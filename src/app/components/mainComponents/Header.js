@@ -16,9 +16,7 @@ const Navbar = () => {
 
   // 🔑 Determine if the user is authenticated clearly
   const authenticated =
-    status === 'authenticated' &&
-    session?.user?.role &&
-    session.user.role !== 'guest';
+    status === 'authenticated' && session?.user?.role && session.user.role !== 'guest';
 
   // 👤 Extract user info safely (defaults to null if not authenticated)
   const user = authenticated ? session.user : null;
@@ -50,11 +48,7 @@ const Navbar = () => {
   // Close the offcanvas when clicking outside of it.
   useEffect(() => {
     const handleOutsideClick = (event) => {
-      if (
-        isOffcanvasOpen &&
-        offcanvasRef.current &&
-        !offcanvasRef.current.contains(event.target)
-      ) {
+      if (isOffcanvasOpen && offcanvasRef.current && !offcanvasRef.current.contains(event.target)) {
         toggleOffcanvas();
       }
     };
@@ -73,22 +67,22 @@ const Navbar = () => {
   return (
     <>
       {/* Navbar Header */}
-      <div className="p-1 fixed top-0 w-full z-10 bg-smooth-gradient-dark-5 opacity-95 shadow backdrop-blur max-h-14 h-14 min-h-14">
-        <div className="w-full flex items-center justify-between px-4">
+      <div className="fixed top-0 z-10 w-full p-1 shadow bg-smooth-gradient-dark-5 opacity-95 backdrop-blur max-h-14 h-14 min-h-14">
+        <div className="flex items-center justify-between w-full px-4">
           {/* Mobile Menu Button */}
           <div className="me-auto mobile:mt-3">
             <button
               onClick={toggleOffcanvas}
-              className="focus:outline-none flex items-center justify-center z-30 cursor-pointer"
+              className="z-30 flex items-center justify-center cursor-pointer focus:outline-none"
               aria-label="Toggle Menu"
             >
               Menu
-              <i className="bi bi-list ml-2 h-6 w-8"></i>
+              <i className="w-8 h-6 ml-2 bi bi-list"></i>
             </button>
           </div>
 
           {/* Center Logo */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center space-x-2 z-10">
+          <div className="absolute z-10 flex items-center space-x-2 transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
             <Link href="/">
               <div className="flex items-center space-x-2">
                 <Image
@@ -98,9 +92,7 @@ const Navbar = () => {
                   height={50}
                   priority
                 />
-                <h1 className="text-2xl font-bold whitespace-nowrap">
-                  Royal TV
-                </h1>
+                <h1 className="text-2xl font-bold whitespace-nowrap">Royal TV</h1>
                 <Image
                   src="/images/logo/logo.png"
                   alt="Logo Right"
@@ -113,14 +105,14 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="mobile:hidden pc:flex items-center space-x-4 pr-4 whitespace-nowrap justify-center">
+          <nav className="items-center justify-center pr-4 space-x-4 mobile:hidden pc:flex whitespace-nowrap">
             <Link href="/FAQ">
-              <button className="w-full min-w-20 m-2 font-bold p-1 rounded-2xl hover-bg-smooth-gradient hover:underline transform hover:scale-105 transition-all duration-700">
+              <button className="w-full p-1 m-2 font-bold transition-all duration-700 transform min-w-20 rounded-2xl hover-bg-smooth-gradient hover:underline hover:scale-105">
                 FAQ !
               </button>
             </Link>
             <Link href="/more-info">
-              <button className="w-full min-w-20 m-2 font-bold p-1 rounded-2xl hover-bg-smooth-gradient hover:underline transform hover:scale-105 transition-all duration-700">
+              <button className="w-full p-1 m-2 font-bold transition-all duration-700 transform min-w-20 rounded-2xl hover-bg-smooth-gradient hover:underline hover:scale-105">
                 More Info !
               </button>
             </Link>
@@ -140,9 +132,7 @@ const Navbar = () => {
                   <i
                     className={`bi ${user?.role === 'admin' ? 'bi-person-badge-fill' : 'bi-person-fill'}`}
                   ></i>
-                  <span>
-                    {user?.role === 'admin' ? 'Admin Actions' : 'User Actions'}
-                  </span>
+                  <span>{user?.role === 'admin' ? 'Admin Actions' : 'User Actions'}</span>
                   <i className="bi bi-chevron-down"></i>
                 </button>
 
@@ -150,34 +140,32 @@ const Navbar = () => {
 
                 <div
                   className={`absolute top-full left-0 w-full bg-smooth-gradient shadow-lg ${
-                    dropdownOpen
-                      ? 'rounded-b-xl h-auto opacity-100'
-                      : 'h-0 opacity-0'
+                    dropdownOpen ? 'rounded-b-xl h-auto opacity-100' : 'h-0 opacity-0'
                   } overflow-hidden transition-all duration-300`}
                 >
                   {user?.role === 'admin' ? (
                     <>
                       <Link
                         href="/admin/dashboard/"
-                        className="block px-4 py-2 bg-gray-700 hover:bg-gray-500 transition"
+                        className="block px-4 py-2 transition bg-gray-700 hover:bg-gray-500"
                       >
                         Show Dashboard
                       </Link>
                       <Link
                         href="/admin/users/main"
-                        className="block px-4 py-2 bg-gray-700 hover:bg-gray-500 transition"
+                        className="block px-4 py-2 transition bg-gray-700 hover:bg-gray-500"
                       >
                         Show Users
                       </Link>
                       <Link
                         href="/admin/subscriptions"
-                        className="block px-4 py-2 bg-gray-700 hover:bg-gray-500 transition"
+                        className="block px-4 py-2 transition bg-gray-700 hover:bg-gray-500"
                       >
                         Show Subscriptions
                       </Link>
                       <Link
                         href="/admin/profile"
-                        className="block px-4 py-2 bg-gray-700 hover:bg-gray-500 transition"
+                        className="block px-4 py-2 transition bg-gray-700 hover:bg-gray-500"
                       >
                         My Profile
                       </Link>
@@ -186,25 +174,25 @@ const Navbar = () => {
                     <>
                       <Link
                         href="/user/dashboard"
-                        className="block px-4 py-2 bg-gray-700 hover:bg-gray-500 transition"
+                        className="block px-4 py-2 transition bg-gray-700 hover:bg-gray-500"
                       >
                         Dashboard
                       </Link>
                       <Link
                         href="/user/liveChat/main"
-                        className="block px-4 py-2 bg-gray-700 hover:bg-gray-500 transition"
+                        className="block px-4 py-2 transition bg-gray-700 hover:bg-gray-500"
                       >
                         My LiveChat Conv.
                       </Link>
                       <Link
                         href="/user/subscriptions"
-                        className="block px-4 py-2 bg-gray-700 hover:bg-gray-500 transition"
+                        className="block px-4 py-2 transition bg-gray-700 hover:bg-gray-500"
                       >
                         My Subscriptions
                       </Link>
                       <Link
                         href="/user/profile"
-                        className="block px-4 py-2 bg-gray-700 hover:bg-gray-500 transition"
+                        className="block px-4 py-2 transition bg-gray-700 hover:bg-gray-500"
                       >
                         My Profile
                       </Link>
@@ -212,7 +200,7 @@ const Navbar = () => {
                   )}
                   <button
                     onClick={logout}
-                    className="block px-4 py-2 bg-red-500 hover:bg-red-300 transition w-full"
+                    className="block w-full px-4 py-2 transition bg-red-500 hover:bg-red-300"
                   >
                     Logout
                   </button>
@@ -221,12 +209,12 @@ const Navbar = () => {
             ) : (
               <>
                 <Link href="/auth/signup">
-                  <button className="w-full min-w-20 m-2 font-bold p-1 rounded-2xl hover-bg-smooth-gradient hover:underline transform hover:scale-105 transition-all duration-700">
+                  <button className="w-full p-1 m-2 font-bold transition-all duration-700 transform min-w-20 rounded-2xl hover-bg-smooth-gradient hover:underline hover:scale-105">
                     Register
                   </button>
                 </Link>
                 <Link href="/auth/signin">
-                  <button className="w-full min-w-20 m-2 font-bold p-1 rounded-2xl hover-bg-smooth-gradient hover:underline hover:opacity-100 transform hover:scale-105 transition-all duration-700">
+                  <button className="w-full p-1 m-2 font-bold transition-all duration-700 transform min-w-20 rounded-2xl hover-bg-smooth-gradient hover:underline hover:opacity-100 hover:scale-105">
                     Login
                   </button>
                 </Link>
@@ -259,20 +247,14 @@ const Navbar = () => {
           className="absolute top-0 right-0 p-2 focus:outline-none"
           aria-label="Close Menu"
         >
-          <i className="bi bi-x h-8 w-8"></i>
+          <i className="w-8 h-8 bi bi-x"></i>
         </button>
 
         {/* Logo inside Offcanvas */}
-        <div className="flex items-center justify-center flex-col pc:my-10 mobile:my-0">
+        <div className="flex flex-col items-center justify-center pc:my-10 mobile:my-0">
           <Link href="/" onClick={toggleOffcanvas}>
             <div className="flex items-center space-x-2">
-              <Image
-                src="/images/logo/logo.png"
-                alt="Logo Left"
-                width={50}
-                height={50}
-                priority
-              />
+              <Image src="/images/logo/logo.png" alt="Logo Left" width={50} height={50} priority />
               <h1 className="text-2xl font-bold">Royal TV</h1>
               <Image
                 src="/images/logo/logo.png"
@@ -286,55 +268,55 @@ const Navbar = () => {
         </div>
 
         {/* Offcanvas Links */}
-        <div className="mt-10 flex flex-col items-center space-y-4">
+        <div className="flex flex-col items-center mt-10 space-y-4">
           <Link href="/" onClick={toggleOffcanvas}>
-            <button className="w-full min-w-40 m-2 font-bold p-1 rounded-2xl bg-smooth-gradient hover:underline  hover:scale-105 transition-all duration-700">
+            <button className="w-full p-1 m-2 font-bold transition-all duration-700 min-w-40 rounded-2xl bg-smooth-gradient hover:underline hover:scale-105">
               Home
             </button>
           </Link>
           <Link href="/more-info" onClick={toggleOffcanvas}>
-            <button className="w-full min-w-40 m-2 font-bold p-1 rounded-2xl bg-smooth-gradient hover:underline  hover:scale-105 transition-all duration-700">
+            <button className="w-full p-1 m-2 font-bold transition-all duration-700 min-w-40 rounded-2xl bg-smooth-gradient hover:underline hover:scale-105">
               More Info
             </button>
           </Link>
           <Link href="/FAQ" onClick={toggleOffcanvas}>
-            <button className="w-full min-w-40 m-2 font-bold p-1 rounded-2xl bg-smooth-gradient hover:underline  hover:scale-105 transition-all duration-700">
+            <button className="w-full p-1 m-2 font-bold transition-all duration-700 min-w-40 rounded-2xl bg-smooth-gradient hover:underline hover:scale-105">
               FAQ
             </button>
           </Link>
-          <hr className="border border-slate-500 w-8/12" />
+          <hr className="w-8/12 border border-slate-500" />
           {/* Auth Buttons based on user role */}
           {authenticated ? (
             <>
               {user?.role === 'admin' ? (
                 <Link href="/admin/dashboard/" onClick={toggleOffcanvas}>
-                  <button className="w-full min-w-40 m-2 font-bold p-1 rounded-2xl bg-smooth-gradient hover:underline  hover:scale-105 transition-all duration-700">
+                  <button className="w-full p-1 m-2 font-bold transition-all duration-700 min-w-40 rounded-2xl bg-smooth-gradient hover:underline hover:scale-105">
                     Admin Dashboard
                   </button>
                 </Link>
               ) : user?.role === 'user' ? (
                 <Link href="/user/dashboard/" onClick={toggleOffcanvas}>
-                  <button className="w-full min-w-40 m-2 font-bold p-1 rounded-2xl bg-smooth-gradient hover:underline  hover:scale-105 transition-all duration-700">
+                  <button className="w-full p-1 m-2 font-bold transition-all duration-700 min-w-40 rounded-2xl bg-smooth-gradient hover:underline hover:scale-105">
                     User Dashboard
                   </button>
                 </Link>
               ) : null}
               <button
                 onClick={logout}
-                className="w-full min-w-28 m-2 text-outline-dark-1 text-red-500 font-bold p-1 rounded-full hover:underline transform hover:scale-105 hover:text-decorative-1 transition-all duration-300"
+                className="w-full p-1 m-2 font-bold text-red-500 transition-all duration-300 transform rounded-full min-w-28 text-outline-dark-1 hover:underline hover:scale-105 hover:text-decorative-1"
               >
                 Logout
               </button>
             </>
           ) : (
             <>
-              <div className="flex flex-col items-center justify-center text-center w-full">
+              <div className="flex flex-col items-center justify-center w-full text-center">
                 <Link
                   href="/auth/signup"
                   onClick={toggleOffcanvas}
                   className="items-center text-center"
                 >
-                  <button className="w-full min-w-32 m-2 font-bold p-1 rounded-2xl bg-smooth-gradient hover:underline  hover:scale-105 transition-all duration-700">
+                  <button className="w-full p-1 m-2 font-bold transition-all duration-700 min-w-32 rounded-2xl bg-smooth-gradient hover:underline hover:scale-105">
                     Register
                   </button>
                 </Link>
@@ -343,7 +325,7 @@ const Navbar = () => {
                   onClick={toggleOffcanvas}
                   className="items-center text-center"
                 >
-                  <button className="w-full min-w-32 m-2 font-bold p-1 rounded-2xl bg-smooth-gradient hover:underline transform hover:scale-105 transition-all duration-700">
+                  <button className="w-full p-1 m-2 font-bold transition-all duration-700 transform min-w-32 rounded-2xl bg-smooth-gradient hover:underline hover:scale-105">
                     Login
                   </button>
                 </Link>

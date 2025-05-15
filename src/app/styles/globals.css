@@ -1,120 +1,59 @@
 /* -------------------------------------------------------------------
-   globals.css – Tailwind v4 single‑file stylesheet for Royal‑TV
-   All custom styles hard‑coded; no reliance on config utilities
+   globals.css – CSS‑first Tailwind v4 with custom design tokens
+   Everything non‑Tailwind (colors, shadows, gradients, breakpoints)
+   is defined via @theme, then consumed in your base/components/utilities.
 ------------------------------------------------------------------- */
 
 /* ------------------------------------------------------------- */
-/* 0️⃣ Import Tailwind                                             */
+/* 0️⃣  Import Tailwind                                         */
 /* ------------------------------------------------------------- */
-@import './theme-utils.css';
-
 @import 'tailwindcss';
 
 /* ------------------------------------------------------------- */
-/* 1️⃣ Variable fonts + CSS custom properties                      */
+/* 1️⃣  Design tokens via CSS‑first @theme                       */
 /* ------------------------------------------------------------- */
-@font-face {
-  font-family: 'Alegreya';
-  src:
-    url('/fonts/Alegreya_Font/Alegreya_Variable_Font.woff2') format('woff2'),
-    url('/fonts/Alegreya_Font/Alegreya_Variable_Font.woff') format('woff');
-  font-weight: normal;
-  font-style: normal;
-}
-@font-face {
-  font-family: 'Alegreya';
-  src:
-    url('/fonts/Alegreya_Font/Alegreya_Italic_Variable_Font.woff2') format('woff2'),
-    url('/fonts/Alegreya_Font/Alegreya_Italic_Variable_Font.woff') format('woff');
-  font-weight: normal;
-  font-style: italic;
-}
-@font-face {
-  font-family: 'Playfair Display';
-  src: url('/fonts/Playfair_Display_Font/PlayfairDisplay-VariableFont_wght.ttf') format('truetype');
-  font-weight: 1 1000;
-  font-style: normal;
-}
-@font-face {
-  font-family: 'Playfair Display Italic';
-  src: url('/fonts/Playfair_Display_Font/PlayfairDisplay-Italic-VariableFont_wght.ttf')
-    format('truetype');
-  font-weight: 1 1000;
-  font-style: italic;
-}
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* 📚 Font families */
   --font-alegreya: 'Alegreya', serif;
   --font-playfair: 'Playfair Display', serif;
   --font-playfair-italic: 'Playfair Display Italic', serif;
-  --font-playpens-sans: 'Playpens Sans', sans-serif;
+
+  /* 🎨 Core colors */
+  --color-text-default: #ffffff;
+  --color-bg-default: #171717;
+
+  /* 🔤 Text‑shadow presets */
+  --text-shadow-dark-1: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+  --text-shadow-dark-2:
+    -1px -1px 0 #000, 0 -1px 0 #000, 1px -1px 0 #000, -1px 0 0 #000, 1px 0 0 #000, -1px 1px 0 #000,
+    0 1px 0 #000, 1px 1px 0 #000;
+
+  /* 🌈 Gradient stops */
+  --gradient-smooth-1: #2a2e45;
+  --gradient-smooth-2: #6b82a6;
+  --gradient-smooth-3: #8b93b0;
+
+  /* 👀 Box‑shadow presets */
+  --shadow-1-1: 10px 5px 10px 5px rgba(32, 40, 69, 0.797);
+  --shadow-1: 0 0 10px 5px rgba(32, 40, 69, 0.797);
+  --shadow-2: 0 0 15px 7px rgba(50, 60, 80, 0.7);
+  --shadow-3: 0 0 20px 10px rgba(20, 30, 60, 0.8);
+  --shadow-4: 0 0 25px 12px rgba(60, 70, 90, 0.75);
+  --shadow-5: 0 0 30px 15px rgba(40, 50, 70, 0.85);
+
+  /* Container sizes for container-query variants */
+  /*  (You can name them the same as your screen keys) */
+  --container-mobile: 991px;
+  --container-pc: 992px;
+  /* 📏 Breakpoints (used by @screen) */
+  --breakpoint-mobile: 991px;
+  --breakpoint-pc: 992px;
 }
 
-/* ***************************************************************** */
-/* 2️⃣ Utility layer – custom helpers                                */
-/* ***************************************************************** */
-@layer utilities {
-  /* Text‑outline helpers */
-  .text-outline-dark-1 {
-    text-shadow:
-      -1px -1px 0 #000,
-      1px -1px 0 #000,
-      -1px 1px 0 #000,
-      1px 1px 0 #000;
-  }
-  .text-outline-dark-2 {
-    text-shadow:
-      -1px -1px 0 #000,
-      0 -1px 0 #000,
-      1px -1px 0 #000,
-      -1px 0 0 #000,
-      1px 0 0 #000,
-      -1px 1px 0 #000,
-      0 1px 0 #000,
-      1px 1px 0 #000;
-  }
-  .text-outline-none {
-    text-shadow: none !important;
-  }
-
-  /* Loader & form field */
-  .loader {
-    border: 4px solid transparent;
-    border-top-color: #fff;
-    border-radius: 9999px;
-  }
-  .input-style {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ccc;
-    border-radius: 0.75rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  }
-
-  /* Visibility helpers */
-  .transition-opacity {
-    opacity: 1;
-    transition: opacity 0.5s ease;
-  }
-  .hidden-opacity {
-    opacity: 0;
-  }
-
-  /* Legacy gradient helpers */
-  .gradient-light-dark-1 {
-    background: linear-gradient(to right, #bdc3c7, #2c3e50);
-  }
-  .gradient-light-dark-2 {
-    background: linear-gradient(to right, #adb5bd, #343a40);
-  }
-}
-
-/* ***************************************************************** */
-/* 3️⃣ Global element styles – base layer                            */
-/* ***************************************************************** */
-@layer components {
+/* ------------------------------------------------------------- */
+/* 2️⃣  Base layer — apply tokens to HTML elements               */
+/* ------------------------------------------------------------- */
+@layer base {
   html,
   body {
     height: 100%;
@@ -122,156 +61,132 @@
     margin: 0;
     padding: 0;
   }
+
   body {
     display: flex;
     flex-direction: column;
     font-family: var(--font-alegreya);
-    color: #fff;
-    background: #171717;
+    color: var(--color-text-default);
+    background-color: var(--color-bg-default);
   }
-  main {
-    flex-grow: 1;
-    margin-top: 3rem;
-    margin-bottom: 2rem;
-  }
-  input,
-  textarea,
-  select {
-    color: #000;
-  }
-  /* Hard‑coded text outlines */
+
+  /* Headings get heavier outline */
   h1,
   h2,
   h3 {
-    text-shadow:
-      -1px -1px 0 #000,
-      0 -1px 0 #000,
-      1px -1px 0 #000,
-      -1px 0 0 #000,
-      1px 0 0 #000,
-      -1px 1px 0 #000,
-      0 1px 0 #000,
-      1px 1px 0 #000;
+    text-shadow: var(--text-shadow-dark-2);
   }
+
+  /* Paragraphs, spans, links, buttons use lighter outline */
   p,
   span,
   li,
   a,
   button {
-    text-shadow:
-      -1px -1px 0 #000,
-      1px -1px 0 #000,
-      -1px 1px 0 #000,
-      1px 1px 0 #000;
+    text-shadow: var(--text-shadow-dark-1);
+  }
+
+  main {
+    flex-grow: 1;
+    @apply my-8;
+  }
+
+  input,
+  textarea,
+  select {
+    color: #000;
   }
 }
 
-/* ***************************************************************** */
-/* 4️⃣ Container styles – hardcoded gradient & shadow                */
-/* ***************************************************************** */
+/* ------------------------------------------------------------- */
+/* 3️⃣  Components layer — custom classes leveraging tokens       */
+/* ------------------------------------------------------------- */
 @layer components {
+  /* Container style */
   .container-style {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    text-align: center;
-    width: 66.666%;
-    padding: 1.5rem;
-    border: 1px solid #ccc;
-    border-radius: 1.5rem;
-    box-shadow: 0 0 10px 5px rgba(32, 40, 69, 0.797);
+    @apply relative flex flex-col w-8/12 p-6 text-center border border-solid rounded-3xl;
+    box-shadow: var(--shadow-1) !important;
     background-color: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(1rem);
-    margin: 1.5rem;
   }
   .container-style::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(to bottom right, #2a2e45, #6b82a6, #8b93b0) !important;
+    background: linear-gradient(
+      to bottom right,
+      var(--gradient-smooth-1),
+      var(--gradient-smooth-2),
+      var(--gradient-smooth-3)
+    ) !important;
     opacity: 0.9;
-    border-radius: 1.5rem;
+    border-radius: inherit;
     z-index: 0;
   }
   .container-style > * {
     position: relative;
     z-index: 1;
   }
-  @media (max-width: 991px) {
+  @screen mobile {
     .container-style {
-      width: 91.666%;
-      padding: 0.5rem;
+      @apply w-11/12 p-2;
+    }
+  }
+
+  /* Loader & input style */
+  .loader {
+    @apply border-4 rounded-full border-t-transparent;
+  }
+  .input-style {
+    @apply w-full p-3 border shadow-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500;
+  }
+}
+
+/* ------------------------------------------------------------- */
+/* 4️⃣  Utilities layer — small atomic helpers                  */
+/* ------------------------------------------------------------- */
+@layer utilities {
+  /* Gradient background utility */
+  .bg-smooth-gradient {
+    background: linear-gradient(
+      to bottom right,
+      var(--gradient-smooth-1),
+      var(--gradient-smooth-2),
+      var(--gradient-smooth-3)
+    ) !important;
+  }
+
+  /* Box‑shadow utilities */
+  .shadow-box-1-1 {
+    box-shadow: var(--shadow-1-1) !important;
+  }
+  .shadow-box-1 {
+    box-shadow: var(--shadow-1) !important;
+  }
+  .shadow-box-2 {
+    box-shadow: var(--shadow-2) !important;
+  }
+  .shadow-box-3 {
+    box-shadow: var(--shadow-3) !important;
+  }
+  .shadow-box-4 {
+    box-shadow: var(--shadow-4) !important;
+  }
+  .shadow-box-5 {
+    box-shadow: var(--shadow-5) !important;
+  }
+
+  /* Responsive utilities (using CSS variables) */
+  @media (max-width: var(--breakpoint-mobile)) {
+    .mobile\:hidden {
+      display: none !important;
+    }
+  }
+  @media (min-width: var(--breakpoint-pc)) {
+    .pc\:flex {
+      display: flex !important;
     }
   }
 }
 
-/* ***************************************************************** */
-/* 5️⃣ Underline helpers                                            */
-/* ***************************************************************** */
-.underline-custom-white {
-  position: relative;
-  display: inline-block;
-}
-.underline-custom-white::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: -2px;
-  width: 100%;
-  height: 2px;
-  background: currentColor;
-}
-.underline-custom-black {
-  position: relative;
-  display: inline-block;
-}
-.underline-custom-black::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: -2px;
-  width: 100%;
-  height: 3px;
-  background: black;
-}
-
-/* ***************************************************************** */
-/* 6️⃣ Custom button styles                                         */
-/* ***************************************************************** */
-@layer components {
-  .btn-dark-style {
-    /* background: #343a40; */
-    color: #fff;
-    border: 1px solid #343a40;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    padding: 0.5rem 1rem;
-    border-radius: 0.75rem;
-  }
-  .btn-outline-dark-style {
-    background: transparent;
-    color: #343a40;
-    border: 1px solid #343a40;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-    padding: 0.5rem 1rem;
-    border-radius: 0.75rem;
-  }
-  .btn-secondary-style {
-    background: #6c757d;
-    color: #fff;
-    border: 1px solid #6c757d;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-    padding: 0.5rem 1rem;
-    border-radius: 0.75rem;
-  }
-  .btn-outline-secondary-style {
-    background: transparent;
-    color: #6c757d;
-    border: 1px solid #6c757d;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-    padding: 0.5rem 1rem;
-    border-radius: 0.75rem;
-  }
-}
-
-/* ***************************************************************** */
-/* End globals.css                                                  */
+/* ------------------------------------------------------------- */
+/* End of globals.css                                           */

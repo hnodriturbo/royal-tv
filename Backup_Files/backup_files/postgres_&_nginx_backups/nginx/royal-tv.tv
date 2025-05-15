@@ -1,0 +1,54 @@
+# /etc/nginx/sites-available/royal-tv.tv
+
+# Redirect all HTTP to HTTPS
+server {
+    listen 80;
+    server_name royal-tv.tv www.royal-tv.tv;
+    return 301 https://$host$request_uri;
+}
+
+# Main HTTPS server
+server {
+    listen 443 ssl http2;
+    server_name royal-tv.tv www.royal-tv.tv;
+
+    # --- TLS certificates ---
+    ssl_certificate     /etc/letsencrypt/live/royal-tv.tv/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/royal-tv.tv/privkey.pem;
+
+    # --- TLS protocols & ciphers ---
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+
+    # ── Add HSTS header ──
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    # Proxy WebSocket to Socket.IO
+    location /socket.io/ {
+        proxy_pass            http://localhost:3001/socket.io/;
+        proxy_http_version    1.1;
+        proxy_set_header      Upgrade $http_upgrade;
+        proxy_set_header      Connection "Upgrade";
+        proxy_set_header      Host $host;
+        proxy_set_header      X-Real-IP $remote_addr;
+        proxy_set_header      X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_buffering       off;
+    }
+
+    # Optional: static asset caching
+    location ~* \.(js|css|png|jpg|svg|ico|json|txt)$ {
+        root        /var/www/royal-tv/public;
+        expires     30d;
+        access_log  off;
+    }
+
+    # Proxy everything else to Next.js
+    location / {
+        proxy_pass            http://localhost:3000;
+        proxy_http_version    1.1;
+        proxy_set_header      Host $host;
+        proxy_set_header      X-Real-IP $remote_addr;
+        proxy_set_header      X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header      X-Forwarded-Proto $scheme;
+    }
+}

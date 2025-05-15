@@ -1,0 +1,47 @@
+/* ***************************************************************** */
+/* *************------------ Storage Codes ------------************* */
+/* ***************************************************************** */
+
+/* Global styles */
+/* 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+/* Container styles */
+/* .container-style {
+  @apply bg-smooth-gradient bg-opacity-50 shadow border border-solid my-box-shadow-1 rounded-3xl;
+} */
+
+/* Main background image */
+/* 
+.main-background {
+  background-image: url('/images/background/main_background.jpg'); 
+  background-size: cover; 
+  background-position: center; 
+  background-repeat: no-repeat; 
+  height: 100vh; 
+  width: 100%; 
+  background-attachment: fixed; 
+  position: relative;
+  z-index: 1;
+}
+ */
+
+ /* ***************************************************************** */
+/* 
+.main-background {
+  background-image: url('/images/background/background.png');
+  @apply bg-gray-700; 
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  min-height: 100vh;
+  min-width: 100vh;
+  position: relative;
+}
+ */
+/* ***************************************************************** */

@@ -1,0 +1,17 @@
+# Runtime artefacts
+.next
+dist
+coverage
+
+# Public assets you never want reformatted
+public/*.svg
+public/fonts
+
+# Generated code
+prisma/migrations
+
+# Leave helper scripts untouched
+scripts
+
+prettierrc.json
+eslint.config.json

@@ -1,14 +1,24 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+// @ts-nocheck
+// eslint.config.mjs
+import js from '@eslint/js';
+import pluginNext from '@next/eslint-plugin-next';
+import pluginPrettier from 'eslint-plugin-prettier';
+import pluginReactHooks from 'eslint-plugin-react-hooks';
+import prettierCfg from 'eslint-config-prettier';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const config = [
+  js.configs.recommended,
+  pluginNext, // includes core-web-vitals
+  prettierCfg, // disables style rules Prettier already fixes
+  {
+    files: ['**/*.{js,jsx}'],
+    plugins: { prettier: pluginPrettier, 'react-hooks': pluginReactHooks },
+    rules: {
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+      'prettier/prettier': 'warn'
+    }
+  }
+];
 
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-const eslintConfig = [...compat.extends("next/core-web-vitals")];
-
-export default eslintConfig;
+export default config;

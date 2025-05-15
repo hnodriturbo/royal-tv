@@ -1,0 +1,259 @@
+@import "tailwindcss";
+
+@layer components {
+  /* ✨ Generic base structure */
+  @keyframes glow-light {
+    0%,
+    100% {
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 3px rgba(255, 255, 255, 0.4),
+        0 0 6px rgba(255, 255, 255, 0.3);
+    }
+    50% {
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 6px rgba(255, 255, 255, 0.6),
+        0 0 12px rgba(255, 255, 255, 0.5);
+    }
+  }
+
+  @keyframes glow-lighter {
+    0%,
+    100% {
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 5px rgba(255, 255, 255, 0.5),
+        0 0 10px rgba(255, 255, 255, 0.4);
+    }
+    50% {
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 10px rgba(255, 255, 255, 0.7),
+        0 0 20px rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  @keyframes glow-lightest {
+    0%,
+    100% {
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 8px rgba(255, 255, 255, 0.6),
+        0 0 15px rgba(255, 255, 255, 0.5);
+    }
+    50% {
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 15px rgba(255, 255, 255, 0.9),
+        0 0 25px rgba(255, 255, 255, 0.8);
+    }
+  }
+
+  @keyframes glow-dark {
+    0%,
+    100% {
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 4px rgba(80, 80, 80, 0.6),
+        0 0 8px rgba(60, 60, 60, 0.4);
+    }
+    50% {
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 8px rgba(80, 80, 80, 0.8),
+        0 0 16px rgba(60, 60, 60, 0.6);
+    }
+  }
+
+  @keyframes glow-darker {
+    0%,
+    100% {
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 6px rgba(40, 40, 40, 0.7),
+        0 0 12px rgba(30, 30, 30, 0.5);
+    }
+    50% {
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 12px rgba(40, 40, 40, 0.9),
+        0 0 20px rgba(30, 30, 30, 0.7);
+    }
+  }
+
+  @keyframes glow-darkest {
+    0%,
+    100% {
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 8px rgba(20, 20, 20, 0.8),
+        0 0 16px rgba(10, 10, 10, 0.6);
+    }
+    50% {
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 16px rgba(20, 20, 20, 1),
+        0 0 30px rgba(10, 10, 10, 0.9);
+    }
+  }
+
+  /* 🖍️ Faded color variants */
+  @keyframes glow-faded-red {
+    0%,
+    100% {
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 6px rgba(255, 100, 100, 0.4),
+        0 0 12px rgba(255, 100, 100, 0.3);
+    }
+    50% {
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 12px rgba(255, 100, 100, 0.6),
+        0 0 20px rgba(255, 100, 100, 0.5);
+    }
+  }
+
+  @keyframes glow-faded-green {
+    0%,
+    100% {
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 6px rgba(100, 255, 100, 0.4),
+        0 0 12px rgba(100, 255, 100, 0.3);
+    }
+    50% {
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 12px rgba(100, 255, 100, 0.6),
+        0 0 20px rgba(100, 255, 100, 0.5);
+    }
+  }
+
+  @keyframes glow-faded-yellow {
+    0%,
+    100% {
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 6px rgba(255, 255, 100, 0.4),
+        0 0 12px rgba(255, 255, 100, 0.3);
+    }
+    50% {
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 12px rgba(255, 255, 100, 0.6),
+        0 0 20px rgba(255, 255, 100, 0.5);
+    }
+  }
+
+  @keyframes glow-faded-purple {
+    0%,
+    100% {
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 6px rgba(180, 100, 255, 0.4),
+        0 0 12px rgba(180, 100, 255, 0.3);
+    }
+    50% {
+      text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 12px rgba(180, 100, 255, 0.6),
+        0 0 20px rgba(180, 100, 255, 0.5);
+    }
+  }
+
+  /* 🎯 Utility classes for usage */
+  .text-glow-light {
+    animation: glow-light 2s infinite alternate;
+  }
+  .text-glow-lighter {
+    animation: glow-lighter 2s infinite alternate;
+  }
+  .text-glow-lightest {
+    animation: glow-lightest 2s infinite alternate;
+  }
+  .text-glow-dark {
+    animation: glow-dark 2s infinite alternate;
+  }
+  .text-glow-darker {
+    animation: glow-darker 2s infinite alternate;
+  }
+  .text-glow-darkest {
+    animation: glow-darkest 2s infinite alternate;
+  }
+
+  /* Text glow colors */
+  .text-glow-faded-red {
+    animation: glow-faded-red 2s infinite alternate;
+  }
+  .text-glow-faded-green {
+    animation: glow-faded-green 2s infinite alternate;
+  }
+  .text-glow-faded-yellow {
+    animation: glow-faded-yellow 2s infinite alternate;
+  }
+  .text-glow-faded-purple {
+    animation: glow-faded-purple 2s infinite alternate;
+  }
+}

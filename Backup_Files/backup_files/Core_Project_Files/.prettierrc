@@ -1,0 +1,10 @@
+{
+  "semi": true,
+  "singleQuote": true,
+
+  "no-unused-vars": "warn",
+  "no-undef": "off",
+  "react-hooks/exhaustive-deps": "warn",
+  "no-console": "off",
+  "no-param-reassign": "off"
+}

@@ -14,7 +14,7 @@ const Footer = () => {
               <div className="flex flex-col items-center">
                 <Link
                   href="/pages/contact"
-                  className="bg-smooth-gradient-dark-1 btn-dark-style font-bold rounded-xl underline hover:scale-105 transform transition-all duration-300"
+                  className="bg-smooth-gradient-dark-1 btn-dark-style font-bold rounded-xl underline:hover scale-105:hover transform transition-all duration-300"
                 >
                   Send Us Message !
                 </Link>
