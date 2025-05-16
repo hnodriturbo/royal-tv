@@ -1,0 +1,191 @@
+@import "tailwindcss";
+
+@layer components {
+
+  .ad-container {
+      max-width: 1000px;
+      position: relative;
+      width: 1000px auto;
+      /* Adjust as necessary */
+      height: auto;
+      /* Adjust as necessary */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(45deg, rgba(51, 51, 51, 0.9), rgba(85, 85, 85, 0.9));
+      /* background: linear-gradient(45deg, #333, #555); */
+
+      /* background: none; */
+      background-size: 400% 400%;
+
+      /* animation: gradientBackground 10s ease infinite; */
+  }
+
+  .ad-gif {
+      width: 100%;
+      height: 100%;
+
+      mix-blend-mode: screen;
+      animation: tiltImage 10s ease-in-out infinite alternate, hueRotate 10s linear infinite;
+  }
+
+  @keyframes gradientBackground {
+      0% {
+          background-position: 0% 50%;
+      }
+
+      50% {
+          background-position: 100% 50%;
+      }
+
+      100% {
+          background-position: 0% 50%;
+      }
+  }
+
+  @keyframes tiltImage {
+      0% {
+          transform: rotate(-2deg);
+      }
+
+      100% {
+          transform: rotate(2deg);
+      }
+  }
+
+  @keyframes hueRotate {
+      0% {
+          filter: hue-rotate(0deg);
+      }
+
+      100% {
+          filter: hue-rotate(360deg);
+      }
+  }
+
+
+
+  /* ***************************************************************************** */
+
+  /* Here starts the css for the get your free trial button styles and more */
+
+  /* Free trial column styles */
+  /* 
+  .free-trial-col {
+      height: 100px;
+      position: relative;
+      overflow: hidden;
+      z-index: 4;
+      background: linear-gradient(270deg, #333, #444, #555); 
+  }
+  */
+
+  /* Define the box shadow and styles for each custom class */
+  .btn-dark-style {
+      background-color: #343a40;
+      /* Dark background */
+      color: #fff;
+      /* White text */
+      border: 1px solid #343a40;
+      /* Dark border */
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  }
+
+  .btn-outline-dark-style {
+      background-color: transparent;
+      /* Transparent background */
+      color: #343a40;
+      /* Dark text */
+      border: 1px solid #343a40;
+      /* Dark border */
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  }
+
+  .btn-secondary-style {
+      background-color: #6c757d;
+      /* Secondary background */
+      color: #fff;
+      /* White text */
+      border: 1px solid #6c757d;
+      /* Secondary border */
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  }
+
+  .btn-outline-secondary-style {
+      background-color: transparent;
+      /* Transparent background */
+      color: #6c757d;
+      /* Secondary text */
+      border: 1px solid #6c757d;
+      /* Secondary border */
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  }
+
+  /* Base transition properties for smooth effects */
+  .toggle-button {
+      transition: all 2s ease-in-out;
+      /* transition: box-shadow 5s ease, background-color 3s ease, border-color 3s ease, color 3s ease-in-out; */
+  }
+
+
+
+
+
+  /* Advertisement button style */
+  .advertisement-button {
+      font-size: 36px;
+      border-radius: 50px;
+      font-weight: bold;
+      font-style: italic;
+      padding: 10px 20px;
+      cursor: pointer;
+  }
+
+  /* Media query for Bootstrap md size and smaller */
+  @media (max-width: 768px) {
+      .advertisement-button {
+          font-size: 24px;
+          /* Adjust as needed for appropriate phone size */
+      }
+  }
+
+  .advertisement-button {
+      z-index: 4;
+      /* Or any value higher than the overlaying element */
+  }
+
+
+}
+
+
+/* Base transition properties for smooth effects */
+/* 
+.toggle-button {
+    transition: box-shadow 5s ease, background-color 3s ease, border-color 3s ease, color 3s ease-in-out;
+}
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* 
+.toggle-classes-dark-button {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    transition: box-shadow 0 10 20px rgba(255, 255, 255, 0.8);
+}
+
+
+.toggle-classes-dark-button {
+    transition: box-shadow 5s ease, background-color 3s ease, border-color 20s ease, color 1.5s ease-in-out;
+}
+
+ */

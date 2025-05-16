@@ -1,0 +1,237 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// ✅ User Model (Common User Info)
+// ────────────────────────────────────────────────────────────────────────────
+model User {
+  user_id             String              @id @default(uuid()) @db.Uuid
+  name                String
+  email               String              @unique
+  username            String              @unique
+  password            String
+  role                Role                @default(user)
+  whatsapp            String?
+  telegram            String?
+  preferredContactWay PreferredContactWay @default(email)
+
+  // relations:
+  subscriptions         Subscription[]         @relation("UserSubscriptions")
+  subscriptionPayments  SubscriptionPayment[] // pluralized for clarity
+  freeTrials            FreeTrial[]            @relation("UserFreeTrials")
+  liveChatConversations LiveChatConversation[]
+  liveChatMessages      LiveChatMessage[]
+
+  bubbleChatConversations BubbleChatConversation[] @relation("BubbleConversations")
+  bubbleChatMessages      BubbleChatMessage[]      @relation("BubbleMessages")
+
+  // timestamps:
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([username])
+  @@index([email])
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// ✅ Real-time Chat Models
+// ────────────────────────────────────────────────────────────────────────────
+model LiveChatConversation {
+  conversation_id String            @id @default(uuid()) @db.Uuid
+  user_id         String            @db.Uuid
+  subject         String?
+  read            Boolean           @default(false)
+  messages        LiveChatMessage[]
+  user            User              @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([user_id])
+}
+
+model LiveChatMessage {
+  message_id      String        @id @default(uuid()) @db.Uuid
+  conversation_id String        @db.Uuid
+  user_id         String?       @db.Uuid
+  guest_id        String?
+  sender_is_admin Boolean       @default(false)
+  message         String
+  status          MessageStatus @default(sent)
+  readAt          DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  conversation LiveChatConversation     @relation(fields: [conversation_id], references: [conversation_id], onDelete: Cascade)
+  user         User?                    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([conversation_id])
+  @@index([user_id])
+  @@index([status])
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// ✅ Bubble Chat Models
+// ────────────────────────────────────────────────────────────────────────────
+model BubbleChatConversation {
+  conversation_id String                @id @default(uuid()) @db.Uuid
+  user_id         String?               @db.Uuid
+  subject         String?
+  read            Boolean               @default(false)
+  messages        BubbleChatMessage[]   @relation("BubbleMessages")
+  user            User?                 @relation("BubbleConversations", fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([user_id])
+}
+
+model BubbleChatMessage {
+  message_id      String                @id @default(uuid()) @db.Uuid
+  conversation_id String                @db.Uuid
+  user_id         String?               @db.Uuid
+  guest_id        String?
+  sender_is_admin Boolean               @default(false)
+  message         String
+  status          MessageStatus         @default(sent)
+  readAt          DateTime?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  conversation BubbleChatConversation @relation("BubbleMessages", fields: [conversation_id], references: [conversation_id], onDelete: Cascade)
+  user         User?                  @relation("BubbleMessages", fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([conversation_id])
+  @@index([user_id])
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 🎟️ User Subscription
+// ────────────────────────────────────────────────────────────────────────────
+model Subscription {
+  subscription_id       String             @id @default(uuid()) @db.Uuid
+  user_id               String             @db.Uuid
+  plan                  String?
+  subscription_username String? // IPTV Username
+  subscription_password String? // IPTV Password
+  subscription_url      String? // IPTV URL or portal  @db.Text
+  subscription_other    String? // Other short info    @db.Text
+  additional_info       String?            @db.Text
+  status                SubscriptionStatus @default(pending)
+  startDate             DateTime?
+  endDate               DateTime?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  user     User                  @relation("UserSubscriptions", fields: [user_id], references: [user_id], onDelete: Cascade)
+  payments SubscriptionPayment[]
+
+  @@index([user_id])
+  @@index([status])
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 🎟️ User Subscription Payments
+// ────────────────────────────────────────────────────────────────────────────
+model SubscriptionPayment {
+  id              String        @id @default(uuid()) @db.Uuid
+  user_id         String        @db.Uuid
+  subscription_id String?       @db.Uuid
+  payment_id      String
+  order_id        String
+  invoice_id      String?       @unique
+  status          PaymentStatus
+  currency        String?
+  amount_paid     Float?
+  amount_received Float?
+  pay_currency    String?
+  pay_address     String?
+  network         String?
+  received_at     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user         User          @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  subscription Subscription? @relation(fields: [subscription_id], references: [subscription_id])
+
+  @@index([payment_id])
+  @@index([user_id])
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 🎫 Free Trial Model
+// ────────────────────────────────────────────────────────────────────────────
+model FreeTrial {
+  trial_id String @id @default(uuid()) @db.Uuid
+  user_id  String @db.Uuid
+
+  free_trial_username String? // IPTV Username
+  free_trial_password String? // IPTV Password
+  free_trial_url      String? // IPTV URL or portal   @db.Text
+  free_trial_other    String? // Other short info     @db.Text
+  additional_info     String? @db.Text
+
+  startDate DateTime?
+  endDate   DateTime?
+
+  status    FreeTrialStatus @default(disabled)
+  claimedAt DateTime        @default(now()) // when the trial was claimed
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  user User @relation("UserFreeTrials", fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([status])
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 🔒 Enums
+// ────────────────────────────────────────────────────────────────────────────
+enum Role {
+  admin
+  user
+}
+
+enum PreferredContactWay {
+  email
+  whatsapp
+  telegram
+}
+
+enum MessageStatus {
+  sent
+  read
+  deleted
+  edited
+}
+
+enum SubscriptionStatus {
+  active
+  expired
+  canceled
+  pending
+  disabled
+}
+
+enum PaymentStatus {
+  waiting
+  confirming
+  confirmed
+  finished
+  failed
+  expired
+  refunded
+}
+
+enum FreeTrialStatus {
+  active
+  disabled
+}

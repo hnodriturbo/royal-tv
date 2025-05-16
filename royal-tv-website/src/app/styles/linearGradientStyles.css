@@ -1,0 +1,87 @@
+@import 'tailwindcss';
+
+/* Linear Gradient Background Colors */
+
+/* Dark to Light Gradient */
+.gradient-dark-light-1 {
+  background: linear-gradient(to right, #2c3e50, #bdc3c7); /* Dark Gray to Light Gray */
+}
+.gradient-dark-light-2 {
+  background: linear-gradient(to right, #343a40, #adb5bd); /* Very Dark Gray to Light Gray */
+}
+.gradient-dark-light-3 {
+  background: linear-gradient(to right, #4e5d6c, #d1d8e0); /* Dark Blue-Gray to Very Light Gray */
+}
+.gradient-dark-light-4 {
+  background: linear-gradient(to bottom right, #3a3d41, #c0c4c8); /* Dark Charcoal to Light Gray */
+}
+.gradient-dark-light-5 {
+  background: linear-gradient(
+    to right,
+    #2f3640,
+    #61666e
+  ); /* Dark Charcoal Blue to Light Blue-Gray */
+}
+
+/* Light to Dark Gradient */
+.gradient-light-dark-1 {
+  background: linear-gradient(to right, #bdc3c7, #2c3e50); /* Light Gray to Dark Gray */
+}
+.gradient-light-dark-2 {
+  background: linear-gradient(to right, #adb5bd, #343a40); /* Light Gray to Very Dark Gray */
+}
+.gradient-light-dark-3 {
+  background: linear-gradient(to right, #d1d8e0, #4e5d6c); /* Very Light Gray to Dark Blue-Gray */
+}
+.gradient-light-dark-4 {
+  background: linear-gradient(to right, #c0c4c8, #3a3d41); /* Light Gray to Dark Charcoal */
+}
+.gradient-light-dark-5 {
+  background: linear-gradient(
+    to right,
+    #a4b0be,
+    #2f3640
+  ); /* Light Blue-Gray to Dark Charcoal Blue */
+}
+
+/* Vertical Gradient (Dark to Light) */
+.gradient-vertical-dark-light-1 {
+  background: linear-gradient(to bottom, #2c3e50, #bdc3c7); /* Dark Gray to Light Gray */
+}
+.gradient-vertical-dark-light-2 {
+  background: linear-gradient(to bottom, #343a40, #adb5bd); /* Very Dark Gray to Light Gray */
+}
+.gradient-vertical-dark-light-3 {
+  background: linear-gradient(to bottom, #4e5d6c, #d1d8e0); /* Dark Blue-Gray to Very Light Gray */
+}
+.gradient-vertical-dark-light-4 {
+  background: linear-gradient(to bottom, #3a3d41, #c0c4c8); /* Dark Charcoal to Light Gray */
+}
+.gradient-vertical-dark-light-5 {
+  background: linear-gradient(
+    to bottom,
+    #2f3640,
+    #a4b0be
+  ); /* Dark Charcoal Blue to Light Blue-Gray */
+}
+
+/* Vertical Gradient (Light to Dark) */
+.gradient-vertical-light-dark-1 {
+  background: linear-gradient(to bottom, #bdc3c7, #2c3e50); /* Light Gray to Dark Gray */
+}
+.gradient-vertical-light-dark-2 {
+  background: linear-gradient(to bottom, #adb5bd, #343a40); /* Light Gray to Very Dark Gray */
+}
+.gradient-vertical-light-dark-3 {
+  background: linear-gradient(to bottom, #d1d8e0, #4e5d6c); /* Very Light Gray to Dark Blue-Gray */
+}
+.gradient-vertical-light-dark-4 {
+  background: linear-gradient(to bottom, #c0c4c8, #3a3d41); /* Light Gray to Dark Charcoal */
+}
+.gradient-vertical-light-dark-5 {
+  background: linear-gradient(
+    to bottom,
+    #a4b0be,
+    #2f3640
+  ); /* Light Blue-Gray to Dark Charcoal Blue */
+}

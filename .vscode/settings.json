@@ -1,0 +1,23 @@
+{
+    "files.associations": { "*.css": "postcss" },
+    "tailwindCSS.includeLanguages": {
+        "postcss": "css",
+        "css": "css",
+        "javascript": "javascriptreact",
+        "javascriptreact": "javascriptreact",
+        "typescript": "typescriptreact",
+        "typescriptreact": "typescriptreact",
+        "html": "html"
+    },
+    "tailwindCSS.experimental.configFile": "./src/app/styles/globals.css",
+    "editor.quickSuggestions": { "other": true, "comments": false, "strings": true },
+    "tailwindCSS.emmetCompletions": true,
+    "css.validate": false,
+    "scss.validate": false,
+    "less.validate": false,
+    "css.lint.unknownAtRules": "ignore",
+    "scss.lint.unknownAtRules": "ignore",
+    "less.lint.unknownAtRules": "ignore",
+    "editor.colorDecorators": true,
+    "tailwindCSS.colorDecorators": true
+}
