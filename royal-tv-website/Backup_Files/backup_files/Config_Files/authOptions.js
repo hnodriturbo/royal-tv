@@ -2,7 +2,7 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 
-import prisma from '@lib/prisma';
+import prisma from '@/lib/prisma';
 import { jwtCallback, sessionCallback } from './callbacks'; // ✅ stay local
 
 const authOptions = {
@@ -15,14 +15,14 @@ const authOptions = {
       credentials: {
         username: { type: 'text' },
         password: { type: 'password' },
-        rememberMe: { type: 'checkbox' },
+        rememberMe: { type: 'checkbox' }
       },
       authorize: async (credentials) => {
         const { username, password, rememberMe } = credentials;
         const isRemembered = rememberMe === 'true';
 
         const user = await prisma.user.findUnique({
-          where: { username },
+          where: { username }
         });
 
         if (!user) {
@@ -37,24 +37,24 @@ const authOptions = {
         const { password: _, ...safeUser } = user;
 
         return { ...safeUser, rememberMe: isRemembered };
-      },
-    }),
+      }
+    })
   ],
 
   session: {
-    strategy: 'jwt',
+    strategy: 'jwt'
   },
 
   callbacks: {
     jwt: jwtCallback,
-    session: sessionCallback,
+    session: sessionCallback
   },
 
   pages: {
-    signIn: '/auth/signin',
+    signIn: '/auth/signin'
   },
 
-  debug: process.env.NODE_ENV === 'development',
+  debug: process.env.NODE_ENV === 'development'
 };
 
 export default authOptions;

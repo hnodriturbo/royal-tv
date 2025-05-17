@@ -147,6 +147,12 @@
     @apply bg-gray-800 text-white border border-gray-800 rounded-xl py-2 px-4;
     box-shadow: var(--shadow-1) !important;
   }
+
+  .hover {
+    transition: all 0.3s ease-in-out;
+    transform: all 0.3s ease-in-out;
+    scale: 1.02;
+  }
 }
 
 /* ------------------------------------------------------------- */
