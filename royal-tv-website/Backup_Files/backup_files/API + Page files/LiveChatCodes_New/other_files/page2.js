@@ -37,7 +37,7 @@ const AdminLiveChatConversation = () => {
   // Get modal actions.
   const { openModal, hideModal } = useModal();
   // Socket helpers
-
+  emoji;
   const { emit, listen } = useSocket();
   const { startTyping, subscribe } = useTypingIndicator(conversation_id);
 
