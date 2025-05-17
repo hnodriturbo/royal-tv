@@ -10,22 +10,27 @@
 @import 'tailwindcss';
 
 /* ------------------------------------------------------------- */
-/* 1️⃣  Design tokens via CSS-first @theme                       */
+/* --------- 1️⃣ Design tokens via CSS-first @theme 1️⃣ --------- */
 /* ------------------------------------------------------------- */
 @theme {
+  /* ------------------------------------------------------------ */
+  /* ###### --- ##### -- ✅ - Font Settings - ✅ ##### -- ###### */
+  /* ------------------------------------------------------------ */
   /* 📚 Font families */
   --font-alegreya: 'Alegreya', serif;
   --font-playfair: 'Playfair Display', serif;
   --font-playfair-italic: 'Playfair Display Italic', serif;
 
+  /* ------------------------------------------------------------ */
+  /* ###### --- #### -- ✅ - Color  Settings - ✅ #### -- ###### */
+  /* ------------------------------------------------------------ */
   /* 🎨 Core colors */
   --color-text-default: #ffffff;
   --color-bg-default: #171717;
 
-  /* 🔤 Text-shadow presets */
+  /* ----- ----- 🧩 Text-shadow presets ----- ----- */
   /* 🔤 Text-shadow Dark presets */
   --text-shadow-dark-1: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
-
   --text-shadow-dark-2:
     -1px -1px 0 #000, 0px -1px 0 #000, 1px -1px 0 #000, -1px 0px 0 #000, 1px 0px 0 #000,
     -1px 1px 0 #000, 0px 1px 0 #000, 1px 1px 0 #000;
