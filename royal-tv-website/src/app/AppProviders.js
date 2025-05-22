@@ -32,7 +32,6 @@ import Footer from '@/components/Footer';
 // Custom Imports
 import WhatsAppLogo from '@/components/ui/whatsapp/WhatsAppBS';
 import ShowMessages from '@/components/ui/showErrorAndMessages/ShowMessages';
-import CustomRingLoader from '@/components/ui/Loader/RingLoader';
 
 export default function AppProviders({ children }) {
   const { data: session, status } = useSession();

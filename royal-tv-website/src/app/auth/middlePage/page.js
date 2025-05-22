@@ -89,12 +89,12 @@ const MiddlePage = () => {
     } else if (notFound) {
       // 📭 Page not found
       message = 'The page you are trying to access does not exist. Redirecting to Home…';
-    } else if (userDenied) {
+    } else if (adminDenied) {
       // ⛔ User dashboard restriction
       message = `Request denied! Redirecting to ${name} dashboard…`;
       color = 'error';
       target = '/user/dashboard';
-    } else if (adminDenied) {
+    } else if (userDenied) {
       // ⛔ Admin dashboard restriction
       message = `Request denied! Redirecting to Admin dashboard…`;
       color = 'error';
