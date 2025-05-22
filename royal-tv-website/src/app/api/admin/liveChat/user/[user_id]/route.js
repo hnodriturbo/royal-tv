@@ -4,107 +4,88 @@
  * 📎 Query‑params
  *   • page   : number (default 1)
  *   • limit  : number (default 5)
- *
- * 📦 Response
+ * 📦 Response:
  *   {
- *     conversations : [{
- *       conversation_id : string
- *       subject         : string | null
- *       updatedAt       : string          // ISO
- *       unreadCount     : number          // unread msgs in this conv
- *     }],
- *     totalPages   : number
- *     userDetails  : {
- *       user_id   : string
- *       name      : string | null
- *       username  : string | null
- *       email     : string | null
- *     }
+ *     conversations: [{ conversation_id, subject, updatedAt, unreadCount }],
+ *     totalPages,
+ *     userDetails
  *   }
  */
-
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma'; // 🔌 central Prisma helper
+import prisma from '@/lib/prisma';
 
-export async function GET(request, { params }) {
-  // 1️⃣ Extract path‑param ------------------------------------------------
-  const { user_id } = await params; // /[user_id] from the URL
+export async function GET(request, context) {
+  // 1️⃣ Extract path param
+  const { user_id } = await context.params;
+
   if (!user_id) {
-    return NextResponse.json(
-      { error: 'User ID is required in the URL path' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'User ID is required in the URL path' }, { status: 400 });
   }
 
-  // 2️⃣ Parse pagination --------------------------------------------------
+  // 2️⃣ Parse pagination
   const { searchParams } = new URL(request.url);
   const page = Math.max(1, Number(searchParams.get('page') ?? 1));
   const limit = Math.max(1, Number(searchParams.get('limit') ?? 5));
-  const skip = (page - 1) * limit;
 
   try {
-    // 3️⃣ Fetch basic user details (name, email, …) ----------------------
+    // 3️⃣ Fetch user details
     const userDetails = await prisma.user.findUnique({
       where: { user_id },
-      select: { user_id: true, name: true, username: true, email: true },
+      select: { user_id: true, name: true, username: true, email: true }
     });
-
     if (!userDetails) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // 4️⃣ Grab this user’s conversations ---------------------------------
-    const rawConvs = await prisma.liveChatConversation.findMany({
+    // 4️⃣ Fetch all conversations for this user (no skip/take yet!)
+    const allConvos = await prisma.liveChatConversation.findMany({
       where: { user_id },
-      skip,
-      take: limit,
-
-      // Order newest‑update first (we’ll fine‑tune later)
       orderBy: { updatedAt: 'desc' },
-
       select: {
         conversation_id: true,
         subject: true,
         updatedAt: true,
-
-        // 👀 unread counter (user‑sent + unread)
         _count: {
           select: {
             messages: {
-              where: { readAt: null, sender_is_admin: false },
-            },
-          },
-        },
-      },
+              where: { readAt: null, sender_is_admin: false }
+            }
+          }
+        }
+      }
     });
 
-    // 5️⃣ Shape + secondary sort (unread first) --------------------------
-    const conversations = rawConvs
-      .map((c) => ({
-        conversation_id: c.conversation_id,
-        subject: c.subject,
-        updatedAt: c.updatedAt,
-        unreadCount: c._count.messages,
+    // 5️⃣ Shape & unread-first sort
+    const sortedConvos = allConvos
+      .map((convo) => ({
+        conversation_id: convo.conversation_id,
+        subject: convo.subject,
+        updatedAt: convo.updatedAt,
+        unreadCount: convo._count.messages
       }))
       .sort((a, b) => {
-        // unread convs to the top 🔼
         if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
         if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
-        // otherwise keep the updatedAt order (already desc)
-        return 0;
+        // Fallback: newest updated first
+        return new Date(b.updatedAt) - new Date(a.updatedAt);
       });
 
-    // 6️⃣ Pagination helpers --------------------------------------------
-    const totalConvs = await prisma.liveChatConversation.count({
-      where: { user_id },
-    });
-    const totalPages = Math.ceil(totalConvs / limit);
+    // 6️⃣ Paginate AFTER sorting
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    const conversations = sortedConvos.slice(start, end);
 
-    // 7️⃣ Done ✅ ---------------------------------------------------------
-    return NextResponse.json({ conversations, totalPages, userDetails });
+    const totalPages = Math.ceil(sortedConvos.length / limit);
+
+    // 7️⃣ Return
+    return NextResponse.json({
+      conversations,
+      totalPages,
+      userDetails,
+      unreadConvos: sortedConvos.filter((conv) => conv.unreadCount > 0).length // (if you want this for badges)
+    });
   } catch (err) {
-    // 8️⃣ Error handling 🔥 ----------------------------------------------
-    console.error('🔥 [admin/liveChat/user] failed:', err);
+    console.error('🔥 [admin/liveChat/user/[user_id]/route.js] failed:', err);
     return NextResponse.json(
       { error: `Failed to fetch user conversations: ${err.message}` },
       { status: 500 }

@@ -67,7 +67,7 @@ const Navbar = () => {
   return (
     <>
       {/* Navbar Header */}
-      <div className="fixed bg-smooth-gradient top-0 z-10 w-full p-1 shadow opacity-95 backdrop-blur max-h-14 h-14 min-h-14">
+      <div className="fixed bg-smooth-gradient top-0 z-[100] w-full p-1 shadow opacity-95 backdrop-blur max-h-14 h-14 min-h-14">
         <div className="flex items-center justify-between w-full px-4">
           {/* Mobile Menu Button */}
           <div className="me-auto md:mt-3">
@@ -125,12 +125,12 @@ const Navbar = () => {
               >
                 {/* Dropdown Button */}
                 <button
-                  className={`flex items-center justify-between w-full min-w-48 p-2 bg-smooth-gradient font-bold ${
+                  className={`flex items-center justify-between w-full min-w-48 p-2 gradient-dark-light-5 font-bold ${
                     dropdownOpen ? 'rounded-t-xl' : 'rounded-xl'
                   } transition-all duration-300`}
                 >
                   <i
-                    className={`bi ${user?.role === 'admin' ? 'bi-person-badge-fill' : 'bi-person-fill'}`}
+                    className={`bi ${user?.role === 'admin' ? 'bi-person-badge-fill ml-4' : 'ml-4 bi-person-fill'}`}
                   ></i>
                   <span>{user?.role === 'admin' ? 'Admin Actions' : 'User Actions'}</span>
                   <i className="bi bi-chevron-down"></i>
@@ -139,7 +139,7 @@ const Navbar = () => {
                 {/* Dropdown Menu */}
 
                 <div
-                  className={`absolute top-full left-0 w-full bg-smooth-gradient shadow-lg ${
+                  className={`absolute top-full left-0 w-full gradient-dark-light-5 shadow-lg ${
                     dropdownOpen ? 'rounded-b-xl h-auto opacity-100' : 'h-0 opacity-0'
                   } overflow-hidden transition-all duration-300`}
                 >
@@ -256,7 +256,7 @@ const Navbar = () => {
       {/* Offcanvas Menu (Mobile) */}
       <div
         ref={offcanvasRef}
-        className={`fixed top-0 left-0 h-full max-w-xs w-full bg-smooth-gradient-5 opacity-90 shadow backdrop-blur z-20 transform transition-transform duration-700 ease-in-out ${
+        className={`fixed top-0 left-0 h-full max-w-xs w-full bg-smooth-gradient opacity-95 shadow backdrop-blur z-[60] transform transition-transform duration-700 ease-in-out ${
           isOffcanvasOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

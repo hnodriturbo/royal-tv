@@ -16,14 +16,20 @@ import prisma from '@/lib/prisma';
 export async function POST(request) {
   // 1️⃣ Parse + trim
   const { subject, message, user_id, chatType } = await request.json();
-
+  const adminUserId = request.headers.get('x-user-id');
   // 2️⃣ Validate
   if (!user_id || !subject || !message)
     return NextResponse.json(
       { error: 'user_id, subject and message are required' },
-      { status: 400 },
+      { status: 400 }
     );
-
+  const adminUser = await prisma.user.findUnique({
+    where: { user_id: adminUserId },
+    select: { role: true }
+  });
+  if (!adminUser || adminUser.role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized: admin privileges required' }, { status: 403 });
+  }
   try {
     // 3️⃣ Create the conversation first
     const convoData = { user_id, subject }; // ✅ only valid fields here
@@ -38,7 +44,7 @@ export async function POST(request) {
       user_id,
       message,
       sender_is_admin: true,
-      status: 'sent',
+      status: 'sent'
     };
 
     if (chatType === 'bubble') {
@@ -46,17 +52,14 @@ export async function POST(request) {
     } else {
       await prisma.liveChatMessage.create({ data: msgData });
     }
-
+    console.log('Message object:', msgData);
     // 5️⃣ Success
-    return NextResponse.json(
-      { conversation_id: convo.conversation_id },
-      { status: 201 },
-    );
+    return NextResponse.json({ conversation_id: convo.conversation_id }, { status: 201 });
   } catch (err) {
     console.error('❌ createConversation:', err);
     return NextResponse.json(
       { error: `Failed to create conversation: ${err.message}` },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

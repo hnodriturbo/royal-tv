@@ -12,6 +12,7 @@
  *
  * Both flows include full sender tracking (user_id or guest_id).
  */
+
 export default function registerMessageEvents(io, socket, prisma) {
   // ─── 1️⃣ LIVE-CHAT: SEND ────────────────────────────────────────
   socket.on('send_message', async ({ conversation_id, message }) => {
@@ -28,12 +29,12 @@ export default function registerMessageEvents(io, socket, prisma) {
       status: 'sent',
       // exactly one of these:
       user_id: isGuest ? null : senderId,
-      guest_id: isGuest ? senderId : null,
+      guest_id: isGuest ? senderId : null
     };
 
     let saved;
     try {
-      saved = await prisma.liveChatMessage.create({ data });
+      saved = await prisma.chatType.create({ data });
     } catch (err) {
       console.error('❌ LiveChat create failed', err);
       return;
@@ -43,14 +44,14 @@ export default function registerMessageEvents(io, socket, prisma) {
     io.to(conversation_id).emit('receive_message', {
       ...saved,
       name: socket.userData.name,
-      role: socket.userData.role,
+      role: socket.userData.role
     });
 
     // if admin sent it, update that user’s unread badge
     if (isAdmin) {
       try {
-        const userUnread = await prisma.liveChatMessage.count({
-          where: { conversation_id, sender_is_admin: true, status: 'sent' },
+        const userUnread = await prisma.message.count({
+          where: { conversation_id, sender_is_admin: true, status: 'sent' }
         });
         io.to(senderId).emit('unread_count', { unreadCount: userUnread });
       } catch (e) {
@@ -61,52 +62,47 @@ export default function registerMessageEvents(io, socket, prisma) {
     // always update global admin unread badge
     try {
       const adminUnread = await prisma.liveChatMessage.count({
-        where: { status: 'sent', sender_is_admin: false },
+        where: { status: 'sent', sender_is_admin: false }
       });
       io.emit('admin_unread_count', adminUnread);
     } catch (e) {
       console.error('❌ admin unread count failed', e);
     }
-    console.log(
-      `[isAdmin: ${isAdmin}]: received message and updated the adminUnreadCount`,
-    );
+    console.log(`[isAdmin: ${isAdmin}]: received message and updated the adminUnreadCount`);
   });
 
   // ─── 2️⃣ LIVE-CHAT: EDIT ─────────────────────────────────────────
-  socket.on(
-    'edit_message',
-    async ({ message_id, conversation_id, message }) => {
-      if (!message?.trim()) return;
-      try {
-        const orig = await prisma.liveChatMessage.findUnique({
-          where: { message_id },
-          select: { user_id: true },
-        });
-        const isOwner = orig?.user_id === socket.userData.user_id;
-        const isAdmin = socket.userData.role === 'admin';
-        if (!isOwner && !isAdmin) return;
+  socket.on('edit_message', async ({ message_id, conversation_id, message }) => {
+    if (!message?.trim()) return;
+    try {
+      const orig = await prisma.liveChatMessage.findUnique({
+        where: { message_id },
+        select: { user_id: true }
+      });
+      const isOwner = orig?.user_id === socket.userData.user_id;
+      const isAdmin = socket.userData.role === 'admin';
+      if (!isOwner && !isAdmin) return;
 
-        const updated = await prisma.liveChatMessage.update({
-          where: { message_id },
-          data: {
-            message: message.trim(),
-            status: 'edited',
-            updatedAt: new Date(),
-          },
-        });
-        io.to(conversation_id).emit('message_edited', updated);
-      } catch (err) {
-        console.error('❌ LiveChat edit failed', err);
-      }
-    },
-  );
+      const updated = await prisma.liveChatMessage.update({
+        where: { message_id },
+        data: {
+          message: message.trim(),
+          status: 'edited',
+          updatedAt: new Date()
+        }
+      });
+      io.to(conversation_id).emit('message_edited', updated);
+    } catch (err) {
+      console.error('❌ LiveChat edit failed', err);
+    }
+  });
 
   // ─── 3️⃣ LIVE-CHAT: DELETE ───────────────────────────────────────
   socket.on('delete_message', async ({ message_id, conversation_id }) => {
     try {
       const orig = await prisma.liveChatMessage.findUnique({
         where: { message_id },
-        select: { user_id: true },
+        select: { user_id: true }
       });
       const isOwner = orig?.user_id === socket.userData.user_id;
       const isAdmin = socket.userData.role === 'admin';
@@ -114,7 +110,7 @@ export default function registerMessageEvents(io, socket, prisma) {
 
       await prisma.liveChatMessage.update({
         where: { message_id },
-        data: { status: 'deleted', updatedAt: new Date() },
+        data: { status: 'deleted', updatedAt: new Date() }
       });
       io.to(conversation_id).emit('message_deleted', { message_id });
     } catch (err) {
@@ -136,7 +132,7 @@ export default function registerMessageEvents(io, socket, prisma) {
       sender_is_admin: isAdmin,
       status: 'sent',
       user_id: isGuest ? null : senderId,
-      guest_id: isGuest ? senderId : null,
+      guest_id: isGuest ? senderId : null
     };
 
     let saved;
@@ -150,7 +146,7 @@ export default function registerMessageEvents(io, socket, prisma) {
     io.to(conversation_id).emit('receive_bubble_message', {
       ...saved,
       name: socket.userData.name,
-      role: socket.userData.role,
+      role: socket.userData.role
     });
   });
 
@@ -167,20 +163,20 @@ export default function registerMessageEvents(io, socket, prisma) {
         where: {
           conversation_id,
           sender_is_admin: false,
-          status: 'sent',
+          status: 'sent'
         },
-        data: { status: 'read', readAt: new Date() },
+        data: { status: 'read', readAt: new Date() }
       });
 
       // 2) Tell *this* admin how many unread remain for that user
       const unreadCount = await prisma.liveChatMessage.count({
-        where: { conversation_id, sender_is_admin: true, status: 'sent' },
+        where: { conversation_id, sender_is_admin: true, status: 'sent' }
       });
       socket.emit('unread_count', { unreadCount });
 
       // 3) Re‑calculate global admin badge
       const adminUnread = await prisma.liveChatMessage.count({
-        where: { status: 'sent', sender_is_admin: false },
+        where: { status: 'sent', sender_is_admin: false }
       });
       io.emit('admin_unread_count', adminUnread);
 

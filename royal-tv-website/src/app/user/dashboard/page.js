@@ -21,7 +21,7 @@ import useSocket from '@/hooks/socket/useSocket';
 /* 🔘 Re‑usable gradient button ------------------------------ */
 const DashboardActionButton = ({ href, label }) => (
   <Link href={href}>
-    <button className="w-full bg-smooth-gradient py-2 px-4 rounded-lg shadow-2xl hover:shadow-md transition">
+    <button className="w-full bg-smooth-gradient py-2 px-4 rounded-lg shadow-2xl hover:shadow-md transition z-40 cursor-pointer">
       {label}
     </button>
   </Link>

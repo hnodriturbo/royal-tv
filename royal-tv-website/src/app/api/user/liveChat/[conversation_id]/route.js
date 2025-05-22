@@ -27,7 +27,7 @@ const messageSelect = {
   readAt: true,
   status: true,
   createdAt: true,
-  updatedAt: true,
+  updatedAt: true
 };
 
 /* 1️⃣  GET – conversation + messages + admin header */
@@ -42,17 +42,16 @@ export async function GET(request, context) {
         subject: true,
         updatedAt: true,
         user: {
-          select: { user_id: true, name: true, email: true, username: true },
+          select: { user_id: true, name: true, email: true, username: true }
         },
         messages: {
           orderBy: { createdAt: 'asc' },
-          select: messageSelect,
-        },
-      },
+          select: messageSelect
+        }
+      }
     });
 
-    if (!convo)
-      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (!convo) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     return NextResponse.json(convo);
   } catch (err) {
@@ -70,7 +69,7 @@ export async function POST(request, context) {
   if (!user_id || !message?.trim())
     return NextResponse.json(
       { error: 'user_id header and non‑empty message required' },
-      { status: 400 },
+      { status: 400 }
     );
 
   try {
@@ -80,14 +79,14 @@ export async function POST(request, context) {
         user_id,
         message: message.trim(),
         sender_is_admin: false,
-        status: 'sent',
+        status: 'sent'
       },
-      select: messageSelect,
+      select: messageSelect
     });
 
     await prisma.liveChatConversation.update({
       where: { conversation_id },
-      data: { updatedAt: new Date() },
+      data: { updatedAt: new Date() }
     });
 
     return NextResponse.json(newMsg, { status: 201 });
@@ -103,7 +102,7 @@ export async function PATCH(request, context) {
   try {
     await prisma.liveChatMessage.updateMany({
       where: { conversation_id, sender_is_admin: true, readAt: null },
-      data: { readAt: new Date() },
+      data: { readAt: new Date() }
     });
     return NextResponse.json({ success: true });
   } catch (err) {
@@ -119,14 +118,14 @@ export async function PUT(request) {
   if (!user_id || !message_id || !message?.trim())
     return NextResponse.json(
       { error: 'user_id header, message_id and non‑empty text required' },
-      { status: 400 },
+      { status: 400 }
     );
 
   try {
     /* ensure the caller owns the message */
     const original = await prisma.liveChatMessage.findUnique({
       where: { message_id },
-      select: { user_id: true },
+      select: { user_id: true }
     });
     if (original?.user_id !== user_id)
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -136,9 +135,9 @@ export async function PUT(request) {
       data: {
         message: message.trim(),
         status: 'edited',
-        updatedAt: new Date(),
+        updatedAt: new Date()
       },
-      select: messageSelect,
+      select: messageSelect
     });
     return NextResponse.json(edited);
   } catch (err) {
@@ -157,27 +156,24 @@ export async function DELETE(request, context) {
       /* delete single message (owner‑only) */
       const original = await prisma.liveChatMessage.findUnique({
         where: { message_id: msgId },
-        select: { user_id: true },
+        select: { user_id: true }
       });
       if (original?.user_id !== user_id)
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
       await prisma.liveChatMessage.update({
         where: { message_id: msgId },
-        data: { status: 'deleted', updatedAt: new Date() },
+        data: { status: 'deleted', updatedAt: new Date() }
       });
       return NextResponse.json({ success: true, deleted: 'message' });
     }
 
     /* delete whole conversation (must belong to user) */
     const result = await prisma.liveChatConversation.deleteMany({
-      where: { conversation_id, user_id },
+      where: { conversation_id, user_id }
     });
     if (result.count === 0)
-      return NextResponse.json(
-        { error: 'Not found or not yours' },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: 'Not found or not yours' }, { status: 404 });
 
     return NextResponse.json({ success: true, deleted: 'conversation' });
   } catch (err) {

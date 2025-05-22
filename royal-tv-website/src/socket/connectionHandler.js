@@ -10,8 +10,7 @@
 
 import registerMessageEvents from './events/messageEvents.js';
 import registerRoomEvents from './events/roomEvents.js';
-import registerSubscriptionEvents from './events/subscriptionEvents.js';
-import registerFreeTrialEvents from './events/freeTrialEvents.js';
+import registerSubscriptionEvents from './events/accountEvents.js';
 import registerUserEvents from './events/userEvents.js';
 
 const connectionHandler = (io, socket, prisma, globalState) => {
@@ -49,7 +48,6 @@ const connectionHandler = (io, socket, prisma, globalState) => {
   // ─── Register all event modules ───────────────────────────────────
 
   registerSubscriptionEvents(io, socket, prisma);
-  registerFreeTrialEvents(io, socket, prisma);
   registerUserEvents(io, socket, globalState);
   registerMessageEvents(io, socket, prisma); // handles live & bubble
   registerRoomEvents(io, socket, prisma, globalState); // handles live & bubble

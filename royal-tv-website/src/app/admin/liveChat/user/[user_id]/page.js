@@ -3,12 +3,14 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axiosInstance from '@/lib/axiosInstance';
+import Link from 'next/link';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import Pagination from '@/components/reusableUI/Pagination';
 import useModal from '@/hooks/useModal';
 import { useSession } from 'next-auth/react';
 import { useAutoRefresh } from '@/hooks/useAutoRefresh';
+import ConversationActionButton from '@/components/reusableUI/ConversationActionButton';
 
 const AdminSeeUserConversations = () => {
   const { data: session, status } = useSession();
@@ -37,29 +39,29 @@ const AdminSeeUserConversations = () => {
     try {
       showLoader({ text: 'Loading conversations...' });
 
-      const response = await axiosInstance.get(`/api/admin/liveChat/user/${user_id}`, {
+      const { data } = await axiosInstance.get(`/api/admin/liveChat/user/${user_id}`, {
         params: { page: currentPage, limit: 5 }
       });
 
       // Set the response into convs
-      const convs = response.data.conversations;
-      setTotalPages(response.data.totalPages); // ✅ add this
+      const convs = data.conversations; // The response set into convs
+      setTotalPages(data.totalPages); // ✅ Set Pages
 
       // ✅ Store username from API response
-      if (response.data.userDetails) {
-        setUsername(response.data.userDetails.name);
-        setUser(response.data.userDetails);
+      if (data.userDetails) {
+        setUsername(data.userDetails.name);
+        setUser(data.userDetails);
       }
 
       // ✅ Extract all messages from conversations into a flat array
-      const allMessages = convs.flatMap((conv) => conv.messages || []); // ✅ Handle undefined messages
-      console.log(allMessages);
-      // ✅ If only one conversation, redirect directly
-      if (convs.length === 1) {
+      /* const allMessages = convs.flatMap((conv) => conv.messages || []); */ // ✅ Handle undefined messages
+
+      // ✅ Only redirect if TOTAL conversations is 1, and we're on the first page!
+      if (data.totalPages === 1 && convs.length === 1 && currentPage === 1) {
         router.replace(`/admin/liveChat/${convs[0].conversation_id}`);
         return;
       }
-
+      // Set the conversations into conversations
       setConversations(convs);
     } catch (error) {
       displayMessage('Failed to load user conversations', 'error');
@@ -68,93 +70,6 @@ const AdminSeeUserConversations = () => {
     }
   };
 
-  const handleNewConversation = (user) => {
-    openModal('newMessage', {
-      title: `Start a New Conversation With ${user.name}`,
-      description: 'Enter a subject and message:',
-      customContent: () => (
-        <div className="flex flex-col gap-4 rounded-lg">
-          <input
-            type="text"
-            ref={inputRef}
-            className="border p-2 w-full text-black rounded-lg"
-            placeholder="Enter subject"
-          />
-          <textarea
-            ref={textAreaRef}
-            className="border p-2 w-full h-24 text-black rounded-lg"
-            placeholder="Type your message here..."
-          />
-        </div>
-      ),
-      confirmButtonText: 'Create Conversation',
-      cancelButtonText: 'Cancel',
-      onConfirm: async () => {
-        const subject = inputRef.current?.value.trim();
-        const message = textAreaRef.current?.value.trim();
-
-        if (!subject || !message) {
-          displayMessage('Subject and message cannot be empty', 'error');
-          return;
-        }
-
-        try {
-          showLoader({ text: 'Creating conversation...' });
-
-          const { data } = await axiosInstance.post('/api/admin/createConversation', {
-            subject,
-            message,
-            user_id: user.user_id,
-            chatType: 'live'
-          });
-          // Display success message
-          displayMessage('Conversation created successfully', 'success');
-          // Push to the new conversation
-          router.push(`/admin/liveChat/${data.conversation_id}`);
-        } catch (error) {
-          displayMessage(`Failed to create conversation: ${error.message}`, 'error');
-        } finally {
-          hideLoader();
-          hideModal();
-        }
-      },
-      onCancel: () => hideModal()
-    });
-  };
-
-  // Delete a whole conversations and all messages within it
-  const handleDeleteConversation = (user) => {
-    openModal('deleteConversation', {
-      title: `Delete Conversation from ${user.name}`,
-      description: 'Are you sure you want to delete this conversation:',
-      confirmButtonType: 'Danger',
-      confirmButtonText: 'Delete Conversation',
-      cancelButtonText: 'Cancel',
-      onConfirm: async () => {
-        try {
-          showLoader({ text: 'Deleting conversation...' });
-
-          // 1️⃣ Create the conversations with the params
-          await axiosInstance.delete('/api/admin/deleteConversation', {
-            params: {
-              user_id: user.user_id,
-              conversation_id: conversations.conversation_id,
-              chatType: 'live'
-            }
-          });
-          // 2️⃣ Display success message
-          displayMessage('Conversation deleted successfully', 'success');
-          fetchUserConversations();
-        } catch (error) {
-          displayMessage(`Failed to delete conversation: ${error.message}`, 'error');
-        } finally {
-          hideLoader();
-          hideModal();
-        }
-      },
-      onCancel: () => hideModal()
-    });
-  };
   // ✅ Fetch Conversations on Load
   useEffect(() => {
     if (user_id && status === 'authenticated' && isAllowed) {
@@ -188,16 +103,11 @@ const AdminSeeUserConversations = () => {
           <hr className="border border-gray-400 w-8/12 text-center items-center justify-center my-4" />
 
           <div className="flex w-full items-center justify-center my-2">
-            <button
-              onClick={() => handleNewConversation({ user_id, name: username })}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
-            >
-              New Conversation
-            </button>
+            <ConversationActionButton action="create" user_id={user?.user_id} chatType="live" />
           </div>
         </div>
         {/* ✅ Conversations Table */}
-        <div className="overflow-x-auto w-full lg:block hidden no-wrap">
+        <div className="overflow-x-auto w-full lg:block hidden">
           <table className="w-full border-collapse border border-gray-600">
             <thead className="text-center">
               <tr className="bg-gray-600 border-b-2">
@@ -236,18 +146,21 @@ const AdminSeeUserConversations = () => {
                         )}
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
-                        <button
-                          onClick={() => router.push(`/admin/liveChat/${conv.conversation_id}`)}
-                          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-                        >
-                          View Messages
-                        </button>
-                        <button
-                          onClick={handleDeleteConversation}
-                          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-                        >
-                          Delete Conversation
-                        </button>
+                        <div className="flex flex-row gap-2 justify-end no-wrap">
+                          <button
+                            className="btn-primary"
+                            onClick={() => router.push(`/admin/liveChat/${conv.conversation_id}`)}
+                          >
+                            View Messages
+                          </button>
+                          <ConversationActionButton
+                            action="delete"
+                            user_id={user.user_id}
+                            conversation_id={conv.conversation_id}
+                            chatType="live"
+                            onActionSuccess={fetchUserConversations}
+                          />
+                        </div>
                       </td>
                     </tr>
                   );
@@ -263,11 +176,11 @@ const AdminSeeUserConversations = () => {
               key={conv.conversation_id}
               className="border border-gray-300 rounded-lg p-4 shadow-sm bg-gray-500 text-md"
             >
+              <div className="flex justify-between mb-2">
+                <h3 className="font-semibold text-lg">{user.name || 'N/A'}</h3>
+                <span>E-mail: {user.email || 'N/A'}</span>
+              </div>
               <div className="space-y-1">
-                <p>
-                  <strong>Conversation ID:</strong>{' '}
-                  <span className="break-all">{conv.conversation_id}</span>
-                </p>
                 <p>
                   <strong>Subject:</strong>{' '}
                   <span title={conv.subject}>{conv.subject || 'No Subject'}</span>
@@ -284,20 +197,21 @@ const AdminSeeUserConversations = () => {
                   )}
                 </p>
               </div>
+              <div className="flex justify-center">
+                <div className="flex sm:flex-row flex-col justify-end gap-2 mt-3 sm:w-full w-10/12">
+                  <Link href={`/admin/liveChat/${conv.conversation_id}`}>
+                    <button className="btn-primary w-full">View Messages</button>
+                  </Link>
 
-              <button
-                onClick={() => router.push(`/admin/liveChat/${conv.conversation_id}`)}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-              >
-                View Messages
-              </button>
-
-              <button
-                onClick={handleDeleteConversation}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-              >
-                Delete Conversation
-              </button>
+                  <ConversationActionButton
+                    action="delete"
+                    user_id={user?.user_id}
+                    conversation_id={conv.conversation_id}
+                    chatType="live"
+                    onActionSuccess={fetchUserConversations}
+                  />
+                </div>
+              </div>
             </div>
           ))}
         </div>

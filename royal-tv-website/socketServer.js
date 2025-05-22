@@ -33,7 +33,7 @@ import { PrismaClient } from '@prisma/client';
 import { instrument } from '@socket.io/admin-ui';
 
 // Modular handler to manage connections and socket events
-import connectionHandler from './src/app/socket/connectionHandler.js';
+import connectionHandler from './src/socket/connectionHandler.js';
 
 // Initialize Prisma client (for database queries)
 const prisma = new PrismaClient();
@@ -44,8 +44,7 @@ const isProd = NODE_ENV === 'production';
 const PORT = process.env.SOCKET_PORT || 3001;
 
 // Paths for TLS certificates in production (HTTPS)
-const CERT_PATH =
-  process.env.TLS_CERT_PATH || '/etc/letsencrypt/live/royal-tv.tv';
+const CERT_PATH = process.env.TLS_CERT_PATH || '/etc/letsencrypt/live/royal-tv.tv';
 const keyFile = `${CERT_PATH}/privkey.pem`;
 const certFile = `${CERT_PATH}/fullchain.pem`;
 
@@ -57,7 +56,7 @@ if (isProd && existsSync(keyFile) && existsSync(certFile)) {
   protocol = 'https';
   server = createHttpsServer({
     key: readFileSync(keyFile),
-    cert: readFileSync(certFile),
+    cert: readFileSync(certFile)
   });
   console.log('🔐 Running in HTTPS mode');
 } else {
@@ -65,9 +64,7 @@ if (isProd && existsSync(keyFile) && existsSync(certFile)) {
   protocol = 'http';
   server = createHttpServer();
   console.log(
-    isProd
-      ? '⚠️ TLS certs missing; running in HTTP mode'
-      : '⚙️ Running in HTTP (development mode)',
+    isProd ? '⚠️ TLS certs missing; running in HTTP mode' : '⚙️ Running in HTTP (development mode)'
   );
 }
 
@@ -82,7 +79,7 @@ console.log('🌐 Allowed origins for CORS:', CLIENT_ORIGINS);
 // Initialize Socket.IO server
 const io = new Server(server, {
   path: '/socket.io',
-  cors: { origin: CLIENT_ORIGINS, credentials: true },
+  cors: { origin: CLIENT_ORIGINS, credentials: true }
 });
 
 // Optional: Configure Socket.IO Admin UI for debugging and management
@@ -91,9 +88,9 @@ if (process.env.ENABLE_ADMIN_UI === 'true') {
     auth: {
       type: 'basic',
       username: process.env.SOCKET_ADMIN_USER,
-      password: process.env.SOCKET_ADMIN_PASS,
+      password: process.env.SOCKET_ADMIN_PASS
     },
-    mode: isProd ? 'production' : 'development',
+    mode: isProd ? 'production' : 'development'
   });
   console.log('🔧 Admin UI is enabled');
 } else {
@@ -104,7 +101,7 @@ if (process.env.ENABLE_ADMIN_UI === 'true') {
 const globalState = {
   onlineUsers: {},
   activeUsersInRoom: {},
-  activeUsersInBubbleRoom: {},
+  activeUsersInBubbleRoom: {}
 };
 
 // Server identification (for logging clarity)
@@ -119,7 +116,5 @@ io.on('connection', (socket) => {
 
 // Start the server and listen on specified port
 server.listen(PORT, () => {
-  console.log(
-    `🚀 Socket.IO running on ${protocol}://${runningServer}:${PORT} [${NODE_ENV}]`,
-  );
+  console.log(`🚀 Socket.IO running on ${protocol}://${runningServer}:${PORT} [${NODE_ENV}]`);
 });

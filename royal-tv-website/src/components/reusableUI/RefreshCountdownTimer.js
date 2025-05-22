@@ -45,7 +45,7 @@ export default function RefreshCountdownTimer({
   intervalSeconds = 300,
   className = '',
   showManualRefreshButton = false,
-  showPauseToggle = false,
+  showPauseToggle = false
 }) {
   // 3️⃣ State → countdown & pause toggle
   const [secondsLeft, setSecondsLeft] = useState(intervalSeconds);
@@ -62,9 +62,7 @@ export default function RefreshCountdownTimer({
     // ▶️ Only start ticking when NOT paused
     if (!isPaused) {
       intervalIdRef.current = setInterval(() => {
-        setSecondsLeft((prevSeconds) =>
-          prevSeconds > 0 ? prevSeconds - 1 : 0,
-        );
+        setSecondsLeft((prevSeconds) => (prevSeconds > 0 ? prevSeconds - 1 : 0));
       }, 1_000);
     }
 
@@ -92,12 +90,12 @@ export default function RefreshCountdownTimer({
   // 9️⃣ Memoised formatted time to avoid extra calculations
   const formattedTime = useMemo(
     () => (isPaused ? 'paused' : formatSecondsAsMMSS(secondsLeft)),
-    [secondsLeft, isPaused],
+    [secondsLeft, isPaused]
   );
 
   // 🔟 Render
   return (
-    <div className={`flex flex-col items-center gap-2 ${className}`}>
+    <div className={`flex flex-col items-center gap-2 z-[30] relative ${className}`}>
       {/* 1️⃣ Display countdown */}
       <p className="text-sm text-gray-300">
         auto‑refresh in&nbsp;
@@ -110,7 +108,7 @@ export default function RefreshCountdownTimer({
           {showManualRefreshButton && (
             <button
               onClick={handleManualRefresh}
-              className="px-3 py-1 text-sm rounded bgögradi hover:bg-blue-700 text-white"
+              className="px-3 py-1 text-sm rounded bg-gray-600 hover:bg-blue-700 text-white"
             >
               🔁 Refresh Now
             </button>

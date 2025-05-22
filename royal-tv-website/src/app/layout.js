@@ -1,16 +1,31 @@
-/*
- * layout.js
- * Root layout for the application.
- * Wraps pages with global providers (Session, Auth, Error/Message, Loader, and Modal)
- * and includes common UI components like Header, Footer, and WhatsAppLogo.
+/**
+ *   ========================== RootLayout.js ==========================
+ * 🏠
+ * APPLICATION ROOT LAYOUT:
+ * Main entry point for the entire website.
+ * - Wraps all pages with global context providers (Session, Auth, Error/Message, Loader, Modal).
+ * - Loads global CSS and style files for the whole app.
+ * - Includes universal UI: Header, Footer, WhatsApp button, and more.
+ * - Applies a custom background image for branding and style.
+ * =====================================================================
+ * ⚙️
+ * PROPS:
+ *   children: ReactNode // All page content rendered inside the layout.
+ * =====================================================================
+ * 📌
+ * USAGE:
+ *   Place in `/app/layout.js` to ensure all pages are wrapped.
+ *   Imports and renders <AppProviders>, enabling global context and UI helpers.
+ * =====================================================================
  */
 
+// Import CSS Styles Files
 import './styles/advertisement.css';
 import './styles/border-styles.css';
 import './styles/linearGradientStyles.css';
 import './styles/extras.css';
-import './styles/myStyles.css';
 
+// End With Importing The Global CSS File And Bootstrap Icons
 import './styles/globals.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 

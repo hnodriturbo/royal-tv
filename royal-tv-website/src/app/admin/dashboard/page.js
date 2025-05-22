@@ -7,12 +7,10 @@ import useAuthGuard from '@/hooks/useAuthGuard';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import useAppHandlers from '@/hooks/useAppHandlers';
-import useSocketHub from '@/hooks/socket/useSocketHub';
-/* import OnlineUsers from '@/components/reusableUI/socket/OnlineUsers'; */
 
 const DashboardActionButton = ({ href, label }) => (
   <Link href={href}>
-    <button className="w-full bg-smooth-gradient py-2 px-4 rounded-lg shadow-2xl hover:shadow-md transition z-40">
+    <button className="w-full bg-smooth-gradient py-2 px-4 rounded-lg shadow-2xl hover:shadow-md transition z-40 cursor-pointer">
       {label}
     </button>
   </Link>
@@ -23,11 +21,10 @@ const AdminDashboard = () => {
   const { data: session, status } = useSession();
   const logout = useLogout();
   const router = useRouter();
-  const [onlineUsers, setOnlineUsers] = useState([]);
 
   // 🚀 Check authentication
   const { isAllowed, redirect } = useAuthGuard('admin');
-  const { displayMessage } = useAppHandlers();
+  const { displayMessage, showLoader, hideLoader } = useAppHandlers();
 
   /* ➡️ Redirect if not authorised once state is known */
   useEffect(() => {
@@ -38,8 +35,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="flex flex-col items-center justify-center w-full">
-      {/* <OnlineUsers /> */}
-
       <div className="container-style lg:w-[600px]">
         <h2 className="text-2xl font-bold mb-4 text-center">
           Welcome, {session?.user?.username || 'Admin'}

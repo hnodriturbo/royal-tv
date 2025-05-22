@@ -20,12 +20,12 @@ const OnlineUsers = () => {
   const currentPathname = usePathname(); // example → '/admin/liveChat/main'
 
   // 🌐 tracked list of users
-  const [onlineUsers, setOnlineUsers] = useState([]); // // holds { user_id, name, role }
+  const [onlineUsers, setOnlineUsers] = useState([]); // holds { user_id, name, role }
 
   // 🔌 socket helpers – note the correct names from useSocketHub
   const {
-    requestOnlineUsers, // // emit('request_online_users')
-    onOnlineUsersUpdate, // // listen('online_users_update')
+    requestOnlineUsers, // emit('request_online_users')
+    onOnlineUsersUpdate // listen('online_users_update')
   } = useSocketHub();
 
   // 📡 subscribe once when component mounts
@@ -40,8 +40,7 @@ const OnlineUsers = () => {
 
   // 🚧 hide component inside a single‑conversation page to keep UI clean
   //     Conversation IDs are typically 24‑char Mongo IDs or 36‑char UUIDs
-  const isChatRoomPage =
-    /^\/admin\/liveChat\/([a-f\d]{24}|[a-f\d-]{36})$/i.test(currentPathname);
+  const isChatRoomPage = /^\/admin\/liveChat\/([a-f\d]{24}|[a-f\d-]{36})$/i.test(currentPathname);
   if (isChatRoomPage) return null; // // nothing to display on that page
 
   // 💤 no users yet – prevent empty container flash
@@ -59,9 +58,7 @@ const OnlineUsers = () => {
           <div key={singleUser.user_id} className="text-white text-sm">
             <span className="text-green-500 mr-1">●</span>
             {singleUser.name}
-            <span className="ml-1 text-xs text-gray-300">
-              ({singleUser.role})
-            </span>
+            <span className="ml-1 text-xs text-gray-300">({singleUser.role})</span>
           </div>
         ))}
       </div>

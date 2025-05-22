@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import Pagination from '@/components/reusableUI/Pagination';
 import useModal from '@/hooks/useModal';
 import { useAutoRefresh } from '@/hooks/useAutoRefresh';
+import ConversationActionButton from '@/components/reusableUI/ConversationActionButton';
 
 const ConversationsPage = () => {
   const { data: session, status } = useSession();
@@ -37,41 +38,6 @@ const ConversationsPage = () => {
     }
   };
 
-  // ✅ Use Modal To Delete All Conversations From User As Admin
-  const handleDeleteConversations = (user) => {
-    openModal('deleteAllConversations', {
-      title: `Delete All Conversations From User: ${user.name || 'Unnamed'}`,
-      description: 'Are you sure you want to delete all conversations from this user?',
-      confirmButtonType: 'Danger',
-      confirmButtonText: 'Delete All Convs',
-      cancelButtonText: 'Cancel',
-
-      onConfirm: async () => {
-        try {
-          showLoader({ text: 'Deleting all conversations from user...' });
-          await axiosInstance.delete('/api/admin/deleteAllUserConversations', {
-            params: {
-              user_id: user.user_id,
-              chatType: 'live'
-            }
-          });
-          // Refresh the list
-          fetchUsersWithConversations();
-        } catch (error) {
-          displayMessage('Failed to delete all conversations from this user', 'error');
-        } finally {
-          displayMessage(
-            `All conversations from user ${user.name || user.email} deleted.`,
-            'success'
-          );
-
-          hideLoader();
-        }
-      },
-      onCancel: () => hideModal()
-    });
-  };
-
   // ✅ Fetch Conversations on Load
   useEffect(() => {
     fetchUsersWithConversations();
@@ -95,11 +61,14 @@ const ConversationsPage = () => {
   return (
     <div className="flex flex-col items-center justify-center w-full">
       <div className="container-style">
-        <div className="flex flex-col items-center text-center justify-center">
-          <h1 className="text-2xl font-bold m-4 text-center">Users with Conversations</h1>
+        <div className="flex flex-col items-center text-center justify-center text-2xl text-wonderful-3 relative">
+          <h1 className="text-wonderful-5">Users with Conversations</h1>
+
+          <hr className="border border-gray-400 w-8/12 text-center items-center justify-center my-4" />
           {Countdown}
           <hr className="border border-gray-400 w-8/12 text-center items-center justify-center my-4" />
         </div>
+
         {/* ✅ Responsive Scrollable Table */}
         <div className="overflow-x-auto w-full lg:block hidden">
           <table className="w-full border-collapse border border-gray-300">
@@ -140,13 +109,12 @@ const ConversationsPage = () => {
                           View
                         </button>
                       </Link>
-
-                      <button
-                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-                        onClick={() => handleDeleteConversations(user)}
-                      >
-                        Delete All
-                      </button>
+                      <ConversationActionButton
+                        action="deleteAll"
+                        user_id={user.user_id}
+                        chatType="live"
+                        onActionSuccess={fetchUsersWithConversations}
+                      />
                     </div>
                   </td>
                 </tr>
@@ -184,19 +152,28 @@ const ConversationsPage = () => {
                   )}
                 </p>
               </div>
-
-              <div className="flex justify-end gap-2 mt-3">
-                <Link href={`/admin/liveChat/user/${user.user_id}`}>
-                  <button className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition text-md">
-                    View
-                  </button>
-                </Link>
-                <button
-                  className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition text-md"
-                  onClick={() => handleDeleteConversations(user)}
-                >
-                  Delete All
-                </button>
+              <div className="flex justify-center">
+                <div className="flex sm:flex-row flex-col justify-end gap-2 mt-3 sm:w-full w-10/12">
+                  <Link
+                    href={`/admin/liveChat/user/${user.user_id}`}
+                    className="btn-primary sm:w-3/12 flex justify-center items-center"
+                  >
+                    <button>View</button>
+                  </Link>
+                  <ConversationActionButton
+                    action="create"
+                    user_id={user.user_id}
+                    chatType="live"
+                    onActionSuccess={fetchUsersWithConversations}
+                  />
+                  <ConversationActionButton
+                    action="deleteAll"
+                    buttonStyle="w-10/12"
+                    user_id={user.user_id}
+                    chatType="live"
+                    onActionSuccess={fetchUsersWithConversations}
+                  />
+                </div>
               </div>
             </div>
           ))}

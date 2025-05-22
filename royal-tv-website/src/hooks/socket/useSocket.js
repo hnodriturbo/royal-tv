@@ -13,14 +13,11 @@ const useSocket = () => {
       socket.on(event, cb);
       return () => socket.off(event, cb);
     },
-    [socket],
+    [socket]
   );
 
   // 📤 Emit alias (kept for backwards compatibility)
-  const emit = useCallback(
-    (event, data) => emitEvent(event, data),
-    [emitEvent],
-  );
+  const emit = useCallback((event, data) => emitEvent(event, data), [emitEvent]);
 
   return { socket, listen, emit, onEvent };
 };

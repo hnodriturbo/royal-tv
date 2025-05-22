@@ -20,7 +20,7 @@ import { useState, useEffect, useCallback } from 'react';
 export default function RefreshCountdownTimer({
   onRefresh,
   intervalSeconds = 300,
-  className = '',
+  className = ''
 }) {
   // 🧮 current countdown value (starts full)
   const [secondsLeft, setSecondsLeft] = useState(intervalSeconds);
@@ -65,7 +65,7 @@ function AdminLiveChatMain() {
 
       <RefreshCountdownTimer
         onRefresh={() => refetch(true)} // 👈 silent refresh
-        intervalSeconds={300} // ⏲️ 5 minutes
+        intervalSeconds={300} // ⏲️ 5 min
       />
       
     </div>

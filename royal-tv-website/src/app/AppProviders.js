@@ -1,3 +1,22 @@
+/**
+ *   ========================= AppProviders.js =========================
+ * ✨
+ * APPLICATION PROVIDER:
+ * For global contexts and layout.
+ * Wraps the entire app in core providers (Socket, Error, Loader, Modal).
+ * Renders global Header, Footer, WhatsApp button, and message UI.
+ * Optionally supports a full-page loader during session hydration.
+ * =======================================================================
+ * ⚙️
+ * PROPS:
+ *   children: ReactNode // All app page content/components.
+ * =======================================================================
+ * 📌
+ * USAGE:
+ *   Import and wrap your Next.js root layout or _app with <AppProviders>.
+ *   Enables app-wide access to context and UI helpers.
+ * =======================================================================
+ */
 'use client';
 
 import { useSession } from 'next-auth/react';
@@ -6,15 +25,15 @@ import { ErrorAndMessageProvider } from '@/context/ErrorAndMessageContext';
 import { ModalProvider } from '@/context/ModalContext';
 import { SocketProvider } from '@/context/SocketContext';
 
+// Header & Footer Imports
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+
+// Custom Imports
 import WhatsAppLogo from '@/components/ui/whatsapp/WhatsAppBS';
 import ShowMessages from '@/components/ui/showErrorAndMessages/ShowMessages';
 import CustomRingLoader from '@/components/ui/Loader/RingLoader';
-/* 
-import BubbleChat from '@/components/ui/liveChat/BubbleChat';
-import AdminBubbleChat from '@/components/ui/liveChat/AdminBubbleChat';
- */
+
 export default function AppProviders({ children }) {
   const { data: session, status } = useSession();
 
@@ -42,11 +61,6 @@ export default function AppProviders({ children }) {
             <div className="min-h-screen flex flex-col">
               <Header />
               <main className="flex-1 pt-14 flex items-center justify-center">{children}</main>
-              {/* 🟢 Admin Chat Bubble shown only to admin users */}
-              {/* 
-              {session?.user?.role === 'admin' && <AdminBubbleChat />}
-              {session?.user?.role !== 'admin' && <BubbleChat />}
-              */}
               <WhatsAppLogo />
               <Footer />
               <ShowMessages />
@@ -57,3 +71,28 @@ export default function AppProviders({ children }) {
     </SocketProvider>
   );
 }
+
+/* ==================================================================== */
+
+// The following loader import and block are kept for learning/testing //
+// This shows RingLoader spinner while the page loads in the beginning //
+
+/* import CustomRingLoader from '@/components/ui/Loader/RingLoader'; */
+
+/* 🌀 Full-page loader (shows while session is hydrating) */
+/* 
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-800">
+        <CustomRingLoader
+          text="Preparing your session..."
+          size="large"
+          color="#3b82f6"
+          textClassName="text-white text-lg font-semibold"
+        />
+      </div>
+    );
+  } 
+*/
+
+/* ==================================================================== */

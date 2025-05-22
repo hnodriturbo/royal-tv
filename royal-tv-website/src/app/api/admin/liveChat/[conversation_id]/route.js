@@ -20,7 +20,7 @@ const messageSelect = {
   readAt: true,
   status: true,
   createdAt: true,
-  updatedAt: true,
+  updatedAt: true
 };
 
 /* ── 1️⃣ GET – full conversation ------------------------------------ */
@@ -35,19 +35,25 @@ export async function GET(request, context) {
         subject: true,
         updatedAt: true,
         user: {
-          select: { user_id: true, name: true, email: true, username: true },
+          select: { user_id: true, name: true, email: true, username: true }
         },
         messages: {
           orderBy: { createdAt: 'asc' },
-          select: messageSelect,
-        },
-      },
+          select: messageSelect
+        }
+      }
+    });
+    const unreadCount = await prisma.liveChatMessage.count({
+      where: {
+        conversation_id,
+        readAt: null,
+        sender_is_admin: false
+      }
     });
 
-    if (!convo)
-      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (!convo) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    return NextResponse.json(convo);
+    return NextResponse.json({ ...convo, unreadCount });
   } catch (err) {
     console.error('GET [conversation_id] error:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
@@ -56,30 +62,28 @@ export async function GET(request, context) {
 
 /* ── 2️⃣ POST – add new admin message ------------------------------- */
 export async function POST(request, context) {
-  const { conversation_id } = await context.params;
-  const { user_id, message } = await request.json();
+  const { conversation_id } = context.params;
+  const { message } = await request.json();
+  const user_id = request.headers.get('x-user-id');
 
   if (!user_id || !message?.trim())
-    return NextResponse.json(
-      { error: 'user_id and non‑empty message required' },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: 'user_id and non‑empty message required' }, { status: 400 });
 
   try {
     const newMsg = await prisma.liveChatMessage.create({
       data: {
         conversation_id,
-        user_id,
+        user_id: user_id,
         message: message.trim(),
         sender_is_admin: true,
-        status: 'sent',
+        status: 'sent'
       },
-      select: messageSelect,
+      select: messageSelect
     });
 
     await prisma.liveChatConversation.update({
       where: { conversation_id },
-      data: { updatedAt: new Date() },
+      data: { updatedAt: new Date() }
     });
 
     return NextResponse.json(newMsg, { status: 201 });
@@ -97,9 +101,9 @@ export async function PATCH(request, context) {
       where: {
         conversation_id,
         sender_is_admin: false,
-        readAt: null,
+        readAt: null
       },
-      data: { readAt: new Date() },
+      data: { readAt: new Date() }
     });
     return NextResponse.json({ success: true });
   } catch (err) {
@@ -114,7 +118,7 @@ export async function PUT(request) {
   if (!message_id || !message?.trim())
     return NextResponse.json(
       { error: 'message_id and non‑empty message required' },
-      { status: 400 },
+      { status: 400 }
     );
 
   try {
@@ -123,9 +127,9 @@ export async function PUT(request) {
       data: {
         message: message.trim(),
         status: 'edited',
-        updatedAt: new Date(),
+        updatedAt: new Date()
       },
-      select: messageSelect,
+      select: messageSelect
     });
     return NextResponse.json(edited);
   } catch (err) {
@@ -142,7 +146,7 @@ export async function DELETE(request, context) {
     if (msgId) {
       await prisma.liveChatMessage.update({
         where: { message_id: msgId },
-        data: { status: 'deleted' },
+        data: { status: 'deleted' }
       });
       return NextResponse.json({ success: true, deleted: 'message' });
     }

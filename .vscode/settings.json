@@ -10,7 +10,6 @@
         "html": "html"
     },
     "tailwindCSS.experimental.configFile": "./src/app/styles/globals.css",
-    "editor.quickSuggestions": { "other": true, "comments": false, "strings": true },
     "tailwindCSS.emmetCompletions": true,
     "css.validate": false,
     "scss.validate": false,
@@ -19,5 +18,15 @@
     "scss.lint.unknownAtRules": "ignore",
     "less.lint.unknownAtRules": "ignore",
     "editor.colorDecorators": true,
-    "tailwindCSS.colorDecorators": true
+    "tailwindCSS.colorDecorators": true,
+    "tailwindCSS.experimental.classRegex": [
+        [ "class(?:Name)?\\s*=\\s*[\"'`]([^\"'`]*)[\"'`]", 1 ],
+        [ "className:\\s*[\"'`]([^\"'`]*)[\"'`]", 1 ],
+        [ "tw`([^`]*)`", 1 ],
+        [ "tw=[\"'`]([^\"'`]*)[\"'`]", 1 ],
+        [ "clsx\\(([^)]*)\\)", 1 ],
+        [ "cn\\(([^)]*)\\)", 1 ],
+        [ "class\\s*=\\s*[\"'`]([^\"'`]*)[\"'`]", 1 ]
+    ],
+    "editor.quickSuggestions": { "other": true, "comments": false, "strings": true }
 }

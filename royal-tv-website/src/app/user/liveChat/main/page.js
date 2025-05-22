@@ -18,6 +18,7 @@ import useAppHandlers from '@/hooks/useAppHandlers';
 import useModal from '@/hooks/useModal';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import Pagination from '@/components/reusableUI/Pagination';
+import useConversationActionButton from '@/components/reusableUI/ConversationActionButton';
 
 const UserConversations = () => {
   // 1️⃣ Auth helpers
@@ -66,7 +67,7 @@ const UserConversations = () => {
     },
     [router, displayMessage, showLoader, hideLoader]
   );
-  // ✅ Show modal to start a new conversation
+
   // ✅ Show modal to start a new conversation
   const handleNewConversation = () => {
     openModal('newMessage', {
@@ -175,12 +176,14 @@ const UserConversations = () => {
     <div className="flex flex-col items-center justify-center w-full">
       <div className="container-style">
         {/* Header + actions */}
-        <h1 className="text-2xl font-bold my-2 text-center">Your Conversations</h1>
+        <h1 className="text-3xl font-bold my-2 text-center">
+          <span className="super-decorative-2 bold italic">Your Conversations</span>
+        </h1>
+        <div className="flex justify-center">
+          <hr className="border border-gray-400 w-10/12 text-center items-center justify-center m-2" />
+        </div>
         <div className="flex flex-row items-center justify-center gap-4 my-4">
-          <button
-            onClick={handleNewConversation}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-          >
+          <button onClick={handleNewConversation} className="btn-outline-success border-radius-15">
             Start New Conversation
           </button>
           <Link href="/user/subscriptions">
@@ -189,7 +192,9 @@ const UserConversations = () => {
             </button>
           </Link>
         </div>
-
+        <div className="flex justify-center">
+          <hr className="border border-gray-400 w-10/12 text-center items-center justify-center m-2 mb-4" />
+        </div>
         {/* 📊 Desktop table */}
         <div className="overflow-x-auto w-full lg:block hidden">
           {conversations.length === 0 ? (

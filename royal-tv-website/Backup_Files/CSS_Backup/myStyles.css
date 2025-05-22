@@ -1,9 +1,0 @@
-@import "tailwindcss";
-
-@layer components {
-  .hover {
-    transition: all 0.3s ease-in-out;
-    transform: all 0.3s ease-in-out;
-    scale: 1.02;
-  }
-}
