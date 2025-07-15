@@ -7,18 +7,32 @@ import useAppHandlers from '@/hooks/useAppHandlers';
 
 const LoginPage = () => {
   const { displayMessage, showLoader, hideLoader } = useAppHandlers();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // 🟦 Prefill username if coming from signup
+  const initialUsername = searchParams?.get('username') || '';
+  const isSignup = searchParams?.get('signup') === 'true';
+
+  // 🟩 Local state
+  const [username, setUsername] = useState(initialUsername);
+  const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
+
   useEffect(() => {
-    const errorOrMessage = searchParams?.get('error') || searchParams?.get('message');
-    if (errorOrMessage) {
-      displayMessage(decodeURIComponent(errorOrMessage) || 'An error occurred.', 'error');
+    if (isSignup) {
+      displayMessage(
+        `Welcome, ${initialUsername}! Please enter your password to finish registration.`,
+        'success'
+      );
+    } else {
+      const errorOrMessage = searchParams?.get('error') || searchParams?.get('message');
+      if (errorOrMessage) {
+        displayMessage(decodeURIComponent(errorOrMessage) || 'An error occurred.', 'error');
+      }
     }
-  }, [searchParams, displayMessage]); // Include displayMessage in the dependency array
+    // eslint-disable-next-line
+  }, [searchParams, displayMessage]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -42,7 +56,13 @@ const LoginPage = () => {
         displayMessage('Wrong username or password', 'error');
       } else {
         displayMessage('Login successful! Redirecting...', 'success');
-        setTimeout(() => router.replace('/auth/middlePage?login=true'), 2000);
+        // 1️⃣ Find redirectTo or fallback to default
+        const redirectTo = searchParams?.get('redirectTo') || '';
+
+        // 2️⃣ Pass redirectTo as query to middlePage (so middlePage can use it!)
+        const middlePageUrl = `/auth/middlePage?login=true${redirectTo ? `&redirectTo=${encodeURIComponent(redirectTo)}` : ''}`;
+        setTimeout(() => router.replace(middlePageUrl), 2000);
+        /* setTimeout(() => router.replace('/auth/middlePage?login=true'), 2000); */
       }
     } catch (error) {
       displayMessage(`Login error: ${error}`, 'error');
@@ -52,8 +72,8 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full flex-col">
-      <div className="container-style lg:w-[700px]">
+    <div className="flex items-center justify-center w-full mt-20">
+      <div className="container-style lg:w-[700px] mx-auto my-12">
         <h1 className="text-4xl font-semibold text-center mb-5 super-decorative-2">
           Login to your dashboard
         </h1>
@@ -65,6 +85,7 @@ const LoginPage = () => {
             placeholder="Enter your username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            autoFocus // focus for smoother UX
           />
           <input
             id="password"

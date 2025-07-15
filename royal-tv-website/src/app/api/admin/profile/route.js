@@ -1,23 +1,17 @@
-'use server';
-
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-/* import { getToken } from 'next-auth/jwt'; */
-import { auth } from '@/lib/auth';
 
 export async function GET(request) {
   try {
-    const token = await auth(request); // ✅ correct usage
-    console.log('token on the backend: ', token);
-    const user_id = token?.user_id;
-
-    if (!token) {
-      return NextResponse.json({ error: 'No token found' }, { status: 401 });
-    }
+    const user_id = request.headers.get('x-user-id');
+    const user_role = request.headers.get('x-user-role');
     if (!user_id) {
+      return NextResponse.json({ error: 'User ID not found!' }, { status: 401 });
+    }
+    if (user_role !== 'admin') {
       return NextResponse.json(
-        { error: 'Unauthorized: User ID not found in token' },
-        { status: 401 },
+        { error: 'You must be an admin for this path to work' },
+        { status: 401 }
       );
     }
 
@@ -30,7 +24,12 @@ export async function GET(request) {
         username: true,
         whatsapp: true,
         telegram: true,
-      },
+        preferredContactWay: true,
+        sendEmails: true,
+        createdAt: true,
+        updatedAt: true,
+        role: true
+      }
     });
 
     if (!user) {
@@ -40,28 +39,31 @@ export async function GET(request) {
     return NextResponse.json(user);
   } catch (error) {
     console.error('[API GET] Error fetching user profile:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch user profile' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Failed to fetch user profile' }, { status: 500 });
   }
 }
 
 export async function PATCH(request) {
   try {
-    const { user_id, name, email, username, whatsapp, telegram } =
+    const user_id = request.headers.get('x-user-id');
+
+    if (!user_id) {
+      return NextResponse.json({ error: 'User ID not found!' }, { status: 401 });
+    }
+    // PATCH
+    const { name, email, username, whatsapp, telegram, preferredContactWay, sendEmails } =
       await request.json();
 
     if (!user_id) {
       return NextResponse.json(
         { error: 'User ID is required in the request body' },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     const updatedUser = await prisma.user.update({
       where: { user_id },
-      data: { name, email, username, whatsapp, telegram },
+      data: { name, email, username, whatsapp, telegram, preferredContactWay, sendEmails },
       select: {
         user_id: true,
         name: true,
@@ -69,7 +71,12 @@ export async function PATCH(request) {
         username: true,
         whatsapp: true,
         telegram: true,
-      },
+        preferredContactWay: true,
+        sendEmails: true,
+        createdAt: true,
+        updatedAt: true,
+        role: true
+      }
     });
 
     return NextResponse.json(updatedUser);
@@ -80,9 +87,9 @@ export async function PATCH(request) {
         error:
           process.env.NODE_ENV === 'development'
             ? `Internal Server Error: ${error.message}` // 🧪 Show full message in dev
-            : 'Internal Server Error', // 🔐 Hide it in production
+            : 'Internal Server Error' // 🔐 Hide it in production
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

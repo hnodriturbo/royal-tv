@@ -34,12 +34,8 @@ export const useAutoRefresh = (
   fetchFunction,
   {
     intervalSeconds = 600, // ⏲️ 10 min by default
-    uiOptions: {
-      showCountdown = true,
-      showManualButton = false,
-      showPauseToggle = false,
-    } = {},
-  } = {},
+    uiOptions: { showCountdown = true, showManualButton = false, showPauseToggle = false } = {}
+  } = {}
 ) => {
   // 🪝 Stable wrapper so RefreshCountdownTimer never re‑creates the interval
   const handleRefresh = useCallback(() => {
@@ -47,7 +43,7 @@ export const useAutoRefresh = (
   }, [fetchFunction]);
 
   // 🎛️ Build the optional UI once (or null if hidden)
-  const Countdown = showCountdown ? (
+  const AutoRefresh = showCountdown ? (
     <RefreshCountdownTimer
       onRefresh={handleRefresh}
       intervalSeconds={intervalSeconds}
@@ -57,5 +53,5 @@ export const useAutoRefresh = (
   ) : null;
 
   // 🎁 Expose the ready‑made component
-  return { Countdown };
+  return { AutoRefresh };
 };

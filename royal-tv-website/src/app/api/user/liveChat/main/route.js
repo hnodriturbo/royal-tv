@@ -1,97 +1,83 @@
-/* ──────────────────────────  ADD THIS INSTEAD  ────────────────────────── */
 /**
- * GET /api/user/liveChat/main?page=1&limit=5
- * ------------------------------------------
- * Headers:
- *   • x-user-id: current user’s ID  (injected by middleware / axios)
+ * GET /api/users/liveChat/main
+ * ----------------------------
+ * Query-params
+ *   • page   : number default 1
+ *   • limit  : number default 5
+ * Headers
+ *   • x-user-id: user UUID (required)
  *
- * Returns paginated list of this user’s conversations, each with:
- *   • subject, updatedAt, lastMessageAt, unreadCount
- * Plus global pagination + how many convs still have unread admin replies.
+ * Returns
+ *   {
+ *     conversations : [{
+ *       conversation_id : string
+ *       subject         : string | null
+ *       updatedAt       : string (ISO)
+ *       unreadCount     : number // unread user messages for this convo
+ *       totalMessages   : number
+ *     }],
+ *     totalPages  : number
+ *   }
  */
-
-'use server';
 
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
 export async function GET(request) {
   try {
-    /* 1️⃣  Current user */
+    // 🔑 Extract user ID from header
     const user_id = request.headers.get('x-user-id');
-    if (!user_id) {
-      return NextResponse.json(
-        { error: 'x-user-id header missing' },
-        { status: 400 },
-      );
-    }
+    if (!user_id) return NextResponse.json({ error: 'User ID required' }, { status: 401 });
 
-    /* 2️⃣  Pagination params */
-    const url = new URL(request.url);
-    const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
-    const limit = Math.max(1, parseInt(url.searchParams.get('limit') || '5'));
+    // 📑 Pagination
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, Number(searchParams.get('page') ?? 1));
+    const limit = Math.max(1, Number(searchParams.get('limit') ?? 5));
     const skip = (page - 1) * limit;
 
-    /* 3️⃣  Count all conversations for this user */
-    const totalConversations = await prisma.liveChatConversation.count({
-      where: { user_id },
-    });
-
-    /* 4️⃣  Fetch one page with unread counts + last message timestamp */
-    const conversations = await prisma.liveChatConversation.findMany({
-      where: { user_id },
-      orderBy: { updatedAt: 'desc' },
+    // 🗣️ Fetch conversations for this user (owner_id)
+    const rawConvos = await prisma.liveChatConversation.findMany({
+      where: { owner_id: user_id },
       skip,
       take: limit,
+      orderBy: { updatedAt: 'desc' },
       select: {
         conversation_id: true,
         subject: true,
         updatedAt: true,
-        /* newest message timestamp */
         messages: {
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-          select: { createdAt: true },
-        },
-        /* unread admin‑sent messages */
-        _count: {
           select: {
-            messages: {
-              where: { sender_is_admin: true, readAt: null },
-            },
-          },
-        },
-      },
+            message_id: true,
+            readAt: true,
+            sender_is_admin: true
+          }
+        }
+      }
     });
 
-    /* 5️⃣  Map helpers */
-    const mapped = conversations.map((c) => ({
+    // 🔄 Map to response structure
+    const conversations = rawConvos.map((c) => ({
       conversation_id: c.conversation_id,
       subject: c.subject,
       updatedAt: c.updatedAt,
-      lastMessageAt: c.messages[0]?.createdAt || c.updatedAt,
-      unreadCount: c._count.messages,
+      unreadCount: c.messages.filter(
+        (m) => m.readAt === null && m.sender_is_admin // unread admin messages for user
+      ).length,
+      totalMessages: c.messages.length
     }));
 
-    /* how many convs still have ANY unread admin replies */
-    const unreadConvoCount = mapped.filter((c) => c.unreadCount > 0).length;
-
-    /* 6️⃣  Respond */
-    return NextResponse.json({
-      conversations: mapped,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalConversations / limit),
-        totalConversations,
-        pageSize: limit,
-      },
-      unreadConvoCount,
+    // 📄 Pagination helpers
+    const totalConvos = await prisma.liveChatConversation.count({
+      where: { owner_id: user_id }
     });
+    const totalPages = Math.ceil(totalConvos / limit);
+
+    return NextResponse.json({ conversations, totalPages });
   } catch (err) {
-    console.error('❌ API Error in fetching conversations:', err);
+    console.error('🔥 [users/liveChat/main] failed:', err);
     return NextResponse.json(
-      { error: 'Failed to fetch conversations' },
-      { status: 500 },
+      { error: `Failed to fetch conversations: ${err.message}` },
+      { status: 500 }
     );
   }
 }

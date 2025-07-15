@@ -15,7 +15,7 @@ const useAppRedirectHandlers = () => {
       messageDelay = 3000, // Default delay for messages
       loaderText,
       loaderOnly = false, // New parameter to control whether only the loader is shown
-      pageDelay = 3000, // Default navigation delay
+      pageDelay = 3000 // Default navigation delay
     }) => {
       // Show message if not in loaderOnly mode
       if (!loaderOnly) {
@@ -35,7 +35,7 @@ const useAppRedirectHandlers = () => {
         if (!loaderOnly) displayMessage(''); // Clear message if it was displayed
       }, pageDelay + 500); // Ensure cleanup happens after navigation
     },
-    [showLoader, hideLoader, displayMessage, router],
+    [showLoader, hideLoader, displayMessage, router]
   );
 
   return { redirectWithMessage };

@@ -26,7 +26,7 @@ export const LoaderProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [loaderConfig, setLoaderConfig] = useState({
     text: 'Loading...',
-    textClassName: 'text2xl text-wonderful-5 text-center m-2 z-[100]',
+    textClassName: 'text2xl text-wonderful-5 text-center m-2 z-[9999]',
     size: 'medium',
     color: 'blue',
     background: true
@@ -121,16 +121,19 @@ export const LoaderProvider = ({ children }) => {
       {isLoading &&
         ReactDOM.createPortal(
           <div
-            className={`fixed inset-0 flex items-center justify-center z-[100] ${
+            className={`fixed inset-0 z-[9999] flex items-center justify-center ${
               loaderConfig.background ? 'bg-black/50' : ''
             }`}
           >
-            <RingLoader
-              size={loaderConfig.size}
-              color={loaderConfig.color}
-              text={loaderConfig.text}
-              textClassName={loaderConfig.textClassName}
-            />
+            <div className="ml-64 flex flex-col items-center">
+              <RingLoader
+                size={loaderConfig.size}
+                color={loaderConfig.color}
+                text={loaderConfig.text}
+                textClassName={loaderConfig.textClassName}
+              />
+              {/* Text, if not inside RingLoader */}
+            </div>
           </div>,
           document.body
         )}

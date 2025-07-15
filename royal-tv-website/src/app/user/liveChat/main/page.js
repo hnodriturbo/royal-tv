@@ -1,10 +1,7 @@
-// 📁 app/user/liveChat/main/page.js
 /**
  * Lists the logged‑in user’s live‑chat conversations
  * with pagination and responsive (table ↔ mobile‑card) layout.
  */
-
-'use client';
 
 'use client';
 
@@ -18,7 +15,7 @@ import useAppHandlers from '@/hooks/useAppHandlers';
 import useModal from '@/hooks/useModal';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import Pagination from '@/components/reusableUI/Pagination';
-import useConversationActionButton from '@/components/reusableUI/ConversationActionButton';
+import ConversationActionButton from '@/components/reusableUI/ConversationActionButton';
 
 const UserConversations = () => {
   // 1️⃣ Auth helpers
@@ -26,18 +23,14 @@ const UserConversations = () => {
   const { isAllowed, redirect } = useAuthGuard('user');
   const router = useRouter();
   const [userId, setUserId] = useState('');
+
   // 2️⃣ UX helpers
   const { displayMessage, showLoader, hideLoader } = useAppHandlers();
-  const { openModal, hideModal } = useModal();
 
   // 3️⃣ Local state
   const [conversations, setConversations] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
-  // 4️⃣ Refs for “new conversation” modal
-  const subjectInputRef = useRef(null);
-  const textAreaRef = useRef(null);
 
   /* ────────────────────────────────────────────────────────────────
      Fetch helper — paginated conversations
@@ -50,110 +43,33 @@ const UserConversations = () => {
           params: { page, limit: 5 }
         });
 
-        setConversations(data.conversations);
-        setTotalPages(data.pagination.totalPages);
-        setUserId(conversations.user_id);
+        // Defensive: fallback empty array if missing
+        setConversations(Array.isArray(data.conversations) ? data.conversations : []);
+        // Defensive: fallback 1 if missing
+        setTotalPages(data.pagination?.totalPages || 1);
+
+        // Defensive: set user id (session or first conversation)
+        if (session?.user?.user_id) {
+          setUserId(session.user.user_id);
+        } else if (data.conversations && data.conversations.length > 0) {
+          setUserId(data.conversations[0].user_id);
+        }
         // 🚀 jump when only one convo
-        if (data.pagination.totalConversations === 1) {
+        if (data.pagination?.totalConversations === 1 && data.conversations.length === 1) {
           router.replace(`/user/liveChat/${data.conversations[0].conversation_id}`);
         }
       } catch (err) {
         console.error('❌ Fetch conversations failed:', err?.response || err);
         displayMessage('Failed to load conversations', 'error');
+        setConversations([]); // fallback
+        setTotalPages(1); // fallback
       } finally {
         displayMessage('conversations fetched successfully', 'success');
         hideLoader();
       }
     },
-    [router, displayMessage, showLoader, hideLoader]
+    [router, displayMessage, showLoader, hideLoader, session]
   );
-
-  // ✅ Show modal to start a new conversation
-  const handleNewConversation = () => {
-    openModal('newMessage', {
-      title: 'Start a New Conversation',
-      description: 'Enter a subject and message:',
-      customContent: () => (
-        <div className="flex flex-col gap-4 rounded-lg">
-          <input
-            type="text"
-            ref={subjectInputRef}
-            className="border p-2 w-full text-black rounded-lg"
-            placeholder="Enter subject"
-          />
-          <textarea
-            ref={textAreaRef}
-            className="border p-2 w-full h-24 text-black rounded-lg"
-            placeholder="Type your message here..."
-          />
-        </div>
-      ),
-      confirmButtonText: 'Send',
-      cancelButtonText: 'Cancel',
-      onConfirm: async () => {
-        const subject = subjectInputRef.current?.value.trim();
-        const message = textAreaRef.current?.value.trim();
-
-        if (!subject || !message) {
-          displayMessage('Subject and message cannot be empty', 'error');
-          return;
-        }
-
-        try {
-          showLoader({ text: 'Creating conversation...' });
-
-          const { data } = await axiosInstance.post('/api/user/createConversation', {
-            subject,
-            message,
-            chatType: 'live'
-          });
-
-          // Display success message
-          displayMessage('Conversation created successfully', 'success');
-
-          // ✅ Correct frontend redirect with received conversation_id
-          router.push(`/user/liveChat/${data.conversation_id}`);
-        } catch (error) {
-          displayMessage('Failed to create conversation', 'error');
-        } finally {
-          hideLoader();
-          hideModal();
-        }
-      },
-      onCancel: () => hideModal()
-    });
-  };
-
-  // ✅ Show modal to delete a conversation
-  const handleDeleteConversation = (conversation_id) => {
-    openModal('deleteConversation', {
-      title: 'Delete Conversation',
-      description:
-        'Are you sure you want to delete this whole conversation and the messages within it?',
-      confirmButtonText: 'Delete',
-      confirmButtonType: 'Danger',
-      cancelButtonText: 'Cancel',
-      onConfirm: async () => {
-        try {
-          showLoader({ text: 'Deleting conversation...' });
-
-          await axiosInstance.delete('/api/user/deleteConversation', {
-            data: { conversation_id, chatType: 'live' }
-          });
-          // Display success message
-          displayMessage('Conversation Deleted Successfully', 'success');
-          // Refresh the conversation list
-          fetchUserConversations(currentPage);
-        } catch (error) {
-          displayMessage('Failed to create conversation', 'error');
-        } finally {
-          hideLoader();
-          hideModal();
-        }
-      },
-      onCancel: () => hideModal()
-    });
-  };
 
   // Fetch the conversations
   useEffect(() => {
@@ -183,14 +99,16 @@ const UserConversations = () => {
           <hr className="border border-gray-400 w-10/12 text-center items-center justify-center m-2" />
         </div>
         <div className="flex flex-row items-center justify-center gap-4 my-4">
-          <button onClick={handleNewConversation} className="btn-outline-success border-radius-15">
-            Start New Conversation
-          </button>
-          <Link href="/user/subscriptions">
-            <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
-              See My Subscriptions
-            </button>
-          </Link>
+          {/* 🟢 Start New Conversation Button */}
+          <ConversationActionButton
+            action="create"
+            user_id={userId}
+            user={session?.user}
+            isAdmin={false}
+            buttonClass="btn-success border-radius-15"
+            buttonText="Start New Conversation"
+            onActionSuccess={() => fetchUserConversations(currentPage)}
+          />
         </div>
         <div className="flex justify-center">
           <hr className="border border-gray-400 w-10/12 text-center items-center justify-center m-2 mb-4" />
@@ -234,12 +152,16 @@ const UserConversations = () => {
                       >
                         View
                       </button>
-                      <button
-                        onClick={() => handleDeleteConversation(conv.conversation_id)}
-                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition text-sm"
-                      >
-                        Delete
-                      </button>
+                      <ConversationActionButton
+                        action="delete"
+                        user_id={userId}
+                        conversation_id={conv.conversation_id}
+                        chatType="live"
+                        isAdmin={false}
+                        buttonClass="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition text-sm"
+                        buttonText="Delete"
+                        onActionSuccess={() => fetchUserConversations(currentPage)}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -279,12 +201,16 @@ const UserConversations = () => {
                 >
                   View
                 </button>
-                <button
-                  onClick={() => handleDeleteConversation(conv.conversation_id)}
-                  className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition text-sm"
-                >
-                  Delete
-                </button>
+                <ConversationActionButton
+                  action="delete"
+                  user_id={userId}
+                  conversation_id={conv.conversation_id}
+                  chatType="live"
+                  isAdmin={false}
+                  buttonClass="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition text-sm"
+                  buttonText="Delete"
+                  onActionSuccess={() => fetchUserConversations(currentPage)}
+                />
               </div>
             </div>
           ))}

@@ -35,7 +35,7 @@ const MoreInfoPage = () => {
 
   return (
     <>
-      <div className="flex flex-col items-center justify-center w-full mx-auto mt-20">
+      <div className="flex flex-col items-center w-full lg:mt-0 mt-12">
         {/* ✅ Thank you banner */}
         {/*         {showThankYou && (
           <div className="p-6 mb-6 text-3xl font-semibold text-center container-style lg:w-8/12 w-11/12">
@@ -52,6 +52,23 @@ const MoreInfoPage = () => {
             onComplete={() => setShowThankYou(false)}
           />
         )}
+        <div className="container-style lg:w-8/12 w-11/12 p-6 text-center mb-6">
+          {/* ✅ Section: Choose your IPTV app */}
+          <h2 className="text-3xl font-bold mb-4">Choose Your IPTV App</h2>
+          <p className="mb-4">
+            We highly recommend that you explore the IPTV app you plan to use with your subscription
+            or trial. Once we’re in contact, the process is quick and easy. After completing your
+            purchase, we’ll send your login credentials.
+          </p>
+          <p className="mb-4">
+            Our top recommendation is <strong>MaxPlayer</strong> (compatible with all devices).
+          </p>
+          <p className="mb-4">
+            We also suggest <strong>TiviMate</strong> (works on Android, Firestick, and Android TV)
+            and <strong>Smarters Player Lite</strong> (compatible with iOS, Android, Firestick,
+            Windows, and macOS).
+          </p>
+        </div>
         <div className="p-6 text-center container-style lg:w-8/12 w-11/12">
           {/* ✅ Section: Choose your IPTV app */}
           <h2 className="mb-4 text-3xl font-bold">Choose Your IPTV App</h2>

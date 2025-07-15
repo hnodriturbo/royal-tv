@@ -4,15 +4,23 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
-export async function PUT(req) {
+export async function PUT(request) {
   try {
-    const { user_id, oldPassword, newPassword } = await req.json();
+    const user_id = request.headers.get('x-user-id');
+    const user_role = request.headers.get('x-user-role');
+    if (!user_id) {
+      return NextResponse.json({ error: 'User ID not found!' }, { status: 401 });
+    }
+    if (user_role !== 'admin') {
+      return NextResponse.json(
+        { error: 'You must be an admin for this path to work' },
+        { status: 401 }
+      );
+    }
+    const { oldPassword, newPassword } = await request.json();
 
     if (!user_id || !oldPassword || !newPassword) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const user = await prisma.user.findUnique({ where: { user_id } });
@@ -23,25 +31,19 @@ export async function PUT(req) {
 
     const passwordMatch = await bcrypt.compare(oldPassword, user.password);
     if (!passwordMatch) {
-      return NextResponse.json(
-        { error: 'Incorrect old password' },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: 'Incorrect old password' }, { status: 400 });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     await prisma.user.update({
       where: { user_id },
-      data: { password: hashedPassword },
+      data: { password: hashedPassword }
     });
 
     return NextResponse.json({ message: 'Password updated successfully' });
   } catch (error) {
     console.error('[API PUT] Error updating password:', error);
-    return NextResponse.json(
-      { error: `internal server error: ${error.message}` },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: `internal server error: ${error.message}` }, { status: 500 });
   }
 }

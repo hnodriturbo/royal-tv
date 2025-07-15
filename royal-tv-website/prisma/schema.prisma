@@ -8,24 +8,24 @@ datasource db {
 }
 
 model User {
-  user_id                 String                   @id @default(uuid()) @db.Uuid
-  name                    String
-  email                   String                   @unique
-  username                String                   @unique
-  password                String
-  role                    Role                     @default(user)
-  whatsapp                String?
-  telegram                String?
-  preferredContactWay     PreferredContactWay      @default(email)
-  createdAt               DateTime                 @default(now())
-  updatedAt               DateTime                 @updatedAt
-  bubbleChatConversations BubbleChatConversation[] @relation("BubbleConversations")
-  bubbleChatMessages      BubbleChatMessage[]      @relation("BubbleMessages")
-  freeTrials              FreeTrial[]              @relation("UserFreeTrials")
-  liveChatConversations   LiveChatConversation[]
-  liveChatMessages        LiveChatMessage[]
-  subscriptions           Subscription[]           @relation("UserSubscriptions")
-  subscriptionPayments    SubscriptionPayment[]
+  user_id               String                 @id @default(uuid()) @db.Uuid
+  name                  String
+  email                 String                 @unique
+  username              String                 @unique
+  password              String
+  role                  Role                   @default(user)
+  whatsapp              String?
+  telegram              String?
+  preferredContactWay   PreferredContactWay    @default(email)
+  sendEmails            Boolean                @default(true)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  freeTrials            FreeTrial[]            @relation("UserFreeTrials")
+  liveChatConversations LiveChatConversation[] @relation("LiveConversations")
+  liveChatMessages      LiveChatMessage[]      @relation("LiveMessages")
+  subscriptions         Subscription[]         @relation("UserSubscriptions")
+  subscriptionPayments  SubscriptionPayment[]  @relation("UserSubscriptionPayments")
+  notifications         Notification[]         @relation("UserNotifications")
 
   @@index([username])
   @@index([email])
@@ -38,8 +38,8 @@ model LiveChatConversation {
   read            Boolean           @default(false)
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
-  owner           User              @relation(fields: [owner_id], references: [user_id], onDelete: Cascade, map: "LiveChatConversation_user_id_fkey")
-  messages        LiveChatMessage[]
+  owner           User              @relation("LiveConversations", fields: [owner_id], references: [user_id], onDelete: Cascade, map: "LiveChatConversation_user_id_fkey")
+  messages        LiveChatMessage[] @relation("LiveMessages")
 
   @@index([owner_id], map: "LiveChatConversation_user_id_idx")
 }
@@ -55,49 +55,18 @@ model LiveChatMessage {
   readAt          DateTime?
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
-  conversation    LiveChatConversation @relation(fields: [conversation_id], references: [conversation_id], onDelete: Cascade)
-  sender          User?                @relation(fields: [sender_id], references: [user_id], onDelete: Cascade, map: "LiveChatMessage_user_id_fkey")
+  conversation    LiveChatConversation @relation("LiveMessages", fields: [conversation_id], references: [conversation_id], onDelete: Cascade)
+  sender          User?                @relation("LiveMessages", fields: [sender_id], references: [user_id], onDelete: Cascade, map: "LiveChatMessage_user_id_fkey")
 
   @@index([conversation_id])
   @@index([status])
   @@index([sender_id], map: "LiveChatMessage_user_id_idx")
 }
 
-model BubbleChatConversation {
-  conversation_id String              @id @default(uuid()) @db.Uuid
-  owner_id        String?             @db.Uuid
-  subject         String?
-  read            Boolean             @default(false)
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  owner           User?               @relation("BubbleConversations", fields: [owner_id], references: [user_id], onDelete: Cascade, map: "BubbleChatConversation_user_id_fkey")
-  messages        BubbleChatMessage[] @relation("BubbleMessages")
-
-  @@index([owner_id], map: "BubbleChatConversation_user_id_idx")
-}
-
-model BubbleChatMessage {
-  message_id      String                 @id @default(uuid()) @db.Uuid
-  conversation_id String                 @db.Uuid
-  sender_id       String?                @db.Uuid
-  guest_id        String?
-  sender_is_admin Boolean                @default(false)
-  message         String
-  status          MessageStatus          @default(sent)
-  createdAt       DateTime               @default(now())
-  updatedAt       DateTime               @updatedAt
-  readAt          DateTime?              @db.Timestamp(6)
-  conversation    BubbleChatConversation @relation("BubbleMessages", fields: [conversation_id], references: [conversation_id], onDelete: Cascade)
-  sender          User?                  @relation("BubbleMessages", fields: [sender_id], references: [user_id], onDelete: Cascade, map: "BubbleChatMessage_user_id_fkey")
-
-  @@index([conversation_id])
-  @@index([sender_id], map: "BubbleChatMessage_user_id_idx")
-}
-
 model Subscription {
   subscription_id       String                @id @default(uuid()) @db.Uuid
   user_id               String                @db.Uuid
-  plan                  String?
+  order_id              String?
   subscription_username String?
   subscription_password String?
   subscription_url      String?
@@ -119,9 +88,9 @@ model SubscriptionPayment {
   id              String        @id @default(uuid()) @db.Uuid
   user_id         String        @db.Uuid
   subscription_id String?       @db.Uuid
-  payment_id      String
+  payment_id      String?       @unique
   order_id        String
-  invoice_id      String?       @unique
+  invoice_id      String?
   status          PaymentStatus
   currency        String?
   amount_paid     Float?
@@ -132,8 +101,8 @@ model SubscriptionPayment {
   received_at     DateTime?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
-  subscription    Subscription? @relation(fields: [subscription_id], references: [subscription_id])
-  user            User          @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  subscription    Subscription? @relation(fields: [subscription_id], references: [subscription_id], onDelete: Cascade)
+  user            User          @relation("UserSubscriptionPayments", fields: [user_id], references: [user_id], onDelete: Cascade)
 
   @@index([payment_id])
   @@index([user_id])
@@ -159,6 +128,21 @@ model FreeTrial {
   @@index([status])
 }
 
+model Notification {
+  notification_id String           @id @default(uuid()) @db.Uuid
+  user_id         String           @db.Uuid
+  title           String
+  body            String
+  link            String?
+  type            NotificationType
+  is_read         Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  user            User             @relation("UserNotifications", fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id])
+}
+
 enum Role {
   admin
   user
@@ -168,6 +152,7 @@ enum PreferredContactWay {
   email
   whatsapp
   telegram
+  website
 }
 
 enum MessageStatus {
@@ -198,4 +183,13 @@ enum PaymentStatus {
 enum FreeTrialStatus {
   active
   disabled
+  pending
+}
+
+enum NotificationType {
+  subscription
+  payment
+  freeTrial
+  liveChatMessage
+  newUserRegistration
 }

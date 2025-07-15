@@ -1,32 +1,30 @@
+/**
+ *   =========================== page.js ===========================
+ * 👑 ADMIN DASHBOARD
+ * - NotificationCenter and Admin Menu stacked, same width.
+ * - Both always top-aligned, centered horizontally, not vertically.
+ * =================================================================
+ */
+
 'use client';
 
-import Link from 'next/link';
-import useLogout from '@/hooks/useLogout';
 import { useSession } from 'next-auth/react';
+import { useEffect } from 'react';
+import useLogout from '@/hooks/useLogout';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import useAppHandlers from '@/hooks/useAppHandlers';
-
-const DashboardActionButton = ({ href, label }) => (
-  <Link href={href}>
-    <button className="w-full bg-smooth-gradient py-2 px-4 rounded-lg shadow-2xl hover:shadow-md transition z-40 cursor-pointer">
-      {label}
-    </button>
-  </Link>
-);
-
-const AdminDashboard = () => {
-  // ✅ Local State
+import DashboardActionButton from '@/components/reusableUI/DashboardActionButton';
+import NotificationCenter from '@/components/reusableUI/socket/NotificationCenter';
+import OnlineUsers from '@/components/reusableUI/socket/OnlineUsers';
+import IsAdminOnline from '@/components/reusableUI/socket/IsAdminOnline';
+export default function AdminDashboard() {
+  // 👤 Auth/session setup
   const { data: session, status } = useSession();
+  const { isAllowed, redirect } = useAuthGuard('admin');
   const logout = useLogout();
   const router = useRouter();
 
-  // 🚀 Check authentication
-  const { isAllowed, redirect } = useAuthGuard('admin');
-  const { displayMessage, showLoader, hideLoader } = useAppHandlers();
-
-  /* ➡️ Redirect if not authorised once state is known */
+  // 🔒 Redirect protection
   useEffect(() => {
     if (status !== 'loading' && !isAllowed && redirect) router.replace(redirect);
   }, [status, isAllowed, redirect, router]);
@@ -34,8 +32,17 @@ const AdminDashboard = () => {
   if (!isAllowed) return null;
 
   return (
-    <div className="flex flex-col items-center justify-center w-full">
-      <div className="container-style lg:w-[600px]">
+    // 🟪 STACKED layout, always top-aligned, centered horizontally
+    <div className="flex flex-col items-center justify-start w-full min-h-screen gap-8">
+      <div className="container-style w-6/12">
+        <IsAdminOnline />
+      </div>
+      <div className="flex w-8/12 items-center justify-center">
+        <OnlineUsers />
+      </div>
+
+      {/* 🗂️ Admin menu card (matches NotificationCenter width) */}
+      {/*  <div className="container-style w-11/12 max-w-[600px] mx-auto">
         <h2 className="text-2xl font-bold mb-4 text-center">
           Welcome, {session?.user?.username || 'Admin'}
         </h2>
@@ -46,24 +53,11 @@ const AdminDashboard = () => {
           User ID: <span className="font-medium">{session?.user?.user_id}</span>
         </p>
 
-        <div className="grid lg:grid-cols-2 grid-cols-1 gap-4 w-full px-4">
-          <DashboardActionButton href="/admin/users/main" label="Manage Users" />
-          <DashboardActionButton href="/admin/subscriptions" label="Show Subscriptions" />
-          <DashboardActionButton href="/admin/liveChat/main" label="View Live Chats" />
-          <DashboardActionButton href="/admin/bubbleChat/main" label="View Bubble Chats" />
-          <DashboardActionButton href="/admin/profile" label="View Your Profile" />
-        </div>
-        <div className="mt-8 flex justify-center items-center">
-          <button
-            onClick={logout}
-            className="bg-red-500 px-4 py-2 rounded hover:bg-red-800 transition duration-700"
-          >
-            Logout
-          </button>
-        </div>
+      </div> */}
+      {/* 🔔 Notification Center panel */}
+      <div className="w-11/12 max-w-[600px] mx-auto">
+        <NotificationCenter userRole="admin" />
       </div>
     </div>
   );
-};
-
-export default AdminDashboard;
+}

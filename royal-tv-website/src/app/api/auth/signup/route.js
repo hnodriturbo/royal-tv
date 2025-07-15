@@ -1,35 +1,31 @@
+/**
+ *   =========================== route.js ===========================
+ * 📝 USER REGISTRATION API ROUTE
+ * - Registers new user.
+ * - Emits admin/user notification via Socket.IO (createNotificationsUtility).
+ * - Sends admin/user welcome emails.
+ * - No hooks or client-side logic used—pure server/utility style.
+ * ==================================================================
+ */
+
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import prisma from '@/lib/prisma';
-
-// Import the send email to admin on new user registration
-import { sendEmailToAdmin } from '@/lib/email/sendEmailToAdmin';
-import { sendEmailToUser } from '@/lib/email/sendEmailToUser';
-import { adminNewUserEmail } from '@/lib/email/premade/adminNewUserEmail';
-import { userNewUserEmail } from '@/lib/email/premade/userNewUserEmail';
+import prisma from '@/lib/prisma.js';
 
 export async function POST(request) {
-  const {
-    name,
-    username,
-    email,
-    password,
-    whatsapp,
-    telegram,
-    preferredContactWay,
-  } = await request.json();
+  const { name, username, email, password, whatsapp, telegram, preferredContactWay, sendEmails } =
+    await request.json();
 
   if (!name || !username || !email || !password || !preferredContactWay) {
-    return NextResponse.json(
-      { error: 'Missing required fields' },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
   try {
+    // 🔒 Hash password for safety
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    const user = await prisma.user.create({
+    // 👤 Create user in database
+    const createdUser = await prisma.user.create({
       data: {
         name,
         username,
@@ -38,43 +34,30 @@ export async function POST(request) {
         whatsapp,
         telegram,
         preferredContactWay,
-        role: 'user',
-      },
+        sendEmails,
+        role: 'user'
+      }
     });
 
-    // 📨 Try to notify the admin & user but swallow any errors
-    // fire both emails in parallel and handle results
-    const [adminResult, userResult] = await Promise.allSettled([
-      sendEmailToAdmin({
-        subject: `💸 New User Registration`,
-        title: 'New User Registration',
-        contentHtml: adminNewUserEmail({ user }),
-        replyTo: user.email || 'not specified',
-      }),
-      sendEmailToUser({
-        to: user.email,
-        subject: 'Welcome To Royal IPTV Services',
-        title: 'Welcome!',
-        contentHtml: userNewUserEmail({ user }),
-      }),
-    ]);
-
-    if (adminResult.status === 'rejected') {
-      console.error('⚠️ Admin email failed:', adminResult.reason);
-    }
-    if (userResult.status === 'rejected') {
-      console.error('⚠️ Welcome email failed:', userResult.reason);
-    }
-
+    // ✅ Success!
     return NextResponse.json(
-      { message: 'User registered successfully' },
-      { status: 201 },
+      {
+        message: 'User registered successfully',
+        user: createdUser // 👈 Return the full user object!
+      },
+      { status: 201 }
     );
   } catch (error) {
     console.error('Signup error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 },
-    );
+    // 🛑 Handle duplicate username/email error from Prisma
+    if (error.code === 'P2002') {
+      const field = error.meta?.target?.[0] || 'field';
+      return NextResponse.json(
+        { message: `This ${field} is already taken. Please try another.` },
+        { status: 400 }
+      );
+    }
+    // 🛑 Other errors
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

@@ -27,7 +27,7 @@ const ShowMessages = () => {
     success: 'bg-green-400',
     warning: 'bg-orange-400',
     error: 'bg-red-400',
-    info: 'bg-blue-400',
+    info: 'bg-blue-400'
   }[message.type || 'info'];
 
   return (
@@ -38,7 +38,7 @@ const ShowMessages = () => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 50 }}
           transition={{ duration: 0.5 }}
-          className={`fixed bottom-0 left-0 w-full p-4 z-50 font-bold ${backgroundColor}`}
+          className={`fixed bottom-0 left-0 w-full p-4 z-[9999] font-bold ${backgroundColor}`}
         >
           <div className="container mx-auto text-center">
             <p className="text-lg">{message.text}</p>

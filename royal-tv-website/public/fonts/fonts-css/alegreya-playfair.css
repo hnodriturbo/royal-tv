@@ -6,11 +6,9 @@
   font-weight: normal;
   font-style: normal;
 }
-
 @font-face {
   font-family: "Alegreya";
-  src: url("../Alegreya_Font/Alegreya_Italic_Variable_Font.woff2")
-      format("woff2"),
+  src: url("../Alegreya_Font/Alegreya_Italic_Variable_Font.woff2") format("woff2"),
     url("../Alegreya_Font/Alegreya_Italic_Variable_Font.woff") format("woff");
   font-weight: normal;
   font-style: italic;
@@ -19,18 +17,29 @@
 /* Playfair Display Font */
 @font-face {
   font-family: "Playfair Display";
-  src: url("../Playfair_Display_Font/PlayfairDisplay-VariableFont_wght.ttf")
-    format("truetype");
+  src: url("../Playfair_Display_Font/PlayfairDisplay-VariableFont_wght.ttf") format("truetype");
   font-weight: 1 1000;
   font-style: normal;
 }
-
 @font-face {
   font-family: "Playfair Display Italic";
-  src: url("../Playfair_Display_Font/PlayfairDisplay-Italic-VariableFont_wght.ttf")
-    format("truetype");
+  src: url("../Playfair_Display_Font/PlayfairDisplay-Italic-VariableFont_wght.ttf") format("truetype");
   font-weight: 1 1000;
   font-style: italic;
+}
+
+/* Geist Variable Font */
+@font-face {
+  font-family: "Geist";
+  src: url("../Geist_Font/GeistVF.woff") format("woff");
+  font-weight: 100 900;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../Geist_Font/GeistMonoVF.woff") format("woff");
+  font-weight: 100 900;
+  font-style: normal;
 }
 
 /* Custom Text Styles */
@@ -56,11 +65,11 @@
   font-weight: 300;
   letter-spacing: 2px;
 }
-
-.font-shadow {
-  text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+.font-big-spacing {
+  font-family: "Alegreya", serif;
+  font-weight: 300;
+  letter-spacing: 4px;
 }
-
 /* Playfair Text Styles */
 .playfair-regular {
   font-family: "Playfair Display", serif;
@@ -78,11 +87,4 @@
 .playfair-header {
   font-family: "Playfair Display", serif;
   font-weight: 900;
-}
-
-.playfair-gradient-text {
-  font-family: "Playfair Display", serif;
-  background: linear-gradient(45deg, #ff6ec4, #7873f5);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }

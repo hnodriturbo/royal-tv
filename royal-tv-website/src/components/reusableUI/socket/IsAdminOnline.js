@@ -22,19 +22,19 @@ const IsAdminOnline = ({ user_id }) => {
   // 3️⃣ What to show for admins online
   let adminLine = null;
   if (!isAdminOnline) {
-    adminLine = <span className="text-xs text-gray-400">No admin currently online.</span>;
+    adminLine = <span className="text-md">No admin currently online.</span>;
   } else if (singleAdmin) {
     adminLine = (
       <>
         <span className="text-sm">
-          Online Admin:{' '}
-          <span className="text-green-700">{singleAdmin.name || 'Admin Support'}</span>
+          Online Admin:
+          <span className="text-green-700 ml-2">{singleAdmin.name || 'Admin Support'}</span>
         </span>
         <ConversationActionButton
-          buttonClass="btn-outline-secondary btn-sm"
+          buttonClass="btn-primary btn-sm"
           action="create"
           user_id={user_id}
-          chatType="live" // or 'bubble'
+          // chatType removed, live is default everywhere now!
         />
       </>
     );
@@ -51,10 +51,9 @@ const IsAdminOnline = ({ user_id }) => {
           ))}
         </span>
         <ConversationActionButton
-          className="btn-outline-secondary btn-sm"
+          className="btn-primary btn-sm"
           action="create"
           user_id={user_id}
-          chatType="live" // or 'bubble'
         />
       </>
     );

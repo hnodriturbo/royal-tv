@@ -1,10 +1,10 @@
 'use client';
 
 import { useContext, useCallback } from 'react';
-import { SocketContext } from '@/context/SocketContext';
+import { SocketContext } from '../../context/SocketContext';
 
 const useSocket = () => {
-  const { socket, emitEvent, onEvent } = useContext(SocketContext);
+  const { socket, emitEvent, onEvent, socketConnected } = useContext(SocketContext);
 
   // 🎧 Subscribe + auto‑cleanup
   const listen = useCallback(
@@ -19,7 +19,7 @@ const useSocket = () => {
   // 📤 Emit alias (kept for backwards compatibility)
   const emit = useCallback((event, data) => emitEvent(event, data), [emitEvent]);
 
-  return { socket, listen, emit, onEvent };
+  return { socket, listen, emit, onEvent, socketConnected };
 };
 
 export default useSocket;

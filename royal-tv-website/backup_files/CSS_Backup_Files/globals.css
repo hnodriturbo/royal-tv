@@ -1,0 +1,938 @@
+/* ================================================================
+  globals.css – CSS-first Tailwind v4 with custom design tokens
+  Everything non-Tailwind colors, shadows, gradients, breakpoints
+  is via @theme, then used in your base/components/utilities.
+================================================================ */
+
+/* ================================================================
+                 0️⃣ IMPORT TAILWIND CSS FOR USAGE          
+================================================================ */
+@import 'tailwindcss';
+
+/* ================================================================
+                1️⃣ TAILWIND THEME DESIGN VARIABLES           
+================================================================ */
+@theme {
+  /* 📚 Font Families */
+  --font-alegreya: 'Alegreya', serif;
+  --font-playfair: 'Playfair Display', serif;
+  --font-playfair-italic: 'Playfair Display Italic', serif;
+
+  /* 🎨 Core Colors */
+  --color-text-default: #ffffff;
+  --color-bg-default: #171717;
+
+  /* 🔤 Text-Shadow Dark Presets  */
+  --text-shadow-dark-1:
+    -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000 !important;
+  --text-shadow-dark-2:
+    -1px -1px 0 #000, 0px -1px 0 #000, 1px -1px 0 #000, -1px 0px 0 #000, 1px 0px 0 #000,
+    -1px 1px 0 #000, 0px 1px 0 #000, 1px 1px 0 #000 !important;
+
+  /* 🔤 Text-Shadow Light Presets  */
+  --text-shadow-light-1:
+    -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff !important;
+  --text-shadow-light-2:
+    -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, -2px -2px 0 #fff,
+    2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff !important;
+
+  /* 👀 Box-Shadow Presets */
+  --shadow-1-1: 10px 5px 10px 5px rgba(32, 40, 69, 0.797);
+  --shadow-1: 2px 5px 10px 2px rgba(32, 40, 69, 0.797);
+  --shadow-2: 0 0 15px 7px rgba(50, 60, 80, 0.7);
+  --shadow-3: 0 0 20px 10px rgba(20, 30, 60, 0.8);
+  --shadow-4: 0 0 25px 12px rgba(60, 70, 90, 0.75);
+  --shadow-5: 0 0 30px 15px rgba(40, 50, 70, 0.85);
+
+  /* 🌈 Gradient Definitions   */
+  --gradient-smooth: linear-gradient(to bottom right, #2a2e45, #6b82a6, #8b93b0);
+  --gradient-smooth-light-1: linear-gradient(to bottom right, #394050, #7c90af, #a1a9c1);
+  --gradient-smooth-light-2: linear-gradient(to bottom right, #4a5363, #8ea0bd, #b1bacd);
+  --gradient-smooth-light-3: linear-gradient(to bottom right, #5b6676, #9db1cb, #c0c9da);
+  --gradient-smooth-light-4: linear-gradient(to bottom right, #6c7890, #adbfd9, #cfd8e7);
+  --gradient-smooth-dark-1: linear-gradient(to bottom right, #252a3f, #5f7596, #7a849f);
+  --gradient-smooth-dark-2: linear-gradient(to bottom right, #202534, #55688a, #6f738f);
+  --gradient-smooth-dark-3: linear-gradient(to top left, #6f738f, #55688a, #202534);
+
+  /* 🖼️ Outline Shadow Presets */
+  --outline-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  --outline-shadow-dark: 0 0 10px rgba(0, 0, 0, 0.5);
+
+  /* 1️⃣ Neon Blue Glow */
+  --wonderful-1-color: #38bdf8;
+  --wonderful-1-shadow: 0 0 12px #38bdf8, 0 0 32px #38bdf8;
+
+  /* 2️⃣ Blue Underline Highlight */
+  --wonderful-2-color: #38bdf8;
+  --wonderful-2-underline: underline;
+  --wonderful-2-underline-color: #38bdf8;
+  --wonderful-2-underline-width: 4px;
+
+  /* 3️⃣ Animated Blue Gradient Pulse */
+  --wonderful-3-gradient: linear-gradient(90deg, #38bdf8, #22d3ee, #2563eb);
+  --wonderful-3-font-weight: 800;
+  --wonderful-3-animation: loader-gradient-pulse 2s linear infinite;
+
+  /* 4️⃣ Deep White with Blue Shadow */
+  --wonderful-4-color: #fff; /* Pure white */
+  --wonderful-4-shadow: 0 2px 12px #22d3ee, 0 8px 32px #0ea5e9cc;
+
+  /* 5️⃣ Smooth Blue Italic */
+  --wonderful-5-color: #93c5fd;
+  --wonderful-5-font-style: italic;
+  --wonderful-5-font-size: 1.875rem;
+  --wonderful-5-font-weight: 700;
+  --wonderful-5-letter-spacing: 0.1em;
+
+  /* ==============================================================
+              ✅ Bootstrap Buttons colors & variables                   
+  ============================================================== */
+  /* 🎨 Bootstrap Colors */
+  --color-primary: #007bff;
+  --color-secondary: #6c757d;
+  --color-success: #28a745;
+  --color-danger: #dc3545;
+  --color-warning: #ffc107;
+  --color-info: #17a2b8;
+  --color-light: #f8f9fa;
+  --color-dark: #343a40;
+
+  /* Button Base Settings (Normal) */
+  --btn-font-size: 1rem;
+  --btn-font-weight: 400;
+  --btn-line-height: 1.5;
+  --btn-padding-y: 0.375rem;
+  --btn-padding-x: 0.75rem;
+  --btn-border-radius: 0.375rem;
+  --btn-border-width: 1px;
+  --btn-transition: all 0.15s ease-in-out;
+  --btn-cursor: pointer;
+
+  /* Small Button Variant */
+  --btn-sm-font-size: 0.875rem;
+  --btn-sm-padding-y: 0.25rem;
+  --btn-sm-padding-x: 0.5rem;
+  --btn-sm-border-radius: 0.2rem;
+
+  /* Large Button Variant */
+  --btn-lg-font-size: 1.25rem;
+  --btn-lg-padding-y: 0.5rem;
+  --btn-lg-padding-x: 1rem;
+  --btn-lg-border-radius: 0.5rem;
+
+  /* Box Shadows (Outline Glows by Color) */
+  --btn-shadow-primary: 0 0 0.25rem rgba(0, 123, 255, 0.5);
+  --btn-shadow-secondary: 0 0 0.25rem rgba(108, 117, 125, 0.5);
+  --btn-shadow-success: 0 0 0.25rem rgba(40, 167, 69, 0.5);
+  --btn-shadow-danger: 0 0 0.25rem rgba(220, 53, 69, 0.5);
+  --btn-shadow-warning: 0 0 0.25rem rgba(255, 193, 7, 0.5);
+  --btn-shadow-info: 0 0 0.25rem rgba(23, 162, 184, 0.5);
+  --btn-shadow-light: 0 0 0.25rem rgba(248, 249, 250, 0.7);
+  --btn-shadow-dark: 0 0 0.25rem rgba(52, 58, 64, 0.5);
+
+  /* Button Hover Colors */
+  --btn-primary-hover-bg: #0069d9;
+  --btn-primary-hover-color: #fff;
+  --btn-primary-hover-border: #0062cc;
+  --btn-primary-hover-shadow: 0 0 0.25rem rgba(0, 123, 255, 0.5);
+
+  --btn-secondary-hover-bg: #5a6268;
+  --btn-secondary-hover-color: #fff;
+  --btn-secondary-hover-border: #545b62;
+  --btn-secondary-hover-shadow: 0 0 0.25rem rgba(108, 117, 125, 0.5);
+
+  --btn-success-hover-bg: #218838;
+  --btn-success-hover-color: #fff;
+  --btn-success-hover-border: #1e7e34;
+  --btn-success-hover-shadow: 0 0 0.25rem rgba(40, 167, 69, 0.5);
+
+  --btn-danger-hover-bg: #c82333;
+  --btn-danger-hover-color: #fff;
+  --btn-danger-hover-border: #bd2130;
+  --btn-danger-hover-shadow: 0 0 0.25rem rgba(220, 53, 69, 0.5);
+
+  --btn-warning-hover-bg: #e0a800;
+  --btn-warning-hover-color: #212529;
+  --btn-warning-hover-border: #d39e00;
+  --btn-warning-hover-shadow: 0 0 0.25rem rgba(255, 193, 7, 0.5);
+
+  --btn-info-hover-bg: #138496;
+  --btn-info-hover-color: #fff;
+  --btn-info-hover-border: #117a8b;
+  --btn-info-hover-shadow: 0 0 0.25rem rgba(23, 162, 184, 0.5);
+
+  --btn-light-hover-bg: #e2e6ea;
+  --btn-light-hover-color: #212529;
+  --btn-light-hover-border: #dae0e5;
+  --btn-light-hover-shadow: 0 0 0.25rem rgba(248, 249, 250, 0.7);
+
+  --btn-dark-hover-bg: #23272b;
+  --btn-dark-hover-color: #fff;
+  --btn-dark-hover-border: #1d2124;
+  --btn-dark-hover-shadow: 0 0 0.25rem rgba(52, 58, 64, 0.5);
+
+  /* Bootstrap Button Outline Hover Variables */
+  --btn-outline-primary-hover-bg: var(--color-primary);
+  --btn-outline-primary-hover-color: #fff;
+  --btn-outline-primary-hover-border: var(--color-primary);
+  --btn-outline-primary-hover-shadow: var(--btn-shadow-primary);
+
+  --btn-outline-secondary-hover-bg: var(--color-secondary);
+  --btn-outline-secondary-hover-color: #fff;
+  --btn-outline-secondary-hover-border: var(--color-secondary);
+  --btn-outline-secondary-hover-shadow: var(--btn-shadow-secondary);
+
+  --btn-outline-success-hover-bg: var(--color-success);
+  --btn-outline-success-hover-color: #fff;
+  --btn-outline-success-hover-border: var(--color-success);
+  --btn-outline-success-hover-shadow: var(--btn-shadow-success);
+
+  --btn-outline-danger-hover-bg: var(--color-danger);
+  --btn-outline-danger-hover-color: #fff;
+  --btn-outline-danger-hover-border: var(--color-danger);
+  --btn-outline-danger-hover-shadow: var(--btn-shadow-danger);
+
+  --btn-outline-warning-hover-bg: var(--color-warning);
+  --btn-outline-warning-hover-color: #212529;
+  --btn-outline-warning-hover-border: var(--color-warning);
+  --btn-outline-warning-hover-shadow: var(--btn-shadow-warning);
+
+  --btn-outline-info-hover-bg: var(--color-info);
+  --btn-outline-info-hover-color: #fff;
+  --btn-outline-info-hover-border: var(--color-info);
+  --btn-outline-info-hover-shadow: var(--btn-shadow-info);
+
+  --btn-outline-light-hover-bg: var(--color-light);
+  --btn-outline-light-hover-color: #212529;
+  --btn-outline-light-hover-border: var(--color-light);
+  --btn-outline-light-hover-shadow: var(--btn-shadow-light);
+
+  --btn-outline-dark-hover-bg: var(--color-dark);
+  --btn-outline-dark-hover-color: #fff;
+  --btn-outline-dark-hover-border: var(--color-dark);
+  --btn-outline-dark-hover-shadow: var(--btn-shadow-dark);
+
+  /* Disabled State */
+  --btn-disabled-opacity: 0.65;
+  --btn-disabled-cursor: not-allowed;
+  --btn-disabled-bg: #e0e0e0; /* fallback neutral background */
+  --btn-disabled-color: #6c757d; /* fallback muted text */
+  --btn-disabled-border-color: #ced4da; /* soft border */
+  --btn-disabled-pointer-events: none;
+  --btn-disabled-box-shadow: none;
+  --btn-disabled-transition: none;
+
+  /* ================================================================
+                    ✅ Responsive Breakpoints            
+================================================================ */
+  /* 📏 Responsive breakpoints for media queries */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
+
+/* ================================================================
+                    2️⃣ TAILWIND CSS BASE LAYER                    
+================================================================ */
+@layer base {
+  html,
+  body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-alegreya);
+    color: var(--color-text-default);
+    background-color: var(--color-bg-default);
+  }
+
+  /* Headings get heavier outline */
+  h1,
+  h2,
+  h3 {
+    text-shadow: var(--text-shadow-dark-2); /* Black outlines thicker */
+  }
+
+  /* Paragraphs, spans, links, buttons use lighter outline */
+  p,
+  span,
+  li,
+  a,
+  button {
+    text-shadow: var(--text-shadow-dark-1); /* Black outlines normal */
+  }
+
+  main {
+    flex-grow: 1;
+    @apply my-8;
+  }
+
+  input,
+  textarea,
+  select {
+    color: #000;
+    background-color: #fff;
+    box-shadow: var(--shadow-1); /* rgba(32, 40, 69, 0.797) */
+  }
+}
+
+/* ================================================================
+                    3️⃣ TAILWIND CSS COMPONENTS                    
+================================================================ */
+@layer components {
+  /* ----- ----- Container styles BELOW ----- ----- */
+  /* Container style */
+  .container-style {
+    @apply relative flex flex-col text-center p-6 border border-solid rounded-3xl w-11/12 lg:w-10/12;
+    box-shadow: var(--shadow-1-1) !important; /* rgba(32, 40, 69, 0.797) */
+    /* background-color: rgba(255, 255, 255, 0.05); */
+  }
+  .container-style::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(
+      --gradient-smooth
+    ) !important; /* linear-gradient(to bottom right, #2a2e45, #6b82a6, #8b93b0) */
+    opacity: 0.9;
+    border-radius: inherit;
+    z-index: 0;
+  }
+  .container-style > * {
+    position: relative;
+    z-index: 1;
+  }
+  /* 📏 Small Container (8/12 width) */
+  .container-style-sm {
+    @apply relative flex flex-col text-center  p-6 border border-solid rounded-3xl w-11/12 lg:w-8/12;
+    box-shadow: var(--shadow-1-1) !important; /* rgba(32, 40, 69, 0.797) */
+  }
+
+  .container-style-sm::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(
+      --gradient-smooth
+    ) !important; /* linear-gradient(to bottom right, #2a2e45, #6b82a6, #8b93b0) */
+    opacity: 0.9;
+    border-radius: inherit;
+    z-index: 0;
+  }
+  .container-style-sm > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* 🖥️ Large Container (11/12 width) */
+  .container-style-lg {
+    @apply relative flex flex-col text-center w-11/12 p-6 border border-solid rounded-3xl;
+    box-shadow: var(--shadow-1-1) !important; /* rgba(32, 40, 69, 0.797) */
+  }
+  .container-style-lg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(
+      --gradient-smooth
+    ) !important; /* linear-gradient(to bottom right, #2a2e45, #6b82a6, #8b93b0) */
+    opacity: 0.9;
+    border-radius: inherit;
+    z-index: 0;
+  }
+  .container-style-lg > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* 🗄️ Static Container - always 10/12 width, never changes at breakpoints */
+  .container-style-static {
+    @apply relative flex flex-col text-center w-10/12 p-6 border border-solid rounded-3xl;
+    box-shadow: var(--shadow-1-1) !important; /* rgba(32, 40, 69, 0.797) */
+  }
+  .container-style-static::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(
+      --gradient-smooth
+    ) !important; /* linear-gradient(to bottom right, #2a2e45, #6b82a6, #8b93b0) */
+    opacity: 0.9;
+    border-radius: inherit;
+    z-index: 0;
+  }
+  .container-style-static > * {
+    position: relative;
+    z-index: 1;
+  }
+  /* ----- ----- Container styles ABOVE ----- ----- */
+
+  /* Loader Style */
+  .loader {
+    @apply border-4 border-t-transparent rounded-full;
+  }
+
+  /* Input Style */
+  .input-style {
+    @apply w-full p-3 border rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500;
+  }
+  /* Hover Style */
+  .hover {
+    transition: all 0.3s ease-in-out;
+    transform: all 0.3s ease-in-out;
+    scale: 1.03;
+  }
+  /* ==========================
+   1️⃣ Neon Blue Glow
+   ========================== */
+  .text-wonderful-1 {
+    @apply text-2xl font-bold text-center m-2 z-[40] tracking-wide;
+    color: var(--wonderful-1-color);
+    text-shadow: var(--wonderful-1-shadow) !important;
+  }
+  /*
+    color: #38bdf8;
+    text-shadow: 0 0 12px #38bdf8, 0 0 32px #38bdf8;
+  */
+
+  /* ==========================
+     2️⃣ Blue Underline Highlight
+     ========================== */
+  .text-wonderful-2 {
+    @apply text-2xl font-bold text-center m-2 z-[40];
+    color: var(--wonderful-2-color);
+    text-decoration: var(--wonderful-2-underline);
+    text-decoration-color: var(--wonderful-2-underline-color);
+    text-decoration-thickness: var(--wonderful-2-underline-width);
+  }
+  /*
+    color: #38bdf8;
+    text-decoration-color: #38bdf8;
+  */
+
+  /* ==========================
+     3️⃣ Animated Blue Gradient Pulse
+     ========================== */
+  .text-wonderful-3 {
+    @apply text-2xl font-extrabold text-center m-2 z-[40];
+    background: var(--wonderful-3-gradient);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: var(--wonderful-3-animation);
+  }
+  /*
+    background: linear-gradient(90deg, #38bdf8, #22d3ee, #2563eb);
+    background-size: 200% 200%;
+    animation: loader-gradient-pulse 2s linear infinite;
+  */
+
+  @keyframes loader-gradient-pulse {
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: 100% 50%;
+    }
+  }
+
+  /* ==========================
+     4️⃣ Deep White with Blue Shadow
+     ========================== */
+  .text-wonderful-4 {
+    @apply text-3xl font-semibold text-center m-2 z-[40] italic tracking-widest;
+    color: var(--wonderful-4-color);
+    text-shadow: var(--text-shadow-dark-2) !important;
+  }
+  /*
+    color: #fff;
+    text-shadow: 0 4px 32px rgba(34,197,243,0.7);
+  */
+
+  /* ==========================
+     5️⃣ Smooth Blue Italic
+     ========================== */
+  .text-wonderful-5 {
+    @apply text-3xl font-bold italic text-center m-2 z-[40] tracking-widest mt-5;
+    color: var(--wonderful-5-color);
+    font-style: var(--wonderful-5-font-style);
+    font-size: var(--wonderful-5-font-size);
+    font-weight: var(--wonderful-5-font-weight);
+    letter-spacing: var(--wonderful-5-letter-spacing);
+  }
+  /*
+    color: #93c5fd;
+    font-style: italic;
+    font-size: 1.875rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  */
+
+  /* ----------------------------------------------------------------------------------- */
+}
+
+/* ================================================================
+                    4️⃣ TAILWIND CSS UTILITIES                    
+================================================================ */
+@layer utilities {
+  /*
+  ✅ Full Bootstrap-style Buttons Using @theme Variables
+  -----------------------------------------------------
+  1️⃣ Each button uses solid or outline styling.
+  2️⃣ Outline buttons include color-matching glow shadows.
+  3️⃣ Padding, radius, font, and transitions are pulled from CSS variables.
+  4️⃣ Universal disabled rule applies to all .btn classes.
+*/
+
+  /* 🟦 Primary Button */
+  .btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+    border: var(--btn-border-width) solid var(--color-primary);
+    box-shadow: none;
+    font-size: var(--btn-font-size);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+    border-radius: var(--btn-border-radius);
+    cursor: var(--btn-cursor);
+    transition: var(--btn-transition);
+  }
+  /* 🟦 Primary Button Hover State */
+  .btn-primary:hover {
+    background-color: var(--btn-primary-hover-bg);
+    color: var(--btn-primary-hover-color);
+    border-color: var(--btn-primary-hover-border);
+    box-shadow: var(--btn-primary-hover-shadow);
+    transition: var(--btn-transition);
+    cursor: var(--btn-cursor);
+  }
+
+  /* 🟦 Outline Primary Button */
+  .btn-outline-primary {
+    background-color: transparent;
+    color: var(--color-primary);
+    border: var(--btn-border-width) solid var(--color-primary);
+    box-shadow: var(--btn-shadow-primary);
+    font-size: var(--btn-font-size);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+    border-radius: var(--btn-border-radius);
+    cursor: var(--btn-cursor);
+    transition: var(--btn-transition);
+  }
+  /* 🟦 Outline Primary Button Hover State */
+  .btn-outline-primary:hover {
+    background-color: var(--btn-outline-primary-hover-bg);
+    color: var(--btn-outline-primary-hover-color);
+    border-color: var(--btn-outline-primary-hover-border);
+    box-shadow: var(--btn-outline-primary-hover-shadow);
+    transition: var(--btn-transition);
+    cursor: var(--btn-cursor);
+  }
+
+  /* 🔘 Secondary Button */
+  .btn-secondary {
+    background-color: var(--color-secondary);
+    color: white;
+    border: var(--btn-border-width) solid var(--color-secondary);
+    box-shadow: none;
+    font-size: var(--btn-font-size);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+    border-radius: var(--btn-border-radius);
+    cursor: var(--btn-cursor);
+    transition: var(--btn-transition);
+  }
+
+  /* 🔘 Secondary Button Hover State */
+  .btn-secondary:hover {
+    background-color: var(--btn-secondary-hover-bg);
+    color: var(--btn-secondary-hover-color);
+    border-color: var(--btn-secondary-hover-border);
+    box-shadow: var(--btn-secondary-hover-shadow);
+    transition: var(--btn-transition);
+    cursor: var(--btn-cursor);
+  }
+
+  /* 🔘 Outline Secondary Button */
+  .btn-outline-secondary {
+    background-color: transparent;
+    color: var(--color-secondary);
+    border: var(--btn-border-width) solid var(--color-secondary);
+    box-shadow: var(--btn-shadow-secondary);
+    font-size: var(--btn-font-size);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+    border-radius: var(--btn-border-radius);
+    cursor: var(--btn-cursor);
+    transition: var(--btn-transition);
+  }
+  /* 🔘 Outline Secondary Button Hover State */
+  .btn-outline-secondary:hover {
+    background-color: var(--btn-outline-secondary-hover-bg);
+    color: var(--btn-outline-secondary-hover-color);
+    border-color: var(--btn-outline-secondary-hover-border);
+    box-shadow: var(--btn-outline-secondary-hover-shadow);
+    transition: var(--btn-transition);
+    cursor: var(--btn-cursor);
+  }
+
+  /* 🟢 Success Button */
+  .btn-success {
+    background-color: var(--color-success);
+    color: white;
+    border: var(--btn-border-width) solid var(--color-success);
+    box-shadow: none;
+    font-size: var(--btn-font-size);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+    border-radius: var(--btn-border-radius);
+    cursor: var(--btn-cursor);
+    transition: var(--btn-transition);
+  }
+
+  /* 🟢 Success Button Hover State */
+  .btn-success:hover {
+    background-color: var(--btn-success-hover-bg);
+    color: var(--btn-success-hover-color);
+    border-color: var(--btn-success-hover-border);
+    box-shadow: var(--btn-success-hover-shadow);
+    transition: var(--btn-transition);
+    cursor: var(--btn-cursor);
+  }
+
+  /* 🟢 Outline Success Button */
+  .btn-outline-success {
+    background-color: transparent;
+    color: var(--color-success);
+    border: var(--btn-border-width) solid var(--color-success);
+    box-shadow: var(--btn-shadow-success);
+    font-size: var(--btn-font-size);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+    border-radius: var(--btn-border-radius);
+    cursor: var(--btn-cursor);
+    transition: var(--btn-transition);
+  }
+  /* 🟢 Outline Success Button Hover State */
+  .btn-outline-success:hover {
+    background-color: var(--btn-outline-success-hover-bg);
+    color: var(--btn-outline-success-hover-color);
+    border-color: var(--btn-outline-success-hover-border);
+    box-shadow: var(--btn-outline-success-hover-shadow);
+    transition: var(--btn-transition);
+    cursor: var(--btn-cursor);
+  }
+
+  /* 🔴 Danger Button */
+  .btn-danger {
+    background-color: var(--color-danger);
+    color: white;
+    border: var(--btn-border-width) solid var(--color-danger);
+    box-shadow: none;
+    font-size: var(--btn-font-size);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+    border-radius: var(--btn-border-radius);
+    cursor: var(--btn-cursor);
+    transition: var(--btn-transition);
+  }
+
+  /* 🔴 Danger Button Hover State */
+  .btn-danger:hover {
+    background-color: var(--btn-danger-hover-bg);
+    color: var(--btn-danger-hover-color);
+    border-color: var(--btn-danger-hover-border);
+    box-shadow: var(--btn-danger-hover-shadow);
+    transition: var(--btn-transition);
+    cursor: var(--btn-cursor);
+  }
+
+  /* 🔴 Outline Danger Button */
+  .btn-outline-danger {
+    background-color: transparent;
+    color: var(--color-danger);
+    border: var(--btn-border-width) solid var(--color-danger);
+    box-shadow: var(--btn-shadow-danger);
+    font-size: var(--btn-font-size);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+    border-radius: var(--btn-border-radius);
+    cursor: var(--btn-cursor);
+    transition: var(--btn-transition);
+  }
+  /* 🔴 Outline Danger Button Hover State */
+  .btn-outline-danger:hover {
+    background-color: var(--btn-outline-danger-hover-bg);
+    color: var(--btn-outline-danger-hover-color);
+    border-color: var(--btn-outline-danger-hover-border);
+    box-shadow: var(--btn-outline-danger-hover-shadow);
+    transition: var(--btn-transition);
+    cursor: var(--btn-cursor);
+  }
+
+  /* 🟡 Warning Button */
+  .btn-warning {
+    background-color: var(--color-warning);
+    color: #000;
+    border: var(--btn-border-width) solid var(--color-warning);
+    box-shadow: none;
+    font-size: var(--btn-font-size);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+    border-radius: var(--btn-border-radius);
+    cursor: var(--btn-cursor);
+    transition: var(--btn-transition);
+  }
+
+  /* 🟡 Warning Button Hover State */
+  .btn-warning:hover {
+    background-color: var(--btn-warning-hover-bg);
+    color: var(--btn-warning-hover-color);
+    border-color: var(--btn-warning-hover-border);
+    box-shadow: var(--btn-warning-hover-shadow);
+    transition: var(--btn-transition);
+    cursor: var(--btn-cursor);
+  }
+
+  /* 🟡 Outline Warning Button */
+  .btn-outline-warning {
+    background-color: transparent;
+    color: var(--color-warning);
+    border: var(--btn-border-width) solid var(--color-warning);
+    box-shadow: var(--btn-shadow-warning);
+    font-size: var(--btn-font-size);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+    border-radius: var(--btn-border-radius);
+    cursor: var(--btn-cursor);
+    transition: var(--btn-transition);
+  }
+  /* 🟡 Outline Warning Button Hover State */
+  .btn-outline-warning:hover {
+    background-color: var(--btn-outline-warning-hover-bg);
+    color: var(--btn-outline-warning-hover-color);
+    border-color: var(--btn-outline-warning-hover-border);
+    box-shadow: var(--btn-outline-warning-hover-shadow);
+    transition: var(--btn-transition);
+    cursor: var(--btn-cursor);
+  }
+
+  /* 🔵 Info Button */
+  .btn-info {
+    background-color: var(--color-info);
+    color: white;
+    border: var(--btn-border-width) solid var(--color-info);
+    box-shadow: none;
+    font-size: var(--btn-font-size);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+    border-radius: var(--btn-border-radius);
+    cursor: var(--btn-cursor);
+    transition: var(--btn-transition);
+  }
+
+  /* 🔵 Info Button Hover State */
+  .btn-info:hover {
+    background-color: var(--btn-info-hover-bg);
+    color: var(--btn-info-hover-color);
+    border-color: var(--btn-info-hover-border);
+    box-shadow: var(--btn-info-hover-shadow);
+    transition: var(--btn-transition);
+    cursor: var(--btn-cursor);
+  }
+
+  /* 🔵 Outline Info Button */
+  .btn-outline-info {
+    background-color: transparent;
+    color: var(--color-info);
+    border: var(--btn-border-width) solid var(--color-info);
+    box-shadow: var(--btn-shadow-info);
+    font-size: var(--btn-font-size);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+    border-radius: var(--btn-border-radius);
+    cursor: var(--btn-cursor);
+    transition: var(--btn-transition);
+  }
+
+  /* 🔵 Outline Info Button Hover State */
+  .btn-outline-info:hover {
+    background-color: var(--btn-outline-info-hover-bg);
+    color: var(--btn-outline-info-hover-color);
+    border-color: var(--btn-outline-info-hover-border);
+    box-shadow: var(--btn-outline-info-hover-shadow);
+    transition: var(--btn-transition);
+    cursor: var(--btn-cursor);
+  }
+
+  /* ⚪ Light Button */
+  .btn-light {
+    background-color: var(--color-light);
+    color: #000;
+    border: var(--btn-border-width) solid var(--color-light);
+    box-shadow: none;
+    font-size: var(--btn-font-size);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+    border-radius: var(--btn-border-radius);
+    cursor: var(--btn-cursor);
+    transition: var(--btn-transition);
+  }
+
+  /* ⚪ Light Button Hover State */
+  .btn-light:hover {
+    background-color: var(--btn-light-hover-bg);
+    color: var(--btn-light-hover-color);
+    border-color: var(--btn-light-hover-border);
+    box-shadow: var(--btn-light-hover-shadow);
+    transition: var(--btn-transition);
+    cursor: var(--btn-cursor);
+  }
+
+  /* ⚪ Outline Light Button */
+  .btn-outline-light {
+    background-color: transparent;
+    color: var(--color-light);
+    border: var(--btn-border-width) solid var(--color-light);
+    box-shadow: var(--btn-shadow-light);
+    font-size: var(--btn-font-size);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+    border-radius: var(--btn-border-radius);
+    cursor: var(--btn-cursor);
+    transition: var(--btn-transition);
+  }
+
+  /* ⚪ Outline Light Button Hover State */
+  .btn-outline-light:hover {
+    background-color: var(--btn-outline-light-hover-bg);
+    color: var(--btn-outline-light-hover-color);
+    border-color: var(--btn-outline-light-hover-border);
+    box-shadow: var(--btn-outline-light-hover-shadow);
+    transition: var(--btn-transition);
+    cursor: var(--btn-cursor);
+  }
+
+  /* ⚫ Dark Button */
+  .btn-dark {
+    background-color: var(--color-dark);
+    color: white;
+    border: var(--btn-border-width) solid var(--color-dark);
+    box-shadow: none;
+    font-size: var(--btn-font-size);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+    border-radius: var(--btn-border-radius);
+    cursor: var(--btn-cursor);
+    transition: var(--btn-transition);
+  }
+
+  /* ⚫ Dark Button Hover State */
+  .btn-dark:hover {
+    background-color: var(--btn-dark-hover-bg);
+    color: var(--btn-dark-hover-color);
+    border-color: var(--btn-dark-hover-border);
+    box-shadow: var(--btn-dark-hover-shadow);
+    transition: var(--btn-transition);
+    cursor: var(--btn-cursor);
+  }
+
+  /* ⚫ Outline Dark Button */
+  .btn-outline-dark {
+    background-color: transparent;
+    color: var(--color-dark);
+    border: var(--btn-border-width) solid var(--color-dark);
+    box-shadow: var(--btn-shadow-dark);
+    font-size: var(--btn-font-size);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+    border-radius: var(--btn-border-radius);
+    cursor: var(--btn-cursor);
+    transition: var(--btn-transition);
+  }
+
+  /* ⚫ Outline Dark Button Hover State */
+  .btn-outline-dark:hover {
+    background-color: var(--btn-outline-dark-hover-bg);
+    color: var(--btn-outline-dark-hover-color);
+    border-color: var(--btn-outline-dark-hover-border);
+    box-shadow: var(--btn-outline-dark-hover-shadow);
+    transition: var(--btn-transition);
+    cursor: var(--btn-cursor);
+  }
+
+  /* 🔁 Universal Disabled Style */
+  .btn:disabled,
+  .btn[disabled] {
+    background-color: var(--btn-disabled-bg);
+    color: var(--btn-disabled-color);
+    border-color: var(--btn-disabled-border-color);
+    cursor: var(--btn-disabled-cursor);
+    opacity: var(--btn-disabled-opacity);
+    pointer-events: var(--btn-disabled-pointer-events);
+    box-shadow: var(--btn-disabled-box-shadow);
+    transition: var(--btn-disabled-transition);
+  }
+
+  /* 📏 Small Button Modifier */
+  .btn-sm {
+    font-size: var(--btn-sm-font-size);
+    padding: var(--btn-sm-padding-y) var(--btn-sm-padding-x);
+    border-radius: var(--btn-sm-border-radius);
+  }
+
+  /* 🖥️ Large Button Modifier */
+  .btn-lg {
+    font-size: var(--btn-lg-font-size);
+    padding: var(--btn-lg-padding-y) var(--btn-lg-padding-x);
+    border-radius: var(--btn-lg-border-radius);
+  }
+  /* ==============================================================
+   Gradient background utilities ( ALL TO BOTTOM RIGHT & blue-ish )
+  ============================================================== */
+  .bg-smooth-gradient {
+    background: var(--gradient-smooth) !important; /* #2a2e45, #6b82a6, #8b93b0) */
+  }
+  .bg-smooth-gradient-light-1 {
+    background: var(--gradient-smooth-light-1) !important; /* #394050, #7c90af, #a1a9c1) */
+  }
+  .bg-smooth-gradient-light-2 {
+    background: var(--gradient-smooth-light-2) !important; /* #4a5363, #8ea0bd, #b1bacd) */
+  }
+  .bg-smooth-gradient-light-3 {
+    background: var(--gradient-smooth-light-3) !important; /* #5b6676, #9db1cb, #c0c9da) */
+  }
+  .bg-smooth-gradient-light-4 {
+    background: var(--gradient-smooth-light-4) !important; /* #6c7890, #adbfd9, #cfd8e7) */
+  }
+  .bg-smooth-gradient-dark-1 {
+    background: var(--gradient-smooth-dark-1) !important; /* #252a3f, #5f7596, #7a849f) */
+  }
+  .bg-smooth-gradient-dark-2 {
+    background: var(--gradient-smooth-dark-2) !important; /* #202534, #55688a, #6f738f) */
+  }
+  .bg-smooth-gradient-dark-3 {
+    background: var(--gradient-smooth-dark-3) !important; /* #6f738f, #55688a, #202534 */
+  }
+  /* ----------------------------------------------------------------------------------- */
+
+  /* =======================================================================================
+   Box-shadow utilities ( 1-1 & 1 HAVE DIFFERENT SHADOW & OTHERS JUST GET LARGER BY NUMBER )
+  ======================================================================================= */
+  .shadow-box-1-1 {
+    box-shadow: var(--shadow-1-1) !important; /* rgba(32, 40, 69, 0.797) */
+  }
+  .shadow-box-1 {
+    box-shadow: var(--shadow-1) !important; /* rgba(32, 40, 69, 0.797) */
+  }
+  .shadow-box-2 {
+    box-shadow: var(--shadow-2) !important; /* rgba(50, 60, 80, 0.7) */
+  }
+  .shadow-box-3 {
+    box-shadow: var(--shadow-3) !important; /* rgba(20, 30, 60, 0.8) */
+  }
+  .shadow-box-4 {
+    box-shadow: var(--shadow-4) !important; /* rgba(60, 70, 90, 0.75) */
+  }
+  .shadow-box-5 {
+    box-shadow: var(--shadow-5) !important; /* rgba(40, 50, 70, 0.85) */
+  }
+}
+/* ----------------------------------------------------------------------------------- */
+
+/* ----------------------------------------------------------------------------------- */
+
+/* End of globals.css                                           */

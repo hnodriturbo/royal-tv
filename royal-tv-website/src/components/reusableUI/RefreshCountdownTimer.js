@@ -108,7 +108,7 @@ export default function RefreshCountdownTimer({
           {showManualRefreshButton && (
             <button
               onClick={handleManualRefresh}
-              className="px-3 py-1 text-sm rounded bg-gray-600 hover:bg-blue-700 text-white"
+              className="px-3 py-1 text-sm rounded bg-gray-600 hover:bg-blue-700 text-white whitespace-nowrap"
             >
               🔁 Refresh Now
             </button>
@@ -117,7 +117,7 @@ export default function RefreshCountdownTimer({
           {showPauseToggle && (
             <button
               onClick={togglePause}
-              className="px-3 py-1 text-sm rounded bg-gray-600 hover:bg-gray-700 text-white"
+              className="px-3 py-1 text-sm rounded bg-gray-600 hover:bg-gray-700 text-white whitespace-nowrap"
             >
               {isPaused ? '▶️ Resume' : '⏸️ Pause'}
             </button>

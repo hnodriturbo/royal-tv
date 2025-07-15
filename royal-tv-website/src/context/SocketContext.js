@@ -10,12 +10,14 @@ export const SocketContext = createContext({
   socket: null,
   emitEvent: () => {},
   onEvent: () => {},
+  socketConnected: false
 });
 
 export const SocketProvider = ({ children }) => {
   // 👉 Hold the socket instance
   const [socket, setSocket] = useState(null);
   const { data: session, status } = useSession();
+  const [socketConnected, setSocketConnected] = useState(false);
 
   /*  🌐 Decide URL by NODE_ENV
       dev  → http://localhost:3001
@@ -30,6 +32,7 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (status === 'loading') return;
 
+    // Only make a new socket when these *core* identity values change
     const role = session?.user?.role || 'guest';
     const user_id = session?.user?.user_id || null;
     const name = session?.user?.name || 'Guest';
@@ -39,7 +42,7 @@ export const SocketProvider = ({ children }) => {
     const socketConnection = io(SOCKET_URL, {
       transports: ['websocket'],
       path: '/socket.io',
-      query: { user_id, role, name },
+      query: { user_id, role, name }
     });
 
     setSocket(socketConnection);
@@ -48,19 +51,38 @@ export const SocketProvider = ({ children }) => {
       socketConnection.disconnect();
       console.log('🔌 Socket disconnected');
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    session?.user?.user_id,
-    session?.user?.role,
-    session?.user?.name,
-    status,
-  ]);
+  }, [SOCKET_URL, session?.user?.user_id, session?.user?.role, session?.user?.name, status]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    // 🟢 Set connected = true when socket connects
+    const handleConnect = () => {
+      setSocketConnected(true);
+      console.log('🟢 [SocketContext] Socket connected!');
+    };
+
+    // 🔴 Set connected = false when socket disconnects
+    const handleDisconnect = () => {
+      setSocketConnected(false);
+      console.log('🔴 [SocketContext] Socket disconnected!');
+    };
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+
+    // 🧹 Cleanup to avoid memory leaks
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+    };
+  }, [socket]);
 
   const emitEvent = useCallback(
     (event, data) => {
       if (socket) socket.emit(event, data);
     },
-    [socket],
+    [socket]
   );
 
   const onEvent = useCallback(
@@ -70,12 +92,12 @@ export const SocketProvider = ({ children }) => {
         return () => socket.off(event, callback);
       }
     },
-    [socket],
+    [socket]
   );
 
   // ✅ Always provide a stable object as `value`
   return (
-    <SocketContext.Provider value={{ socket, emitEvent, onEvent }}>
+    <SocketContext.Provider value={{ socket, emitEvent, onEvent, socketConnected }}>
       {children}
     </SocketContext.Provider>
   );

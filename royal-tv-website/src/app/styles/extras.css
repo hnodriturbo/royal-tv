@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* 
 This is a custom CSS file that I created for my own personal use.
@@ -6,6 +6,84 @@ It includes extra utilities and components that are not included in the default 
 
 */
 
+/* ***************************************************************************** */
+
+/* Here starts the css for the get your free trial button styles and more */
+
+/* Free trial column styles */
+/* 
+  .free-trial-col {
+      height: 100px;
+      position: relative;
+      overflow: hidden;
+      z-index: 4;
+      background: linear-gradient(270deg, #333, #444, #555); 
+  }
+  */
+@keyframes blink {
+  0%,
+  30% {
+    opacity: 1;
+  }
+  40%,
+  60% {
+    opacity: 0;
+  }
+  70%,
+  100% {
+    opacity: 1;
+  }
+}
+.blink {
+  animation: blink 2s ease-in-out infinite;
+}
+
+/* Define the box shadow and styles for each custom class */
+.btn-dark-style {
+  background-color: #343a40;
+  /* Dark background */
+  color: #fff;
+  /* White text */
+  border: 1px solid #343a40;
+  /* Dark border */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.btn-outline-dark-style {
+  background-color: transparent;
+  /* Transparent background */
+  color: #343a40;
+  /* Dark text */
+  border: 1px solid #343a40;
+  /* Dark border */
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.btn-secondary-style {
+  background-color: #6c757d;
+  /* Secondary background */
+  color: #fff;
+  /* White text */
+  border: 1px solid #6c757d;
+  /* Secondary border */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.btn-outline-secondary-style {
+  background-color: transparent;
+  /* Transparent background */
+  color: #6c757d;
+  /* Secondary text */
+  border: 1px solid #6c757d;
+  /* Secondary border */
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+/* Base transition properties for smooth effects */
+.toggle-button {
+  transition: all 2s ease-in-out;
+  /* transition: box-shadow 5s ease, background-color 3s ease, border-color 3s ease, color 3s ease-in-out; */
+}
 
 .btn-secondary-outline-my-own {
   position: relative;
@@ -13,7 +91,7 @@ It includes extra utilities and components that are not included in the default 
 }
 
 .btn-secondary-outline-my-own::before {
-  content: "";
+  content: '';
   position: absolute;
   top: -50%;
   left: -50%;
@@ -137,6 +215,18 @@ It includes extra utilities and components that are not included in the default 
 }
 .cursor-default {
   cursor: default !important;
+}
+/* ===== Scrollbar for notification body ===== */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #334155 #1e293b;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 8px;
 }
 
 /* Button glow effect */
@@ -349,7 +439,6 @@ It includes extra utilities and components that are not included in the default 
 /* Dark Button Glowing Effect */
 .my-btn-dark-box-shadow {
   box-shadow: 0 0 8px 0 #343a40;
-  transition: box-shadow 0.9s ease-in-out;
   border: 2px solid transparent;
   animation: glow-dark 1s infinite alternate;
 }
@@ -570,7 +659,9 @@ It includes extra utilities and components that are not included in the default 
   -webkit-text-fill-color: transparent;
   color: transparent;
   display: inline;
-  animation: glow 1s infinite alternate, gradientShift 5s ease-in-out infinite;
+  animation:
+    glow 1s infinite alternate,
+    gradientShift 5s ease-in-out infinite;
 }
 
 @keyframes glow {
@@ -875,13 +966,7 @@ It includes extra utilities and components that are not included in the default 
 
 /* Smooth greyish-blue gradient background */
 .bg-gradient-greyish-blue {
-  background: linear-gradient(
-    135deg,
-    #232a33,
-    #3a444f,
-    #505e6a,
-    #6a7b86
-  ); /* Diagonal gradient */
+  background: linear-gradient(135deg, #232a33, #3a444f, #505e6a, #6a7b86); /* Diagonal gradient */
   background-size: 400% 400%; /* Larger size to create the effect of smooth transitioning */
   display: inline-block;
   animation: bgColorShiftGreyishBlue 20s ease infinite;
@@ -905,13 +990,7 @@ It includes extra utilities and components that are not included in the default 
 
 /* Darker Blueish-Grey Gradient */
 .bg-gradient-dark-blue-grey {
-  background: linear-gradient(
-    135deg,
-    #0a0d12,
-    #1c2631,
-    #2d394b,
-    #3b4a61
-  ); /* Diagonal gradient */
+  background: linear-gradient(135deg, #0a0d12, #1c2631, #2d394b, #3b4a61); /* Diagonal gradient */
   background-size: 400% 400%;
   display: inline-block;
   animation: bgColorShiftDarkBlueGrey 20s ease infinite;
@@ -1240,206 +1319,3 @@ It includes extra utilities and components that are not included in the default 
     background-color: #0b0f14; /* Back to very dark blue-gray */
   }
 }
-
-.z-index-1 {
-  z-index: 1 !important;
-}
-
-.z-index-2 {
-  z-index: 2 !important;
-}
-
-.z-index-3 {
-  z-index: 3 !important;
-}
-
-.z-index-4 {
-  z-index: 4 !important;
-}
-
-.z-index-5 {
-  z-index: 5 !important;
-}
-
-.z-index-6 {
-  z-index: 6 !important;
-}
-
-.z-index-7 {
-  z-index: 7 !important;
-}
-
-.z-index-8 {
-  z-index: 8 !important;
-}
-
-.z-index-9 {
-  z-index: 9 !important;
-}
-
-.z-index-10 {
-  z-index: 10 !important;
-}
-
-/* --------------------------------------------------------- */
-/* ----- Basic font size classes for normal-sized windows ---- */
-/* --------------------------------------------------------- */
-
-.font-size-xxs {
-  font-size: 10px; /* Extra extra small */
-}
-
-.font-size-xs {
-  font-size: 12px; /* Extra small */
-}
-
-.font-size-sm {
-  font-size: 14px; /* Small */
-}
-
-.font-size-md {
-  font-size: 16px; /* Medium */
-}
-
-.font-size-lg {
-  font-size: 18px; /* Large */
-}
-
-.font-size-xl {
-  font-size: 20px; /* Extra large */
-}
-
-.font-size-xxl {
-  font-size: 24px; /* Double extra large */
-}
-
-.font-size-xxxl {
-  font-size: 32px; /* Triple extra large */
-}
-
-.font-size-xxxxl {
-  font-size: 40px; /* Quadruple extra large */
-}
-
-.font-size-xxxxxl {
-  font-size: 48px; /* Quintuple extra large */
-}
-
-.font-size-xxxxxxl {
-  font-size: 64px; /* Sextuple extra large */
-}
-
-/* --------------------------------------------------------- */
-/* ----- Font size adjustments for smaller screens --------- */
-/* --------------------------------------------------------- */
-
-@media (max-width: 768px) {
-  .font-size-xxs {
-    font-size: 8px; /* Extra extra small */
-  }
-
-  .font-size-xs {
-    font-size: 10px; /* Extra small */
-  }
-
-  .font-size-sm {
-    font-size: 12px; /* Small */
-  }
-
-  .font-size-md {
-    font-size: 14px; /* Medium */
-  }
-
-  .font-size-lg {
-    font-size: 16px; /* Large */
-  }
-
-  .font-size-xl {
-    font-size: 18px; /* Extra large */
-  }
-
-  .font-size-xxl {
-    font-size: 20px; /* Double extra large */
-  }
-
-  .font-size-xxxl {
-    font-size: 24px; /* Triple extra large */
-  }
-
-  .font-size-xxxxl {
-    font-size: 32px; /* Quadruple extra large */
-  }
-
-  .font-size-xxxxxl {
-    font-size: 40px; /* Quintuple extra large */
-  }
-
-  .font-size-xxxxxxl {
-    font-size: 48px; /* Sextuple extra large */
-  }
-}
-
-/* --------------------------------------------------------- */
-/* ----- Font size adjustments for extra small screens ----- */
-/* --------------------------------------------------------- */
-
-@media (max-width: 576px) {
-  .font-size-xxs {
-    font-size: 6px; /* Extra extra small */
-  }
-
-  .font-size-xs {
-    font-size: 8px; /* Extra small */
-  }
-
-  .font-size-sm {
-    font-size: 10px; /* Small */
-  }
-
-  .font-size-md {
-    font-size: 12px; /* Medium */
-  }
-
-  .font-size-lg {
-    font-size: 14px; /* Large */
-  }
-
-  .font-size-xl {
-    font-size: 16px; /* Extra large */
-  }
-
-  .font-size-xxl {
-    font-size: 18px; /* Double extra large */
-  }
-
-  .font-size-xxxl {
-    font-size: 20px; /* Triple extra large */
-  }
-
-  .font-size-xxxxl {
-    font-size: 24px; /* Quadruple extra large */
-  }
-
-  .font-size-xxxxxl {
-    font-size: 32px; /* Quintuple extra large */
-  }
-
-  .font-size-xxxxxxl {
-    font-size: 40px; /* Sextuple extra large */
-  }
-}
-
-/* Not in need for these in this project */
-/*
-.btn-dark {
-    border-radius: 15px !important;
-}
-
-.btn-outline-dark {
-    border-radius: 15px !important;
-}
-
-.card {
-    box-shadow: 0 0 10px rgba(108, 117, 125, 1); 
-}
- */

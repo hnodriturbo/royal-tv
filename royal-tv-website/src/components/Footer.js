@@ -1,87 +1,55 @@
-// use the client-side JavaScript
 'use client';
 
 import Link from 'next/link';
 
+const footerButtonClasses =
+  'flex items-center justify-center px-3 py-2 rounded-full text-md font-normal transition-all duration-200 ' +
+  'hover:bg-gradient-to-br hover:from-gray-200 hover:to-gray-600 hover:text-white hover:scale-105 focus:outline-none';
+
 const Footer = () => {
   return (
-    <footer className="bottom-0 w-full gradient-dark-light-5 py-6 px-10 uppercase font-bold mt-4 z-30">
-      <div className="flex justify-between items-center h-30">
-        {/* Left: First Set of Links */}
-        <div className="w-full md:w-1/3 flex flex-col items-center mb-4">
-          <ul className="list-none space-y-4 text-center">
-            <li>
-              <Link
-                href="/pages/contact"
-                className="gradient-dark-light-5 py-1 px-4 border font-bold rounded-[25px] underline:hover hover:scale-105 transform transition-all duration-300"
-              >
-                Send Us Message !
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/pages/transaction"
-                className="gradient-dark-light-5 py-1 px-4 border font-bold rounded-[25px] underline:hover hover:scale-105 transform transition-all duration-300"
-              >
-                Buy Now !
-              </Link>
-            </li>
-          </ul>
+    <footer className="w-full bg-gradient-to-r from-[#6f738f] via-[#55688a] to-[#202534] py-2 px-2 mt-4 z-[400] border-t border-neutral-800">
+      <div className="max-w-7xl mx-auto flex md:flex-row flex-col items-start justify-between gap-8">
+        {/* Left side: Buttons, left-aligned on desktop, full width on mobile */}
+        <div className="w-full md:w-1/2">
+          <div className="flex flex-row gap-2 md:items-start items-center md:justify-start justify-center ms-5 whitespace-nowrap">
+            <Link href="/contact" className={footerButtonClasses}>
+              <span className="mr-1">📩</span>
+              <span>Contact</span>
+            </Link>
+            <Link href="/transaction" className={footerButtonClasses}>
+              <span className="mr-1">💳</span>
+              <span>Buy Now</span>
+            </Link>
+            <Link href="/faq" className={footerButtonClasses}>
+              <span className="mr-1">❓</span>
+              <span>FAQ</span>
+            </Link>
+            <Link href="/more-info" className={footerButtonClasses}>
+              <span className="mr-1">ℹ️</span>
+              <span>More Info</span>
+            </Link>
+          </div>
         </div>
 
-        {/* Right: Social Media Links */}
-        <div className="w-full md:w-1/3 text-center flex-col items-center whitespace-nowrap">
-          <div className="flex flex-row md:flex-col items-center">
-            {/* WhatsApp Link */}
-            <a
-              href="https://wa.me/3547624845"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mx-2 text-green-500 hover:text-green-900 hover:font-bold hover:underline transition-all duration-300"
-            >
-              <i className="bi bi-whatsapp text-3xl mx-3"></i>
-              <br />
-
-              <span className="inline md:hidden">Contact Us On WhatsApp</span>
-              <span className="hidden md:inline">WhatsApp</span>
-            </a>
-
-            {/* Telegram Admin Link */}
+        {/* Right side: Telegram only, centered on mobile/desktop */}
+        <div className="w-full md:w-1/2">
+          <div className="flex flex-row gap-2 items-center justify-center md:justify-center mt-0 md:mt-2">
             <a
               href="https://t.me/RoyalTVAdmin"
               target="_blank"
               rel="noopener noreferrer"
-              className="mx-2 text-blue-500 hover:text-blue-900 hover:font-bold hover:underline transition-all duration-300"
+              className="flex items-center justify-center text-blue-500 hover:text-blue-900 transition-all duration-200"
             >
-              <i className="bi bi-telegram text-3xl mx-3"></i>
-              <br />
-              <span className="inline md:hidden">Contact Us On Telegram</span>
-              <span className="hidden md:inline">Telegram</span>
+              <i className="bi bi-telegram text-2xl"></i>
+              <span className="ml-1 font-bold inline">Telegram</span>
             </a>
           </div>
         </div>
+      </div>
 
-        {/* Center: Second Set of Links */}
-        <div className="w-full md:w-1/3 flex flex-col items-center mb-4">
-          <ul className="list-none space-y-3 text-center">
-            <li>
-              <Link
-                href="/pages/faq"
-                className="gradient-dark-light-5 py-1 px-4 border font-bold rounded-[25px] underline:hover hover:scale-105 transform transition-all duration-300"
-              >
-                FAQ
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/pages/about"
-                className="gradient-dark-light-5 py-1 px-4 border font-bold rounded-[25px] underline:hover hover:scale-105 transform transition-all duration-300"
-              >
-                About Us
-              </Link>
-            </li>
-          </ul>
-        </div>
+      <div className="mt-2 text-xs text-center text-gray-400">
+        © {new Date().getFullYear()} Royal TV. All rights reserved.
       </div>
     </footer>
   );

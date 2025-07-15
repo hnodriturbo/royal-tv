@@ -1,0 +1,96 @@
+/* -------------------------------------------------------------------
+   theme-utils.css – Hard‑coded gradients & shadows
+   Import this into globals.css to restore bg-smooth-* & shadow-box-* classes
+------------------------------------------------------------------- */
+
+@layer utilities {
+  /* Gradient backgrounds (from config) */
+  .bg-smooth-gradient {
+    background: linear-gradient(to bottom right, #2a2e45, #6b82a6, #8b93b0) !important;
+  }
+  .bg-smooth-gradient-light-1 {
+    background: linear-gradient(to bottom right, #394050, #7c90af, #a1a9c1) !important;
+  }
+  .bg-smooth-gradient-light-2 {
+    background: linear-gradient(to bottom right, #4a5363, #8ea0bd, #b1bacd) !important;
+  }
+  .bg-smooth-gradient-light-3 {
+    background: linear-gradient(to bottom right, #5b6676, #9db1cb, #c0c9da) !important;
+  }
+  .bg-smooth-gradient-light-4 {
+    background: linear-gradient(to bottom right, #6c7890, #adbfd9, #cfd8e7) !important;
+  }
+  .bg-smooth-gradient-light-5 {
+    background: linear-gradient(to bottom right, #7d8aa5, #bccce7, #dde5f4) !important;
+  }
+  .bg-smooth-gradient-dark-1 {
+    background: linear-gradient(to bottom right, #252a3f, #5f7596, #7a849f) !important;
+  }
+  .bg-smooth-gradient-dark-2 {
+    background: linear-gradient(to bottom right, #202534, #55688a, #6f738f) !important;
+  }
+  .bg-smooth-gradient-dark-3 {
+    background: linear-gradient(to bottom right, #1b1f2a, #4b5b7e, #656882) !important;
+  }
+  .bg-smooth-gradient-dark-4 {
+    background: linear-gradient(to bottom right, #16181f, #414f72, #5a5d75) !important;
+  }
+  .bg-smooth-gradient-dark-5 {
+    background: linear-gradient(to bottom right, #12141a, #373b66, #505368) !important;
+  }
+
+  /* Box-shadow utilities (from config boxShadow) */
+  .shadow-box-1-1 {
+    box-shadow: 10px 5px 10px 5px rgba(32, 40, 69, 0.797) !important;
+  }
+  .shadow-box-1 {
+    box-shadow: 0 0 10px 5px rgba(32, 40, 69, 0.797) !important;
+  }
+  .shadow-box-2 {
+    box-shadow: 0 0 15px 7px rgba(50, 60, 80, 0.7) !important;
+  }
+  .shadow-box-3 {
+    box-shadow: 0 0 20px 10px rgba(20, 30, 60, 0.8) !important;
+  }
+  .shadow-box-4 {
+    box-shadow: 0 0 25px 12px rgba(60, 70, 90, 0.75) !important;
+  }
+  .shadow-box-5 {
+    box-shadow: 0 0 30px 15px rgba(40, 50, 70, 0.85) !important;
+  }
+}
+
+/* Hover variants for all your bg-smooth gradients */
+.hover-bg-smooth-gradient:hover {
+  background: linear-gradient(to bottom right, #4facfe 0%, #00f2fe 100%) !important;
+}
+.hover-bg-smooth-gradient-light-1:hover {
+  background: linear-gradient(to bottom right, #394050, #7c90af, #a1a9c1) !important;
+}
+.hover-bg-smooth-gradient-light-2:hover {
+  background: linear-gradient(to bottom right, #4a5363, #8ea0bd, #b1bacd) !important;
+}
+.hover-bg-smooth-gradient-light-3:hover {
+  background: linear-gradient(to bottom right, #5b6676, #9db1cb, #c0c9da) !important;
+}
+.hover-bg-smooth-gradient-light-4:hover {
+  background: linear-gradient(to bottom right, #6c7890, #adbfd9, #cfd8e7) !important;
+}
+.hover-bg-smooth-gradient-light-5:hover {
+  background: linear-gradient(to bottom right, #7d8aa5, #bccce7, #dde5f4) !important;
+}
+.hover-bg-smooth-gradient-dark-1:hover {
+  background: linear-gradient(to bottom right, #252a3f, #5f7596, #7a849f) !important;
+}
+.hover-bg-smooth-gradient-dark-2:hover {
+  background: linear-gradient(to bottom right, #202534, #55688a, #6f738f) !important;
+}
+.hover-bg-smooth-gradient-dark-3:hover {
+  background: linear-gradient(to bottom right, #1b1f2a, #4b5b7e, #656882) !important;
+}
+.hover-bg-smooth-gradient-dark-4:hover {
+  background: linear-gradient(to bottom right, #16181f, #414f72, #5a5d75) !important;
+}
+.hover-bg-smooth-gradient-dark-5:hover {
+  background: linear-gradient(to bottom right, #12141a, #373b66, #505368) !important;
+}

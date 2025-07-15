@@ -1,0 +1,17 @@
+# .eslintignore 🚫
+
+node_modules/
+.next/
+out/
+dist/
+coverage/
+public/
+package.json
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.eslintignore
+*.md
+*.css
+*.scss
+*.svg

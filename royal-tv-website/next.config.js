@@ -1,5 +1,5 @@
 // next.config.js — ESM format for Next.js config (requires "type": "module" in package.json)
-import path from 'path';
+// import path from 'path';
 
 /**
  * @type {import('next').NextConfig}

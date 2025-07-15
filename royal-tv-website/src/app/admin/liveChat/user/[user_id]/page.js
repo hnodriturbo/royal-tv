@@ -1,68 +1,68 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axiosInstance from '@/lib/axiosInstance';
 import Link from 'next/link';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useAuthGuard from '@/hooks/useAuthGuard';
-import Pagination from '@/components/reusableUI/Pagination';
-import useModal from '@/hooks/useModal';
 import { useSession } from 'next-auth/react';
-import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import ConversationActionButton from '@/components/reusableUI/ConversationActionButton';
+
+// Sorting imports, AutoRefresh, Pagination
+import SortDropdown from '@/components/reusableUI/SortDropdown';
+import useLocalSorter from '@/hooks/useLocalSorter';
+import { conversationSortOptions, getConversationSortFunction } from '@/lib/sorting';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
+import Pagination from '@/components/reusableUI/Pagination';
 
 const AdminSeeUserConversations = () => {
   const { data: session, status } = useSession();
-  // Get the user_id of the user from params
   const { user_id } = useParams();
-  // Loaders and other security
   const { displayMessage, showLoader, hideLoader } = useAppHandlers();
   const { isAllowed, redirect } = useAuthGuard('admin');
   const router = useRouter();
 
-  // Conversations and username
-  const [conversations, setConversations] = useState([]); // ✅ Store conversations
-  const [username, setUsername] = useState(''); // ✅ Store username separately
-  const [user, setUser] = useState([]);
-  // Pages
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  // 🟢 State
+  const [conversations, setConversations] = useState([]);
+  const [username, setUsername] = useState('');
+  const [user, setUser] = useState({});
 
-  // Modal dialog import setting
-  const { openModal, hideModal } = useModal();
-  const inputRef = useRef(null);
-  const textAreaRef = useRef(null);
+  const [currentPage, setCurrentPage] = useState(1); // 🔢 Current page
+  const [sortOrder, setSortOrder] = useState('updatedAt_desc'); // 🔀 Sort order
 
-  // ✅ Fetch user conversations
+  // 🧠 Sorted conversations
+  const sortedConversations = useLocalSorter(conversations, sortOrder, getConversationSortFunction);
+  // 📏 Results per page
+  const pageSize = 5;
+  // 🔢 Total pages
+  const totalPages = Math.ceil(sortedConversations.length / pageSize);
+  // 🎯 Conversations for current page
+  const pagedConversations = sortedConversations.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  // 🟢 Fetch ALL user conversations (no pagination, all at once)
   const fetchUserConversations = async () => {
     try {
       showLoader({ text: 'Loading conversations...' });
 
-      const { data } = await axiosInstance.get(`/api/admin/liveChat/user/${user_id}`, {
-        params: { page: currentPage, limit: 5 }
-      });
+      const { data } = await axiosInstance.get(`/api/admin/liveChat/user/${user_id}`);
+      const convs = data.conversations || [];
+      setConversations(convs);
 
-      // Set the response into convs
-      const convs = data.conversations; // The response set into convs
-      setTotalPages(data.totalPages); // ✅ Set Pages
-
-      // ✅ Store username from API response
+      // Store user details
       if (data.userDetails) {
         setUsername(data.userDetails.name);
         setUser(data.userDetails);
       }
 
-      // ✅ Extract all messages from conversations into a flat array
-      /* const allMessages = convs.flatMap((conv) => conv.messages || []); */ // ✅ Handle undefined messages
-
-      // ✅ Only redirect if TOTAL conversations is 1, and we're on the first page!
-      if (data.totalPages === 1 && convs.length === 1 && currentPage === 1) {
+      // Redirect if only one conversation
+      if (convs.length === 1) {
         router.replace(`/admin/liveChat/${convs[0].conversation_id}`);
         return;
       }
-      // Set the conversations into conversations
-      setConversations(convs);
     } catch (error) {
       displayMessage('Failed to load user conversations', 'error');
     } finally {
@@ -70,111 +70,158 @@ const AdminSeeUserConversations = () => {
     }
   };
 
-  // ✅ Fetch Conversations on Load
+  // 🟢 Fetch on mount/param/status
   useEffect(() => {
     if (user_id && status === 'authenticated' && isAllowed) {
       fetchUserConversations();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user_id, currentPage]);
+  }, [user_id, isAllowed, status]);
 
-  // Countdown timer every 10 minutes automatic refresh
-  const { Countdown } = useAutoRefresh(fetchUserConversations, {
+  // 🟢 AutoRefresh
+  const { AutoRefresh } = useAutoRefresh(fetchUserConversations, {
     intervalSeconds: 600,
     uiOptions: { showManualButton: true, showPauseToggle: true }
   });
 
-  // ✅ Redirect if Not Authorized And Wait Until We Know The State
+  // 🟢 Redirect if Not Authorized
   useEffect(() => {
     if (status !== 'loading' && !isAllowed && redirect) {
-      router.replace(redirect); // ✅ Redirect safely in useEffect
+      router.replace(redirect);
     }
   }, [status, isAllowed, redirect, router]);
+
+  // ---------- If not allowed, render nothing ----------
+  if (!isAllowed) return null;
 
   return (
     <div className="flex flex-col items-center justify-center w-full">
       <div className="container-style">
-        <div className="flex flex-col items-center text-center justify-center">
-          <h1 className="text-3xl font-bold mb-4 text-center">
-            Conversations with {username ? username : 'User'}
-          </h1>
-          {Countdown}
+        <div className="flex flex-col items-center text-center justify-center text-2xl text-wonderful-3 relative">
+          <h1 className="text-wonderful-5">Conversations for {username}</h1>
+          <hr className="border border-gray-400 w-8/12 text-center items-center justify-center my-2" />
+        </div>
+        {/* 🔄 Sorting & AutoRefresh Controls (row on desktop, stacked on mobile) */}
+        <div className="flex justify-center items-center w-full">
+          <div className="flex flex-col w-10/12 mb-3 items-center md:flex-row md:space-x-3 md:space-y-0 space-y-10">
+            {/* 🟦 SortDropdown centered in its column */}
+            <div className="flex-1 flex justify-center items-center m-2">
+              <SortDropdown
+                options={conversationSortOptions}
+                value={sortOrder}
+                onChange={setSortOrder}
+              />
+            </div>
 
-          <hr className="border border-gray-400 w-8/12 text-center items-center justify-center my-4" />
+            {/* 📏 Divider for mobile/tablet */}
+            <hr className="md:hidden border border-gray-400 w-8/12 my-4" />
 
-          <div className="flex w-full items-center justify-center my-2">
-            <ConversationActionButton action="create" user_id={user?.user_id} chatType="live" />
+            {/* ⏳ AutoRefresh centered in its column */}
+            <div className="flex-1 flex justify-center items-center">{AutoRefresh}</div>
           </div>
         </div>
-        {/* ✅ Conversations Table */}
-        <div className="overflow-x-auto w-full lg:block hidden">
-          <table className="w-full border-collapse border border-gray-600">
-            <thead className="text-center">
-              <tr className="bg-gray-600 border-b-2">
-                <th className="border border-gray-300 px-4 py-2">Conversation ID</th>
-                <th className="border border-gray-300 px-4 py-2">Subject</th>
-                <th className="border border-gray-300 px-4 py-2">Last Updated</th>
-                <th className="border border-gray-300 px-4 py-2">Unread Messages</th>
-                <th className="border border-gray-300 px-4 py-2">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {conversations.length === 0 ? (
-                <tr>
-                  <td colSpan="4" className="text-center py-4 text-gray-500">
-                    No conversations found.
-                  </td>
+        <div className="flex items-center justify-center">
+          {/* 📏 Divider for mobile/tablet */}
+          <hr className="md:hidden border border-gray-400 w-8/12 my-4" />
+        </div>
+        {/* 🆕 Create Conversation Button (own row, always centered) */}
+        <div className="flex justify-center w-full mb-6">
+          <ConversationActionButton
+            action="create"
+            user_id={user?.user_id}
+            user={user}
+            chatType="live"
+            buttonText="Start New Conversation"
+            isAdmin={true}
+            // add m-0 if you want zero margin
+          />
+        </div>
+
+        {/* ===================💻 Desktop: Responsive Table View (xl+) =================== */}
+        <div className="hidden xl:flex justify-center w-full">
+          {/* 🖱️ Enables horizontal scroll if needed */}
+          <div className="w-full max-w-full overflow-x-auto">
+            <table className="min-w-[750px] w-full border-separate border-spacing-0">
+              <thead className="text-center">
+                <tr className="bg-gray-600">
+                  <th className="border border-gray-300 px-4 py-2">Conversation ID</th>
+                  <th className="border border-gray-300 px-4 py-2">Subject</th>
+                  <th className="border border-gray-300 px-4 py-2">Last Updated</th>
+                  <th className="border border-gray-300 px-4 py-2">Unread Messages</th>
+                  <th className="border border-gray-300 px-4 py-2">Action</th>
                 </tr>
-              ) : (
-                conversations.map((conv) => {
-                  return (
-                    <tr key={conv.conversation_id} className="hover:bg-gray-400">
-                      <td className="border border-gray-300 px-4 py-2">{conv.conversation_id}</td>
+              </thead>
+              <tbody className="text-center">
+                {pagedConversations.length === 0 ? (
+                  <tr>
+                    {/* 🚫 Empty state */}
+                    <td
+                      colSpan="5"
+                      className="text-center py-4 text-gray-500 border border-gray-300"
+                    >
+                      No conversations found.
+                    </td>
+                  </tr>
+                ) : (
+                  pagedConversations.map((conversationObject) => (
+                    <tr key={conversationObject.conversation_id} className="hover:bg-gray-400">
+                      <td className="border border-gray-300 px-4 py-2">
+                        {conversationObject.conversation_id}
+                      </td>
                       <td className="border border-gray-300 px-4 py-2 max-w-[200px] truncate">
-                        <span className="block truncate" title={conv.subject}>
-                          {conv.subject || 'No Subject'}
+                        {/* 📋 Subject truncated if too long */}
+                        <span className="block truncate" title={conversationObject.subject}>
+                          {conversationObject.subject || 'No Subject'}
                         </span>
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
-                        {new Date(conv.updatedAt).toLocaleString()}
+                        {/* ⏱️ Show last updated in local format */}
+                        {new Date(conversationObject.updatedAt).toLocaleString()}
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
-                        {conv.unreadCount > 0 ? (
-                          <span className="text-green-500 font-bold">● {conv.unreadCount}</span>
+                        {/* 🟢 Unread messages count, green if positive */}
+                        {conversationObject.unreadCount > 0 ? (
+                          <span className="text-green-500 font-bold">
+                            ● {conversationObject.unreadCount}
+                          </span>
                         ) : (
                           <span className="text-gray-400">0</span>
                         )}
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
-                        <div className="flex flex-row gap-2 justify-end no-wrap">
+                        {/* 🛠️ Action buttons */}
+                        <div className="flex flex-row gap-2 no-wrap w-fit justify-center">
                           <button
                             className="btn-primary"
-                            onClick={() => router.push(`/admin/liveChat/${conv.conversation_id}`)}
+                            onClick={() =>
+                              router.push(`/admin/liveChat/${conversationObject.conversation_id}`)
+                            }
                           >
                             View Messages
                           </button>
                           <ConversationActionButton
                             action="delete"
-                            user_id={user.user_id}
-                            conversation_id={conv.conversation_id}
+                            user_id={user?.user_id}
+                            conversation_id={conversationObject.conversation_id}
                             chatType="live"
                             onActionSuccess={fetchUserConversations}
+                            isAdmin={true}
                           />
                         </div>
                       </td>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-        {/* 📱 Card View for Mobile */}
-        <div className="lg:hidden flex flex-col gap-4 w-full mt-6 no-wrap">
-          {conversations.map((conv) => (
+        {/* ===================📱 Card View for Mobile/Tablet (below xl) =================== */}
+        <div className="xl:hidden flex flex-col gap-4 w-full mt-6">
+          {pagedConversations.map((conv) => (
             <div
               key={conv.conversation_id}
-              className="border border-gray-300 rounded-lg p-4 shadow-sm bg-gray-500 text-md"
+              className="border border-gray-300 rounded-2xl p-4 shadow-sm bg-gray-500 text-md"
             >
               <div className="flex justify-between mb-2">
                 <h3 className="font-semibold text-lg">{user.name || 'N/A'}</h3>
@@ -202,19 +249,20 @@ const AdminSeeUserConversations = () => {
                   <Link href={`/admin/liveChat/${conv.conversation_id}`}>
                     <button className="btn-primary w-full">View Messages</button>
                   </Link>
-
                   <ConversationActionButton
                     action="delete"
                     user_id={user?.user_id}
                     conversation_id={conv.conversation_id}
                     chatType="live"
                     onActionSuccess={fetchUserConversations}
+                    isAdmin={true}
                   />
                 </div>
               </div>
             </div>
           ))}
         </div>
+        {/* 🔢 Pagination below tables/cards */}
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}

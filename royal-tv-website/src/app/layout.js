@@ -20,11 +20,10 @@
  */
 
 // Import CSS Styles Files
-import './styles/advertisement.css';
+import './styles/theme-utils.css';
 import './styles/border-styles.css';
-import './styles/linearGradientStyles.css';
 import './styles/extras.css';
-
+import './styles/linearGradientStyles.css';
 // End With Importing The Global CSS File And Bootstrap Icons
 import './styles/globals.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';

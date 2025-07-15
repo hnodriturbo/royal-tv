@@ -1,176 +1,297 @@
+/**
+ * ========================= AdminUsersMainPage.js =========================
+ * 👤
+ * HEADLINE: Admin Users – Main List (Cards Only)
+ * - Cards for each user, show all key relations.
+ * - Sorting at top, pagination at bottom.
+ * - Buttons to see user’s Free Trials, Live & Bubble Chats, Subs, Profile.
+ * ========================================================================
+ */
+
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-
+import axiosInstance from '@/lib/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
+import { useSession } from 'next-auth/react';
 import useAuthGuard from '@/hooks/useAuthGuard';
-import useModal from '@/hooks/useModal';
-import useConversationsList from '@/components/reusableUI/useConversationsList';
+import { useRouter } from 'next/navigation';
+import { adminUserSortOptions, getAdminUserSortFunction } from '@/lib/sorting';
+import SortDropdown from '@/components/reusableUI/SortDropdown';
+import useLocalSorter from '@/hooks/useLocalSorter';
 import Pagination from '@/components/reusableUI/Pagination';
 
-export default function UsersPage() {
-  const router = useRouter();
+export default function AdminUsersMainPage() {
+  // 🦸 Admin session/auth
   const { data: session, status } = useSession();
-  const { displayMessage, showLoader, hideLoader } = useAppHandlers();
-  const { openModal } = useModal();
+  const router = useRouter();
   const { isAllowed, redirect } = useAuthGuard('admin');
+  const { displayMessage, showLoader, hideLoader } = useAppHandlers();
 
-  // ─── useConversationsList in "main" mode (no selectedUserId)
-  const {
-    conversations: users, // actually our enriched user‐stats
-    currentPage,
-    totalPages,
-    setCurrentPage
-  } = useConversationsList({
-    role: 'admin',
-    chatType: 'live',
-    initialPage: 1,
-    pageSize: 5
-  });
+  // 📦 Users state
+  const [users, setUsers] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1); // 🔢 Current page
+  const [sortOrder, setSortOrder] = useState('livechat_unread_first'); // 🔀 Default sort order
 
-  // ➡️ Redirect if not authorised
+  // 📥 Fetch all Users (admin)
+  const fetchUsers = async () => {
+    try {
+      showLoader({ text: 'Loading users...' }); // ⏳
+      const res = await axiosInstance.get('/api/admin/users/main');
+      setUsers(res.data.users || []);
+      displayMessage('Users loaded!', 'success');
+    } catch (err) {
+      displayMessage(
+        `Failed to load users${err?.response?.data?.error ? `: ${err.response.data.error}` : ''}`,
+        'error'
+      );
+    } finally {
+      hideLoader();
+    }
+  };
+
+  // 🚦 Only fetch ONCE when allowed
+  useEffect(() => {
+    if (status === 'authenticated' && isAllowed) {
+      fetchUsers();
+    }
+  }, [status, isAllowed]);
+
+  // 🚦 Redirect if not allowed
   useEffect(() => {
     if (status !== 'loading' && !isAllowed && redirect) {
       router.replace(redirect);
     }
   }, [status, isAllowed, redirect, router]);
 
+  // 🧠 Add the sort fields for compatibility with your sort function
+  const usersWithSortFields = users.map((user) => ({
+    ...user,
+    freeTrials: user.freeTrials || [],
+    subscriptions: user.subscriptions || [],
+    unreadLiveChats: user.unreadLiveChats || 0,
+    unreadBubbleChats: user.unreadBubbleChats || 0,
+    name: user.name || ''
+  }));
+
+  // 🧠 Sorted users (use custom hook)
+  const sortedUsers = useLocalSorter(usersWithSortFields, sortOrder, getAdminUserSortFunction);
+
+  // 📏 Results per page
+  const pageSize = 5;
+
+  // 🔢 Total pages
+  const totalPages = Math.ceil(sortedUsers.length / pageSize);
+
+  // 🎯 Users for current page
+  const pagedUsers = sortedUsers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  // 🔄 Reset to first page if sortOrder changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortOrder]);
+
+  // ---------- If not allowed, render nothing ----------
   if (!isAllowed) return null;
-
-  const handleNewConversation = (recipientUserId) => {
-    let subjectRef, messageRef;
-
-    openModal('newMessage', {
-      title: 'Start a New Conversation',
-      description: 'Enter a subject and message:',
-      customContent: () => (
-        <div className="flex flex-col gap-4">
-          <input
-            type="text"
-            ref={(el) => (subjectRef = el)}
-            className="border p-2 w-full text-black bg-white rounded-lg"
-            placeholder="Enter subject"
-          />
-          <textarea
-            ref={(el) => (messageRef = el)}
-            className="border p-2 w-full h-24 text-black bg-white rounded-lg"
-            placeholder="Type your message here..."
-          />
-        </div>
-      ),
-      confirmButtonText: 'Send',
-      cancelButtonText: 'Cancel',
-      onConfirm: async () => {
-        const subject = subjectRef?.value.trim();
-        const messageText = messageRef?.value.trim();
-        if (!subject || !messageText) {
-          displayMessage('Subject and message cannot be empty', 'error');
-          return;
-        }
-        try {
-          showLoader({ text: 'Creating conversation...' });
-          const { data } = await axiosInstance.post('/api/admin/createConversation', {
-            subject,
-            message: messageText,
-            user_id: user_id
-          });
-          displayMessage('Conversation created successfully', 'success');
-          router.push(`/admin/liveChat/${data.conversation_id}`);
-        } catch (err) {
-          displayMessage('Failed to create conversation', 'error');
-        } finally {
-          hideLoader();
-        }
-      }
-    });
-  };
 
   return (
     <div className="flex flex-col items-center justify-center w-full">
-      <div className="container-style">
-        <div className="text-center mb-4">
-          <h1 className="text-2xl font-bold">Manage Users</h1>
-          <hr className="border-gray-400 w-8/12 mx-auto mt-2" />
+      <div className="container-style max-w-3xl w-full">
+        {/* 🏷️ Title & Divider */}
+        <div className="flex flex-col items-center text-center justify-center w-full">
+          <h1 className="text-wonderful-5 text-2xl mb-0">All Users (Cards View)</h1>
+          <hr className="border border-gray-400 w-8/12 my-4" />
         </div>
 
-        {/* Desktop Table */}
-        <div className="overflow-x-auto w-full lg:block hidden text-lg">
-          <table className="w-full border-collapse border border-gray-300">
-            <thead>
-              <tr className="bg-gray-600">
-                <th className="border px-4 py-2">Username</th>
-                <th className="border px-4 py-2">Email</th>
-                <th className="border px-4 py-2">Conversations</th>
-                <th className="border px-4 py-2">Unread Threads</th>
-                <th className="border px-4 py-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.user_id} className="hover:bg-gray-400">
-                  <td className="border px-4 py-2">{user.username}</td>
-                  <td className="border px-4 py-2">{user.email}</td>
-                  <td className="border px-4 py-2">{user.conversationCount}</td>
-                  <td className="border px-4 py-2">{user.convoUnreadCount}</td>
-                  <td className="border px-4 py-2 flex gap-2 justify-center">
-                    <Link href={`/admin/users/${user.user_id}`}>
-                      <button className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
-                        View
-                      </button>
-                    </Link>
-                    <button
-                      className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-                      onClick={() => handleNewConversation(user.user_id)}
-                    >
-                      Create Convo
+        {/* 🔀 Sorting Dropdown */}
+        <div className="flex justify-end w-full mb-4">
+          <SortDropdown options={adminUserSortOptions} value={sortOrder} onChange={setSortOrder} />
+        </div>
+
+        {/* 🃏 User Cards */}
+        <div className="flex flex-col gap-6 w-full mt-6">
+          {pagedUsers.length === 0 && (
+            <div className="text-center text-gray-400 my-8">No users found.</div>
+          )}
+          {pagedUsers.map((user) => (
+            <div
+              key={user.user_id}
+              className="border border-gray-300 rounded-2xl p-5 shadow-md bg-gray-600 text-base-100"
+            >
+              {/* 🆔 Top: Name, Username, Email */}
+              <div className="flex flex-col md:flex-row justify-between mb-2 items-center">
+                <div className="w-full text-center flex flex-col items-center">
+                  <h3 className="font-semibold text-lg">
+                    {/* 👤 Name & Username */}
+                    {user.name}
+                    <span className="ml-2 text-xs text-muted">({user.username})</span>
+                  </h3>
+                  <div className="text-sm mt-1">
+                    <strong>Email:</strong> {user.email}
+                  </div>
+                  <div className="text-xs text-muted">
+                    <span>
+                      {/* 🕰️ Joined: */}
+                      Joined {new Date(user.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1 items-end mt-2 md:mt-0">
+                  {/* 🔑 User Role */}
+                  <span className="px-3 py-1 rounded-lg bg-purple-800 text-sm font-bold uppercase tracking-wider">
+                    {user.role}
+                  </span>
+                </div>
+              </div>
+              {/* 📱 Contact info row */}
+              <div className="flex flex-row gap-4 text-sm mb-2 justify-center">
+                {user.whatsapp && (
+                  <span>
+                    <span className="font-bold">WhatsApp:</span> {user.whatsapp}
+                  </span>
+                )}
+                {user.telegram && (
+                  <span>
+                    <span className="font-bold">Telegram:</span> {user.telegram}
+                  </span>
+                )}
+                <span>
+                  <span className="font-bold">Preferred Contact:</span> {user.preferredContactWay}
+                </span>
+              </div>
+              {/* 🔗 Action Buttons for Relations */}
+              <div className="flex flex-col gap-3 mt-4 w-full">
+                {/* 🎁 Free Trials */}
+                {user.freeTrials && user.freeTrials.length > 0 ? (
+                  <Link
+                    href={`/admin/freeTrials/${user.freeTrials[0].trial_id}`}
+                    className="w-full"
+                  >
+                    <button className="btn-secondary w-full flex items-center justify-center">
+                      <span>
+                        🎁 Free Trials{' '}
+                        <span className="ml-1 font-normal">({user.totalFreeTrials})</span>
+                      </span>
+                      {user.freeTrials[0].status && (
+                        <span
+                          className={`ml-2 text-xs font-bold ${
+                            user.freeTrials[0].status === 'disabled'
+                              ? 'text-red-400'
+                              : user.freeTrials[0].status === 'pending'
+                                ? 'text-yellow-400'
+                                : 'text-green-400'
+                          }`}
+                        >
+                          (
+                          {user.freeTrials[0].status.charAt(0).toUpperCase() +
+                            user.freeTrials[0].status.slice(1)}
+                          )
+                        </span>
+                      )}
                     </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* 📱 Card View for Mobile */}
-        <div className="lg:hidden flex flex-col gap-4 w-full mt-6 no-wrap">
-          {users.map((user) => (
-            <div key={user.user_id} className="bg-white border rounded-lg p-4 shadow-sm text-sm">
-              <h3 className="font-bold text-lg">{user.username}</h3>
-              <p>
-                <strong>Email:</strong> {user.email}
-              </p>
-              <p>
-                <strong>Convos:</strong> {user.conversationCount}
-              </p>
-              <p>
-                <strong>Unread:</strong> {user.convoUnreadCount}
-              </p>
-              <div className="flex justify-end gap-2 mt-2">
-                <Link href={`/admin/users/${user.user_id}`}>
-                  <button className="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600">
-                    View
+                  </Link>
+                ) : (
+                  <button
+                    className="btn:disabled w-full opacity-50 cursor-not-allowed flex flex-col items-center py-2 border border-white rounded-md"
+                    disabled
+                  >
+                    🎁 Free Trials (0)
                   </button>
+                )}
+
+                {/* 💬 Live Chat Conversations */}
+                {user.totalLiveChats > 0 ? (
+                  <Link href={`/admin/liveChat/user/${user.user_id}`} className="w-full">
+                    <button className="btn-primary w-full flex flex-col items-center py-2">
+                      <span>💬 Live Chats </span>
+                      <span className="font-normal mt-1">
+                        Total: {user.totalLiveChats} -{' '}
+                        <span className={user.unreadLiveChats > 0 ? 'font-bold' : 'text-muted'}>
+                          Unread: {user.unreadLiveChats}
+                        </span>
+                      </span>
+                    </button>
+                  </Link>
+                ) : (
+                  <button
+                    className="btn:disabled w-full opacity-50 cursor-not-allowed flex flex-col items-center py-2 border border-white rounded-md"
+                    disabled
+                    type="button"
+                  >
+                    <span>💬 Live Chats (0)</span>
+                    <span className="text-sm mt-1 text-muted">Unread: 0</span>
+                  </button>
+                )}
+
+                {/* 🫧 Bubble Chat Conversations */}
+                {/* {user.totalBubbleChats > 0 ? (
+                  <Link href={`/admin/bubbleChat/user/${user.user_id}`} className="w-full">
+                    <button className="btn-primary w-full flex flex-col items-center py-2">
+                      <span>
+                        🫧 Bubble Chats{' '}
+                        <span className="font-normal">({user.totalBubbleChats})</span>
+                      </span>
+                      <span className="text-sm mt-1">
+                        Unread:
+                        <span
+                          className={
+                            user.unreadBubbleChats > 0 ? 'text-accent-2 font-bold' : 'text-muted'
+                          }
+                        >
+                          {user.unreadBubbleChats}
+                        </span>
+                      </span>
+                    </button>
+                  </Link>
+                ) : (
+                  <button
+                    className="btn:disabled w-full opacity-50 cursor-not-allowed flex flex-col items-center py-2 border border-white rounded-md"
+                    disabled
+                    type="button"
+                  >
+                    <span>🫧 Bubble Chats (0)</span>
+                    <span className="text-sm mt-1 text-muted">Unread: 0</span>
+                  </button>
+                )} */}
+
+                {/* 📦 Subscriptions */}
+                {user.subscriptions && user.subscriptions.length > 0 ? (
+                  <Link
+                    href={`/admin/subscriptions/${user.subscriptions[0].subscription_id}`}
+                    className="w-full"
+                  >
+                    <button className="btn-secondary w-full">
+                      📦 Subscriptions{' '}
+                      <span className="ml-1 font-normal">({user.totalSubscriptions})</span>
+                    </button>
+                  </Link>
+                ) : (
+                  <button
+                    className="btn:disabled w-full opacity-50 cursor-not-allowed flex flex-col items-center py-2 border border-white rounded-md"
+                    disabled
+                  >
+                    📦 Subscriptions (0)
+                  </button>
+                )}
+
+                {/* 🪪 Profile */}
+                <Link href={`/admin/users/${user.user_id}`} className="w-full">
+                  <button className="btn-success w-full">🪪 Profile</button>
                 </Link>
-                <button
-                  className="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600"
-                  onClick={() => handleNewConversation(user.user_id)}
-                >
-                  Create Convo
-                </button>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
+        {/* 🔢 Pagination below cards */}
+        <div className="flex justify-center mt-6">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
       </div>
     </div>
   );
