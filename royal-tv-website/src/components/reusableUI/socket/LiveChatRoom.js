@@ -220,15 +220,19 @@ export default function LiveChatRoom({
       <div className={clsx('container-style mx-auto flex flex-col gap-2 min-h-[400px]', className)}>
         {/* 🏷️ Header – Subject + unread/user count */}
         <div className="flex justify-between items-center">
-          <h2 className="text-base font-bold">Conversation Subject: {subject}</h2>
-          <span className="text-xs text-gray-400">
-            {usersInRoom.length} online • 🔔 {unreadCount} unread
+          <h2 className="text-base font-bold">
+            Conversation Subject:<br></br>{' '}
+            <span className="text-wonderful-5 underline"> {subject}</span>
+          </h2>
+          <span>
+            {usersInRoom.length} online <br></br>{' '}
+            <span className="whitespace-nowrap">🔔 {unreadCount} unread</span>
           </span>
         </div>
 
         {/* 💬 Message bubbles (auto-scroll, reverse order) */}
         <div
-          className="flex-1 overflow-y-auto flex flex-col-reverse space-y-2 gap-2"
+          className="flex-1 overflow-y-auto flex flex-col-reverse space-y-2 gap-2 max-h-[500px]"
           ref={chatBoxRef}
         >
           {messages
@@ -238,14 +242,14 @@ export default function LiveChatRoom({
               <div
                 key={message.message_id || `idx-${idx}`}
                 className={clsx(
-                  'w-2/3 min-w-[150px] max-w-[75%] p-2 rounded-lg text-xs',
+                  'w-2/3 min-w-[150px] max-w-[75%] p-2 rounded-lg',
                   isOwnMessage(message)
                     ? 'items-end justify-end self-end bg-blue-600 text-end' // 🟦 My messages: right, blue
                     : 'items-start justify-start self-start bg-gray-600 text-start' // 🟩 Others: left, gray
                 )}
               >
                 <p className="break-words whitespace-pre-wrap">{message.message}</p>
-                <div className="flex justify-between items-center mt-2 text-xs">
+                <div className="flex justify-between items-center mt-2">
                   {/* ✏️ Edit/Delete only for own messages */}
                   {isOwnMessage(message) && (
                     <div className="flex gap-2">
@@ -293,7 +297,7 @@ export default function LiveChatRoom({
             onFocus={handleInputFocus}
             onBlur={handleInputBlur}
             onKeyDown={handleKeyDown}
-            className="flex-1 p-2 border rounded text-sm text-black focus:outline-none"
+            className="flex-1 p-2 border rounded text-lg text-black focus:outline-none"
             placeholder="Type a message…"
           />
           <button

@@ -153,6 +153,15 @@ export default function UserFreeTrialRequestPage() {
                       <span className="text-base sm:text-lg">{freeTrial.free_trial_other}</span>
                     </div>
                   )}
+                  {/* 📝 Other info (optional) */}
+                  {freeTrial.additional_info && (
+                    <div className="flex gap-3 items-center">
+                      <span className="font-bold min-w-[90px] tracking-wide text-base sm:text-lg">
+                        Additional Info:
+                      </span>
+                      <span className="text-base sm:text-lg">{freeTrial.additional_info}</span>
+                    </div>
+                  )}
                   {/* 🗓️ Dates */}
                   <div className="flex flex-col gap-1 mt-2 text-sm text-black text-center">
                     <div>
@@ -204,13 +213,13 @@ export default function UserFreeTrialRequestPage() {
               enjoying our service!
             </span>
 
-            <div className="mt-2 text-md text-gray-500">
+            {/*             <div className="mt-2 text-md text-gray-500">
               Expired Credentials:
               <br />
               Username: {freeTrial.free_trial_username}
               <br />
               Password: {freeTrial.free_trial_password}
-            </div>
+            </div> */}
           </div>
         )}
 

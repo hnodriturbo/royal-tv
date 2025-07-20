@@ -48,7 +48,7 @@ const useAuthGuard = (requiredRole) => {
   const isAllowed = session?.user?.role === requiredRole;
 
   return {
-    isAllowed,
+    isAllowed
   };
 };
 

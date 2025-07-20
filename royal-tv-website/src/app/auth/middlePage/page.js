@@ -1,19 +1,12 @@
 /**
  *   ========================= MiddlePage.js ==========================
- * 🚦
- * CENTRAL REDIRECT & MESSAGING HUB:
- * Handles all auth-related redirects and feedback.
- * - Reads why user was redirected and where they *should* go next.
- * - Always prioritizes "redirectTo" if it exists and is safe.
- * ====================================================================
- * ⚙️
- * PROPS:
- *   None (reads from query-params & session)
- * ====================================================================
- * 📌
- * USAGE:
- *   Used as an invisible hub for all main auth workflows.
- * ====================================================================
+ * 🚦  CENTRAL REDIRECT & MESSAGING HUB (v3) – *loop‑safe*
+ * --------------------------------------------------------------------
+ * 1. Waits for NextAuth to fully settle **and** (when ?login=true) for
+ *    the session to be authenticated before deciding what to do.
+ * 2. Guests are redirected only once. Further renders are ignored via
+ *    the `redirected` flag.
+ * 3. Always uses `redirectWithMessage` for feedback & redirect.
  */
 
 'use client';
@@ -23,60 +16,56 @@ import { useSearchParams } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 
 import useAppRedirectHandlers from '@/hooks/useAppRedirectHandlers';
-import useAppHandlers from '@/hooks/useAppHandlers';
 
-// 🏷️ Map NextAuth errors to friendly messages
+// 🏷️ Friendly error mapping
 const errorLabels = {
   CredentialsSignin: 'Incorrect username or password.',
   Configuration: 'Incorrect username or password.',
   default: 'Unexpected error. Please try again.'
 };
 
-// 🛡️ List of pages we never want to auto-redirect to
+// 🚫 Never auto-redirect to these pages
 const forbiddenRedirects = ['/auth/login', '/auth/middlePage'];
 
 const MiddlePage = () => {
-  // 🌐 Read query parameters and session state
+  // 🔗 Get query params, NextAuth session, and your custom redirect helper
   const searchParams = useSearchParams();
   const { redirectWithMessage } = useAppRedirectHandlers();
   const { data: session, status } = useSession();
 
-  // 🔁 Local state to prevent double redirects
+  // 🔁 Local state to block double redirects
   const [redirected, setRedirected] = useState(false);
 
   useEffect(() => {
+    // 🛑 1. Block double-redirects, or if session loading, pause
     if (redirected) return;
     if (status === 'loading') return;
 
-    // 🧾 Gather query params
+    // 📦 2. Gather all query params
     const login = searchParams.get('login') === 'true';
     const logout = searchParams.get('logout') === 'true';
     const guest = searchParams.get('guest') === 'true';
-    const notLoggedIn = searchParams.get('notLoggedIn') === 'true';
-    const adminDenied = searchParams.get('admin') === 'false';
-    const userDenied = searchParams.get('user') === 'false';
+    const notIn = searchParams.get('notLoggedIn') === 'true';
+    const adminNo = searchParams.get('admin') === 'false';
+    const userNo = searchParams.get('user') === 'false';
     const notFound = searchParams.get('not-found') === 'true';
     const error = searchParams.get('error');
     const redirectToParam = searchParams.get('redirectTo');
-
     const profileUpdated = searchParams.get('update') === 'profile';
     const profilePasswordUpdated = searchParams.get('passwordUpdate') === 'profile';
     const updateSuccess = searchParams.get('success') === 'true';
-    const role = searchParams.get('role') || 'user'; // fallback
 
-    // 🧑‍💻 User name
-    const name = session?.user?.name || 'User';
+    // 🔒 3. Prevent loop on login: only redirect after session is authenticated
+    if (login && status !== 'authenticated') {
+      // 💤 Wait until session reflects the new login (solves login-redirect-loop)
+      return;
+    }
 
-    // 💬 Default message and color
-    let message = '';
-    let color = 'info';
-
-    // 🎯 Redirect target: always prefer safe "redirectTo" param if present
+    // 🎯 4. Decide default and safe redirect targets
     let defaultTarget = '/';
     if (session?.user?.role === 'admin') defaultTarget = '/admin/dashboard';
     if (session?.user?.role === 'user') defaultTarget = '/user/dashboard';
 
-    // 🚫 Forbid redirecting to login or middlePage itself!
     let target = defaultTarget;
     if (
       redirectToParam &&
@@ -85,73 +74,83 @@ const MiddlePage = () => {
       target = redirectToParam;
     }
 
-    // 🟢 Success login: Welcome & redirect
-    if (login) {
-      message = `Welcome ${name}! Redirecting to your page…`;
-      color = 'success';
+    // 💬 5. Pick feedback message & color
+    let message = '';
+    let color = 'info';
+    const name = session?.user?.name || 'User';
+
+    if (status === 'authenticated') {
+      // 🎉 Just logged in
+      if (login) {
+        message = `Welcome ${name}! Redirecting to your page…`;
+        color = 'success';
+      }
+      // 👋 Just logged out
+      else if (logout) {
+        signOut({ redirect: false });
+        message = 'Logout successful. Redirecting to Home…';
+        color = 'success';
+        target = '/';
+      }
+      // ✅ Profile updated
+      else if (profileUpdated && updateSuccess) {
+        message = 'Profile updated successfully! Redirecting…';
+        color = 'success';
+      } else if (profilePasswordUpdated && updateSuccess) {
+        message = 'Profile Password updated successfully! Redirecting…';
+        color = 'success';
+      }
+      // ⛔️ Role denied
+      else if (adminNo || userNo) {
+        message = 'Access denied for this section.';
+        color = 'error';
+        target = '/';
+      }
+    } else {
+      // 🔓 Not authenticated cases
+      if (logout) {
+        message = 'Logout successful. Redirecting to Home…';
+        color = 'success';
+        target = '/';
+      } else if (notIn || guest) {
+        message = 'You are not authorized! Redirecting to login…';
+        color = 'error';
+        target = '/auth/signin';
+      } else if (adminNo || userNo) {
+        message = 'Access denied! Redirecting to login…';
+        color = 'error';
+        target = `/auth/signin?redirectTo=${encodeURIComponent(target)}`;
+      } else if (error) {
+        message = errorLabels[error] || errorLabels.default;
+        color = 'error';
+        target = '/auth/signin';
+      }
     }
-    // 🚪 User logged out
-    else if (logout) {
-      signOut({ redirect: false });
-      message = 'Logout successful. Redirecting to Home…';
-      color = 'success';
-      target = '/';
-    }
-    // 🔐 Unauthorized access (not logged in)
-    else if (notLoggedIn || guest) {
-      message = 'You are not authorized to view this page! Redirecting to Home…';
-      color = 'error';
-      target = '/';
-    }
-    // 🔐 Admin Denied & Remember Page
-    else if (adminDenied) {
-      message = `Request denied! You must be an admin. Redirecting to sign in…`;
-      color = 'error';
-      // Always redirect to signin with intended page preserved
-      target = `/auth/signin?redirectTo=${encodeURIComponent(redirectToParam || '/admin/dashboard')}`;
-    }
-    // 🔐 User Denied & Remember Page
-    else if (userDenied) {
-      message = `Request denied! You must be a user. Redirecting to sign in…`;
-      color = 'error';
-      // Always redirect to signin with intended page preserved
-      target = `/auth/signin?redirectTo=${encodeURIComponent(redirectToParam || '/user/dashboard')}`;
-    }
-    // 🛠️ Profile update
-    else if (profileUpdated && updateSuccess) {
-      message = 'Profile updated successfully! Redirecting…';
-      color = 'success';
-    } else if (profilePasswordUpdated && updateSuccess) {
-      message = 'Profile Password updated successfully! Redirecting…';
-      color = 'success';
-    }
-    // 🆘 Error handling (login failure, config, etc)
-    else if (error) {
-      message = errorLabels[error] || errorLabels.default;
-      color = 'error';
-      target = '/';
-    }
-    // 📭 Not found
-    else if (notFound) {
-      message = 'The page you are trying to access does not exist. Redirecting to Home…';
+
+    // 🧭 Page not found
+    if (notFound) {
+      message = 'Page does not exist. Redirecting to Home…';
+      color = 'info';
       target = '/';
     }
 
-    // 🚦 Show toast and perform redirect with splash delay
+    // 🚦 6. Only trigger redirect if there's a message/action to take
     if (message) {
       setRedirected(true);
+      // 🪄 Use your custom redirect/toast handler (show message, then nav)
       redirectWithMessage({
         target,
         message,
         loaderText: message,
         color,
         loaderOnly: true,
-        pageDelay: 3000 // ⏲️ 3 seconds before redirect
+        pageDelay: 2000 // Slightly faster (2s, tweak if you want!)
       });
     }
   }, [searchParams, status, session, redirected, redirectWithMessage]);
 
-  return null; // 🕳️ No UI; just a redirect hub!
+  // 👻 No UI, only logic!
+  return null;
 };
 
 export default MiddlePage;

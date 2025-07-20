@@ -175,7 +175,7 @@ export default function UserSubscriptionsMainPage() {
                     <span
                       className={
                         sub.status === 'active'
-                          ? 'text-green-400 font-bold'
+                          ? 'text-green-200 font-bold bg-green-800'
                           : sub.status === 'pending'
                             ? 'text-yellow-300 font-bold'
                             : sub.status === 'expired'
@@ -186,7 +186,7 @@ export default function UserSubscriptionsMainPage() {
                       {sub.status?.toUpperCase() || 'Unknown'}
                     </span>
                   </div>
-                  <div className="text-lg text-muted">
+                  <div className="text-lg">
                     {/* 🕰️ Dates */}
                     <span>
                       Created {sub.createdAt ? new Date(sub.createdAt).toLocaleString() : '--'}
@@ -210,59 +210,112 @@ export default function UserSubscriptionsMainPage() {
               <div className="flex flex-col gap-1 text-lg mb-2 mt-2">
                 {sub.subscription_username && (
                   <span>
-                    <span className="font-bold">Username:</span> {sub.subscription_username}
+                    <span className="font-bold me-2">Username:</span> {sub.subscription_username}
                   </span>
                 )}
                 {sub.subscription_password && (
                   <span>
-                    <span className="font-bold">Password:</span> {sub.subscription_password}
+                    <span className="font-bold me-2">Password:</span> {sub.subscription_password}
                   </span>
                 )}
                 {sub.subscription_url && (
                   <span>
-                    <span className="font-bold">URL:</span> {sub.subscription_url}
+                    <span className="font-bold me-2">URL:</span> {sub.subscription_url}
                   </span>
                 )}
                 {sub.subscription_other && (
                   <span>
-                    <span className="font-bold">Other:</span> {sub.subscription_other}
+                    <span className="font-bold me-2">Other:</span> {sub.subscription_other}
                   </span>
                 )}
                 {sub.additional_info && (
                   <span>
-                    <span className="font-bold">Notes:</span> {sub.additional_info}
+                    <span className="font-bold me-2">Notes:</span> {sub.additional_info}
                   </span>
                 )}
               </div>
-              {/* 💸 Payments list */}
-              <div className="mt-2 text-lg">
-                <strong>Payments:</strong>
-                <div className="flex flex-col gap-1">
+              {/* 💸 Payments List - Creative Version */}
+              <div className="mt-4">
+                <strong className="text-lg mb-2 block">Payments:</strong>
+                <div className="flex flex-col gap-4">
                   {sub.payments && sub.payments.length > 0 ? (
-                    sub.payments.map((pay) => (
-                      <div key={pay.id} className="border border-gray-500 rounded-md p-2 mt-1">
-                        <span>
-                          <span className="font-bold">Status:</span> {pay.status}
-                        </span>
-                        <span className="ml-2">
-                          <span className="font-bold">Invoice:</span> {pay.invoice_id}
-                        </span>
-                        {pay.amount_paid && (
-                          <span className="ml-2">
-                            <span className="font-bold">Paid:</span> {pay.amount_paid}{' '}
-                            {pay.currency}
-                          </span>
-                        )}
-                        {pay.createdAt && (
-                          <span className="ml-2">
-                            <span className="font-bold">At:</span>{' '}
-                            {new Date(pay.createdAt).toLocaleString()}
-                          </span>
-                        )}
-                      </div>
-                    ))
+                    sub.payments.map((pay) => {
+                      // 🎨 Pick a color for the left bar based on payment status
+                      const statusColor =
+                        pay.status === 'confirmed' || pay.status === 'finished'
+                          ? 'bg-green-400'
+                          : pay.status === 'pending'
+                            ? 'bg-yellow-400'
+                            : pay.status === 'failed'
+                              ? 'bg-red-400'
+                              : 'bg-gray-400';
+
+                      return (
+                        <div
+                          key={pay.id}
+                          className={`
+              group flex items-center rounded-xl shadow-lg overflow-hidden 
+              transition transform hover:scale-[1.03] hover:shadow-2xl
+              bg-gradient-to-br from-gray-800 to-gray-900
+              border border-gray-600
+            `}
+                        >
+                          {/* 🎨 Left Status Bar */}
+                          {/* <div className={`${statusColor} w-2 h-full`} /> */}
+
+                          {/* 🧾 Payment Info Body */}
+                          <div className="flex-1 px-4 py-3 grid grid-cols-2 sm:grid-cols-3 gap-y-1 gap-x-3">
+                            {/* 🔖 Status */}
+                            <div className="flex items-center gap-1">
+                              <span className="text-xl">🔖</span>
+                              <span className="font-semibold">{pay.status?.toUpperCase()}</span>
+                            </div>
+                            {/* 🧾 Invoice ID */}
+                            <div className="flex items-center gap-1">
+                              <span className="text-xl">📄</span>
+                              <span>Inv: {pay.invoice_id}</span>
+                            </div>
+                            {/* 🔑 Payment ID */}
+                            {pay.payment_id && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-xl">🆔</span>
+                                <span>ID: {pay.payment_id}</span>
+                              </div>
+                            )}
+                            {/* 💵 Amount Paid */}
+                            {pay.amount_paid && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-xl">💰</span>
+                                <span>
+                                  {pay.amount_paid} {pay.currency}
+                                </span>
+                              </div>
+                            )}
+                            {/* ⏰ Created At */}
+                            {pay.createdAt && (
+                              <div className="flex items-center gap-1 col-span-2 sm:col-span-1">
+                                <span className="text-xl">⏰</span>
+                                <span>{new Date(pay.createdAt).toLocaleString()}</span>
+                              </div>
+                            )}
+                          </div>
+                          {/* ✅ Right Side Icon */}
+                          <div className="h-full flex items-center pr-4">
+                            {pay.status === 'confirmed' || pay.status === 'finished' ? (
+                              <span className="text-2xl text-green-400 bg-green-800">✔️</span>
+                            ) : pay.status === 'pending' ? (
+                              <span className="text-2xl text-yellow-400">⏳</span>
+                            ) : pay.status === 'failed' ? (
+                              <span className="text-2xl text-red-400">❌</span>
+                            ) : (
+                              <span className="text-2xl text-gray-400">❔</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
                   ) : (
-                    <span className="text-gray-400">No payments yet.</span>
+                    <span className="text-gray-400 pl-2">No payments yet.</span>
                   )}
                 </div>
               </div>

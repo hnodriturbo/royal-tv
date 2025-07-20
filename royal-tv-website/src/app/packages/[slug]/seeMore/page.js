@@ -16,6 +16,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { paymentPackages, packageFeatures } from '@/packages/data/packages'; // 🎁 Centralized data
+import Guide from '@/packages/data/guide';
 
 export default function PackageSlugPage() {
   // 🏷️ Get slug from URL
@@ -52,15 +53,14 @@ export default function PackageSlugPage() {
       {/* 🦄 Card wrapper */}
       <div
         className="
-        bg-gradient-to-br from-wonderful-8 via-wonderful-10 to-wonderful-4
-        border-2 border-wonderful-2/40
+        border-2
         container-style
         rounded-3xl
         shadow-2xl
         backdrop-blur-lg
         px-8 py-12
         flex flex-col items-center
-        max-w-3xl w-full
+        max-w-2xl
         relative
         mb-10
         "
@@ -126,6 +126,9 @@ export default function PackageSlugPage() {
           )}
         </div>
       </div>
+
+      {/* The guide from packages/data/guide.js */}
+      <Guide />
 
       {/* 🏠 Back to All Packages */}
       <div className="container-style w-fit mb-12">

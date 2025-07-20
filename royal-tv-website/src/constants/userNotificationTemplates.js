@@ -90,6 +90,7 @@ export const userNotificationTemplates = {
       (data.subscription_password ? `Password: ${data.subscription_password}\n` : '') +
       (data.subscription_url ? `URL: ${data.subscription_url}\n` : '') +
       (data.subscription_other ? `Other: ${data.subscription_other}\n` : '') +
+      (data.additional_info ? `Additional information: ${data.additional_info}\n` : '') +
       `\n🚀 Enter these details into your IPTV app to start watching now.\n` +
       `If you need help, login and use Live Chat for fastest support!`,
     link: `/user/subscriptions`

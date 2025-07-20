@@ -153,7 +153,7 @@ export default function UserConversationDetailsPage() {
 
   // 🔻 RENDER UI
   return (
-    <div className="flex flex-col items-center w-full">
+    <div className="flex flex-col items-center w-full mt-4">
       {/* 🔲 Main container, compact width */}
       <div className="container-style lg:w-10/12 w-full mt-2 p-2">
         {/* 🧑‍🤝‍🧑 Two-column header (User & Admin info) */}

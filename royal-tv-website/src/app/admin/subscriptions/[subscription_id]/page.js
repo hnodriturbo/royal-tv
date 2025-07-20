@@ -18,7 +18,7 @@ import useAppHandlers from '@/hooks/useAppHandlers';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import { useSession } from 'next-auth/react';
 import useModal from '@/hooks/useModal';
-import useSocketHub from '@/hooks/socket/useSocketHub';
+/* import useSocketHub from '@/hooks/socket/useSocketHub'; */
 import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
 
 export default function AdminEditSubscriptionPage() {
@@ -31,7 +31,7 @@ export default function AdminEditSubscriptionPage() {
   const router = useRouter();
   const params = useParams();
   const { subscription_id } = params;
-  const { subscriptionStatusUpdate } = useSocketHub();
+  /* const { subscriptionStatusUpdate } = useSocketHub(); */
   const { createSubscriptionActivatedNotification } = useCreateNotifications();
 
   const [subscription, setSubscription] = useState(null);
@@ -73,6 +73,11 @@ export default function AdminEditSubscriptionPage() {
 
   // 3️⃣ Handle the Update process
   const handleUpdate = async () => {
+    // ⛔ Don't proceed if subscription/formData isn't loaded yet!
+    if (!formData.subscription_id) {
+      displayMessage('⏳ Please wait, loading subscription data...', 'info');
+      return;
+    }
     showLoader({ text: 'Updating subscription...' });
     setLoading(true);
     try {
@@ -81,11 +86,20 @@ export default function AdminEditSubscriptionPage() {
       if (patchData.startDate) patchData.startDate = new Date(patchData.startDate).toISOString();
       if (patchData.endDate) patchData.endDate = new Date(patchData.endDate).toISOString();
 
+      // 🛰️ PATCH request: Send update to backend API
       const response = await axiosInstance.patch(
         `/api/admin/subscriptions/${subscription_id}`,
         patchData
       );
+
+      // 🧩 Destructure and rename 'subscription' to 'updatedSubscription'
       const { subscription: updatedSubscription, previousStatus } = response.data;
+
+      // 🕵️‍♂️ DEBUG: Log what comes back from backend
+      console.log('🔎 [DEBUG] updatedSubscription:', updatedSubscription);
+      console.log('🔎 [DEBUG] previousStatus:', previousStatus);
+
+      // 🎉 UI feedback
       displayMessage('✅ Subscription updated successfully', 'success');
 
       // 2️⃣ Notify if status changed to active
@@ -93,8 +107,14 @@ export default function AdminEditSubscriptionPage() {
         previousStatus !== updatedSubscription.status &&
         updatedSubscription.status === 'active'
       ) {
+        // 🕵️‍♂️ DEBUG: Log what is being sent to notification
+        console.log('📬 [DEBUG] Notifying with user:', updatedSubscription.user);
+        console.log('📬 [DEBUG] Notifying with subscription:', updatedSubscription);
+
+        // 🚨 Trigger notification for subscription activation
         createSubscriptionActivatedNotification(updatedSubscription.user, updatedSubscription);
-        subscriptionStatusUpdate(updatedSubscription.user.user_id);
+        // 🔄 Let sockets/other tabs know user subscription status updated
+        /* await subscriptionStatusUpdate(updatedSubscription.user.user_id); */
       }
 
       setTimeout(() => {
@@ -102,6 +122,20 @@ export default function AdminEditSubscriptionPage() {
       }, 2000);
     } catch (err) {
       displayMessage('❌ Failed to update subscription', 'error');
+      // Log every possible detail!
+      console.error('❌ [DEBUG] PATCH error:', err, err?.response, err?.toJSON?.());
+      alert(
+        JSON.stringify(
+          {
+            message: err.message,
+            responseData: err?.response?.data,
+            responseStatus: err?.response?.status,
+            responseHeaders: err?.response?.headers
+          },
+          null,
+          2
+        )
+      ); // TEMP for dev!
     } finally {
       hideLoader();
       setLoading(false);

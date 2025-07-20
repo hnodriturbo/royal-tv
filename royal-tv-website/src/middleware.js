@@ -9,13 +9,15 @@
  */
 
 import { NextResponse } from 'next/server';
-import { edgeAuth } from '@/lib/auth/edge-auth';
+import { edgeAuth } from './lib/auth/edge-auth';
 
 export async function middleware(request) {
   // 🔍 Unpack the authentication token
   const token = await edgeAuth(request);
   const userRole = token?.role;
   const userId = token?.user_id;
+  console.log('NEXTAUTH_SECRET:', process.env.NEXTAUTH_SECRET);
+  console.log('JWT TOKEN:', token);
 
   // ✉️ Clone headers to add identity info for downstream use
   const forwardedHeaders = new Headers(request.headers);

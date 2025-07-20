@@ -1,11 +1,3 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-// 📦 Packages Grid (Drop this wherever you want your packages to show on the homepage)
-import { paymentPackages, packageFeatures } from '@/packages/data/packages';
 /*
   HomePage component for Royal IPTV Service.
   - Displays a header encouraging registration.
@@ -14,6 +6,17 @@ import { paymentPackages, packageFeatures } from '@/packages/data/packages';
     otherwise, it leads to a contact form.
   - Each package includes a "Details" button that routes to a dedicated details page.
 */
+
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+// 📦 Packages Grid (Drop this wherever you want your packages to show on the homepage)
+import PackagesGrid from '@/packages/data/packages';
+
+import Guide from '@/packages/data/guide';
 
 export default function HomePage() {
   // 🌐 Fetch current session and status clearly from NextAuth
@@ -93,8 +96,91 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {/* 🎬 INSTRUCTIONS + IPTV APPS SECTION */}
-        <div className="w-full flex flex-col items-center justify-center">
+        {/* The guide from packages/data/guide.js */}
+        <Guide />
+
+        {/* Packages Grid using packages/data/packages.js */}
+        <PackagesGrid authenticated={authenticated} />
+
+        <div className="flex flex-col items-center justify-center w-full">
+          {/* ✅ Thank you banner */}
+          {showThankYou && (
+            <div className="container-style text-3xl mb-6 font-semibold">
+              <p>
+                Thank you for contacting us! We’ll get back to you as soon as possible. ({countdown}
+                )
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+{
+  /* 📦 Packages Responsive Grid */
+}
+{
+  /* <div className="lg:w-11/12 w-10/12 mb-8 px-2">
+          <div
+            className="
+    grid 
+    grid-cols-1 
+    sm:grid-cols-2 
+    xl:grid-cols-3 
+    gap-6
+    "
+          >
+            {packages.map((pkg) => (
+              <div key={pkg.id} className="flex">
+                <div className="container-style flex flex-col justify-between items-center w-full">
+                  <div>
+                    <h3 className="text-2xl font-semibold mb-2">{pkg.title}</h3>
+                    <p className="text-lg mb-4">{pkg.description}</p>
+                    <p className="text-xl font-bold mb-4">{pkg.price}</p>
+                  </div>
+                  <div className="flex flex-col space-y-2 whitespace-nowrap w-full items-center">
+                    {authenticated && user?.role === 'user' ? (
+                      <>
+                        <Link href="/user/liveChat/createConversation" className="w-full">
+                          <button className="w-10/12 bg-green-500 py-2 px-4 rounded-xl hover:bg-green-600 transition whitespace-nowrap overflow-hidden text-ellipsis text-center">
+                            Send message to admin
+                          </button>
+                        </Link>
+                        <Link href={pkg.buyNow} className="w-full">
+                          <button className="w-10/12 bg-red-500 py-2 px-4 rounded-xl hover:bg-red-600 transition whitespace-nowrap overflow-hidden text-ellipsis text-center">
+                            Buy Now
+                          </button>
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <Link href="/auth/signup" className="w-full">
+                          <button className="w-10/12 bg-green-500 py-2 px-4 rounded-xl hover:bg-green-600 transition whitespace-nowrap overflow-hidden text-ellipsis text-center">
+                            Register To Buy
+                          </button>
+                        </Link>
+                        <Link href={pkg.detailsUrl} className="w-full">
+                          <button className="w-10/12 bg-blue-500 py-2 px-4 rounded-xl hover:bg-blue-600 transition whitespace-nowrap overflow-hidden text-ellipsis text-center">
+                            More Details
+                          </button>
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div> */
+}
+
+{
+  /* 🎬 INSTRUCTIONS + IPTV APPS SECTION */
+}
+{
+  /*         <div className="w-full flex flex-col items-center justify-center">
           <div className="container-style mb-8 py-8 bg-smooth-gradient-light-2">
             <ul className="list-disc list-inside space-y-6 text-lg font-semibold">
               Step 1:{' '}
@@ -130,13 +216,13 @@ export default function HomePage() {
               </li>
             </ul>
 
-            {/* IPTV apps guidance, more engaging */}
+         
             <div className="mt-8">
               <h2 className="text-3xl font-extrabold underline text-cyan-300 drop-shadow-2xl mb-4">
                 Prepare Your Streaming Setup:
               </h2>
               <div className="w-full flex flex-col md:flex-row gap-10 text-lg">
-                {/* Smart TV column */}
+             
                 <div className="flex-1 flex flex-col items-center gap-3">
                   <h3 className="text-xl font-bold text-yellow-200 drop-shadow-lg">
                     Smart TV Apps 📺
@@ -162,7 +248,7 @@ export default function HomePage() {
                     </li>
                   </ul>
                 </div>
-                {/* Android TV column */}
+                
                 <div className="flex-1 flex flex-col items-center gap-3">
                   <h3 className="text-xl font-bold text-green-200 drop-shadow-lg">
                     Android TV & More 🤖
@@ -214,141 +300,5 @@ export default function HomePage() {
               <span className="text-yellow-200 font-extrabold">Royal TV!</span>
             </h2>
           </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8 w-full max-w-6xl mx-auto">
-          {paymentPackages.map((pkg) => (
-            <div
-              key={pkg.slug}
-              className="
-        relative bg-gradient-to-br from-wonderful-7 via-wonderful-10 to-wonderful-2
-        border-2 border-wonderful-3/40
-        container-style rounded-2xl p-8 flex flex-col items-center shadow-2xl
-        transition-transform duration-300 hover:-translate-y-2 hover:scale-105 hover:shadow-[0_8px_40px_0_rgba(0,0,0,0.40)]
-        backdrop-blur-lg
-      "
-            >
-              {/* 🏷️ Device Badge */}
-              <div className="absolute top-4 right-4 bg-wonderful-4 text-black px-3 py-1 rounded-full text-xs font-bold shadow-lg uppercase">
-                {pkg.devices === 1 ? 'Single Device' : '2 Devices'}
-              </div>
-
-              {/* 🏆 Name */}
-              <h3 className="text-3xl font-bold text-yellow-300 mb-2 drop-shadow-xl">{pkg.name}</h3>
-
-              {/* 💵 Price */}
-              <div className="mb-2 flex items-center gap-2">
-                <span className="text-3xl font-extrabold text-pink-400 drop-shadow-lg">
-                  ${pkg.price}
-                </span>
-                <span className="text-lg font-semibold text-white/80">USD</span>
-              </div>
-
-              {/* ⏳ Duration */}
-              <div className="mb-1 text-lg text-blue-200 font-bold tracking-wide uppercase">
-                {pkg.duration}
-              </div>
-
-              {/* 🎁 Shared Features */}
-              <ul className="mb-6 mt-2 text-cyan-100 text-base font-medium space-y-1 text-left w-full max-w-[260px]">
-                {packageFeatures.map((feature, i) => (
-                  <li key={i} className="flex items-center gap-2">
-                    <span className="text-wonderful-5">✔️</span>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-
-              {/* 🔗 Buttons */}
-              <div className="flex flex-col gap-2 w-full mt-auto">
-                {authenticated ? (
-                  <Link href={pkg.buyNowUrl} className="w-full">
-                    <button className="btn-primary w-full py-3 rounded-xl font-bold text-xl tracking-wide shadow-xl transition hover:scale-105">
-                      Buy Now
-                    </button>
-                  </Link>
-                ) : (
-                  <Link href="/auth/signup" className="w-full">
-                    <button className="btn-secondary w-full py-3 rounded-xl font-bold text-xl tracking-wide shadow-xl transition hover:scale-105">
-                      Register to Buy
-                    </button>
-                  </Link>
-                )}
-                <Link href={pkg.detailsUrl} className="w-full">
-                  <button className="btn-info w-full py-3 rounded-xl font-bold text-lg tracking-wide shadow-lg hover:scale-105">
-                    More Info
-                  </button>
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* 📦 Packages Responsive Grid */}
-        {/* <div className="lg:w-11/12 w-10/12 mb-8 px-2">
-          <div
-            className="
-    grid 
-    grid-cols-1 
-    sm:grid-cols-2 
-    xl:grid-cols-3 
-    gap-6
-    "
-          >
-            {packages.map((pkg) => (
-              <div key={pkg.id} className="flex">
-                <div className="container-style flex flex-col justify-between items-center w-full">
-                  <div>
-                    <h3 className="text-2xl font-semibold mb-2">{pkg.title}</h3>
-                    <p className="text-lg mb-4">{pkg.description}</p>
-                    <p className="text-xl font-bold mb-4">{pkg.price}</p>
-                  </div>
-                  <div className="flex flex-col space-y-2 whitespace-nowrap w-full items-center">
-                    {authenticated && user?.role === 'user' ? (
-                      <>
-                        <Link href="/user/liveChat/createConversation" className="w-full">
-                          <button className="w-10/12 bg-green-500 py-2 px-4 rounded-xl hover:bg-green-600 transition whitespace-nowrap overflow-hidden text-ellipsis text-center">
-                            Send message to admin
-                          </button>
-                        </Link>
-                        <Link href={pkg.buyNow} className="w-full">
-                          <button className="w-10/12 bg-red-500 py-2 px-4 rounded-xl hover:bg-red-600 transition whitespace-nowrap overflow-hidden text-ellipsis text-center">
-                            Buy Now
-                          </button>
-                        </Link>
-                      </>
-                    ) : (
-                      <>
-                        <Link href="/auth/signup" className="w-full">
-                          <button className="w-10/12 bg-green-500 py-2 px-4 rounded-xl hover:bg-green-600 transition whitespace-nowrap overflow-hidden text-ellipsis text-center">
-                            Register To Buy
-                          </button>
-                        </Link>
-                        <Link href={pkg.detailsUrl} className="w-full">
-                          <button className="w-10/12 bg-blue-500 py-2 px-4 rounded-xl hover:bg-blue-600 transition whitespace-nowrap overflow-hidden text-ellipsis text-center">
-                            More Details
-                          </button>
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div> */}
-
-        <div className="flex flex-col items-center justify-center w-full">
-          {/* ✅ Thank you banner */}
-          {showThankYou && (
-            <div className="container-style text-3xl mb-6 font-semibold">
-              <p>
-                Thank you for contacting us! We’ll get back to you as soon as possible. ({countdown}
-                )
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    </>
-  );
+        </div> */
 }

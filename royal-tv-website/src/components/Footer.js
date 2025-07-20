@@ -13,21 +13,13 @@ const Footer = () => {
         {/* Left side: Buttons, left-aligned on desktop, full width on mobile */}
         <div className="w-full md:w-1/2">
           <div className="flex flex-row gap-2 md:items-start items-center md:justify-start justify-center ms-5 whitespace-nowrap">
-            <Link href="/contact" className={footerButtonClasses}>
-              <span className="mr-1">📩</span>
-              <span>Contact</span>
-            </Link>
-            <Link href="/transaction" className={footerButtonClasses}>
+            <Link href="/more-info" className={footerButtonClasses}>
               <span className="mr-1">💳</span>
-              <span>Buy Now</span>
+              <span>More Info & Buy Now</span>
             </Link>
             <Link href="/faq" className={footerButtonClasses}>
               <span className="mr-1">❓</span>
               <span>FAQ</span>
-            </Link>
-            <Link href="/more-info" className={footerButtonClasses}>
-              <span className="mr-1">ℹ️</span>
-              <span>More Info</span>
             </Link>
           </div>
         </div>

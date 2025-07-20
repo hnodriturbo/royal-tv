@@ -19,7 +19,7 @@ import axios from 'axios'; // For direct POST to socket server HTTP endpoint
 export async function POST(request) {
   // 📨 Get raw body for signature validation
   const rawBody = await request.text();
-  /*   const signature = request.headers.get('x-nowpayments-sig');
+  const signature = request.headers.get('x-nowpayments-sig');
 
   // 🔏 Compute HMAC for IPN security
   const expectedSig = crypto
@@ -31,7 +31,7 @@ export async function POST(request) {
     // 🛑 Invalid signature
     console.error('❌ Invalid IPN signature.');
     return new Response('Invalid signature', { status: 403 });
-  } */
+  }
 
   // 📦 Parse the payload
   let body;
