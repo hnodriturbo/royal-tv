@@ -10,7 +10,7 @@ module.exports = {
       node_args: '-r dotenv/config'
     },
     {
-      name: 'royal-tv-socket',
+      name: 'royal-tv-backend',
       script: 'node',
       args: 'server.js',
       cwd: '/root/royal-tv',

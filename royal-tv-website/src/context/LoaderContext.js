@@ -125,7 +125,7 @@ export const LoaderProvider = ({ children }) => {
               loaderConfig.background ? 'bg-black/50' : ''
             }`}
           >
-            <div className="ml-64 flex flex-col items-center">
+            <div className="flex flex-col items-center justify-center lg:ml-64">
               <RingLoader
                 size={loaderConfig.size}
                 color={loaderConfig.color}
