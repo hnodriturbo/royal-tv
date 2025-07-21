@@ -6,30 +6,6 @@
 //   - onChange: function to call when changed
 // ================================================================
 
-/* export default function SortDropdown({ options, value, onChange, className }) {
-  return (
-    <div className={`flex items-center gap-2 ${className}`}>
-      
-      <label className="font-medium" htmlFor="sort-order">
-        Sort:
-      </label>
-      <select
-        id="sort-order"
-        className="border rounded p-1 text-sm bg-gray-100"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
- */
-
 import clsx from 'clsx';
 export default function SortDropdown({ options, value, onChange, className, selectClassName }) {
   return (
