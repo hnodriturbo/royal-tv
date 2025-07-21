@@ -174,10 +174,17 @@ enum PaymentStatus {
   waiting
   confirming
   confirmed
+  sending
+  partially_paid
   finished
-  failed
   expired
+  failed
   refunded
+  completed
+  paying
+  partially_paid_expired
+  overpaid
+  underpaid
 }
 
 enum FreeTrialStatus {

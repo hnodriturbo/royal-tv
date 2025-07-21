@@ -9,25 +9,15 @@
  */
 
 import { NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { edgeAuth } from './auth/edge-auth';
 
 export async function middleware(request) {
-  // 🍪 Figure out cookie name based on environment
-  const isProduction = process.env.NODE_ENV === 'production';
-  const cookieName = isProduction ? '__Secure-authjs.session-token' : 'authjs.session-token';
-
-  // 🕵️‍♂️ Debug: Log all cookies present
-  const cookieList = Array.from(request.cookies?.keys?.() || []);
-
-  // 🔑 Get JWT token using correct cookie and secret
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET,
-    cookieName // 🏷️ Force correct cookie for dev/prod!
-  });
-
+  // 🔍 Unpack the authentication token
+  const token = await edgeAuth(request);
   const userRole = token?.role;
   const userId = token?.user_id;
+  console.log('NEXTAUTH_SECRET:', process.env.NEXTAUTH_SECRET);
+  console.log('JWT TOKEN:', token);
 
   // ✉️ Clone headers to add identity info for downstream use
   const forwardedHeaders = new Headers(request.headers);
@@ -37,9 +27,10 @@ export async function middleware(request) {
     forwardedHeaders.set('x-user-id', userId);
     forwardedHeaders.set('x-owner-id', userId);
     forwardedHeaders.set('x-sender-id', userId);
-    forwardedHeaders.set('x-user-role', userRole);
 
+    forwardedHeaders.set('x-user-role', userRole);
     console.log('[Middleware] injected x-user-role:', userRole);
+
     console.log('[Middleware] injected x-user-id:', userId);
   }
 

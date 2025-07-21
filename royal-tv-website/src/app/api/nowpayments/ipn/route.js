@@ -3,37 +3,31 @@
  * /api/nowpayments/ipn/route.js
  * -----------------------------------------------
  * Handles NowPayments IPN webhook for Royal TV.
- * - Validates IPN signature
- * - Updates payment status in DB
- * - Creates subscription if payment is finished
- * - Emits a real-time transactionFinished event to socket server (for this user only)
- *   → Frontend buyNow page listens for this event,
- *     then triggers both user and admin notifications.
+ * - Validates IPN signature.
+ * - On first IPN: links payment_id to DB row using invoice_id.
+ * - After that: ONLY uses payment_id for lookups.
+ * - Updates payment status, creates subscription, emits socket event.
  * ===============================================
  */
 
 import crypto from 'crypto';
 import prisma from '@/lib/prisma';
-import axios from 'axios'; // For direct POST to socket server HTTP endpoint
+import axios from 'axios';
 
 export async function POST(request) {
-  // 📨 Get raw body for signature validation
+  // --- 1. Signature Validation ---
   const rawBody = await request.text();
   const signature = request.headers.get('x-nowpayments-sig');
-
-  // 🔏 Compute HMAC for IPN security
   const expectedSig = crypto
     .createHmac('sha512', process.env.NOWPAYMENTS_IPN_KEY)
     .update(rawBody)
     .digest('hex');
-
   if (signature !== expectedSig) {
-    // 🛑 Invalid signature
     console.error('❌ Invalid IPN signature.');
     return new Response('Invalid signature', { status: 403 });
   }
 
-  // 📦 Parse the payload
+  // --- 2. Parse and Normalize Payload ---
   let body;
   try {
     body = JSON.parse(rawBody);
@@ -41,59 +35,78 @@ export async function POST(request) {
     return new Response('Bad Request', { status: 400 });
   }
 
-  // 🧾 Extract fields from payload
   const {
-    invoice_id,
-    payment_id,
+    invoice_id: raw_invoice_id,
+    payment_id: raw_payment_id,
     payment_status,
     price_amount,
-    amount_received,
+    amount_received: raw_amount_received,
     pay_address,
     pay_currency,
     network
   } = body;
 
-  // 🔍 Find the pending payment by invoice_id
-  const paymentRecord = await prisma.subscriptionPayment.findFirst({
-    where: { invoice_id, status: 'waiting' },
+  const invoice_id = String(raw_invoice_id);
+  const payment_id = String(raw_payment_id);
+  const amount_paid = parseFloat(price_amount);
+  const amount_received = raw_amount_received ? parseFloat(raw_amount_received) : null;
+
+  // --- 3. Try to find by payment_id (normal path for all but first IPN) ---
+  let paymentRecord = await prisma.subscriptionPayment.findFirst({
+    where: { payment_id },
     orderBy: { createdAt: 'desc' }
   });
 
+  // --- 4. If not found, first IPN: match by invoice_id and SET payment_id ---
   if (!paymentRecord) {
-    console.error('❌ Payment record not found for invoice:', invoice_id);
+    paymentRecord = await prisma.subscriptionPayment.findFirst({
+      where: { invoice_id, status: 'waiting' },
+      orderBy: { createdAt: 'desc' }
+    });
+    if (paymentRecord) {
+      // Save payment_id for future webhooks!
+      await prisma.subscriptionPayment.update({
+        where: { id: paymentRecord.id },
+        data: { payment_id }
+      });
+    }
+  }
+
+  // --- 5. If still not found, reject ---
+  if (!paymentRecord) {
+    console.error(
+      '❌ Payment record not found. invoice_id:',
+      invoice_id,
+      'payment_id:',
+      payment_id
+    );
     return new Response('Payment record not found', { status: 404 });
   }
 
-  // 📝 Update payment details immediately
+  // --- 6. Update payment status/fields ---
   await prisma.subscriptionPayment.update({
     where: { id: paymentRecord.id },
     data: {
       payment_id,
       status: payment_status,
-      amount_paid: parseFloat(price_amount),
-      amount_received: parseFloat(amount_received),
+      amount_paid,
+      amount_received,
       pay_address,
       pay_currency,
       network,
-      received_at: payment_status === 'finished' ? new Date() : undefined
+      received_at:
+        payment_status === 'finished' || payment_status === 'completed' ? new Date() : undefined
     }
   });
 
-  let subscription = null;
-
-  // 👤 Fetch the user for merging into socket payload
+  // --- 7. Fetch User ---
   const user = await prisma.user.findUnique({
     where: { user_id: paymentRecord.user_id }
   });
 
-  /*   // 💸 Fetch the updated payment record
-  const updatedPayment = await prisma.subscriptionPayment.findUnique({
-    where: { id: paymentRecord.id }
-  }); */
-
-  // 🚀 If payment is finished, create subscription & emit real-time event for user
-  if (payment_status === 'finished') {
-    // 1️⃣ Create subscription
+  // --- 8. Create Subscription & Emit Event if payment is finished or completed ---
+  let subscription = null;
+  if (payment_status === 'finished' || payment_status === 'completed') {
     subscription = await prisma.subscription.create({
       data: {
         user_id: paymentRecord.user_id,
@@ -103,43 +116,31 @@ export async function POST(request) {
       }
     });
 
-    // 2️⃣ Link payment to subscription
     await prisma.subscriptionPayment.update({
       where: { id: paymentRecord.id },
       data: { subscription_id: subscription.subscription_id }
     });
 
-    // 💡 Fetch the updated payment record AGAIN, NOW with subscription_id!
-    const updatedPayment = await prisma.subscriptionPayment.findUnique({
-      where: { id: paymentRecord.id }
-    });
-
-    // 3️⃣ 🔔 Emit transactionFinished event for this user (via socket server HTTP bridge)
     try {
       const SOCKET_SERVER_URL = process.env.SOCKET_SERVER_URL || 'http://localhost:3001';
-      console.log(
-        '[IPN] About to POST to Socket Server:',
-        `${SOCKET_SERVER_URL}/emit/transactionFinished`
-      );
-      console.log('[IPN] Payload:', {
+      await axios.post(`${SOCKET_SERVER_URL}/emit/transactionFinished`, {
         userId: user.user_id,
         user,
-        payment: updatedPayment,
+        payment: {
+          ...paymentRecord,
+          payment_id,
+          status: payment_status,
+          amount_paid,
+          amount_received,
+          pay_address,
+          pay_currency,
+          network
+        },
         subscription
       });
-
-      const socketResponse = await axios.post(`${SOCKET_SERVER_URL}/emit/transactionFinished`, {
-        userId: user.user_id,
-        user,
-        payment: updatedPayment,
-        subscription
-      });
-      console.log('[IPN] Socket server response:', socketResponse.data);
     } catch (error) {
       console.error('❌ Error sending transactionFinished to socket server:', error);
     }
-
-    console.log(`🎉 Subscription created for user ${paymentRecord.user_id}`);
   }
 
   return new Response('OK', { status: 200 });

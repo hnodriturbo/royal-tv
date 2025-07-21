@@ -23,9 +23,10 @@ const LoginPage = () => {
   const initialUsername = searchParams?.get('username') || '';
   const isSignup = searchParams?.get('signup') === 'true';
 
-  // 🟩 Local form state
+  // 🟩 Form States, username & password & rememberMe
   const [username, setUsername] = useState(initialUsername);
   const [password, setPassword] = useState('');
+  const [rememberMeChecked, setRememberMeChecked] = useState(false);
 
   useEffect(() => {
     // 📨 Show welcome for signup, else show any error
@@ -59,7 +60,8 @@ const LoginPage = () => {
       const result = await signIn('credentials', {
         redirect: false,
         username,
-        password
+        password,
+        rememberMe: rememberMeChecked ? true : false
       });
 
       if (!result.error) {
@@ -103,6 +105,15 @@ const LoginPage = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          <label className="flex items-center mb-4">
+            <input
+              type="checkbox"
+              checked={rememberMeChecked}
+              onChange={(e) => setRememberMeChecked(e.target.checked)}
+              className="mr-2"
+            />
+            Remember me
+          </label>
           {/* 🗑️ No Remember Me! */}
           <button
             type="submit"

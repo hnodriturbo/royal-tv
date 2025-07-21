@@ -85,7 +85,7 @@ const SignupPage = () => {
       // ✅ Display the success message
       displayMessage('Account created successfully! Check your email.', 'success');
 
-      router.push(`/auth/signin?signup=true?username=${formData.username}`);
+      router.push(`/auth/signin?signup=true&username=${formData.username}`);
     } catch (error) {
       // 1️⃣ Extract message and status from Axios error object
       const msg = error.response?.data?.message || 'Failed to create account';

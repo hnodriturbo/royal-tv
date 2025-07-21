@@ -1,18 +1,15 @@
 /**
  * ===============================
- * 💸 Buy Now Page (Dynamic Invoice Pattern)
+ * 💸 Buy Now Page (Single Init Pattern)
  * ---------------------------------------
- * - On page load: creates a new invoice via NowPayments API
- * - Fee is always paid by the user
- * - Always BTC, always unique invoice per payment
- * - Stores widget_url for user session
- * - Handles real-time subscription notifications!
+ * - Creates payment init only ONCE per login/page
+ * - Runs function inside useEffect, only on status change
  * ===============================
  */
 
 'use client';
 
-import { useEffect, useMemo, useCallback, useState } from 'react';
+import { useEffect, useMemo, useCallback } from 'react';
 import { useParams, notFound, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import axiosInstance from '@/lib/axiosInstance'; // 🪄 Custom axios instance
@@ -24,7 +21,7 @@ import useSocketHub from '@/hooks/socket/useSocketHub'; // 📡 Unified socket h
 import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications'; // 🔔 Notification creator
 
 export default function PackageBuyNowPage() {
-  // 🌈 Get the slug from URL params
+  // 🌈 Get the slug from params
   const { slug } = useParams();
 
   // 🗺️ Next router for navigation
@@ -39,56 +36,40 @@ export default function PackageBuyNowPage() {
   const { showLoader, hideLoader, displayMessage } = useAppHandlers();
 
   // 📦 Find current payment package by slug
-  const paymentPackage = useMemo(
-    () => paymentPackages.find((packageItem) => packageItem.slug === slug),
-    [slug]
-  );
+  const paymentPackage = useMemo(() => paymentPackages.find((pkg) => pkg.slug === slug), [slug]);
 
-  // 🚧 If package not found, show 404
+  // 🚧 If not found, 404
   if (!paymentPackage) return notFound();
 
   // 👂 Listen for transactionFinished event from socket server
   const { onTransactionFinished } = useSocketHub();
 
-  // 🛠️ Create notification helpers
+  // 🛠️ Create the functions for notifications
   const { createSubscriptionCreatedNotification, createPaymentReceivedNotification } =
     useCreateNotifications();
 
-  // 🌐 Store widgetUrl for iframe
-  const [widgetUrl, setWidgetUrl] = useState(null);
-
-  // 💸 Create invoice (and payment record) as soon as possible
-  const initializePaymentSession = useCallback(async () => {
+  // 💸 Payment init function (only runs ONCE after login)
+  const initializePayment = useCallback(async () => {
     if (!session?.user || !paymentPackage) return;
-    showLoader({ text: 'Creating secure BTC invoice...' }); // ⏳
-
+    showLoader({ text: 'Creating secure payment record...' }); // 🌀 Show loader!
     try {
-      // 📨 Call backend to create a unique invoice
-      const { data } = await axiosInstance.post('/api/nowpayments/create-invoice', {
-        order_id: paymentPackage.slug, // Your tracking for DB
-        package_name: paymentPackage.name,
-        price: paymentPackage.price,
-        customer_email: session.user.email || undefined
+      await axiosInstance.post('/api/nowpayments/init', {
+        order_id: paymentPackage.slug,
+        invoice_id: paymentPackage.iid
       });
-
-      if (data.widget_url) {
-        setWidgetUrl(data.widget_url); // 🪄 Ready for iframe!
-        displayMessage('Your secure BTC invoice is ready.', 'success');
-      } else {
-        displayMessage('Could not load payment widget.', 'error');
-      }
+      displayMessage('Your secure payment is ready.', 'success'); // 🎉
     } catch (error) {
-      console.error('❌ Invoice creation error:', error);
+      console.error('❌ Payment init error:', error);
       displayMessage('Could not initialize payment. Please refresh.', 'error');
     } finally {
       hideLoader();
     }
-  }, [session?.user, paymentPackage, showLoader, hideLoader, displayMessage]);
+  }, []);
 
   // 🕹️ Run once after login & allowed & package found
   useEffect(() => {
     if (status === 'authenticated' && isAllowed) {
-      initializePaymentSession(); // 🎬
+      initializePayment(); // 🎬
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, isAllowed]);
@@ -96,19 +77,16 @@ export default function PackageBuyNowPage() {
   // 👂 Listen for real-time payment success
   useEffect(() => {
     const unsubscribe = onTransactionFinished(({ user, payment, subscription }) => {
+      // 🎉 Show success toast or message
       displayMessage('✅ Payment received! Subscription is pending admin approval.', 'success');
+      // 🔔 Fire both user & admin notifications
       createPaymentReceivedNotification(user, payment);
       createSubscriptionCreatedNotification(user, subscription);
+      // 🚦 Just redirect to subscriptions with a flag
       router.push('/user/subscriptions?paymentSuccess=1');
     });
     return unsubscribe;
-  }, [
-    onTransactionFinished,
-    router,
-    createPaymentReceivedNotification,
-    createSubscriptionCreatedNotification,
-    displayMessage
-  ]);
+  }, [onTransactionFinished, router]);
 
   // 🛑 Guard: Only render after allowed!
   if (!isAllowed) return null;
@@ -132,27 +110,19 @@ export default function PackageBuyNowPage() {
         </p>
         <p className="text-2xl text-cyan-200 mb-4">Instructions are below!</p>
 
-        {/* 🪙 Crypto Payment Iframe (dynamic BTC invoice) */}
+        {/* 🪙 Crypto Payment Iframe */}
         <div className="w-full flex justify-center mt-8 mb-12">
-          {widgetUrl ? (
-            <iframe
-              src={widgetUrl}
-              width="410"
-              height="696"
-              frameBorder="0"
-              scrolling="no"
-              style={{ overflowY: 'hidden' }}
-              title={`Buy ${paymentPackage.name} - Crypto Payment`}
-            >
-              Can't load widget
-            </iframe>
-          ) : (
-            <div className="flex items-center justify-center w-full h-[400px]">
-              <span className="text-lg text-yellow-300 font-bold animate-pulse">
-                Loading BTC payment widget...
-              </span>
-            </div>
-          )}
+          <iframe
+            src={`https://nowpayments.io/embeds/payment-widget?iid=${paymentPackage.iid}`}
+            width="410"
+            height="696"
+            frameBorder="0"
+            scrolling="no"
+            style={{ overflowY: 'hidden' }}
+            title={`Buy ${paymentPackage.name} - Crypto Payment`}
+          >
+            Can't load widget
+          </iframe>
         </div>
       </div>
 
