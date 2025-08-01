@@ -26,6 +26,7 @@
  */
 
 import prisma from '../lib/prisma.js';
+import logger from '../lib/logger'; // 🪵 Centralized logger for all logs
 
 export default function registerAccountEvents(io, socket) {
   /* ------------- Subscription Socket Events ------------- */
@@ -37,12 +38,10 @@ export default function registerAccountEvents(io, socket) {
       where: { user_id: socket.userData?.user_id },
       orderBy: { createdAt: 'desc' }
     });
-    // Log the fetch action (if enabled)
-    if (process.env.SOCKET_LOGS === 'true') {
-      console.log(
-        `📋 [SOCKET] ${socket.userData?.name || socket.userData?.user_id} fetched all subscriptions.`
-      );
-    }
+    // Log the fetch action
+    logger.socket(
+      `📋 [SOCKET] ${socket.userData?.name || socket.userData?.user_id} fetched all subscriptions.`
+    );
     // Send the subscriptions list back to the client
     socket.emit('subscriptions_list', subscriptions);
   });
@@ -57,36 +56,35 @@ export default function registerAccountEvents(io, socket) {
 
     // Security: Only allow if it belongs to the current user
     if (!subscription || subscription.user_id !== socket.userData?.user_id) {
-      if (process.env.SOCKET_LOGS === 'true') {
-        console.log(
-          `⛔ [SOCKET] ${socket.userData?.name || socket.userData?.user_id} tried to fetch status for unauthorized or missing subscription: ${subscription_id}`
-        );
-      }
+      logger.socket(
+        `⛔ [SOCKET] ${socket.userData?.name || socket.userData?.user_id} tried to fetch status for unauthorized or missing subscription: ${subscription_id}`
+      );
       socket.emit('subscription_status', null);
       return;
     }
-    if (process.env.SOCKET_LOGS === 'true') {
-      console.log(
-        `📊 [SOCKET] ${socket.userData?.name || socket.userData?.user_id} fetched subscription status for ${subscription_id}:`,
-        subscription.status
-      );
-    }
+
+    logger.socket(
+      `📊 [SOCKET] ${socket.userData?.name || socket.userData?.user_id} fetched subscription status for ${subscription_id}:`,
+      subscription.status
+    );
+
     // Emit the found subscription status (no user_id for privacy)
     socket.emit('subscription_status', {
       subscription_id: subscription.subscription_id,
       status: subscription.status
     });
   });
+
   // 💸 Get the full payment record for a given order_id
   socket.on('fetch_subscription_payment', async ({ order_id }) => {
     // Find the payment record for the provided order_id
     const payment = await prisma.subscriptionPayment.findUnique({ where: { id: order_id } });
-    if (process.env.SOCKET_LOGS === 'true') {
-      console.log(
-        `💸 [SOCKET] ${socket.userData?.name || socket.userData?.user_id} fetched subscription payment for order ${order_id}:`,
-        payment ? payment.status : null
-      );
-    }
+
+    logger.socket(
+      `💸 [SOCKET] ${socket.userData?.name || socket.userData?.user_id} fetched subscription payment for order ${order_id}:`,
+      payment ? payment.status : null
+    );
+
     // Emit the payment object to the client (you may want to check ownership here as well)
     socket.emit('subscription_payment', payment || null);
   });
@@ -98,12 +96,12 @@ export default function registerAccountEvents(io, socket) {
       where: { id: order_id },
       select: { status: true }
     });
-    if (process.env.SOCKET_LOGS === 'true') {
-      console.log(
-        `💵 [SOCKET] ${socket.userData?.name || socket.userData?.user_id} fetched payment status for order ${order_id}:`,
-        payment ? payment.status : null
-      );
-    }
+
+    logger.socket(
+      `💵 [SOCKET] ${socket.userData?.name || socket.userData?.user_id} fetched payment status for order ${order_id}:`,
+      payment ? payment.status : null
+    );
+
     // Emit just the status (and order_id) to the client
     socket.emit('subscription_payment_status', {
       order_id,
@@ -115,9 +113,7 @@ export default function registerAccountEvents(io, socket) {
   socket.on('emit_subscription_created', ({ subscription }) => {
     // Safety check: require subscription object and user_id
     if (!subscription || !subscription.user_id) return;
-    if (process.env.SOCKET_LOGS === 'true') {
-      console.log(`🆕 [SOCKET] Emitting subscription_created for user ${subscription.user_id}`);
-    }
+    logger.socket(`🆕 [SOCKET] Emitting subscription_created for user ${subscription.user_id}`);
     // Send the subscription_created event to the specific user
     io.to(subscription.user_id).emit('subscription_created', subscription);
   });
@@ -126,12 +122,10 @@ export default function registerAccountEvents(io, socket) {
   socket.on('emit_payment_status_updated', ({ user_id: target_id, order_id, status }) => {
     // Require all necessary fields
     if (!target_id || !order_id || !status) return;
-    if (process.env.SOCKET_LOGS === 'true') {
-      console.log(
-        `🔄 [SOCKET] Emitting payment_status_updated for user ${target_id}, order ${order_id}:`,
-        status
-      );
-    }
+    logger.socket(
+      `🔄 [SOCKET] Emitting payment_status_updated for user ${target_id}, order ${order_id}:`,
+      status
+    );
     // Emit the update to the affected user
     io.to(target_id).emit('payment_status_updated', { order_id, status });
   });
@@ -145,12 +139,10 @@ export default function registerAccountEvents(io, socket) {
       select: { status: true }
     });
     // 🟢 Log: Status fetch and emit
-    if (process.env.SOCKET_LOGS === 'true') {
-      console.log(
-        `🔎 [SOCKET] User ${socket.userData?.name} requested free_trial_status – emitted free_trial_status:`,
-        freeTrial ? freeTrial.status : null
-      );
-    }
+    logger.socket(
+      `🔎 [SOCKET] User ${socket.userData?.name} requested free_trial_status – emitted free_trial_status:`,
+      freeTrial ? freeTrial.status : null
+    );
     socket.emit('free_trial_status', freeTrial ? freeTrial.status : null);
   });
 
@@ -160,12 +152,10 @@ export default function registerAccountEvents(io, socket) {
       where: { user_id: socket.userData.user_id }
     });
     // 📦 Log: Full object fetch and emit
-    if (process.env.SOCKET_LOGS === 'true') {
-      console.log(
-        `🗃️ [SOCKET] User ${socket.userData?.name || socket.userData?.user_id} requested full_free_trial – emitted full_free_trial:`,
-        !!freeTrial
-      );
-    }
+    logger.socket(
+      `🗃️ [SOCKET] User ${socket.userData?.name || socket.userData?.user_id} requested full_free_trial – emitted full_free_trial:`,
+      !!freeTrial
+    );
     socket.emit('full_free_trial', freeTrial || null);
   });
 
@@ -176,12 +166,10 @@ export default function registerAccountEvents(io, socket) {
       select: { status: true }
     });
     // ✉️ Log: Admin status update and emit
-    if (process.env.SOCKET_LOGS === 'true') {
-      console.log(
-        `✉️ [SOCKET] Admin updated free_trial_status for user ${user_id} – emitted free_trial_status:`,
-        freeTrial ? freeTrial.status : null
-      );
-    }
+    logger.socket(
+      `✉️ [SOCKET] Admin updated free_trial_status for user ${user_id} – emitted free_trial_status:`,
+      freeTrial ? freeTrial.status : null
+    );
     io.to(user_id).emit('free_trial_status', freeTrial ? freeTrial.status : null);
   });
 }

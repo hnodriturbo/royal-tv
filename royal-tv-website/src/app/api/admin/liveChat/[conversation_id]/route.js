@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
@@ -42,7 +43,7 @@ export async function GET(request, context) {
     return NextResponse.json({ ...convo, unreadCount });
   } catch (err) {
     // Print everything
-    console.error('GET [conversation_id] error:', {
+    logger.error('GET [conversation_id] error:', {
       message: err.message,
       stack: err.stack,
       name: err.name,

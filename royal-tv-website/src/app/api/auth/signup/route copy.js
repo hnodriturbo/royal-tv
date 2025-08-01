@@ -8,6 +8,7 @@
  * ==================================================================
  */
 
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/prisma.js';
@@ -81,9 +82,9 @@ export async function POST(request) {
     results.forEach((result, i) => {
       if (result.status === 'rejected') {
         if (i < adminUsers.length) {
-          console.error(`⚠️ Admin email failed for ${adminUsers[i].email}:`, result.reason);
+          logger.error(`⚠️ Admin email failed for ${adminUsers[i].email}:`, result.reason);
         } else {
-          console.error('⚠️ User welcome email failed:', result.reason);
+          logger.error('⚠️ User welcome email failed:', result.reason);
         }
       }
     });
@@ -117,7 +118,7 @@ export async function POST(request) {
     // ✅ 9️⃣ Success!
     return NextResponse.json({ message: 'User registered successfully' }, { status: 201 });
   } catch (error) {
-    console.error('Signup error:', error);
+    logger.error('Signup error:', error);
     // 🛑 Handle duplicate username/email error from Prisma
     if (error.code === 'P2002') {
       const field = error.meta?.target?.[0] || 'field';

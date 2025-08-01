@@ -6,6 +6,35 @@
  * ======================================================
  */
 
+/* 
+  const guardedEmit = useCallback(
+    (event, payload) => {
+      if (!socketConnected) {
+        // 🛑 Not connected: queue emit and warn
+        logger.warn(`⚠️ [SOCKET HUB] Emit "${event}" queued (waiting for connection)`, payload);
+        emitQueueRef.current.push({ event, payload });
+        return;
+      }
+      emit(event, payload);
+    },
+    [emit, socketConnected]
+  );
+
+  const guardedListen = useCallback(
+    (event, handler) => {
+      if (!socketConnected) {
+        // 🛑 Not connected: queue listen and warn
+        logger.warn(`⚠️ [SOCKET HUB] Listen "${event}" queued (waiting for connection)`);
+        listenQueueRef.current.push({ event, handler });
+        // Return a cleanup that does nothing
+        return () => {};
+      }
+      return listen(event, handler);
+    },
+    [listen, socketConnected]
+  );
+ */
+import logger from '@/lib/logger';
 import prisma from '../prisma.js';
 
 // 🔒 Make a unique room name for a conversation

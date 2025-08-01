@@ -6,6 +6,7 @@
  * - Reads user_id from x-user-id header, never from query!
  * =================================================================
  */
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma.js';
 
@@ -45,7 +46,7 @@ export async function GET(request) {
       readCount
     });
   } catch (error) {
-    console.error('❌ GET /api/user/notifications failed:', error);
+    logger.error('❌ GET /api/user/notifications failed:', error);
     return NextResponse.json(
       { notifications: [], total: 0, page: 0, pageSize: 10, unreadCount: 0, readCount: 0 },
       { status: 500 }

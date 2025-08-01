@@ -7,6 +7,7 @@
  * ==============================================
  */
 
+import logger from '@/lib/logger';
 import dayjs from 'dayjs'; // 🗓️ For consistent dates (optional)
 import prisma from '../lib/prisma.js'; // 📦 Prisma client singleton
 
@@ -17,11 +18,11 @@ export default function registerMessageEvents(io, socket) {
   // 📨 1️⃣ New message sent from client!
   socket.on('send_message', async ({ conversation_id, message }) => {
     // 🕵️‍♂️ Debug incoming payload – see what's really coming in!
-    console.log('[DEBUG] send_message payload:', { conversation_id, message });
+    logger.log('[DEBUG] send_message payload:', { conversation_id, message });
 
     // 🛡️ Never trust: Validate UUID!
     if (!isUuid(conversation_id)) {
-      console.error('[ERROR] Invalid conversation_id (not a UUID):', conversation_id);
+      logger.error('[ERROR] Invalid conversation_id (not a UUID):', conversation_id);
       socket.emit('send_message_error', { error: 'Invalid conversation ID!' });
       return;
     }
@@ -48,9 +49,9 @@ export default function registerMessageEvents(io, socket) {
         name: socket.userData.name,
         role: socket.userData.role
       });
-      console.log(`[live] 📨 Message sent: ${saved.message_id}`); // 🟢 Confirm send!
+      logger.log(`[live] 📨 Message sent: ${saved.message_id}`); // 🟢 Confirm send!
     } catch (err) {
-      console.error(`[live] ❌ send_message failed`, err); // 🔥 Show any DB error
+      logger.error(`[live] ❌ send_message failed`, err); // 🔥 Show any DB error
       socket.emit('send_message_error', { error: 'Failed to send message' }); // 🔴 Notify UI
     }
   });
@@ -59,7 +60,7 @@ export default function registerMessageEvents(io, socket) {
   socket.on('edit_message', async ({ conversation_id, message_id, message }) => {
     // 🛡️ Make sure UUID is valid!
     if (!isUuid(conversation_id)) {
-      console.error('[ERROR] Invalid conversation_id (edit_message):', conversation_id);
+      logger.error('[ERROR] Invalid conversation_id (edit_message):', conversation_id);
       return;
     }
     if (!message?.trim()) return; // 🛑 Don't edit to empty string!
@@ -70,7 +71,7 @@ export default function registerMessageEvents(io, socket) {
     try {
       const orig = await messageModel.findUnique({ where: { message_id } }); // 🔍 Find orig msg
       if (!orig || (orig.sender_id !== senderId && !isAdmin)) {
-        console.warn(`⛔ Edit denied: ${message_id}`); // ❌ Not allowed!
+        logger.warn(`⛔ Edit denied: ${message_id}`); // ❌ Not allowed!
         return;
       }
 
@@ -80,16 +81,16 @@ export default function registerMessageEvents(io, socket) {
         data: { message: message.trim(), status: 'edited', updatedAt: dayjs().toDate() }
       });
       io.to(conversation_id).emit('message_edited', { ...updated }); // 🔄 Notify all
-      console.log(`[live] ✏️ Message edited: ${message_id}`);
+      logger.log(`[live] ✏️ Message edited: ${message_id}`);
     } catch (err) {
-      console.error(`[live] ❌ edit_message failed`, err);
+      logger.error(`[live] ❌ edit_message failed`, err);
     }
   });
 
   // 🗑️ 3️⃣ Delete a message (only own, or admin can!)
   socket.on('delete_message', async ({ conversation_id, message_id }) => {
     if (!isUuid(conversation_id)) {
-      console.error('[ERROR] Invalid conversation_id (delete_message):', conversation_id);
+      logger.error('[ERROR] Invalid conversation_id (delete_message):', conversation_id);
       return;
     }
     const messageModel = prisma.liveChatMessage;
@@ -101,7 +102,7 @@ export default function registerMessageEvents(io, socket) {
 
       // 🛑 Only sender or admin can delete
       if (!originalMessage || (originalMessage.sender_id !== senderUserId && !isAdmin)) {
-        console.warn(`⛔ Delete denied: ${message_id}`);
+        logger.warn(`⛔ Delete denied: ${message_id}`);
         return;
       }
 
@@ -112,16 +113,16 @@ export default function registerMessageEvents(io, socket) {
         conversation_id
       });
 
-      console.log(`[live] 🗑️ Message deleted: ${message_id}`); // ✅ Log it
+      logger.log(`[live] 🗑️ Message deleted: ${message_id}`); // ✅ Log it
     } catch (error) {
-      console.error(`[live] ❌ delete_message failed`, error);
+      logger.error(`[live] ❌ delete_message failed`, error);
     }
   });
 
   // 📖 4️⃣ Mark all messages as read for this user
   socket.on('mark_read', async ({ conversation_id }) => {
     if (!isUuid(conversation_id)) {
-      console.error('[ERROR] Invalid conversation_id (mark_read):', conversation_id);
+      logger.error('[ERROR] Invalid conversation_id (mark_read):', conversation_id);
       return;
     }
     const conversationModel = prisma.liveChatConversation;
@@ -161,18 +162,18 @@ export default function registerMessageEvents(io, socket) {
       // 🔔 Send new unread count just for this socket
       socket.emit('unread_count_update', { conversation_id, unreadCount });
 
-      console.log(
+      logger.log(
         `[live] 📖 All messages marked read for user ${userId} in conversation: ${conversation_id}`
       );
     } catch (err) {
-      console.error('❌ mark_read failed', err);
+      logger.error('❌ mark_read failed', err);
     }
   });
 
   // 👀 5️⃣ Typing indicator for real-time feedback
   socket.on('typing', ({ conversation_id, isTyping }) => {
     if (!isUuid(conversation_id)) {
-      console.error('[ERROR] Invalid conversation_id (typing):', conversation_id);
+      logger.error('[ERROR] Invalid conversation_id (typing):', conversation_id);
       return;
     }
     const { name, user_id, role } = socket.userData;
@@ -190,7 +191,7 @@ export default function registerMessageEvents(io, socket) {
   // 🔄 6️⃣ Refresh all messages for a room
   socket.on('refresh_messages', async ({ conversation_id }) => {
     if (!isUuid(conversation_id)) {
-      console.error('[ERROR] Invalid conversation_id (refresh_messages):', conversation_id);
+      logger.error('[ERROR] Invalid conversation_id (refresh_messages):', conversation_id);
       return;
     }
     const messageModel = prisma.liveChatMessage;
@@ -207,9 +208,9 @@ export default function registerMessageEvents(io, socket) {
         messages
       });
 
-      console.log(`[live] 🔄 Messages refreshed for conversation: ${conversation_id}`);
+      logger.log(`[live] 🔄 Messages refreshed for conversation: ${conversation_id}`);
     } catch (err) {
-      console.error(`[live] ❌ refresh_messages failed`, err);
+      logger.error(`[live] ❌ refresh_messages failed`, err);
     }
   });
 }

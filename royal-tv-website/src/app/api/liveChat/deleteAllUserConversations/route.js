@@ -6,6 +6,7 @@
  *   • user_id : string (UUID)  ← required
  * Middleware: Requires admin role
  */
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
@@ -28,7 +29,7 @@ export async function DELETE(request) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('❌ deleteAllUserConversations error:', error);
+    logger.error('❌ deleteAllUserConversations error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

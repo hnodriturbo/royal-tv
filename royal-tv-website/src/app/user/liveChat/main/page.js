@@ -6,6 +6,7 @@
 'use client';
 
 // Next JS imports
+import logger from '@/lib/logger';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -62,7 +63,7 @@ const UserConversations = () => {
           router.replace(`/user/liveChat/${data.conversations[0].conversation_id}`);
         }
       } catch (err) {
-        console.error('❌ Fetch conversations failed:', err?.response || err);
+        logger.error('❌ Fetch conversations failed:', err?.response || err);
         displayMessage('Failed to load conversations', 'error');
       } finally {
         displayMessage('conversations fetched successfully', 'success');

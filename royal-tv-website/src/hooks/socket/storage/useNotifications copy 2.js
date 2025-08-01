@@ -9,6 +9,7 @@
  * ============================================
  */
 
+import logger from '@/lib/logger';
 import { useState, useEffect, useCallback } from 'react';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 
@@ -49,22 +50,22 @@ export default function useNotifications(userId) {
         setNotifications(sorted);
         setUnreadCount(sorted.filter((n) => !n.is_read).length);
         // 🟩 [LOG] Updated notifications and unread count
-        console.log('🟩 [useNotifications] Set notifications:', sorted);
-        console.log(
+        logger.log('🟩 [useNotifications] Set notifications:', sorted);
+        logger.log(
           '🟧 [useNotifications] Set unreadCount:',
           sorted.filter((n) => !n.is_read).length
         );
       } else {
         setNotifications([]);
         setUnreadCount(0);
-        console.log('🟨 [useNotifications] No notifications received.');
+        logger.log('🟨 [useNotifications] No notifications received.');
       }
     });
 
     // 👂 Listen for push trigger ('notification_received') and refresh notifications when it happens
     const stopPush = onNotificationReceived(() => {
       // 🟣 [LOG] Push notification trigger received, refreshing...
-      console.log('🟣 [useNotifications] notification_received → refreshing');
+      logger.log('🟣 [useNotifications] notification_received → refreshing');
       requestNotifications(userId);
     });
 

@@ -12,6 +12,7 @@
 
 'use client';
 
+import logger from '@/lib/logger';
 import { useEffect, useMemo, useCallback, useState } from 'react';
 import { useParams, notFound, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -78,7 +79,7 @@ export default function PackageBuyNowPage() {
         displayMessage('Could not load payment widget.', 'error');
       }
     } catch (error) {
-      console.error('❌ Invoice creation error:', error);
+      logger.error('❌ Invoice creation error:', error);
       displayMessage('Could not initialize payment. Please refresh.', 'error');
     } finally {
       hideLoader();

@@ -10,6 +10,7 @@
 
 import { NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import logger from '@/lib/logger';
 
 export async function middleware(request) {
   // 🍪 Figure out cookie name based on environment
@@ -39,8 +40,8 @@ export async function middleware(request) {
     forwardedHeaders.set('x-sender-id', userId);
     forwardedHeaders.set('x-user-role', userRole);
 
-    console.log('[Middleware] injected x-user-role:', userRole);
-    console.log('[Middleware] injected x-user-id:', userId);
+    logger.log('[Middleware] injected x-user-role:', userRole);
+    logger.log('[Middleware] injected x-user-id:', userId);
   }
 
   // 🚦 Block: If NOT logged in and NOT already on an /auth page...

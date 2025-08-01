@@ -7,6 +7,7 @@
  * ===========================================================
  */
 
+import logger from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
@@ -74,7 +75,7 @@ export async function PATCH(request, context) {
     });
   } catch (error) {
     // 🛑 Error handling
-    console.error('PATCH /api/admin/freeTrials/[trial_id] failed:', error);
+    logger.error('PATCH /api/admin/freeTrials/[trial_id] failed:', error);
     return NextResponse.json({ error: error.message || 'Unknown server error' }, { status: 500 });
   }
 }

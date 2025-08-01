@@ -6,6 +6,7 @@
  * - Use anywhere you want to trigger a "pull" refresh.
  * ================================================
  */
+import logger from '@/lib/logger';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 
 export default function useRefreshNotifications() {
@@ -14,7 +15,7 @@ export default function useRefreshNotifications() {
 
   // 🟣 Call this to trigger a refresh_notifications event for THIS user
   const refreshNotifications = () => {
-    console.log('refresh Notifications called!');
+    logger.log('refresh Notifications called!');
     requestNotificationsRefresh(); // Only this socket/user!
   };
 

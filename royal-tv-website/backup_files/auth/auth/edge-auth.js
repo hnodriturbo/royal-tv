@@ -1,4 +1,5 @@
 // 📁 src/lib/auth/edge-auth.js
+import logger from '@/lib/logger';
 import { getToken } from 'next-auth/jwt';
 
 /**
@@ -6,7 +7,7 @@ import { getToken } from 'next-auth/jwt';
  * Only works with JWT strategy (NextAuth v5)
  */
 export async function edgeAuth(req) {
-  console.log('NEXTAUTH_SECRET:', process.env.NEXTAUTH_SECRET);
+  logger.log('NEXTAUTH_SECRET:', process.env.NEXTAUTH_SECRET);
   const token = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET

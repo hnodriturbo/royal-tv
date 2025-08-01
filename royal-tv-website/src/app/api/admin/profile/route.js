@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
@@ -38,7 +39,7 @@ export async function GET(request) {
 
     return NextResponse.json(user);
   } catch (error) {
-    console.error('[API GET] Error fetching user profile:', error);
+    logger.error('[API GET] Error fetching user profile:', error);
     return NextResponse.json({ error: 'Failed to fetch user profile' }, { status: 500 });
   }
 }
@@ -81,7 +82,7 @@ export async function PATCH(request) {
 
     return NextResponse.json(updatedUser);
   } catch (error) {
-    console.error('[API PATCH] Error updating profile:', error.message);
+    logger.error('[API PATCH] Error updating profile:', error.message);
     return NextResponse.json(
       {
         error:

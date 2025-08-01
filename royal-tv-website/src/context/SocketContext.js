@@ -2,6 +2,7 @@
 // ✅ PROVIDE SAFE INITIAL DEFAULT VALUES
 'use client';
 
+import logger from '@/lib/logger';
 import { createContext, useEffect, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { useSession } from 'next-auth/react';
@@ -33,7 +34,7 @@ export const SocketProvider = ({ children }) => {
     const user_id = session?.user?.user_id || null;
     const name = session?.user?.name || 'Guest';
 
-    console.log('📡 Connecting socket with:', { user_id, role, name });
+    logger.log('📡 Connecting socket with:', { user_id, role, name });
 
     const socketConnection = io(SOCKET_URL, {
       transports: ['websocket'],
@@ -45,7 +46,7 @@ export const SocketProvider = ({ children }) => {
 
     return () => {
       socketConnection.disconnect();
-      console.log('🔌 Socket disconnected');
+      logger.log('🔌 Socket disconnected');
     };
   }, [SOCKET_URL, session?.user?.user_id, session?.user?.role, session?.user?.name, status]);
 
@@ -55,13 +56,13 @@ export const SocketProvider = ({ children }) => {
     // 🟢 Set connected = true when socket connects
     const handleConnect = () => {
       setSocketConnected(true);
-      console.log('🟢 [SocketContext] Socket connected!');
+      logger.log('🟢 [SocketContext] Socket connected!');
     };
 
     // 🔴 Set connected = false when socket disconnects
     const handleDisconnect = () => {
       setSocketConnected(false);
-      console.log('🔴 [SocketContext] Socket disconnected!');
+      logger.log('🔴 [SocketContext] Socket disconnected!');
     };
 
     socket.on('connect', handleConnect);

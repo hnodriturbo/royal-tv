@@ -8,6 +8,7 @@
  *   • x-user-role: must be "admin"
  */
 
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 export async function GET(request) {
@@ -70,7 +71,7 @@ export async function GET(request) {
 
     return NextResponse.json({ users, totalCount });
   } catch (err) {
-    console.error('🔥 [admin/liveChat/main] failed:', err);
+    logger.error('🔥 [admin/liveChat/main] failed:', err);
     return NextResponse.json(
       { error: `Failed to fetch user conversations: ${err.message}` },
       { status: 500 }

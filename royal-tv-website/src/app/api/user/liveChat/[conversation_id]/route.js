@@ -17,6 +17,7 @@
  *   }
  */
 
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
@@ -62,7 +63,7 @@ export async function GET(request, context) {
 
     return NextResponse.json({ ...convo, unreadCount });
   } catch (err) {
-    console.error('GET /user/liveChat/[conversation_id] error:', err);
+    logger.error('GET /user/liveChat/[conversation_id] error:', err);
     return NextResponse.json({ error: err.message, full: err }, { status: 500 });
   }
 }

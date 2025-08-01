@@ -10,7 +10,7 @@
  */
 
 import prisma from '../lib/prisma.js'; // 🗄️ Prisma client
-console.log('🔍 Prisma check:', prisma);
+import logger from '../lib/logger.js'; // 📌 Logger
 
 export default function registerLogEvents(io, socket) {
   // 🪵 Log every page visit received from the client
@@ -40,13 +40,11 @@ export default function registerLogEvents(io, socket) {
       // socket.emit("page_logged", { success: true });
 
       // 📋 Debug log
-      if (process.env.SOCKET_LOGS === 'true') {
-        console.log(
-          `🪵 [SOCKET] ${role} ${user_id || guest_id} visited ${payload.page} (${payload.description})`
-        );
-      }
+      logger.log(
+        `🪵 [SOCKET] ${role} ${user_id || guest_id} visited ${payload.page} (${payload.description})`
+      );
     } catch (err) {
-      console.error('❌ [SOCKET] Error logging page visit:', err);
+      logger.error('❌ [SOCKET] Error logging page visit:', err);
     }
   });
 }

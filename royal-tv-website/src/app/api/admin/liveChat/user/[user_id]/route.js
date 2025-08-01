@@ -5,6 +5,7 @@
  * No pagination: client does all pagination and sorting!
  * --------------------------------------
  */
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
@@ -65,7 +66,7 @@ export async function GET(request, context) {
       unreadConvos: conversations.filter((conv) => conv.unreadCount > 0).length
     });
   } catch (err) {
-    console.error('GET [user_id] error:', err);
+    logger.error('GET [user_id] error:', err);
     return NextResponse.json({ error: err.message, full: err }, { status: 500 });
   }
 }

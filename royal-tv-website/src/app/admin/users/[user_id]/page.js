@@ -1,5 +1,6 @@
 'use client';
 
+import logger from '@/lib/logger';
 import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import axiosInstance from '@/lib/axiosInstance';
@@ -39,10 +40,10 @@ export default function AdminUserDetailPage() {
   // Fetch user details from the API.
   const fetchUser = async () => {
     try {
-      console.log('[fetchUser] Starting fetch for user details...');
+      logger.log('[fetchUser] Starting fetch for user details...');
       showLoader({ text: 'Fetching user details...' });
       const response = await axiosInstance.get(`/api/admin/users/${user_id}`);
-      console.log('[fetchUser] API response:', response.data);
+      logger.log('[fetchUser] API response:', response.data);
 
       const fetchedUser = response.data;
       setUser(fetchedUser);
@@ -56,37 +57,37 @@ export default function AdminUserDetailPage() {
         whatsapp: fetchedUser?.whatsapp || '',
         telegram: fetchedUser?.telegram || '',
       });
-      console.log('[fetchUser] User details set in state.');
+      logger.log('[fetchUser] User details set in state.');
     } catch (error) {
-      console.error('[fetchUser] Error fetching user:', error);
+      logger.error('[fetchUser] Error fetching user:', error);
       displayMessage('Error fetching user details', 'error');
     } finally {
       hideLoader();
-      console.log('[fetchUser] Loader hidden.');
+      logger.log('[fetchUser] Loader hidden.');
     }
   };
 
   // Update user via PATCH request.
   const handleUpdateUser = async () => {
     try {
-      console.log('[handleUpdateUser] Updating user with formData:', formData);
+      logger.log('[handleUpdateUser] Updating user with formData:', formData);
       showLoader({ text: 'Updating user details...' });
       const response = await axiosInstance.patch(
         `/api/admin/users/${user_id}`,
         formData,
       );
-      console.log('[handleUpdateUser] Update response:', response.data);
+      logger.log('[handleUpdateUser] Update response:', response.data);
 
       const updatedUser = response.data;
       setUser(updatedUser);
       setIsEditing(false);
       displayMessage('User updated successfully', 'success');
     } catch (error) {
-      console.error('[handleUpdateUser] Error updating user:', error);
+      logger.error('[handleUpdateUser] Error updating user:', error);
       displayMessage('Failed to update user', 'error');
     } finally {
       hideLoader();
-      console.log('[handleUpdateUser] Loader hidden after update attempt.');
+      logger.log('[handleUpdateUser] Loader hidden after update attempt.');
     }
   };
 
@@ -100,27 +101,27 @@ export default function AdminUserDetailPage() {
       cancelButtonText: 'Cancel',
       onConfirm: async () => {
         try {
-          console.log(
+          logger.log(
             '[handleDeleteUser] Deleting user with user_id:',
             user_id,
           );
           showLoader({ text: 'Deleting user...' });
           await axiosInstance.delete(`/api/admin/users/${user_id}`);
           displayMessage('User deleted successfully', 'success');
-          console.log(
+          logger.log(
             '[handleDeleteUser] User deleted, redirecting to users list.',
           );
           router.replace('/admin/users/main');
         } catch (error) {
-          console.error('[handleDeleteUser] Error deleting user:', error);
+          logger.error('[handleDeleteUser] Error deleting user:', error);
           displayMessage('Failed to delete user', 'error');
         } finally {
           hideLoader();
-          console.log('[handleDeleteUser] Loader hidden after delete attempt.');
+          logger.log('[handleDeleteUser] Loader hidden after delete attempt.');
         }
       },
       onCancel: () => {
-        console.log('[handleDeleteUser] Deletion cancelled via modal.');
+        logger.log('[handleDeleteUser] Deletion cancelled via modal.');
       },
     });
   };
@@ -128,7 +129,7 @@ export default function AdminUserDetailPage() {
   // Handle form input changes during editing.
   const handleChange = (e) => {
     const { name, value } = e.target;
-    console.log(`[handleChange] Field changed: ${name} = ${value}`);
+    logger.log(`[handleChange] Field changed: ${name} = ${value}`);
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -157,7 +158,7 @@ export default function AdminUserDetailPage() {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                console.log(
+                logger.log(
                   '[EditForm] Form submitted. Calling handleUpdateUser...',
                 );
                 handleUpdateUser();
@@ -200,7 +201,7 @@ export default function AdminUserDetailPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    console.log('[EditForm] Cancel editing.');
+                    logger.log('[EditForm] Cancel editing.');
                     setIsEditing(false);
                   }}
                   className="px-4 py-2 bg-gray-600 rounded-md hover:bg-gray-200"
@@ -257,7 +258,7 @@ export default function AdminUserDetailPage() {
               <div className="mt-6 flex gap-4 justify-between">
                 <button
                   onClick={() => {
-                    console.log('[ViewMode] Switching to edit mode.');
+                    logger.log('[ViewMode] Switching to edit mode.');
                     setIsEditing(true);
                   }}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"

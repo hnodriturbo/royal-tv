@@ -1,5 +1,6 @@
 'use client';
 
+import logger from '@/lib/logger';
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import axiosInstance from '@/lib/axiosInstance';
@@ -75,7 +76,7 @@ const useConversationsList = ({
     async (isSilent = false) => {
       if (!endPointURL || status !== 'authenticated' || !session) return;
 
-      console.log('[useConversationsList] Fetching:', endPointURL);
+      logger.log('[useConversationsList] Fetching:', endPointURL);
 
       if (!isSilent) {
         const loaderText = firstFetchRef.current
@@ -149,7 +150,7 @@ const useConversationsList = ({
           displayMessage('Data loaded ✔️', 'success', 3);
         }
       } catch (error) {
-        console.error('[useConversationsList] ❌ Fetch Error:', error);
+        logger.error('[useConversationsList] ❌ Fetch Error:', error);
         displayMessage('Failed to load data ❌', 'error');
         setItems([]);
         setTotalPages(1);

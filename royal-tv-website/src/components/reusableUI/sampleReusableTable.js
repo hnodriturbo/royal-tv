@@ -1,4 +1,5 @@
 // pages/admin/users.js
+import logger from '@/lib/logger';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ReusableTable from '@/components/ui/ReusableTable';
@@ -43,7 +44,7 @@ export default function UsersPage() {
         const response = await axios.get('/api/admin/users');
         setUsers(response.data);
       } catch (err) {
-        console.error(err);
+        logger.error(err);
         // ⚠️ Show error message globally
         displayMessage({ type: 'error', text: 'Could not load users.' });
       } finally {

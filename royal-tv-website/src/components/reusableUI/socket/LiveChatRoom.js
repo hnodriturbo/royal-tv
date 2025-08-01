@@ -8,6 +8,7 @@
  * - Royal TV real-time emoji commenting everywhere! 🦁✨
  */
 
+import logger from '@/lib/logger';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import clsx from 'clsx'; // 🎨 Utility for clean conditional classes
 import dayjs from 'dayjs'; // 🕒 Dates formatting
@@ -112,7 +113,7 @@ export default function LiveChatRoom({
       if (msg.sender_is_admin) {
         // 👤 Notify user if admin sent (user must be loaded)
         if (!user || !user.user_id) {
-          console.warn('[LiveChatRoom] Notification: user not ready, skipping...');
+          logger.warn('[LiveChatRoom] Notification: user not ready, skipping...');
           return;
         }
         createLiveChatMessageNotificationForUserOnly(

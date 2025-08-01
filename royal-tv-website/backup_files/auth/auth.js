@@ -7,6 +7,7 @@
  *  • Exports NextAuth handlers for API routes
  */
 
+import logger from '@/lib/logger';
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@auth/prisma-adapter';
@@ -14,7 +15,7 @@ import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
 // 🌍 Debug your trusted host on startup
-console.log('🌍 AUTH_TRUST_HOST:', process.env.AUTH_TRUST_HOST);
+logger.log('🌍 AUTH_TRUST_HOST:', process.env.AUTH_TRUST_HOST);
 
 const nextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -92,13 +93,13 @@ const nextAuthOptions = {
 
   logger: {
     error(code, metadata) {
-      console.error('[AUTH ERROR] ❌', code, metadata);
+      logger.error('[AUTH ERROR] ❌', code, metadata);
     },
     warn(code) {
-      console.warn('[AUTH WARN] ⚠️', code);
+      logger.warn('[AUTH WARN] ⚠️', code);
     },
     debug(code, metadata) {
-      console.log('[AUTH DEBUG] 🪲', code, metadata);
+      logger.log('[AUTH DEBUG] 🪲', code, metadata);
     }
   }
 };

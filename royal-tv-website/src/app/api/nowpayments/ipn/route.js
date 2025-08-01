@@ -5,6 +5,7 @@
  * ===============================================
  */
 
+import logger from '@/lib/logger';
 import crypto from 'crypto';
 import prisma from '@/lib/prisma';
 import axios from 'axios';
@@ -12,7 +13,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request) {
   // 🚦 Incoming request
-  console.log('🚦 [ipn] IPN webhook received:', new Date().toISOString());
+  logger.log('🚦 [ipn] IPN webhook received:', new Date().toISOString());
 
   // 1. Get raw body and signature
   const rawBody = await request.text();
@@ -26,19 +27,19 @@ export async function POST(request) {
 
   // 3. Validate signature
   if (signature !== expectedSig) {
-    console.error('❌ [ipn] Invalid IPN signature!');
+    logger.error('❌ [ipn] Invalid IPN signature!');
     return NextResponse.json({ error: 'Invalid signature' }, { status: 403 });
   }
-  console.log('🔏 [ipn] Valid signature for webhook!');
+  logger.log('🔏 [ipn] Valid signature for webhook!');
 
   // 4. Parse body
   let body;
   try {
     body = JSON.parse(rawBody);
     // 📦 Log incoming summary
-    console.log('📦 [ipn] Body: ', body);
+    logger.log('📦 [ipn] Body: ', body);
   } catch (error) {
-    console.error('❌ [ipn] JSON parse failed:', error);
+    logger.error('❌ [ipn] JSON parse failed:', error);
     return NextResponse.json({ error: 'Bad Request (body parse failed)' }, { status: 400 });
   }
 
@@ -61,7 +62,7 @@ export async function POST(request) {
     purchase_id
   } = body;
   // 🧾 Log the extracted/aliased fields your code uses
-  console.log('🧾 [ipn] Extracted Fields:', {
+  logger.log('🧾 [ipn] Extracted Fields:', {
     payment_id,
     payment_status,
     price_amount,
@@ -82,7 +83,7 @@ export async function POST(request) {
   // 6. Use order_id as DB anchor
   const paymentId = order_id;
   if (!paymentId) {
-    console.error('❌ [ipn] No paymentId (order_id) in IPN');
+    logger.error('❌ [ipn] No paymentId (order_id) in IPN');
     return NextResponse.json({ error: 'No paymentId in IPN' }, { status: 400 });
   }
 
@@ -93,14 +94,14 @@ export async function POST(request) {
       where: { id: paymentId }
     });
     // 🔎 Searched by id
-    console.log('🔎 [ipn] Searched by id:', paymentId, 'Found:', !!paymentRecord);
+    logger.log('🔎 [ipn] Searched by id:', paymentId, 'Found:', !!paymentRecord);
   } catch (error) {
-    console.error('❌ [ipn] DB error (find by id):', error);
+    logger.error('❌ [ipn] DB error (find by id):', error);
     return NextResponse.json({ error: 'DB error (find by id)' }, { status: 500 });
   }
 
   if (!paymentRecord) {
-    console.error('❌ [ipn] Payment record not found. id:', paymentId);
+    logger.error('❌ [ipn] Payment record not found. id:', paymentId);
     return NextResponse.json({ error: 'Payment record not found' }, { status: 404 });
   }
 
@@ -143,14 +144,14 @@ export async function POST(request) {
         orderId: paymentRecord.id,
         newStatus: payment_status
       });
-      console.log(
+      logger.log(
         `💾 [ipn] Sent POST request to /emit/paymentStatusUpdated | userId: ${paymentRecord.user_id} | orderId: ${paymentRecord.id} | New Status:, ${payment_status}`
       );
     }
     // 💾 Payment updated
-    console.log('💾 [ipn] Payment updated:', paymentId, '| New Status:', payment_status);
+    logger.log('💾 [ipn] Payment updated:', paymentId, '| New Status:', payment_status);
   } catch (error) {
-    console.error('❌ [ipn] DB error (update payment):', error);
+    logger.error('❌ [ipn] DB error (update payment):', error);
     return NextResponse.json({ error: 'DB error (update payment)' }, { status: 500 });
   }
 
@@ -166,10 +167,10 @@ export async function POST(request) {
       user = userWithoutPassword;
     }
     // 👤 User fetched for payment — password never sent!
-    console.log('👤 [ipn] User fetched for payment:', paymentRecord.user_id, '| Found:', !!user);
+    logger.log('👤 [ipn] User fetched for payment:', paymentRecord.user_id, '| Found:', !!user);
   } catch (error) {
     // ❌ DB error (find user)
-    console.error('❌ [ipn] DB error (find user):', error);
+    logger.error('❌ [ipn] DB error (find user):', error);
     return NextResponse.json({ error: 'DB error (find user)' }, { status: 500 });
   }
 
@@ -193,14 +194,14 @@ export async function POST(request) {
         }
       });
       // 🎉 Subscription created
-      console.log('🎉 [ipn] Subscription created:', subscription.subscription_id);
+      logger.log('🎉 [ipn] Subscription created:', subscription.subscription_id);
 
       await prisma.subscriptionPayment.update({
         where: { id: paymentId },
         data: { subscription_id: subscription.subscription_id }
       });
       // 🔗 Payment linked to subscription
-      console.log(
+      logger.log(
         '🔗 [ipn] Payment linked to subscription:',
         paymentId,
         '->',
@@ -220,7 +221,7 @@ export async function POST(request) {
           subscription
         });
         // 📢 Transaction event sent
-        console.log('📢 [ipn] transactionFinished emitted for:', paymentId);
+        logger.log('📢 [ipn] transactionFinished emitted for:', paymentId);
 
         // 🔥 Call the panel API sync
         const subscriptionCreation = await axios.post('/api/panel/subscription', {
@@ -232,24 +233,24 @@ export async function POST(request) {
           telegram
         });
         // 📢 POST sent to the megaott subscription creator
-        console.log(
+        logger.log(
           '📢 [ipn] POST sent to the megaott subscription creator /panel/subscription/route.js:',
           subscriptionCreation
         );
       } catch (error) {
-        console.error('❌ [ipn] Error emitting transactionFinished:', error);
+        logger.error('❌ [ipn] Error emitting transactionFinished:', error);
       }
     } catch (error) {
-      console.error('❌ [ipn] DB error (create subscription):', error);
+      logger.error('❌ [ipn] DB error (create subscription):', error);
       return NextResponse.json({ error: 'DB error (create subscription)' }, { status: 500 });
     }
   } else {
-    console.log(
+    logger.log(
       `⏭️ [ipn] Subscription creation skipped | status: ${payment_status} alreadyLinked to subscription: ${!!paymentRecord.subscription_id}`
     );
   }
 
   // ✅ Done!
-  console.log('✅ [ipn] IPN processed successfully for id:', paymentId);
+  logger.log('✅ [ipn] IPN processed successfully for id:', paymentId);
   return NextResponse.json({ ok: true }, { status: 200 });
 }

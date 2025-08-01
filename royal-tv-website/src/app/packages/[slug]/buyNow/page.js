@@ -13,6 +13,7 @@
 'use client';
 
 // ✅ Import core logic for this page
+import logger from '@/lib/logger';
 import { useEffect, useMemo, useCallback, useState } from 'react';
 import { useParams, notFound, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -89,7 +90,7 @@ export default function PackageBuyNowPage() {
         displayMessage('Could not load payment widget.', 'error');
       }
     } catch (error) {
-      console.error('❌ Invoice creation error:', error);
+      logger.error('❌ Invoice creation error:', error);
       displayMessage('Could not initialize payment. Please refresh.', 'error');
     } finally {
       hideLoader();
@@ -134,7 +135,7 @@ export default function PackageBuyNowPage() {
     const unsub = onPaymentStatusUpdated(({ order_id, status }) => {
       if (order_id === currentOrderId) {
         setCurrentPaymentStatus(status);
-        console.log('Payment Status Updated Through Socket, new status: ', status);
+        logger.log('Payment Status Updated Through Socket, new status: ', status);
       }
     });
     // 2. Fetch current status (useful if user reloads or comes back later)

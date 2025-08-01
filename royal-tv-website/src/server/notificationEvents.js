@@ -9,6 +9,7 @@
  * ===============================================================
  */
 
+import logger from '@/lib/logger';
 import notificationSystem from '../constants/notificationSystem.js';
 import prisma from '../lib/prisma.js';
 import { sendEmailToAdmin } from '../lib/email/sendEmailToAdmin.js';
@@ -64,13 +65,13 @@ async function createAndEmitNotification({
   });
 
   // 📥 Log notification creation
-  console.log(
+  logger.log(
     `📥 Notification created for ${isAdminNotification ? 'ADMIN' : 'USER'} [${createdNotification.notification_id}] - ${notificationType}`
   );
 
   // 📬 Emit notification instantly via socket
   io.to(recipientUserId).emit('notification_received', createdNotification);
-  console.log(
+  logger.log(
     `📤 Notification sent to ${isAdminNotification ? 'ADMIN' : 'USER'} (${recipientUserId})`
   );
 
@@ -84,7 +85,7 @@ async function createAndEmitNotification({
           contentHtml: notificationTemplate.body.replace(/\n/g, '<br>'),
           includeSignature: false
         });
-        console.log(`✉️ [EMAIL] Admin email sent to ${ADMIN_EMAIL}`);
+        logger.log(`✉️ [EMAIL] Admin email sent to ${ADMIN_EMAIL}`);
       } else {
         await sendEmailToUser({
           to: recipientEmail,
@@ -93,10 +94,10 @@ async function createAndEmitNotification({
           contentHtml: notificationTemplate.body.replace(/\n/g, '<br>'),
           includeSignature: true
         });
-        console.log(`✉️ [EMAIL] User email sent to ${recipientEmail}`);
+        logger.log(`✉️ [EMAIL] User email sent to ${recipientEmail}`);
       }
     } catch (emailError) {
-      console.error('❌ [EMAIL] Failed to send email:', emailError);
+      logger.error('❌ [EMAIL] Failed to send email:', emailError);
     }
   }
 
@@ -142,11 +143,11 @@ export default function registerNotificationEvents(io, socket) {
         adminNotification,
         userNotification
       });
-      console.log(
+      logger.log(
         '✅ [SOCKET] notification_created emitted with both admin and user notifications'
       );
     } catch (error) {
-      console.error('❌ [SOCKET] Error creating notification for both:', error);
+      logger.error('❌ [SOCKET] Error creating notification for both:', error);
       socket.emit('notifications_error', { message: 'Error creating notification for both' });
     }
   });
@@ -165,9 +166,9 @@ export default function registerNotificationEvents(io, socket) {
         io
       });
       socket.emit('notification_created', { success: true, adminNotification });
-      console.log('✅ [SOCKET] notification_created emitted for admin');
+      logger.log('✅ [SOCKET] notification_created emitted for admin');
     } catch (error) {
-      console.error('❌ [SOCKET] Error creating admin notification:', error);
+      logger.error('❌ [SOCKET] Error creating admin notification:', error);
       socket.emit('notifications_error', { message: 'Error creating admin notification' });
     }
   });
@@ -193,9 +194,9 @@ export default function registerNotificationEvents(io, socket) {
       });
 
       socket.emit('notification_created', { success: true, userNotification });
-      console.log('✅ [SOCKET] notification_created emitted for user');
+      logger.log('✅ [SOCKET] notification_created emitted for user');
     } catch (error) {
-      console.error('❌ [SOCKET] Error creating user notification:', error);
+      logger.error('❌ [SOCKET] Error creating user notification:', error);
       socket.emit('notifications_error', { message: 'Error creating user notification' });
     }
   });
@@ -204,12 +205,12 @@ export default function registerNotificationEvents(io, socket) {
   socket.on('fetch_notifications', async ({ user_id }) => {
     try {
       const { notifications, unreadCount, total } = await getAllNotifications(user_id);
-      console.log(
+      logger.log(
         `🔔 [SOCKET] notifications: total=${total}, unread=${unreadCount}, user_id=${user_id}`
       );
       socket.emit('notifications_list', { notifications, unreadCount, total });
     } catch (error) {
-      console.error('❌ [SOCKET] Error fetching notifications:', error);
+      logger.error('❌ [SOCKET] Error fetching notifications:', error);
       socket.emit('notifications_list', []);
     }
   });
@@ -220,12 +221,12 @@ export default function registerNotificationEvents(io, socket) {
       const total = await prisma.notification.count({ where: { user_id } });
       const unread = await prisma.notification.count({ where: { user_id, is_read: false } });
       const read = total - unread;
-      console.log(
+      logger.log(
         `🔢 [SOCKET] notifications count: total=${total}, unread=${unread}, read=${read}, user_id=${user_id}`
       );
       socket.emit('notifications_count', { total, unread, read });
     } catch (error) {
-      console.error('❌ [SOCKET] Error counting notifications:', error);
+      logger.error('❌ [SOCKET] Error counting notifications:', error);
       socket.emit('notifications_count', { total: 0, unread: 0, read: 0 });
     }
   });
@@ -238,9 +239,9 @@ export default function registerNotificationEvents(io, socket) {
         data: { is_read: true }
       });
       socket.emit('notification_marked_read', { notification_id });
-      console.log(`🟢 [SOCKET] notification ${notification_id} marked read`);
+      logger.log(`🟢 [SOCKET] notification ${notification_id} marked read`);
     } catch (error) {
-      console.error('❌ [SOCKET] Error marking notification as read:', error);
+      logger.error('❌ [SOCKET] Error marking notification as read:', error);
       socket.emit('notifications_error', { message: 'Error marking as read' });
     }
   });
@@ -249,12 +250,12 @@ export default function registerNotificationEvents(io, socket) {
   socket.on('refresh_notifications', async ({ user_id }) => {
     try {
       const { notifications, unreadCount, total } = await getAllNotifications(user_id);
-      console.log(
+      logger.log(
         `🔄 [SOCKET] notifications refreshed: total=${total}, unread=${unreadCount}, user_id=${user_id}`
       );
       socket.emit('notifications_list', { notifications, unreadCount, total });
     } catch (error) {
-      console.error('❌ [SOCKET] Error refreshing notifications:', error);
+      logger.error('❌ [SOCKET] Error refreshing notifications:', error);
       socket.emit('notifications_list', []);
     }
   });
@@ -298,7 +299,7 @@ export default function registerNotificationEvents(io, socket) {
       io.to(payload.user.user_id).emit('notification_received', created);
       socket.emit('notification_created', { success: true, notification: created });
     } catch (error) {
-      console.error('❌ [SOCKET] Error creating notification via socket:', error);
+      logger.error('❌ [SOCKET] Error creating notification via socket:', error);
       socket.emit('notifications_error', { message: 'Error creating notification' });
     }
   });
@@ -314,9 +315,9 @@ export default function registerNotificationEvents(io, socket) {
       const { notifications, unreadCount, total } = await getAllNotifications(user_id);
       io.to(user_id).emit('notifications_list', { notifications, unreadCount, total });
       socket.emit('notification_deleted', [notification_id]);
-      console.log(`🗑️ [SOCKET] notification ${notification_id} deleted`);
+      logger.log(`🗑️ [SOCKET] notification ${notification_id} deleted`);
     } catch (error) {
-      console.error('❌ [SOCKET] Error deleting notification:', error);
+      logger.error('❌ [SOCKET] Error deleting notification:', error);
       socket.emit('notifications_error', { message: 'Error deleting notification' });
     }
   });
@@ -328,9 +329,9 @@ export default function registerNotificationEvents(io, socket) {
       // ⚡ Emit new (empty) notification list to user after clearing
       io.to(user_id).emit('notifications_list', { notifications: [], unreadCount: 0, total: 0 });
       socket.emit('notifications_cleared', { user_id });
-      console.log(`🔥 [SOCKET] All notifications cleared for user ${user_id}`);
+      logger.log(`🔥 [SOCKET] All notifications cleared for user ${user_id}`);
     } catch (error) {
-      console.error('❌ [SOCKET] Error clearing notifications:', error);
+      logger.error('❌ [SOCKET] Error clearing notifications:', error);
       socket.emit('notifications_error', { message: 'Error clearing notifications' });
     }
   });

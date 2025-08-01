@@ -1,5 +1,6 @@
 'use server';
 
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
@@ -43,7 +44,7 @@ export async function PUT(request) {
 
     return NextResponse.json({ message: 'Password updated successfully' });
   } catch (error) {
-    console.error('[API PUT] Error updating password:', error);
+    logger.error('[API PUT] Error updating password:', error);
     return NextResponse.json({ error: `internal server error: ${error.message}` }, { status: 500 });
   }
 }

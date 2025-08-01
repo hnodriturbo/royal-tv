@@ -20,6 +20,7 @@
  *   }
  */
 
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
@@ -58,7 +59,7 @@ export async function GET(request) {
 
     return NextResponse.json({ conversations });
   } catch (err) {
-    console.error('🔥 [users/liveChat/main] failed:', err);
+    logger.error('🔥 [users/liveChat/main] failed:', err);
     return NextResponse.json(
       { error: `Failed to fetch conversations: ${err.message}` },
       { status: 500 }

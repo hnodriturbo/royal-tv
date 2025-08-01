@@ -7,6 +7,7 @@
  * =====================================================================
  */
 
+import logger from '@/lib/logger';
 import { useCallback, useRef, useEffect } from 'react';
 import useSocket from '@/hooks/socket/useSocket';
 
@@ -17,40 +18,13 @@ const useSocketHub = () => {
   // ===================== EMIT/LISTEN QUEUES =====================
   const emitQueueRef = useRef([]);
   const listenQueueRef = useRef([]);
-  /* 
-  const guardedEmit = useCallback(
-    (event, payload) => {
-      if (!socketConnected) {
-        // 🛑 Not connected: queue emit and warn
-        console.warn(`⚠️ [SOCKET HUB] Emit "${event}" queued (waiting for connection)`, payload);
-        emitQueueRef.current.push({ event, payload });
-        return;
-      }
-      emit(event, payload);
-    },
-    [emit, socketConnected]
-  );
 
-  const guardedListen = useCallback(
-    (event, handler) => {
-      if (!socketConnected) {
-        // 🛑 Not connected: queue listen and warn
-        console.warn(`⚠️ [SOCKET HUB] Listen "${event}" queued (waiting for connection)`);
-        listenQueueRef.current.push({ event, handler });
-        // Return a cleanup that does nothing
-        return () => {};
-      }
-      return listen(event, handler);
-    },
-    [listen, socketConnected]
-  );
- */
   // 1️⃣ Guarded Emit: queue if not connected
   const guardedEmit = useCallback(
     (event, payload) => {
       if (!socket || !socketConnected) {
         // 🛑 Not connected or socket not defined: queue emit and warn
-        console.warn(`⚠️ [SOCKET HUB] Emit "${event}" queued (waiting for connection)`, payload);
+        logger.warn(`⚠️ [SOCKET HUB] Emit "${event}" queued (waiting for connection)`, payload);
         emitQueueRef.current.push({ event, payload });
         return;
       }
@@ -63,7 +37,7 @@ const useSocketHub = () => {
     (event, handler) => {
       if (!socket || !socketConnected) {
         // 🛑 Not connected or socket not defined: queue listen and warn
-        console.warn(`⚠️ [SOCKET HUB] Listen "${event}" queued (waiting for connection)`);
+        logger.warn(`⚠️ [SOCKET HUB] Listen "${event}" queued (waiting for connection)`);
         listenQueueRef.current.push({ event, handler });
         return () => {};
       }
@@ -78,13 +52,13 @@ const useSocketHub = () => {
     // Flush emits
     emitQueueRef.current.forEach(({ event, payload }) => {
       emit(event, payload);
-      console.info(`✅ [SOCKET HUB] Queued emit "${event}" sent after connect.`, payload);
+      logger.info(`✅ [SOCKET HUB] Queued emit "${event}" sent after connect.`, payload);
     });
     emitQueueRef.current = [];
     // Flush listens (register all now)
     listenQueueRef.current.forEach(({ event, handler }) => {
       listen(event, handler);
-      console.info(`✅ [SOCKET HUB] Queued listen "${event}" registered after connect.`);
+      logger.info(`✅ [SOCKET HUB] Queued listen "${event}" registered after connect.`);
     });
     listenQueueRef.current = [];
   }, [socketConnected, emit, listen]);

@@ -5,6 +5,7 @@
  * - Only creates and returns freeTrial object (+ user object).
  * =============================================================
  */
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
@@ -21,7 +22,7 @@ export async function GET(request) {
     });
     return NextResponse.json(freeTrial);
   } catch (error) {
-    console.error('🔥 FreeTrial fetch error:', error);
+    logger.error('🔥 FreeTrial fetch error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -58,7 +59,7 @@ export async function POST(request) {
     // ✅ Only return the user and freeTrial objects!
     return NextResponse.json({ freeTrial, user }, { status: 201 });
   } catch (error) {
-    console.error('🔥 FreeTrial POST error:', error);
+    logger.error('🔥 FreeTrial POST error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

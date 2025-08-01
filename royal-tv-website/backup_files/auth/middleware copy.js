@@ -8,6 +8,7 @@
  * ===================================================================
  */
 
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { edgeAuth } from './auth/edge-auth';
 
@@ -16,8 +17,8 @@ export async function middleware(request) {
   const token = await edgeAuth(request);
   const userRole = token?.role;
   const userId = token?.user_id;
-  console.log('NEXTAUTH_SECRET:', process.env.NEXTAUTH_SECRET);
-  console.log('JWT TOKEN:', token);
+  logger.log('NEXTAUTH_SECRET:', process.env.NEXTAUTH_SECRET);
+  logger.log('JWT TOKEN:', token);
 
   // ✉️ Clone headers to add identity info for downstream use
   const forwardedHeaders = new Headers(request.headers);
@@ -29,9 +30,9 @@ export async function middleware(request) {
     forwardedHeaders.set('x-sender-id', userId);
 
     forwardedHeaders.set('x-user-role', userRole);
-    console.log('[Middleware] injected x-user-role:', userRole);
+    logger.log('[Middleware] injected x-user-role:', userRole);
 
-    console.log('[Middleware] injected x-user-id:', userId);
+    logger.log('[Middleware] injected x-user-id:', userId);
   }
 
   // 🚦 Block: If NOT logged in and NOT already on an /auth page...

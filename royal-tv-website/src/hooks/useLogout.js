@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 import { signOut } from 'next-auth/react';
 
 const useLogout = () => {
@@ -5,7 +6,7 @@ const useLogout = () => {
     try {
       await signOut({ callbackUrl: '/auth/middlePage?logout=true' });
     } catch (error) {
-      console.error('Error logging out:', error);
+      logger.error('Error logging out:', error);
     }
   };
 

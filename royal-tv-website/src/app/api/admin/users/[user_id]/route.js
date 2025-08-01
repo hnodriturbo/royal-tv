@@ -1,5 +1,6 @@
 'use server';
 
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
@@ -10,7 +11,7 @@ import prisma from '@/lib/prisma';
 export async function GET(request, { params }) {
   // Extract user_id from the dynamic route params
   const { user_id } = await params;
-  console.log('[API GET] Fetching user with user_id:', user_id);
+  logger.log('[API GET] Fetching user with user_id:', user_id);
 
   try {
     // Find the user by user_id and select only non-sensitive fields
@@ -29,14 +30,14 @@ export async function GET(request, { params }) {
     });
 
     if (!user) {
-      console.log('[API GET] User not found');
+      logger.log('[API GET] User not found');
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    console.log('[API GET] Found user:', user);
+    logger.log('[API GET] Found user:', user);
     return NextResponse.json(user);
   } catch (error) {
-    console.error('[API GET] Error fetching user:', error);
+    logger.error('[API GET] Error fetching user:', error);
     return NextResponse.json({ error: 'Error fetching user' }, { status: 500 });
   }
 }
@@ -48,11 +49,11 @@ export async function GET(request, { params }) {
  */
 export async function PATCH(request, { params }) {
   const { user_id } = params;
-  console.log('[API PATCH] Updating user with user_id:', user_id);
+  logger.log('[API PATCH] Updating user with user_id:', user_id);
 
   try {
     const body = await request.json();
-    console.log('[API PATCH] Received update data:', body);
+    logger.log('[API PATCH] Received update data:', body);
 
     // Update the user with provided fields and return the updated record
     const updatedUser = await prisma.user.update({
@@ -70,10 +71,10 @@ export async function PATCH(request, { params }) {
       },
     });
 
-    console.log('[API PATCH] Updated user:', updatedUser);
+    logger.log('[API PATCH] Updated user:', updatedUser);
     return NextResponse.json(updatedUser);
   } catch (error) {
-    console.error('[API PATCH] Error updating user:', error);
+    logger.error('[API PATCH] Error updating user:', error);
     return NextResponse.json(
       { error: 'Failed to update user' },
       { status: 500 },
@@ -87,16 +88,16 @@ export async function PATCH(request, { params }) {
  */
 export async function DELETE(request, { params }) {
   const { user_id } = params;
-  console.log('[API DELETE] Deleting user with user_id:', user_id);
+  logger.log('[API DELETE] Deleting user with user_id:', user_id);
 
   try {
     await prisma.user.delete({
       where: { user_id },
     });
-    console.log('[API DELETE] User deleted successfully');
+    logger.log('[API DELETE] User deleted successfully');
     return NextResponse.json({ message: 'User deleted successfully' });
   } catch (error) {
-    console.error('[API DELETE] Error deleting user:', error);
+    logger.error('[API DELETE] Error deleting user:', error);
     return NextResponse.json(
       { error: 'Failed to delete user' },
       { status: 500 },

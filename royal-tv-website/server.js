@@ -5,6 +5,7 @@
  * =============================================
  */
 
+import logger from '@/lib/logger';
 import './src/lib/socketServer.js'; // Your Socket.IO server
 import { sweepExpiredTrialsAndSubs } from './src/lib/expireServer.js';
 
@@ -19,4 +20,4 @@ setInterval(() => {
 // Run once at server startup
 sweepExpiredTrialsAndSubs().catch(console.error);
 
-console.log('🎯 [Main server] Socket.IO and expiry sweeper are both running.');
+logger.log('🎯 [Main server] Socket.IO and expiry sweeper are both running.');

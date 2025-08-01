@@ -11,6 +11,7 @@
 
 'use client';
 
+import logger from '@/lib/logger';
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import axiosInstance from '@/lib/axiosInstance';
@@ -96,8 +97,8 @@ export default function AdminEditSubscriptionPage() {
       const { subscription: updatedSubscription, previousStatus } = response.data;
 
       // 🕵️‍♂️ DEBUG: Log what comes back from backend
-      console.log('🔎 [DEBUG] updatedSubscription:', updatedSubscription);
-      console.log('🔎 [DEBUG] previousStatus:', previousStatus);
+      logger.log('🔎 [DEBUG] updatedSubscription:', updatedSubscription);
+      logger.log('🔎 [DEBUG] previousStatus:', previousStatus);
 
       // 🎉 UI feedback
       displayMessage('✅ Subscription updated successfully', 'success');
@@ -108,8 +109,8 @@ export default function AdminEditSubscriptionPage() {
         updatedSubscription.status === 'active'
       ) {
         // 🕵️‍♂️ DEBUG: Log what is being sent to notification
-        console.log('📬 [DEBUG] Notifying with user:', updatedSubscription.user);
-        console.log('📬 [DEBUG] Notifying with subscription:', updatedSubscription);
+        logger.log('📬 [DEBUG] Notifying with user:', updatedSubscription.user);
+        logger.log('📬 [DEBUG] Notifying with subscription:', updatedSubscription);
 
         // 🚨 Trigger notification for subscription activation
         createSubscriptionActivatedNotification(updatedSubscription.user, updatedSubscription);
@@ -121,7 +122,7 @@ export default function AdminEditSubscriptionPage() {
     } catch (err) {
       displayMessage('❌ Failed to update subscription', 'error');
       // Log every possible detail!
-      console.error('❌ [DEBUG] PATCH error:', err, err?.response, err?.toJSON?.());
+      logger.error('❌ [DEBUG] PATCH error:', err, err?.response, err?.toJSON?.());
       alert(
         JSON.stringify(
           {

@@ -16,6 +16,7 @@
  * =========================================================
  */
 
+import logger from '@/lib/logger';
 import { useCallback } from 'react';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 
@@ -27,7 +28,7 @@ export default function useMessageEvents(conversation_id) {
   const send = useCallback(
     (message) => {
       sendMessage(conversation_id, message);
-      console.log(`📤 Sent message: ${message}`);
+      logger.log(`📤 Sent message: ${message}`);
     },
     [conversation_id, sendMessage]
   );
@@ -36,7 +37,7 @@ export default function useMessageEvents(conversation_id) {
   const edit = useCallback(
     (message_id, newMessage) => {
       editMessage(conversation_id, message_id, newMessage);
-      console.log(`✏️ Edit message: ${message_id}`);
+      logger.log(`✏️ Edit message: ${message_id}`);
     },
     [conversation_id, editMessage]
   );
@@ -45,7 +46,7 @@ export default function useMessageEvents(conversation_id) {
   const del = useCallback(
     (message_id) => {
       deleteMessage(conversation_id, message_id);
-      console.log(`🗑️ Delete message: ${message_id}`);
+      logger.log(`🗑️ Delete message: ${message_id}`);
     },
     [conversation_id, deleteMessage]
   );

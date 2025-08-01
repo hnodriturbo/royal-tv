@@ -9,6 +9,7 @@
  * =====================================================================
  */
 
+import logger from '@/lib/logger';
 import { useCallback } from 'react';
 import useSocket from '@/hooks/socket/useSocket';
 
@@ -18,23 +19,23 @@ const useSocketHub = () => {
   // 1️⃣ Room/Conversation
   const joinRoom = useCallback(
     (chatType, conversation_id) => {
-      console.log('📡 [useSocketHub] joinRoom:', { chatType, conversation_id });
+      logger.log('📡 [useSocketHub] joinRoom:', { chatType, conversation_id });
       emit('join_room', { chatType, conversation_id });
     },
     [emit]
   );
   const leaveRoom = useCallback(
     (chatType, conversation_id) => {
-      console.log('📡 [useSocketHub] leaveRoom:', { chatType, conversation_id });
+      logger.log('📡 [useSocketHub] leaveRoom:', { chatType, conversation_id });
       emit('leave_room', { chatType, conversation_id });
     },
     [emit]
   );
   const onRoomUsersUpdate = useCallback(
     (handler) => {
-      console.log('📡 [useSocketHub] Listening: room_users_update');
+      logger.log('📡 [useSocketHub] Listening: room_users_update');
       return listen('room_users_update', (...args) => {
-        console.log('📡 [useSocketHub] room_users_update triggered:', ...args);
+        logger.log('📡 [useSocketHub] room_users_update triggered:', ...args);
         handler(...args);
       });
     },
@@ -44,7 +45,7 @@ const useSocketHub = () => {
   // 2️⃣ Message Events
   const sendMessage = useCallback(
     (chatType, conversation_id, message) => {
-      console.log('💬 [useSocketHub] sendMessage:', { chatType, conversation_id, message });
+      logger.log('💬 [useSocketHub] sendMessage:', { chatType, conversation_id, message });
       emit('send_message', { chatType, conversation_id, message: message.trim() });
     },
     [emit]
@@ -53,7 +54,7 @@ const useSocketHub = () => {
   // Edit message
   const editMessage = useCallback(
     (chatType, conversation_id, message_id, message) => {
-      console.log('✏️ [useSocketHub] editMessage:', {
+      logger.log('✏️ [useSocketHub] editMessage:', {
         chatType,
         conversation_id,
         message_id,
@@ -67,7 +68,7 @@ const useSocketHub = () => {
   // Delete Message
   const deleteMessage = useCallback(
     (chatType, conversation_id, message_id) => {
-      console.log('🗑️ [useSocketHub] deleteMessage:', { chatType, conversation_id, message_id });
+      logger.log('🗑️ [useSocketHub] deleteMessage:', { chatType, conversation_id, message_id });
       emit('delete_message', { chatType, conversation_id, message_id });
     },
     [emit]
@@ -75,9 +76,9 @@ const useSocketHub = () => {
 
   const receiveMessage = useCallback(
     (handler) => {
-      console.log('💬 [useSocketHub] Listening: receive_message');
+      logger.log('💬 [useSocketHub] Listening: receive_message');
       return listen('receive_message', (...args) => {
-        console.log('💬 [useSocketHub] receive_message triggered:', ...args);
+        logger.log('💬 [useSocketHub] receive_message triggered:', ...args);
         handler(...args);
       });
     },
@@ -86,7 +87,7 @@ const useSocketHub = () => {
 
   const refreshMessages = useCallback(
     (chatType, conversation_id) => {
-      console.log('✅ [useSocketHub] refreshMessages:', { chatType, conversation_id });
+      logger.log('✅ [useSocketHub] refreshMessages:', { chatType, conversation_id });
       emit('refresh_messages', { chatType, conversation_id });
     },
     [emit]
@@ -95,7 +96,7 @@ const useSocketHub = () => {
   const onMessagesRefreshed = useCallback(
     (handler) =>
       listen('messages_refreshed', (payload) => {
-        console.log('✅ [useSocketHub] onMessagesRefreshed:', { payload });
+        logger.log('✅ [useSocketHub] onMessagesRefreshed:', { payload });
         handler(payload); // payload: { chatType, conversation_id, messages }
       }),
     [listen]
@@ -103,7 +104,7 @@ const useSocketHub = () => {
   // 4️⃣ Mark messages as read
   const markRead = useCallback(
     (chatType, conversation_id) => {
-      console.log('✅ [useSocketHub] markRead:', { chatType, conversation_id });
+      logger.log('✅ [useSocketHub] markRead:', { chatType, conversation_id });
       emit('mark_read', { chatType, conversation_id });
     },
     [emit]
@@ -128,9 +129,9 @@ const useSocketHub = () => {
   // 6️⃣ Unread counts and badges
   const onUserUnreadCount = useCallback(
     (handler) => {
-      console.log('🔵 [useSocketHub] Listening: user_unread_count');
+      logger.log('🔵 [useSocketHub] Listening: user_unread_count');
       return listen('user_unread_count', (...args) => {
-        console.log('🔵 [useSocketHub] user_unread_count triggered:', ...args);
+        logger.log('🔵 [useSocketHub] user_unread_count triggered:', ...args);
         handler(...args);
       });
     },
@@ -138,9 +139,9 @@ const useSocketHub = () => {
   );
   const onAdminUnreadCount = useCallback(
     (handler) => {
-      console.log('🔴 [useSocketHub] Listening: admin_unread_count');
+      logger.log('🔴 [useSocketHub] Listening: admin_unread_count');
       return listen('admin_unread_count', (...args) => {
-        console.log('🔴 [useSocketHub] admin_unread_count triggered:', ...args);
+        logger.log('🔴 [useSocketHub] admin_unread_count triggered:', ...args);
         handler(...args);
       });
     },
@@ -148,9 +149,9 @@ const useSocketHub = () => {
   );
   const onUserUnreadBadge = useCallback(
     (handler) => {
-      console.log('🟣 [useSocketHub] Listening: user_unread_badge');
+      logger.log('🟣 [useSocketHub] Listening: user_unread_badge');
       return listen('user_unread_badge', (...args) => {
-        console.log('🟣 [useSocketHub] user_unread_badge triggered:', ...args);
+        logger.log('🟣 [useSocketHub] user_unread_badge triggered:', ...args);
         handler(...args);
       });
     },
@@ -159,15 +160,15 @@ const useSocketHub = () => {
 
   // 7️⃣ Online users
   const requestOnlineUsers = useCallback(() => {
-    console.log('🌍 [useSocketHub] requestOnlineUsers');
+    logger.log('🌍 [useSocketHub] requestOnlineUsers');
     emit('request_online_users');
   }, [emit]);
 
   const onOnlineUsersUpdate = useCallback(
     (handler) => {
-      console.log('🟩 [useSocketHub] Listening: online_users_update');
+      logger.log('🟩 [useSocketHub] Listening: online_users_update');
       return listen('online_users_update', (...args) => {
-        console.log('🟩 [useSocketHub] online_users_update triggered:', ...args);
+        logger.log('🟩 [useSocketHub] online_users_update triggered:', ...args);
         handler(...args);
       });
     },
@@ -176,15 +177,15 @@ const useSocketHub = () => {
 
   // 8️⃣ Account events (admin badges, trials, subs)
   const requestAccountBadges = useCallback(() => {
-    console.log('🏵️ [useSocketHub] requestAccountBadges');
+    logger.log('🏵️ [useSocketHub] requestAccountBadges');
     emit('fetch_account_badges');
   }, [emit]);
 
   const onAccountBadgesUpdate = useCallback(
     (handler) => {
-      console.log('🏅 [useSocketHub] Listening: account_badges_update');
+      logger.log('🏅 [useSocketHub] Listening: account_badges_update');
       return listen('account_badges_update', (...args) => {
-        console.log('🏅 [useSocketHub] account_badges_update triggered:', ...args);
+        logger.log('🏅 [useSocketHub] account_badges_update triggered:', ...args);
         handler(...args);
       });
     },
@@ -193,15 +194,15 @@ const useSocketHub = () => {
 
   // 9️⃣ Free Trials events
   const requestFreeTrials = useCallback(() => {
-    console.log('🎟️ [useSocketHub] requestFreeTrials');
+    logger.log('🎟️ [useSocketHub] requestFreeTrials');
     emit('fetch_free_trials');
   }, [emit]);
 
   const onFreeTrialUpdate = useCallback(
     (handler) => {
-      console.log('🎟️ [useSocketHub] Listening: freeTrials_update');
+      logger.log('🎟️ [useSocketHub] Listening: freeTrials_update');
       return listen('freeTrials_update', (...args) => {
-        console.log('🎟️ [useSocketHub] freeTrials_update triggered:', ...args);
+        logger.log('🎟️ [useSocketHub] freeTrials_update triggered:', ...args);
         handler(...args);
       });
     },
@@ -210,15 +211,15 @@ const useSocketHub = () => {
 
   // 🔟 Subscriptions events
   const requestSubscriptions = useCallback(() => {
-    console.log('🗃️ [useSocketHub] requestSubscriptions');
+    logger.log('🗃️ [useSocketHub] requestSubscriptions');
     emit('fetch_subscriptions');
   }, [emit]);
 
   const onSubscriptionsUpdate = useCallback(
     (handler) => {
-      console.log('🗃️ [useSocketHub] Listening: subscriptions_update');
+      logger.log('🗃️ [useSocketHub] Listening: subscriptions_update');
       return listen('subscriptions_update', (...args) => {
-        console.log('🗃️ [useSocketHub] subscriptions_update triggered:', ...args);
+        logger.log('🗃️ [useSocketHub] subscriptions_update triggered:', ...args);
         handler(...args);
       });
     },
@@ -227,15 +228,15 @@ const useSocketHub = () => {
 
   // 🔟a) Admin: Pending (free trials and subs)
   const requestPendingFreeTrials = useCallback(() => {
-    console.log('⏳ [useSocketHub] requestPendingFreeTrials');
+    logger.log('⏳ [useSocketHub] requestPendingFreeTrials');
     emit('fetch_pending_free_trials');
   }, [emit]);
 
   const onPendingFreeTrialsUpdate = useCallback(
     (handler) => {
-      console.log('⏳ [useSocketHub] Listening: pending_freeTrials_update');
+      logger.log('⏳ [useSocketHub] Listening: pending_freeTrials_update');
       return listen('pending_freeTrials_update', (...args) => {
-        console.log('⏳ [useSocketHub] pending_freeTrials_update triggered:', ...args);
+        logger.log('⏳ [useSocketHub] pending_freeTrials_update triggered:', ...args);
         handler(...args);
       });
     },
@@ -243,15 +244,15 @@ const useSocketHub = () => {
   );
 
   const requestPendingSubscriptions = useCallback(() => {
-    console.log('⏳ [useSocketHub] requestPendingSubscriptions');
+    logger.log('⏳ [useSocketHub] requestPendingSubscriptions');
     emit('fetch_pending_subscriptions');
   }, [emit]);
 
   const onPendingSubscriptionsUpdate = useCallback(
     (handler) => {
-      console.log('⏳ [useSocketHub] Listening: pending_subscriptions_update');
+      logger.log('⏳ [useSocketHub] Listening: pending_subscriptions_update');
       return listen('pending_subscriptions_update', (...args) => {
-        console.log('⏳ [useSocketHub] pending_subscriptions_update triggered:', ...args);
+        logger.log('⏳ [useSocketHub] pending_subscriptions_update triggered:', ...args);
         handler(...args);
       });
     },
@@ -264,7 +265,7 @@ const useSocketHub = () => {
   const requestNotifications = useCallback(
     (user_id) => {
       if (!user_id) return;
-      console.log('🔔 [useSocketHub] requestNotifications', { user_id });
+      logger.log('🔔 [useSocketHub] requestNotifications', { user_id });
       emit('fetch_notifications', { user_id });
     },
     [emit]
@@ -276,10 +277,10 @@ const useSocketHub = () => {
   const onNotificationsUpdate = useCallback(
     (handler) => {
       // 🟠 [LOG] Set up listener for notifications_list event from server
-      console.log('🟠 [SOCKET HUB] Listening: notifications_list');
+      logger.log('🟠 [SOCKET HUB] Listening: notifications_list');
       return listen('notifications_list', (payload) => {
         // 🟣 [LOG] Received notifications_list event payload
-        console.log('🟣 [SOCKET HUB] Received notifications_list:', payload);
+        logger.log('🟣 [SOCKET HUB] Received notifications_list:', payload);
         handler(payload);
       });
     },
@@ -290,7 +291,7 @@ const useSocketHub = () => {
   const markNotificationRead = useCallback(
     (notification_id) => {
       if (!notification_id) return;
-      console.log('✅ [useSocketHub] markNotificationRead:', { notification_id });
+      logger.log('✅ [useSocketHub] markNotificationRead:', { notification_id });
       emit('mark_notification_read', { notification_id });
     },
     [emit]
@@ -299,9 +300,9 @@ const useSocketHub = () => {
   // 3️⃣ Listen for single notification push from backend (realtime trigger)
   const onNotificationReceived = useCallback(
     (handler) => {
-      console.log('🟢 [useSocketHub] Listening: notification_received');
+      logger.log('🟢 [useSocketHub] Listening: notification_received');
       return listen('notification_received', (...args) => {
-        console.log('🟢 [useSocketHub] notification_received triggered:', ...args);
+        logger.log('🟢 [useSocketHub] notification_received triggered:', ...args);
         handler(...args);
       });
     },

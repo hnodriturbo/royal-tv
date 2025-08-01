@@ -4,6 +4,7 @@
  * Allows ANY number of admins and ANY number of users per room!
  */
 
+import logger from '@/lib/logger';
 import prisma from '../lib/prisma.js';
 
 export default function registerRoomEvents(io, socket, globalState) {
@@ -30,7 +31,7 @@ export default function registerRoomEvents(io, socket, globalState) {
     });
 
     // 📝 Log join event (no more chatType distinction)
-    console.log(`🚪 [LiveRoom] ${socket.userData.name} joined room: ${conversation_id}`);
+    logger.log(`🚪 [LiveRoom] ${socket.userData.name} joined room: ${conversation_id}`);
   });
 
   // 2️⃣ Conversation creation (admin/user triggers for user as owner)
@@ -75,11 +76,11 @@ export default function registerRoomEvents(io, socket, globalState) {
       });
       socket.emit('live_chat_room_ready', { conversation_id: convo_id, chatType: 'live' });
 
-      console.log(
+      logger.log(
         `➕ [LiveChatRoom Created]: ${convo_id} by ${socket.userData.name} for user ${user_id}`
       );
     } catch (err) {
-      console.error(`❌ [LiveChatRoom creation error]`, err);
+      logger.error(`❌ [LiveChatRoom creation error]`, err);
       socket.emit('room_creation_error', { error: 'Internal server error' });
     }
   });

@@ -7,6 +7,7 @@
  * ===============================================
  */
 
+import logger from '@/lib/logger';
 import crypto from 'crypto';
 import prisma from '@/lib/prisma';
 import axios from 'axios';
@@ -14,7 +15,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request) {
   // 🚦 Incoming webhook request
-  console.log('🚦 [coinremitter] Webhook received:', new Date().toISOString());
+  logger.log('🚦 [coinremitter] Webhook received:', new Date().toISOString());
 
   // 1. Get raw body and signature (if using signatures, optional)
   const rawBody = await request.text();
@@ -26,19 +27,19 @@ export async function POST(request) {
   //   .update(rawBody)
   //   .digest('hex');
   // if (signature && signature !== expectedSig) {
-  //   console.error('❌ [coinremitter] Invalid signature!');
+  //   logger.error('❌ [coinremitter] Invalid signature!');
   //   return NextResponse.json({ error: 'Invalid signature' }, { status: 403 });
   // }
-  // console.log('🔏 [coinremitter] Valid signature for webhook!');
+  // logger.log('🔏 [coinremitter] Valid signature for webhook!');
 
   // 3. Parse JSON body
   let body;
   try {
     body = JSON.parse(rawBody);
     // 📦 Log incoming
-    console.log('📦 [coinremitter] Body:', body);
+    logger.log('📦 [coinremitter] Body:', body);
   } catch (error) {
-    console.error('❌ [coinremitter] JSON parse failed:', error);
+    logger.error('❌ [coinremitter] JSON parse failed:', error);
     return NextResponse.json({ error: 'Bad Request (body parse failed)' }, { status: 400 });
   }
 
@@ -55,7 +56,7 @@ export async function POST(request) {
 
   // 5. Use invoice_id as DB anchor
   if (!reference_id) {
-    console.error('❌ [coinremitter] No reference_id in webhook');
+    logger.error('❌ [coinremitter] No reference_id in webhook');
     return NextResponse.json({ error: 'No reference_id in webhook' }, { status: 400 });
   }
 
@@ -66,19 +67,19 @@ export async function POST(request) {
       where: { id: reference_id }
     });
     // 🔎 Log search
-    console.log(
+    logger.log(
       '🔎 [coinremitter] Searched by id: reference_id:',
       reference_id,
       'Found:',
       !!paymentRecord
     );
   } catch (error) {
-    console.error('❌ [coinremitter] DB error (find by invoice_id):', error);
+    logger.error('❌ [coinremitter] DB error (find by invoice_id):', error);
     return NextResponse.json({ error: 'DB error (find by invoice_id)' }, { status: 500 });
   }
 
   if (!paymentRecord) {
-    console.error('❌ [coinremitter] Payment not found. invoice_id:', invoice_id);
+    logger.error('❌ [coinremitter] Payment not found. invoice_id:', invoice_id);
     return NextResponse.json({ error: 'Payment not found' }, { status: 404 });
   }
 
@@ -95,9 +96,9 @@ export async function POST(request) {
       }
     });
     // 💾 Payment updated
-    console.log('💾 [coinremitter] Payment updated:', invoice_id, '| New Status:', status);
+    logger.log('💾 [coinremitter] Payment updated:', invoice_id, '| New Status:', status);
   } catch (error) {
-    console.error('❌ [coinremitter] DB error (update payment):', error);
+    logger.error('❌ [coinremitter] DB error (update payment):', error);
     return NextResponse.json({ error: 'DB error (update payment)' }, { status: 500 });
   }
 
@@ -108,9 +109,9 @@ export async function POST(request) {
       where: { user_id: paymentRecord.user_id }
     });
     // 👤 User fetched
-    console.log('👤 [coinremitter] User fetched:', paymentRecord.user_id, '| Found:', !!user);
+    logger.log('👤 [coinremitter] User fetched:', paymentRecord.user_id, '| Found:', !!user);
   } catch (error) {
-    console.error('❌ [coinremitter] DB error (find user):', error);
+    logger.error('❌ [coinremitter] DB error (find user):', error);
     return NextResponse.json({ error: 'DB error (find user)' }, { status: 500 });
   }
 
@@ -128,14 +129,14 @@ export async function POST(request) {
         }
       });
       // 🎉 Subscription created
-      console.log('🎉 [coinremitter] Subscription created:', subscription.subscription_id);
+      logger.log('🎉 [coinremitter] Subscription created:', subscription.subscription_id);
 
       await prisma.subscriptionPayment.update({
         where: { invoice_id },
         data: { subscription_id: subscription.subscription_id }
       });
       // 🔗 Payment linked to subscription
-      console.log(
+      logger.log(
         '🔗 [coinremitter] Payment linked to subscription:',
         invoice_id,
         '->',
@@ -157,20 +158,20 @@ export async function POST(request) {
           subscription
         });
         // 📢 Event emitted!
-        console.log('📢 [coinremitter] transactionFinished emitted for:', invoice_id);
+        logger.log('📢 [coinremitter] transactionFinished emitted for:', invoice_id);
       } catch (error) {
-        console.error('❌ [coinremitter] Error emitting transactionFinished:', error);
+        logger.error('❌ [coinremitter] Error emitting transactionFinished:', error);
       }
     } catch (error) {
-      console.error('❌ [coinremitter] DB error (create subscription):', error);
+      logger.error('❌ [coinremitter] DB error (create subscription):', error);
       return NextResponse.json({ error: 'DB error (create subscription)' }, { status: 500 });
     }
   } else {
     // ⏳ Not paid/finished yet
-    console.log('⏳ [coinremitter] Payment not completed, status:', status);
+    logger.log('⏳ [coinremitter] Payment not completed, status:', status);
   }
 
   // ✅ Done!
-  console.log('✅ [coinremitter] Webhook processed for:', invoice_id);
+  logger.log('✅ [coinremitter] Webhook processed for:', invoice_id);
   return NextResponse.json({ ok: true }, { status: 200 });
 }

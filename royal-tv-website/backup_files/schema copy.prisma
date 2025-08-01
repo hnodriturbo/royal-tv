@@ -65,31 +65,25 @@ model LiveChatMessage {
 }
 
 model Subscription {
-  subscription_id          String             @id @default(uuid()) @db.Uuid
-  user_id                  String             @db.Uuid
-  provider_subscription_id Int
-  username                 String
-  password                 String
-  package_id               Int
-  template_id              Int?
-  devices                  Int
-  paid                     Boolean
-  dns_link                 String?
-  dns_link_for_samsung_lg  String?
-  portal_link              String?
-  note                     String?
-  status                   SubscriptionStatus @default(active)
-  startDate                DateTime?
-  endDate                  DateTime?
-  createdAt                DateTime           @default(now())
-  updatedAt                DateTime           @updatedAt
-
-  // 🔗 Relations
-  user     User                  @relation("UserSubscriptions", fields: [user_id], references: [user_id], onDelete: Cascade)
-  payments SubscriptionPayment[] // 💳 Payment history
+  subscription_id       String                @id @default(uuid()) @db.Uuid
+  user_id               String                @db.Uuid
+  order_id              String?               @unique
+  order_description     String?
+  subscription_username String?
+  subscription_password String?
+  subscription_url      String?
+  subscription_other    String?
+  additional_info       String?
+  status                SubscriptionStatus    @default(pending)
+  startDate             DateTime?
+  endDate               DateTime?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  user                  User                  @relation("UserSubscriptions", fields: [user_id], references: [user_id], onDelete: Cascade)
+  payments              SubscriptionPayment[]
 
   @@index([user_id])
-  @@index([provider_subscription_id])
+  @@index([status])
 }
 
 model SubscriptionPayment {

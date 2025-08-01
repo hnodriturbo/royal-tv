@@ -23,6 +23,7 @@
  * ================================================
  */
 
+import logger from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import axios from 'axios';
 import { getPanelPackageInfo } from '@/lib/panelPackageMap';
@@ -100,7 +101,7 @@ export async function POST(request) {
 
     return NextResponse.json({ ok: true, panelSub });
   } catch (err) {
-    console.error('❌ Panel subscribe error:', err?.response?.data || err.message);
+    logger.error('❌ Panel subscribe error:', err?.response?.data || err.message);
     return NextResponse.json(
       { error: 'Panel subscribe error', detail: err?.response?.data || err.message },
       { status: 500 }

@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { instrument } from '@socket.io/admin-ui';
@@ -10,11 +11,11 @@ const io = new Server(httpServer, {
 instrument(io, { auth: false });
 
 io.on('connection', (socket) => {
-  console.log('Connected:', socket.id);
+  logger.log('Connected:', socket.id);
 });
 
 const PORT = 4001;
 httpServer.listen(PORT, () => {
-  console.log(`Socket.IO server running at http://localhost:${PORT}`);
-  console.log(`Admin UI: http://localhost:${PORT}/admin`);
+  logger.log(`Socket.IO server running at http://localhost:${PORT}`);
+  logger.log(`Admin UI: http://localhost:${PORT}/admin`);
 });

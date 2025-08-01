@@ -5,6 +5,7 @@
  * to everyone in the conversation room.
  * ==============================================
  */
+import logger from '@/lib/logger';
 import getChatModel from '../../src/server/getChatModel.js';
 import prisma from '../../src/lib/prisma.js';
 
@@ -28,7 +29,7 @@ export default async function refreshConversation(io, chatType = 'live', convers
   io.to(conversation_id).emit('conversation_updated', conversation);
 
   // 4️⃣ Debug log
-  console.log(
+  logger.log(
     `🔁 [${chatType}] Emitted updated conversation for conversation_id: ${conversation_id}`
   );
 }

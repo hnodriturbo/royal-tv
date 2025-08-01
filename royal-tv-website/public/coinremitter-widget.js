@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 /**
  * ===============================================
  * 🚀 Coinremitter Payment Button Widget Integrator
@@ -35,37 +36,37 @@
       const widgetEvent = window.widget_x7EGj8eHOw;
       if (widgetEvent && typeof widgetEvent.on === 'function') {
         widgetEvent.on('widgetInit', function (data) {
-          console.log('🟢 Widget Initialized', data);
+          logger.log('🟢 Widget Initialized', data);
         });
         widgetEvent.on('widgetInitError', function (data) {
-          console.error('❌ Widget Init Error', data);
+          logger.error('❌ Widget Init Error', data);
         });
         widgetEvent.on('orderCreate', function (data) {
-          console.log('📝 Order Created', data);
+          logger.log('📝 Order Created', data);
         });
         widgetEvent.on('orderCreatError', function (data) {
-          console.error('❌ Order Create Error', data);
+          logger.error('❌ Order Create Error', data);
         });
         widgetEvent.on('transactionReceive', function (data) {
-          console.log('💰 Transaction Received', data);
+          logger.log('💰 Transaction Received', data);
         });
         widgetEvent.on('transactionConfirm', function (data) {
-          console.log('✅ Transaction Confirmed', data);
+          logger.log('✅ Transaction Confirmed', data);
         });
         widgetEvent.on('orderPaid', function (data) {
-          console.log('🤑 Order Paid', data);
+          logger.log('🤑 Order Paid', data);
         });
         widgetEvent.on('orderExpire', function (data) {
-          console.warn('⌛ Order Expired', data);
+          logger.warn('⌛ Order Expired', data);
         });
         widgetEvent.on('orderReport', function (data) {
-          console.warn('📢 Order Reported', data);
+          logger.warn('📢 Order Reported', data);
         });
         widgetEvent.on('widgetClose', function (data) {
-          console.log('🚪 Widget Closed', data);
+          logger.log('🚪 Widget Closed', data);
         });
       } else {
-        console.warn('⚠️ Widget event handler missing or not ready yet');
+        logger.warn('⚠️ Widget event handler missing or not ready yet');
       }
     }, 150); // Widget usually loads in <100ms, but setTimeout ensures window is ready
   };

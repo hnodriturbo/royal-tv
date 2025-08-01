@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 // 👥 src/server/events/userEvents.js
 /**
  * registerUserEvents
@@ -27,6 +28,6 @@ export default function registerUserEvents(io, socket, globalState) {
       });
     }
 
-    console.log(`❌ Disconnected: ${name}`);
+    logger.log(`❌ Disconnected: ${name}`);
   });
 }

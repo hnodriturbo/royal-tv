@@ -10,6 +10,7 @@
 
 'use client';
 
+import logger from '@/lib/logger';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import RefreshNotificationsButton from 'backup_files/Socket_Backup_Files/RefreshNotificationsButton';
@@ -62,7 +63,7 @@ export default function NotificationCenter({ userRole = 'user' }) {
       setTotalNotifications(res.data.total ?? 0);
       setUnreadCount(res.data.unreadCount ?? 0);
     } catch (err) {
-      console.error('❌ Failed to fetch notifications:', err);
+      logger.error('❌ Failed to fetch notifications:', err);
     }
   }, [notificationsApiPath, drawerOpen, drawerPage]);
 
@@ -83,7 +84,7 @@ export default function NotificationCenter({ userRole = 'user' }) {
       socket?.emit('mark_notification_read', { notification_id });
       // 🚫 Do NOT call fetchNotifications or setTimeout(fetchNotifications, ...)
     } catch (err) {
-      console.error('❌ Failed to mark notification as read (socket):', err);
+      logger.error('❌ Failed to mark notification as read (socket):', err);
     }
   };
 

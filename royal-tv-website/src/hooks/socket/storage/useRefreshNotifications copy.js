@@ -7,6 +7,7 @@
  * ================================================
  */
 
+import logger from '@/lib/logger';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 
 export default function useRefreshNotifications(userId) {
@@ -17,7 +18,7 @@ export default function useRefreshNotifications(userId) {
   function requestRefresh() {
     // 🟢 [LOG] User manually requested notification refresh
     if (!userId) {
-      console.warn('⚠️ [REFRESH BUTTON] No userId found, skipping refresh.');
+      logger.warn('⚠️ [REFRESH BUTTON] No userId found, skipping refresh.');
       return;
     }
     requestNotifications(userId);

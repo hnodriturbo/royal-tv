@@ -6,17 +6,18 @@
  * ===========================================
  */
 
+import logger from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import axios from 'axios';
 import { NextResponse } from 'next/server';
 
 export async function POST(request) {
-  console.log('➡️ [create-invoice] Request received');
+  logger.log('➡️ [create-invoice] Request received');
   const user_id = request.headers.get('x-user-id');
   const { package_slug, order_description, price, customer_email } = await request.json();
 
   if (!user_id || !package_slug || !price || !order_description) {
-    console.warn('⚠️ [create-invoice] Missing required info:', {
+    logger.warn('⚠️ [create-invoice] Missing required info:', {
       user_id,
       package_slug,
       order_description,
@@ -35,9 +36,9 @@ export async function POST(request) {
         order_description
       }
     });
-    console.log('🆕 [create-invoice] Created DB record:', paymentRecord);
+    logger.log('🆕 [create-invoice] Created DB record:', paymentRecord);
   } catch (error) {
-    console.error('❌ [create-invoice] DB create failed:', error);
+    logger.error('❌ [create-invoice] DB create failed:', error);
     return NextResponse.json({ error: 'Failed to create DB record' }, { status: 500 });
   }
 
@@ -55,7 +56,7 @@ export async function POST(request) {
       ipn_callback_url: 'https://royal-tv.tv/api/nowpayments/ipn',
       customer_email
     };
-    console.log('🌐 [create-invoice] Sending NowPayments payload:', invoicePayload);
+    logger.log('🌐 [create-invoice] Sending NowPayments payload:', invoicePayload);
 
     const { data: nowPaymentsData } = await axios.post(
       'https://api.nowpayments.io/v1/invoice',
@@ -68,14 +69,14 @@ export async function POST(request) {
       }
     );
 
-    console.log('✅ [create-invoice] NowPayments invoice created:', nowPaymentsData);
+    logger.log('✅ [create-invoice] NowPayments invoice created:', nowPaymentsData);
 
     // 3. Update DB record with invoice_id
     await prisma.subscriptionPayment.update({
       where: { id: paymentId },
       data: { invoice_id: nowPaymentsData.id }
     });
-    console.log('🔄 [create-invoice] Updated DB record with invoice_id');
+    logger.log('🔄 [create-invoice] Updated DB record with invoice_id');
 
     // 4. Respond with everything needed for frontend
     return NextResponse.json({
@@ -86,7 +87,7 @@ export async function POST(request) {
       payment_status: paymentRecord.status
     });
   } catch (error) {
-    console.error('❌ [create-invoice] NowPayments call failed:', error?.response?.data || error);
+    logger.error('❌ [create-invoice] NowPayments call failed:', error?.response?.data || error);
     return NextResponse.json({ error: 'Failed to create invoice' }, { status: 500 });
   }
 }

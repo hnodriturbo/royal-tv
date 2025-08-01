@@ -8,6 +8,7 @@
  * ==================================================================
  */
 
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/prisma.js';
@@ -48,7 +49,7 @@ export async function POST(request) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Signup error:', error);
+    logger.error('Signup error:', error);
     // 🛑 Handle duplicate username/email error from Prisma
     if (error.code === 'P2002') {
       const field = error.meta?.target?.[0] || 'field';

@@ -11,6 +11,7 @@
  * 🏰 Royal TV rule: Only USERS can own conversations! Admins can create, but never own.
  */
 
+import logger from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
@@ -67,7 +68,7 @@ export async function POST(request) {
 
     return NextResponse.json({ conversation_id: conversation.conversation_id }, { status: 201 });
   } catch (err) {
-    console.error('❌ createConversation route error:', err);
+    logger.error('❌ createConversation route error:', err);
     return NextResponse.json(
       { error: `Failed to create conversation: ${err.message}` },
       { status: 500 }

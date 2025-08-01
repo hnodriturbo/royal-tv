@@ -8,6 +8,7 @@
  * ===========================================
  */
 
+import logger from '@/lib/logger';
 import registerMessageEvents from './messageEvents.js';
 import registerRoomEvents from './roomEvents.js';
 import registerUserEvents from './userEvents.js';
@@ -35,19 +36,19 @@ const connectionHandler = (io, socket, globalState) => {
   // 👑 If admin, also join the global 'admins' room
   if (role === 'admin') {
     socket.join('admins');
-    console.log(`👑 Admin joined global 'admins' room: ${name} (${user_id})`);
+    logger.log(`👑 Admin joined global 'admins' room: ${name} (${user_id})`);
   }
 
   // 🌐 Print online users (one per line)
-  console.log('🌐 Online Users:');
+  logger.log('🌐 Online Users:');
   Object.values(globalState.onlineUsers).forEach((user) => {
-    console.log(`  - ${user.name} (${user.role}) [${user.user_id}]`);
+    logger.log(`  - ${user.name} (${user.role}) [${user.user_id}]`);
   });
 
   // 🔄 Broadcast updated online list as before
   io.emit('online_users_update', Object.values(globalState.onlineUsers));
 
-  console.log(`✅ Connected: ${name} (${role}) uid:${user_id}`);
+  logger.log(`✅ Connected: ${name} (${role}) uid:${user_id}`);
 
   // 4️⃣ Register events ONCE per socket
   registerUserEvents(io, socket, globalState);

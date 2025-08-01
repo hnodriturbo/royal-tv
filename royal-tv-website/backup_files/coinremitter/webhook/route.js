@@ -1,3 +1,4 @@
+import logger from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import axios from 'axios';
 import { NextResponse } from 'next/server';
@@ -8,7 +9,7 @@ export async function POST(request) {
     // 📦 Parse the raw body (webhook is sent as text)
     let rawBody = await request.text();
     let body = JSON.parse(rawBody);
-    console.log('📦 [coinremitter] Webhook body:', body);
+    logger.log('📦 [coinremitter] Webhook body:', body);
 
     // 🪄 Normalize the payload
     const eventData = body.data || body;
@@ -17,7 +18,7 @@ export async function POST(request) {
     const reference_id = eventData.order_id || eventData.reference_id || null;
     if (!reference_id) {
       // ❌ No payment reference? Nothing to do!
-      console.warn('⚠️ [coinremitter] No reference/order_id in webhook');
+      logger.warn('⚠️ [coinremitter] No reference/order_id in webhook');
       return NextResponse.json({ ok: true }, { status: 200 });
     }
 
@@ -28,7 +29,7 @@ export async function POST(request) {
 
     if (!paymentRecord) {
       // ❌ Payment does not exist, do NOT create (must always be pre-created)
-      console.warn('⚠️ [coinremitter] Payment not found in DB:', reference_id);
+      logger.warn('⚠️ [coinremitter] Payment not found in DB:', reference_id);
       return NextResponse.json({ ok: true }, { status: 200 });
     }
 
@@ -51,7 +52,7 @@ export async function POST(request) {
         updatedAt: new Date()
       }
     });
-    console.log('💾 [coinremitter] Payment updated:', reference_id, status);
+    logger.log('💾 [coinremitter] Payment updated:', reference_id, status);
 
     // 🔄 Refetch updated payment
     const updatedPayment = await prisma.subscriptionPayment.findUnique({
@@ -102,17 +103,17 @@ export async function POST(request) {
             },
             subscription
           });
-          console.log('📢 [coinremitter] transactionFinished emitted for:', invoice_id);
+          logger.log('📢 [coinremitter] transactionFinished emitted for:', invoice_id);
         } catch (error) {
-          console.error('❌ [coinremitter] Socket emit failed:', error);
+          logger.error('❌ [coinremitter] Socket emit failed:', error);
         }
       } catch (error) {
-        console.error('❌ [coinremitter] Subscription creation failed:', error);
+        logger.error('❌ [coinremitter] Subscription creation failed:', error);
         // Return 200 anyway for Coinremitter
       }
     } else {
       // 💤 Not completed or already linked to subscription
-      console.log(
+      logger.log(
         '⏳ [coinremitter] Payment not yet complete or already linked:',
         updatedPayment.status
       );
@@ -122,7 +123,7 @@ export async function POST(request) {
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (error) {
     // 🛑 Error in webhook handling, log but always return 200
-    console.error('❌ [coinremitter] Webhook error:', error);
+    logger.error('❌ [coinremitter] Webhook error:', error);
     return NextResponse.json({ ok: true }, { status: 200 });
   }
 }
