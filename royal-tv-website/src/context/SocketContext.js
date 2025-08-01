@@ -19,10 +19,6 @@ export const SocketProvider = ({ children }) => {
   const { data: session, status } = useSession();
   const [socketConnected, setSocketConnected] = useState(false);
 
-  /*  🌐 Decide URL by NODE_ENV
-      dev  → http://localhost:3001
-      prod → https://royal-tv.tv  (change if you host elsewhere)
-  */
   const SOCKET_URL =
     process.env.NODE_ENV === 'production'
       ? 'https://royal-tv.tv' // ✅ prod

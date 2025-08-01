@@ -54,6 +54,7 @@ const MiddlePage = () => {
     const profileUpdated = searchParams.get('update') === 'profile';
     const profilePasswordUpdated = searchParams.get('passwordUpdate') === 'profile';
     const updateSuccess = searchParams.get('success') === 'true';
+    const paymentSuccess = searchParams.get('paymentSuccess') === 'true';
 
     // 🔒 3. Prevent loop on login: only redirect after session is authenticated
     if (login && status !== 'authenticated') {
@@ -92,13 +93,23 @@ const MiddlePage = () => {
         color = 'success';
         target = '/';
       }
-      // ✅ Profile updated
+      // ✅ Profile Updated Success
       else if (profileUpdated && updateSuccess) {
         message = 'Profile updated successfully! Redirecting…';
         color = 'success';
-      } else if (profilePasswordUpdated && updateSuccess) {
+      }
+      // ✅ Profile Password Updated Success
+      else if (profilePasswordUpdated && updateSuccess) {
         message = 'Profile Password updated successfully! Redirecting…';
         color = 'success';
+      }
+      // ✅ Payment success
+      else if (paymentSuccess) {
+        message =
+          '✅ Payment complete! Your subscription is being created and pending admin approval.';
+        color = 'success';
+        target = '/user/subscriptions?paymentSuccess=1';
+        pageDelay = 5000;
       }
       // ⛔️ Role denied
       else if (adminNo || userNo) {

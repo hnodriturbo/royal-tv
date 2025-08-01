@@ -21,6 +21,7 @@ import { adminUserSortOptions, getAdminUserSortFunction } from '@/lib/sorting';
 import SortDropdown from '@/components/reusableUI/SortDropdown';
 import useLocalSorter from '@/hooks/useLocalSorter';
 import Pagination from '@/components/reusableUI/Pagination';
+import ConversationActionButton from '@/components/reusableUI/ConversationActionButton';
 
 export default function AdminUsersMainPage() {
   // 🦸 Admin session/auth
@@ -201,7 +202,7 @@ export default function AdminUsersMainPage() {
                 )}
 
                 {/* 💬 Live Chat Conversations */}
-                {user.totalLiveChats > 0 ? (
+                {user.totalLiveChats > 0 && user.role !== 'admin' ? (
                   <Link href={`/admin/liveChat/user/${user.user_id}`} className="w-full">
                     <button className="btn-primary w-full flex flex-col items-center py-2">
                       <span>💬 Live Chats </span>
@@ -214,14 +215,17 @@ export default function AdminUsersMainPage() {
                     </button>
                   </Link>
                 ) : (
-                  <button
-                    className="btn:disabled w-full opacity-50 cursor-not-allowed flex flex-col items-center py-2 border border-white rounded-md"
-                    disabled
-                    type="button"
-                  >
-                    <span>💬 Live Chats (0)</span>
-                    <span className="text-sm mt-1 text-muted">Unread: 0</span>
-                  </button>
+                  user.role !== 'admin' && (
+                    <ConversationActionButton
+                      action="create"
+                      buttonClass="w-full flex flex-col items-center py-4 border border-white rounded-md btn-primary"
+                      user_id={user.user_id}
+                      user={user}
+                      isAdmin={true}
+                      size="lg"
+                      buttonText="💬 Start Conversation"
+                    />
+                  )
                 )}
 
                 {/* 🫧 Bubble Chat Conversations */}

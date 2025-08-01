@@ -113,8 +113,6 @@ export default function AdminEditSubscriptionPage() {
 
         // 🚨 Trigger notification for subscription activation
         createSubscriptionActivatedNotification(updatedSubscription.user, updatedSubscription);
-        // 🔄 Let sockets/other tabs know user subscription status updated
-        /* await subscriptionStatusUpdate(updatedSubscription.user.user_id); */
       }
 
       setTimeout(() => {
@@ -248,7 +246,7 @@ export default function AdminEditSubscriptionPage() {
             <div className="flex flex-row items-start lg:items-center justify-center w-full gap-2 mb-4">
               <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">Product :</label>
               <span className="w-full lg:max-w-md text-left font-bold underline text-2xl">
-                {formData.order_id || ''}
+                {formData.order_description || ''}
               </span>
             </div>
             {/* 3️⃣ Username */}

@@ -11,12 +11,13 @@ import { useState } from 'react';
 import useFreeTrialStatus from '@/hooks/socket/useFreeTrials'; // 🟢 Rename for clarity!
 import FreeTrialButton from '@/components/reusableUI/FreeTrialButton';
 import axiosInstance from '@/lib/axiosInstance';
-import useNotifications from '@/hooks/socket/storage/useNotifications';
+import useNotifications from '@/hooks/socket/useNotifications';
 import useModal from '@/hooks/useModal';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
+import clsx from 'clsx';
 
-export default function FreeTrials({ user_id }) {
+export default function FreeTrials({ user_id, className }) {
   const { freeTrialStatus, refreshFreeTrialStatus } = useFreeTrialStatus(user_id);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -70,7 +71,9 @@ export default function FreeTrials({ user_id }) {
   };
 
   return (
-    <div className="container-style-sm w-11/12 lg:w-[600px] mx-auto flex flex-col items-center my-6">
+    <div
+      className={clsx('w-11/12 lg:w-[600px] mx-auto flex flex-col items-center my-2', className)}
+    >
       <FreeTrialButton
         freeTrialStatus={freeTrialStatus}
         loading={loading}

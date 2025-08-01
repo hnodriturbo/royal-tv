@@ -13,6 +13,11 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+
+import FreeTrials from '@/components/reusableUI/socket/FreeTrials';
+import useFreeTrialStatus from '@/hooks/socket/useFreeTrials';
+import UserSubscriptionDropdown from '@/components/reusableUI/UserSubscriptionDropdown';
+
 // 📦 Packages Grid (Drop this wherever you want your packages to show on the homepage)
 import PackagesGrid from '@/packages/data/packages';
 
@@ -32,6 +37,9 @@ export default function HomePage() {
   // The states for thank you message
   const [showThankYou, setShowThankYou] = useState(false);
   const [countdown, setCountdown] = useState(10);
+
+  // Get the free trial status for the logged in user
+  const { freeTrialStatus } = useFreeTrialStatus(session?.user?.user_id);
 
   // Search parameters to check if user came through the form page
   const searchParams = useSearchParams();
@@ -89,11 +97,24 @@ export default function HomePage() {
             Register now and unlock a universe of entertainment. Double the value, double the fun,
             double the satisfaction—guaranteed!
           </p>
-          <Link href="/auth/signup">
-            <button className="my-btn-dark-box-shadow btn-secondary btn-lg text-xl font-bold tracking-wider shadow-lg transition duration-1000 hover:scale-110 uppercase">
-              Register Now & Claim Your FREE 1-Day Trial Access!
-            </button>
-          </Link>
+          {/* 🟢 Switch: If NOT authenticated, show register button. If authenticated, show free trial logic. */}
+          {!authenticated ? (
+            <Link href="/auth/signup">
+              <button className="my-btn-dark-box-shadow btn-secondary btn-lg text-xl font-bold tracking-wider shadow-lg transition duration-1000 hover:scale-110 uppercase">
+                Register Now & Claim Your FREE 1-Day Trial Access!
+              </button>
+            </Link>
+          ) : (
+            <>
+              {/* If expired or disabled, show Buy Subscription */}
+              {freeTrialStatus === 'disabled' || freeTrialStatus === 'expired' ? (
+                <UserSubscriptionDropdown />
+              ) : (
+                // Otherwise, show the trial request/status panel as usual
+                <FreeTrials user_id={user?.user_id} className="w-full" />
+              )}
+            </>
+          )}
         </div>
 
         {/* The guide from packages/data/guide.js */}

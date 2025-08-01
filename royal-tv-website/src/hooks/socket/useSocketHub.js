@@ -17,8 +17,7 @@ const useSocketHub = () => {
   // ===================== EMIT/LISTEN QUEUES =====================
   const emitQueueRef = useRef([]);
   const listenQueueRef = useRef([]);
-
-  // 1️⃣ Guarded Emit: queue if not connected
+  /* 
   const guardedEmit = useCallback(
     (event, payload) => {
       if (!socketConnected) {
@@ -32,7 +31,6 @@ const useSocketHub = () => {
     [emit, socketConnected]
   );
 
-  // 2️⃣ Guarded Listen: queue if not connected
   const guardedListen = useCallback(
     (event, handler) => {
       if (!socketConnected) {
@@ -45,6 +43,33 @@ const useSocketHub = () => {
       return listen(event, handler);
     },
     [listen, socketConnected]
+  );
+ */
+  // 1️⃣ Guarded Emit: queue if not connected
+  const guardedEmit = useCallback(
+    (event, payload) => {
+      if (!socket || !socketConnected) {
+        // 🛑 Not connected or socket not defined: queue emit and warn
+        console.warn(`⚠️ [SOCKET HUB] Emit "${event}" queued (waiting for connection)`, payload);
+        emitQueueRef.current.push({ event, payload });
+        return;
+      }
+      emit(event, payload);
+    },
+    [emit, socket, socketConnected]
+  );
+  // 2️⃣ Guarded Listen: queue if not connected
+  const guardedListen = useCallback(
+    (event, handler) => {
+      if (!socket || !socketConnected) {
+        // 🛑 Not connected or socket not defined: queue listen and warn
+        console.warn(`⚠️ [SOCKET HUB] Listen "${event}" queued (waiting for connection)`);
+        listenQueueRef.current.push({ event, handler });
+        return () => {};
+      }
+      return listen(event, handler);
+    },
+    [listen, socket, socketConnected]
   );
 
   // 3️⃣ On connection: flush all queued emits/listens
@@ -129,10 +154,12 @@ const useSocketHub = () => {
     (handler) => guardedListen('user_unread_count', handler),
     [guardedListen]
   );
+
   const onAdminUnreadCount = useCallback(
     (handler) => guardedListen('admin_unread_count', handler),
     [guardedListen]
   );
+
   const onUserUnreadBadge = useCallback(
     (handler) => guardedListen('user_unread_badge', handler),
     [guardedListen]
@@ -145,59 +172,51 @@ const useSocketHub = () => {
     [guardedListen]
   );
 
-  // ============ 🎟️ Free Trials ===========================
-
-  const requestFreeTrialStatus = useCallback(
-    () => guardedEmit('fetch_free_trial_status'),
-    [guardedEmit]
-  );
-  const onFreeTrialStatus = useCallback(
-    (handler) => guardedListen('free_trial_status', handler),
-    [guardedListen]
-  );
-  const freeTrialStatusUpdate = useCallback(
-    (user_id) => guardedEmit('free_trial_status_update', { user_id }),
-    [guardedEmit]
-  );
-  const onFreeTrialStatusUpdate = useCallback(
-    (handler) => guardedListen('free_trial_status_update', handler),
-    [guardedListen]
-  );
-
   // ========== Notifications ==========
 
   const requestNotifications = useCallback(
     (user_id) => guardedEmit('fetch_notifications', { user_id }),
     [guardedEmit]
   );
+
   const onNotificationsUpdate = useCallback(
     (handler) => guardedListen('notifications_list', handler),
     [guardedListen]
   );
+
   const requestNotificationsCount = useCallback(
     (user_id) => guardedEmit('count_notifications', { user_id }),
     [guardedEmit]
   );
+
   const onNotificationsCount = useCallback(
     (handler) => guardedListen('notifications_count', handler),
     [guardedListen]
   );
+
   const markNotificationRead = useCallback(
     (notification_id) => guardedEmit('mark_notification_read', { notification_id }),
     [guardedEmit]
   );
+
   const onNotificationMarkedRead = useCallback(
     (handler) => guardedListen('notification_marked_read', handler),
     [guardedListen]
   );
+
+  // Refresh Notifications
   const refreshNotifications = useCallback(
     (user_id) => guardedEmit('refresh_notifications', { user_id }),
     [guardedEmit]
   );
+
+  // ✅ Receive Notifications
   const onNotificationReceived = useCallback(
     (handler) => guardedListen('notification_received', handler),
     [guardedListen]
   );
+
+  // ✅ Create Notifications for both or single user or single admin
   const createNotificationForBoth = useCallback(
     (type, event, user, data) =>
       guardedEmit('create_notification_for_both', { type, event, user, data }),
@@ -214,10 +233,120 @@ const useSocketHub = () => {
     [guardedEmit]
   );
 
+  // 🗑️ Delete one notification
+  const deleteNotification = useCallback(
+    (notification_id, user_id) => guardedEmit('delete_notification', { notification_id, user_id }),
+    [guardedEmit]
+  );
+
+  // 🔥 Danger zone: clear all notifications
+  const clearNotifications = useCallback(
+    (user_id) => guardedEmit('clear_notifications', { user_id }),
+    [guardedEmit]
+  );
+
+  // ❗ Listen for notification errors
+  const onNotificationsError = useCallback(
+    (handler) => guardedListen('notifications_error', handler),
+    [guardedListen]
+  );
+
   // 💸 Listen for finished payment notification for current user
   const onTransactionFinished = useCallback(
     (handler) => guardedListen('transactionFinished', handler),
     [guardedListen]
+  );
+  // =================== SUBSCRIPTIONS & PAYMENTS ===================
+
+  // 📋 Fetch all subscriptions for the current user (returns all user subscriptions)
+  const fetchSubscriptions = useCallback(() => guardedEmit('fetch_subscriptions'), [guardedEmit]);
+  // 📋 Listen for list of subscriptions
+  const onSubscriptionsList = useCallback(
+    (handler) => guardedListen('subscriptions_list', handler),
+    [guardedListen]
+  );
+
+  // 📊 Fetch the status of a specific subscription by ID
+  const fetchSubscriptionStatus = useCallback(
+    (subscription_id) => guardedEmit('fetch_subscription_status', { subscription_id }),
+    [guardedEmit]
+  );
+  // 📊 Listen for status of a specific subscription
+  const onSubscriptionStatus = useCallback(
+    (handler) => guardedListen('subscription_status', handler),
+    [guardedListen]
+  );
+
+  // 💸 Fetch a payment record by order_id
+  const fetchSubscriptionPayment = useCallback(
+    (order_id) => guardedEmit('fetch_subscription_payment', { order_id }),
+    [guardedEmit]
+  );
+  // 💸 Listen for payment record result
+  const onSubscriptionPayment = useCallback(
+    (handler) => guardedListen('subscription_payment', handler),
+    [guardedListen]
+  );
+
+  // 💵 Fetch only payment status by order_id
+  const fetchSubscriptionPaymentStatus = useCallback(
+    (order_id) => guardedEmit('fetch_subscription_payment_status', { order_id }),
+    [guardedEmit]
+  );
+  // 💵 Listen for just the payment status
+  const onSubscriptionPaymentStatus = useCallback(
+    (handler) => guardedListen('subscription_payment_status', handler),
+    [guardedListen]
+  );
+
+  // 🆕 Listen for backend emit: subscription_created (real-time event after a new subscription is added)
+  const onSubscriptionCreated = useCallback(
+    (handler) => guardedListen('subscription_created', handler),
+    [guardedListen]
+  );
+
+  // 🔄 Listen for backend emit: payment_status_updated (real-time event after payment updates)
+  const onPaymentStatusUpdated = useCallback(
+    (handler) => guardedListen('payment_status_updated', handler),
+    [guardedListen]
+  );
+
+  // ============ 🎟️ Free Trials (already included, but for reference) ===========================
+
+  // 🧪 Request user's current free trial status
+  const requestFreeTrialStatus = useCallback(
+    () => guardedEmit('fetch_free_trial_status'),
+    [guardedEmit]
+  );
+  // 🧪 Listen for free trial status updates
+  const onFreeTrialStatus = useCallback(
+    (handler) => guardedListen('free_trial_status', handler),
+    [guardedListen]
+  );
+
+  // 📦 Request user's full free trial object
+  const fetchFullFreeTrial = useCallback(() => guardedEmit('fetch_full_free_trial'), [guardedEmit]);
+  // 📦 Listen for full free trial object
+  const onFullFreeTrial = useCallback(
+    (handler) => guardedListen('full_free_trial', handler),
+    [guardedListen]
+  );
+
+  // ✉️ Admin notifies user of trial status change
+  const freeTrialStatusUpdate = useCallback(
+    (user_id) => guardedEmit('free_trial_status_update', { user_id }),
+    [guardedEmit]
+  );
+  const onFreeTrialStatusUpdate = useCallback(
+    (handler) => guardedListen('free_trial_status_update', handler),
+    [guardedListen]
+  );
+
+  const logPageVisit = useCallback(
+    ({ page, event = 'page_visit', description }) => {
+      guardedEmit('log_page_visit', { page, event, description });
+    },
+    [guardedEmit]
   );
 
   // ======================= EXPORTS ========================
@@ -274,7 +403,34 @@ const useSocketHub = () => {
     createNotificationForAdmin,
     createNotificationForUser,
 
-    onTransactionFinished
+    deleteNotification,
+    clearNotifications,
+    onNotificationsError,
+
+    onTransactionFinished,
+
+    // Subscriptions & Payments
+    fetchSubscriptions,
+    onSubscriptionsList,
+    fetchSubscriptionStatus,
+    onSubscriptionStatus,
+    fetchSubscriptionPayment,
+    onSubscriptionPayment,
+    fetchSubscriptionPaymentStatus,
+    onSubscriptionPaymentStatus,
+    onSubscriptionCreated,
+    onPaymentStatusUpdated,
+
+    // Free Trials
+    requestFreeTrialStatus,
+    onFreeTrialStatus,
+    fetchFullFreeTrial,
+    onFullFreeTrial,
+    freeTrialStatusUpdate,
+    onFreeTrialStatusUpdate,
+
+    // Log Page Visits
+    logPageVisit
   };
 };
 

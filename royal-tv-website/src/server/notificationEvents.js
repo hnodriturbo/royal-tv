@@ -304,4 +304,34 @@ export default function registerNotificationEvents(io, socket) {
   });
 
   // 🚧 Bulk mark/delete scaffolded for future
+  // 9️⃣ DELETE A SINGLE NOTIFICATION
+  socket.on('delete_notification', async ({ notification_id, user_id }) => {
+    try {
+      await prisma.notification.delete({
+        where: { notification_id }
+      });
+      // 🗑️ Emit new notification list to user after deletion
+      const { notifications, unreadCount, total } = await getAllNotifications(user_id);
+      io.to(user_id).emit('notifications_list', { notifications, unreadCount, total });
+      socket.emit('notification_deleted', [notification_id]);
+      console.log(`🗑️ [SOCKET] notification ${notification_id} deleted`);
+    } catch (error) {
+      console.error('❌ [SOCKET] Error deleting notification:', error);
+      socket.emit('notifications_error', { message: 'Error deleting notification' });
+    }
+  });
+
+  // 🔥 CLEAR ALL NOTIFICATIONS (Danger Zone!)
+  socket.on('clear_notifications', async ({ user_id }) => {
+    try {
+      await prisma.notification.deleteMany({ where: { user_id } });
+      // ⚡ Emit new (empty) notification list to user after clearing
+      io.to(user_id).emit('notifications_list', { notifications: [], unreadCount: 0, total: 0 });
+      socket.emit('notifications_cleared', { user_id });
+      console.log(`🔥 [SOCKET] All notifications cleared for user ${user_id}`);
+    } catch (error) {
+      console.error('❌ [SOCKET] Error clearing notifications:', error);
+      socket.emit('notifications_error', { message: 'Error clearing notifications' });
+    }
+  });
 }

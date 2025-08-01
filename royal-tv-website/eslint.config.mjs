@@ -11,6 +11,25 @@ import pluginReactHooks from 'eslint-plugin-react-hooks';
 import prettierCfg from 'eslint-config-prettier';
 
 const config = [
+  {
+    ignores: [
+      'node_modules/**',
+      '.next/**',
+      'out/**',
+      'dist/**',
+      'coverage/**',
+      'public/**',
+      'package.json',
+      'package-lock.json',
+      'yarn.lock',
+      'pnpm-lock.yaml',
+      '*.md',
+      '*.css',
+      '*.scss',
+      '*.svg',
+      '*.eslintignore'
+    ]
+  },
   js.configs.recommended, // ✅ Base JS rules
   pluginNext, // ⚡ Next.js & web-vitals
   prettierCfg, // 🧹 Disables rules covered by Prettier
@@ -23,7 +42,8 @@ const config = [
     rules: {
       'react-hooks/rules-of-hooks': 'error', // ❗ Enforce Rules of Hooks
       'react-hooks/exhaustive-deps': 'warn', // ⚠️ Warn on missing deps
-      'prettier/prettier': 'warn' // 🔔 Prettier formatting issues
+      'prettier/prettier': 'warn', // 🔔 Prettier formatting issues
+      'google-font-display': '1' // 👀 Warn if Google Fonts don't use &display
     }
   }
 ];

@@ -28,7 +28,10 @@ export default function useNotifications(userId) {
     requestNotifications, // 🔹 Ask server for all my notifications
     onNotificationsUpdate, // 🔹 Listen for full list (fetch/refresh)
     onNotificationReceived, // 🔹 Listen for single real-time notification pushes
-    markNotificationRead // 🔹 Ask server to mark a specific notification as read
+    markNotificationRead, // 🔹 Ask server to mark a specific notification as read
+    deleteNotification, // 🔹 Ask server to delete single notification for user / admin
+    clearNotifications, // 🔹 Ask server to clear all notifications for user / admin
+    onNotificationsError // 🔹 Used For showing errors to user
   } = useSocketHub();
 
   // 📦 Local state: full list, unread badge, loading spinner
@@ -146,6 +149,21 @@ export default function useNotifications(userId) {
     requestNotifications(userId); // 🔁 Server will send fresh list
   }, [userId, requestNotifications]);
 
+  // 🗑️ Delete single notification (by id)
+  const removeNotification = useCallback(
+    (notification_id) => {
+      if (!userId || !notification_id) return;
+      deleteNotification(notification_id, userId);
+    },
+    [deleteNotification, userId]
+  );
+
+  // 🔥 Clear all notifications for user
+  const clearAllNotifications = useCallback(() => {
+    if (!userId) return;
+    clearNotifications(userId);
+  }, [clearNotifications, userId]);
+
   // ============================================================
   // 5️⃣ HELPERS: Preview/drawer slicing for UI display
   // ------------------------------------------------------------
@@ -178,8 +196,16 @@ export default function useNotifications(userId) {
     });
   }, []);
 
+  useEffect(() => {
+    const stop = onNotificationsError((error) => {
+      // 🛑 Handle error: show toast, modal, or console
+      console.error('Notification error:', error?.message || error);
+      // Or update state for UI!
+    });
+    return () => stop && stop();
+  }, [onNotificationsError]);
   // ============================================================
-  // 7️⃣ EXPORT: Return all helpers for NotificationCenter, badges, etc.
+  // ✅ EXPORT: Return all helpers for NotificationCenter, badges, etc.
   // ------------------------------------------------------------
   // - notifications: full sorted array
   // - unreadCount: for badges
@@ -195,6 +221,8 @@ export default function useNotifications(userId) {
     loading, // ⏳ Loading spinner state
     markAsRead, // ✅ Mark as read function (optimistic)
     refreshNotifications, // 🔁 Manual refresh
+    removeNotification, // 🗑️ For single
+    clearAllNotifications, // 🔥 For all
     getPreview, // 🔍 Preview top n notifications
     getDrawerSlice, // 📄 Drawer/page slicing
     resortNotifications // 🔀 Re-sort helper

@@ -168,7 +168,7 @@ export default function UserSubscriptionsMainPage() {
                 <div className="w-full text-center flex flex-col items-center">
                   <h3 className="font-semibold text-2xl">
                     {/* 📦 Product/Order */}
-                    {sub.product || sub.order_id || 'Subscription'}
+                    {sub.product || sub.order_description || 'Subscription'}
                   </h3>
                   <div className="text-lg mt-1">
                     <strong className="me-2">Status:</strong>{' '}

@@ -16,6 +16,7 @@ import { useSession } from 'next-auth/react';
 import RefreshNotifications from '@/components/reusableUI/socket/RefreshNotifications';
 import useNotifications from '@/hooks/socket/useNotifications';
 import { useRouter } from 'next/navigation';
+import useModal from '@/hooks/useModal';
 
 const PREVIEW_COUNT = 3; // 👑 First 3 shown always
 const FIRST_DRAWER_COUNT = 7; // 📄 First batch after preview
@@ -31,7 +32,7 @@ export default function NotificationCenter({ userRole = 'user' }) {
   const { data: session } = useSession();
   const user_id = session?.user?.user_id;
   const router = useRouter();
-
+  const { openModal, hideModal } = useModal();
   // 🟢 Get notifications and helpers from socket-driven hook
   const {
     notifications,
@@ -41,8 +42,41 @@ export default function NotificationCenter({ userRole = 'user' }) {
     getDrawerSlice,
     resortNotifications,
     refreshNotifications,
+    removeNotification,
+    clearAllNotifications,
     loading: notificationsLoading
   } = useNotifications(user_id);
+
+  const handleDeleteNotificationModal = (notification_id) => {
+    openModal('deleteNotification', {
+      title: 'Delete Notification',
+      description: 'Are you sure you want to delete this notification? This cannot be undone.',
+      confirmButtonType: 'Danger',
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
+      onConfirm: () => {
+        removeNotification(notification_id); // Your delete logic from before!
+        hideModal();
+      },
+      onCancel: hideModal
+    });
+  };
+
+  const handleClearAllNotificationsModal = () => {
+    openModal('clearAllNotifications', {
+      title: 'Delete ALL Notifications',
+      description:
+        'Are you sure you want to permanently delete ALL notifications? This cannot be undone!',
+      confirmButtonType: 'Danger',
+      confirmButtonText: 'Delete All',
+      cancelButtonText: 'Cancel',
+      onConfirm: () => {
+        clearAllNotifications(); // Your bulk clear logic
+        hideModal();
+      },
+      onCancel: hideModal
+    });
+  };
 
   // --- UI STATE ---
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -200,8 +234,15 @@ export default function NotificationCenter({ userRole = 'user' }) {
                     <p className="whitespace-pre-wrap">{notif.body}</p>
                   </div>
                   {shouldShowButton(notif) && (
-                    // 🎯 Center “Open Content” button in preview
-                    <div className="flex justify-center mt-3">
+                    <div className="flex justify-between items-center mt-3">
+                      {/* 🗑️ Delete notification */}
+                      <button
+                        className="px-2 py-1 rounded bg-red-700 hover:bg-red-900 text-white text-xs border border-red-500 transition"
+                        onClick={() => handleDeleteNotificationModal(notif.notification_id)}
+                        title="Delete notification"
+                      >
+                        🗑️ Delete
+                      </button>
                       <button
                         className="btn-primary btn-sm"
                         onClick={() => router.push(notif.link)}
@@ -241,12 +282,14 @@ export default function NotificationCenter({ userRole = 'user' }) {
               Total Notifications: {totalNotifications}
             </div>
           )}
-          <button
-            className="btn-outline-primary btn-sm"
-            onClick={() => router.push(`/${userRole}/notifications`)}
-          >
-            🗂️ See All Notifications
-          </button>
+          {notifications.length > 0 && (
+            <button
+              className="btn-outline-primary btn-sm"
+              onClick={() => router.push(`/${userRole}/notifications`)}
+            >
+              🗂️ See All Notifications
+            </button>
+          )}
         </div>
       )}
 
@@ -287,9 +330,17 @@ export default function NotificationCenter({ userRole = 'user' }) {
                         <p className="whitespace-pre-wrap">{notif.body}</p>
                       </div>
                       {shouldShowButton(notif) && (
-                        <div className="flex flex-col sm:flex-row gap-3 mt-2">
+                        <div className="flex justify-between items-center mt-3">
+                          {/* 🗑️ Delete notification */}
                           <button
-                            className="btn-primary btn-sm w-fit"
+                            className="px-2 py-1 rounded bg-red-700 hover:bg-red-900 text-white text-xs border border-red-500 transition"
+                            onClick={() => handleDeleteNotificationModal(notif.notification_id)}
+                            title="Delete notification"
+                          >
+                            🗑️ Delete
+                          </button>
+                          <button
+                            className="btn-primary btn-sm"
                             onClick={() => router.push(notif.link)}
                           >
                             Open Content
@@ -328,14 +379,16 @@ export default function NotificationCenter({ userRole = 'user' }) {
               </button>
             </div>
             {/* Right: See All */}
-            <div className="flex-1 flex justify-end">
-              <button
-                className="btn-outline-primary"
-                onClick={() => router.push(`/${userRole}/notifications`)}
-              >
-                🗂️ See All Notifications
-              </button>
-            </div>
+            {notifications.length > 0 && (
+              <div className="flex-1 flex justify-end">
+                <button
+                  className="btn-outline-primary"
+                  onClick={() => router.push(`/${userRole}/notifications`)}
+                >
+                  🗂️ See All Notifications
+                </button>
+              </div>
+            )}
           </div>
 
           {/* 5️⃣ Drawer count range */}
@@ -346,6 +399,25 @@ export default function NotificationCenter({ userRole = 'user' }) {
               </>
             )}
           </div>
+        </div>
+      )}
+      {/* 🚨 Danger Zone: Clear All Notifications */}
+      {notifications.length > 0 && (
+        <div className="w-full max-w-sm mx-auto border border-red-700 rounded-2xl bg-red-950/60 flex flex-col items-center p-6 shadow-lg">
+          <h3 className="text-lg font-bold text-red-400 mb-2 flex items-center">
+            <span className="mr-2">⚠️</span>
+            Danger Zone
+          </h3>
+          {/*           <p className="mb-4 text-red-300 text-sm text-center">
+            This will <b>permanently delete all notifications</b> for your account. This cannot be
+            undone!
+          </p> */}
+          <button
+            className="px-5 py-2 rounded-lg bg-red-700 hover:bg-red-900 border border-red-500 text-white font-bold shadow transition"
+            onClick={handleClearAllNotificationsModal}
+          >
+            🧨 Clear All Notifications
+          </button>
         </div>
       )}
     </div>

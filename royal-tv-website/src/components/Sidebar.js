@@ -28,22 +28,6 @@ export default function Sidebar() {
   if (role === 'user') links = sidebarLinks.user;
   if (role === 'admin') links = sidebarLinks.admin;
 
-  // 🟢 Merge guest links into admin/user, remove duplicates by href
-  /*   let links = [...sidebarLinks.guest];
-  if (role === 'user') {
-    const userHrefs = sidebarLinks.user.map((link) => link.href);
-    links = [
-      ...sidebarLinks.user,
-      ...sidebarLinks.guest.filter((link) => !userHrefs.includes(link.href))
-    ];
-  } else if (role === 'admin') {
-    const adminHrefs = sidebarLinks.admin.map((link) => link.href);
-    links = [
-      ...sidebarLinks.admin,
-      ...sidebarLinks.guest.filter((link) => !adminHrefs.includes(link.href))
-    ];
-  }
- */
   const logout = useLogout();
   const [open, setOpen] = useState(false);
   const handleClose = () => setOpen(false);

@@ -218,6 +218,15 @@ pm2 save
 pm2 startup  # Follow systemctl instructions printed!
 ```
 
+### 🛠️ Edit your config ecosystem with pm2
+```bash
+pm2 reload ecosystem.config.cjs
+
+pm2 delete all
+
+pm2 start ecosystem.config.cjs
+```
+
 * // 🚦 PM2 keeps your apps running 24/7
 
 ---

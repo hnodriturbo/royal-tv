@@ -67,10 +67,10 @@ export const userNotificationTemplates = {
     title: '🆕 Subscription Created',
     body:
       `Your new subscription was created on ${formatDate(data.createdAt)}.\n` +
-      (data.order_id ? `Order ID: ${data.order_id}\n` : '') +
-      `Status: ${data.status || 'pending'}\n` +
-      `\n👉 Please complete payment if you haven't already.\n` +
-      `We'll activate your subscription and send your login details as soon as payment is confirmed!\n` +
+      (data.order_description ? `Order: ${data.order_description}\n` : '') +
+      `Status: 👉 ${data.status || 'pending'}\n` +
+      `\n` +
+      `We'll activate your subscription and send your login details as soon as admin activates your subscription.\n` +
       `Need help? Login and use Live Chat for support.`,
     link: '/user/subscriptions'
   }),
@@ -82,7 +82,7 @@ export const userNotificationTemplates = {
     title: '🟢 Subscription Active',
     body:
       `Your subscription is now fully active!\n` +
-      (data.order_id ? `• Order ID: ${data.order_id}\n` : '') +
+      (data.order_description ? `• Order: ${data.order_description}\n` : '') +
       (data.startDate ? `Start: ${formatDate(data.startDate)}\n` : '') +
       (data.endDate ? `Expires: ${formatDate(data.endDate)}\n` : '') +
       `Status: ${data.status || 'active'}\n` +
@@ -99,16 +99,22 @@ export const userNotificationTemplates = {
   /**
    * 💸 Payment Confirmed
    */
+  // 💸 Payment Confirmed (User)
   [NotificationType.PAYMENT]: (data) => ({
     title: '💸 Payment Confirmed',
     body:
-      `Thank you! We received ${data.amount_paid ? `${data.amount_paid} ${data.currency || ''}` : 'your payment'} for order #${data.order_id || 'N/A'}.\n` +
-      `Status: ${data.status || 'completed'}.\n` +
-      (data.pay_currency ? `Payment currency: ${data.pay_currency}\n` : '') +
-      (data.network ? `Network: ${data.network}\n` : '') +
-      (data.pay_address ? `Payment address: ${data.pay_address}\n` : '') +
-      (data.invoice_id ? `Invoice: ${data.invoice_id}\n` : '') +
-      (data.received_at ? `Received at: ${formatDate(data.received_at)}\n` : '') +
+      `Thank you! Your payment for order #${data.order_id || 'N/A'} has been received.\n\n` +
+      (data.amount_paid && data.price_currency
+        ? `• Amount Paid: ${data.amount_paid} ${data.price_currency}\n`
+        : '') +
+      (data.actually_paid && data.pay_currency
+        ? `• Amount Sent (Crypto): ${data.actually_paid} ${data.pay_currency}\n`
+        : '') +
+      (data.network ? `• Network: ${data.network}\n` : '') +
+      (data.pay_address ? `• Payment Address: ${data.pay_address}\n` : '') +
+      (data.invoice_id ? `• Invoice ID: ${data.invoice_id}\n` : '') +
+      (data.received_at ? `• Received: ${formatDate(data.received_at)}\n` : '') +
+      `• Status: ${data.status || 'confirmed'}\n` +
       `\nYou'll get another notification when your subscription is activated.\n` +
       `Questions? Login and use Live Chat!`,
     link: '/user/subscriptions'

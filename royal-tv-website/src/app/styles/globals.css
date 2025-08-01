@@ -588,7 +588,11 @@
   3️⃣ Padding, radius, font, and transitions are pulled from CSS variables.
   4️⃣ Universal disabled rule applies to all .btn classes.
 */
-
+  /* Override Tailwind's .text-black globally */
+  .text-black {
+    color: black !important;
+    text-shadow: var(--text-shadow-light-1) !important;
+  }
   /* 🟦 Primary Button */
   .btn-primary {
     background-color: var(--color-primary);

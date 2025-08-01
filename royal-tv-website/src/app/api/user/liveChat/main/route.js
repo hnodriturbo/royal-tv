@@ -29,18 +29,10 @@ export async function GET(request) {
     const user_id = request.headers.get('x-user-id');
     if (!user_id) return NextResponse.json({ error: 'User ID required' }, { status: 401 });
 
-    // 📑 Pagination
-    const { searchParams } = new URL(request.url);
-    const page = Math.max(1, Number(searchParams.get('page') ?? 1));
-    const limit = Math.max(1, Number(searchParams.get('limit') ?? 5));
-    const skip = (page - 1) * limit;
-
-    // 🗣️ Fetch conversations for this user (owner_id)
+    // Fetch all conversations for the user
     const rawConvos = await prisma.liveChatConversation.findMany({
       where: { owner_id: user_id },
-      skip,
-      take: limit,
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { updatedAt: 'desc' }, // default sort
       select: {
         conversation_id: true,
         subject: true,
@@ -55,24 +47,16 @@ export async function GET(request) {
       }
     });
 
-    // 🔄 Map to response structure
+    // Transform to flat structure for frontend
     const conversations = rawConvos.map((c) => ({
       conversation_id: c.conversation_id,
       subject: c.subject,
       updatedAt: c.updatedAt,
-      unreadCount: c.messages.filter(
-        (m) => m.readAt === null && m.sender_is_admin // unread admin messages for user
-      ).length,
+      unreadCount: c.messages.filter((m) => m.readAt === null && m.sender_is_admin).length,
       totalMessages: c.messages.length
     }));
 
-    // 📄 Pagination helpers
-    const totalConvos = await prisma.liveChatConversation.count({
-      where: { owner_id: user_id }
-    });
-    const totalPages = Math.ceil(totalConvos / limit);
-
-    return NextResponse.json({ conversations, totalPages });
+    return NextResponse.json({ conversations });
   } catch (err) {
     console.error('🔥 [users/liveChat/main] failed:', err);
     return NextResponse.json(

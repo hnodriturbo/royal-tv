@@ -16,7 +16,7 @@ import { useSession } from 'next-auth/react'; // 🔐 Session
 import { useEffect } from 'react'; // ⏱️ Side-effects
 import { useRouter } from 'next/navigation'; // 🧭 Navigation
 import useAuthGuard from '@/hooks/useAuthGuard'; // 🚧 Protect route by role
-import SeeAllNotifications from '@/components/reusableUI/socket/storage/SeeAllNotifications'; // 🛎️ See all notifications
+import SeeAllNotifications from '@/components/reusableUI/socket/SeeAllNotifications'; // 🛎️ See all notifications
 
 export default function AdminNotificationsPage() {
   const { data: session, status } = useSession();

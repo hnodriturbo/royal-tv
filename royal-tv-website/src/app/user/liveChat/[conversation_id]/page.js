@@ -162,20 +162,20 @@ export default function UserConversationDetailsPage() {
             <div className="flex flex-col lg:flex-row gap-2 items-center lg:items-stretch w-10/12 mb-2">
               {/* 👤 User info */}
               <div className="container-style lg:min-w-[220px] lg:max-w-lg w-full p-2 text-center border mx-auto">
-                <h2 className="text-base font-bold mb-1">User Info</h2>
-                <p className="text-xs">
+                <h2 className="font-bold underline mb-1 text-xl">User Info</h2>
+                <p className="text-lg">
                   <strong>Name:</strong> {conversationDetails.owner?.name || 'N/A'}
                 </p>
-                <p className="text-xs">
+                <p className="text-lg">
                   <strong>Email:</strong> {conversationDetails.owner?.email || 'N/A'}
                 </p>
-                <p className="text-xs">
+                <p className="text-lg">
                   <strong>Username:</strong> {conversationDetails.owner?.username || 'N/A'}
                 </p>
               </div>
               {/* 🧑‍💼 Admin info */}
-              <div className="container-style min-w-[220px] lg:max-w-lg w-full p-2 text-center border mx-auto">
-                <IsAdminOnline />
+              <div className="container-style min-w-[220px] w-full p-2 text-center border mx-auto justify-center items-center">
+                <IsAdminOnline user_id={session?.user?.user_id} />
               </div>
             </div>
           </div>
@@ -189,7 +189,7 @@ export default function UserConversationDetailsPage() {
                 <hr className="border border-white w-8/12 my-2" />
               </div>
               <div
-                className="flex flex-col gap-1 p-1 w-full max-h-48 overflow-y-auto transition-all"
+                className="flex flex-col gap-1 p-1 w-full max-h-60 overflow-y-auto transition-all"
                 style={{ minWidth: 0, width: '100%' }}
               >
                 {userConversations
@@ -201,9 +201,13 @@ export default function UserConversationDetailsPage() {
                     const isCurrent = conversationItem.conversation_id === conversation_id;
                     const isUnread = conversationItem.unreadCount > 0;
 
-                    // 🎨 Color logic
-                    const readBg = 'bg-gray-500 hover:bg-slate-300 text-white'; // For read convos
-                    const unreadBg = 'bg-purple-700 text-white hover:bg-purple-500'; // For unread convos
+                    /*                     // 🎨 Color logic
+                    const readBg = 'bg-white hover:bg-slate-500 text-black text-shadow-light-1'; // For read convos
+                    const unreadBg = 'bg-purple-700 text-white hover:bg-purple-500'; // For unread convos */
+                    // Read conversation
+                    const readBg = 'bg-gray-100 hover:bg-gray-300 text-black';
+                    // Unread conversation
+                    const unreadBg = 'bg-blue-700 hover:bg-blue-600 text-white';
 
                     return (
                       <button
@@ -211,8 +215,8 @@ export default function UserConversationDetailsPage() {
                         onClick={() =>
                           router.replace(`/user/liveChat/${conversationItem.conversation_id}`)
                         }
-                        className={`px-2 py-3 rounded-lg text-xs font-bold w-full transition-colors border
-                  ${isCurrent ? 'border-2 border-green-300' : 'border border-transparent'}
+                        className={`px-2 py-3 rounded-lg font-bold w-full transition-colors border
+                  ${isCurrent ? 'border-3 border-black' : 'border border-transparent'}
                   ${isUnread ? unreadBg : readBg}
                 `}
                         style={{ minWidth: 90, width: '100%' }}

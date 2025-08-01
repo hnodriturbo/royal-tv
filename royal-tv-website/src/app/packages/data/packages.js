@@ -28,54 +28,44 @@ export const packageFeatures = [
 
 // 💰 Main packages array, auto-generates detailsUrl and buyNowUrl
 export const paymentPackages = [
-  {
+  /*   {
     slug: 'tester',
     order_id: 'tester',
-    name: 'Tester',
-    duration: 'Test period',
+    order_description: 'Tester Period',
     devices: 1,
-    price: 30,
-    iid: '4369375603'
-  },
+    price: 30
+  }, */
   {
     slug: '6m',
     order_id: '6m',
-    name: '6 Months',
-    duration: '6 months',
+    order_description: '6 Months',
     devices: 1,
-    price: 70,
-    iid: '5164526363'
+    price: 80
   },
   {
     slug: '6m_extra',
     order_id: '6m_extra',
-    name: '6 Months + Extra Device',
-    duration: '6 months',
+    order_description: '6 Months + Extra Device',
     devices: 2,
-    price: 120,
-    iid: '4900982772'
+    price: 120
   },
   {
     slug: '12m',
     order_id: '12m',
-    name: '12 Months',
-    duration: '12 months',
+    order_description: '12 months',
     devices: 1,
-    price: 120,
-    iid: '5663642432'
+    price: 140
   },
   {
     slug: '12m_extra',
     order_id: '12m_extra',
-    name: '12 Months + Extra Device',
-    duration: '12 months',
+    order_description: '12 Months + Extra Device',
     devices: 2,
-    price: 180,
-    iid: '4701899669'
+    price: 200
   }
+  // ✅ This map function adds detailsUrl and buyNowUrl to all packages.
 ].map((pkg) => ({
   ...pkg,
-  // 🛤️ Always use underscore slug for URLs
   detailsUrl: `/packages/${pkg.slug}/seeMore`,
   buyNowUrl: `/packages/${pkg.slug}/buyNow`
 }));
@@ -97,7 +87,9 @@ const PackagesGrid = ({ authenticated }) => (
           {pkg.devices === 1 ? 'Single Device' : '2 Devices'}
         </div>
         {/* 🏆 Name */}
-        <h3 className="text-3xl font-bold text-yellow-300 mb-2 drop-shadow-xl">{pkg.name}</h3>
+        <h3 className="text-3xl font-bold text-yellow-300 mb-2 drop-shadow-xl">
+          {pkg.order_description}
+        </h3>
         {/* 💵 Price */}
         <div className="mb-2 flex items-center gap-2">
           <span className="text-3xl font-extrabold text-pink-400 drop-shadow-lg">${pkg.price}</span>

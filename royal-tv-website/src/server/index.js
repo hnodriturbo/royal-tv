@@ -3,7 +3,8 @@
  * 🛠️
  * MODULAR SOCKET.IO EVENT REGISTRATION ENTRYPOINT
  * - Identifies and seeds user
- * - Registers all socket event modules (chat, room, user, account, etc)
+ * - Registers all socket event modules (chat, room, user, account, log, etc)
+ * - No more file-based logs! All logs go to database.
  * ===========================================
  */
 
@@ -12,6 +13,7 @@ import registerRoomEvents from './roomEvents.js';
 import registerUserEvents from './userEvents.js';
 import registerNotificationEvents from './notificationEvents.js';
 import registerAccountEvents from './accountEvents.js';
+import registerLogEvents from './logEvents.js'; // 🪵 Log page visits to DB!
 
 const connectionHandler = (io, socket, globalState) => {
   // 1️⃣ Initialize global state (bubble removed)
@@ -42,7 +44,7 @@ const connectionHandler = (io, socket, globalState) => {
     console.log(`  - ${user.name} (${user.role}) [${user.user_id}]`);
   });
 
-  // 🔄 Then broadcast updated online list as before
+  // 🔄 Broadcast updated online list as before
   io.emit('online_users_update', Object.values(globalState.onlineUsers));
 
   console.log(`✅ Connected: ${name} (${role}) uid:${user_id}`);
@@ -53,6 +55,7 @@ const connectionHandler = (io, socket, globalState) => {
   registerAccountEvents(io, socket);
   registerMessageEvents(io, socket);
   registerNotificationEvents(io, socket);
+  registerLogEvents(io, socket); // 🪵 Register page visit logger!
 };
 
 export default connectionHandler;

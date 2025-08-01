@@ -17,7 +17,7 @@ import useLogout from '@/hooks/useLogout';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import { useRouter } from 'next/navigation';
 
-import UserSubscriptionPanel from '@/components/ui/userSubscriptionPanel/UserSubscriptionPanel';
+import UserSubscriptionPanel from '@/components/reusableUI/socket/UserSubscriptionPanel';
 import NotificationCenter from '@/components/reusableUI/socket/NotificationCenter';
 import FreeTrials from '@/components/reusableUI/socket/FreeTrials';
 import IsAdminOnline from '@/components/reusableUI/socket/IsAdminOnline';
@@ -43,9 +43,9 @@ export default function UserDashboard() {
   return (
     <div className="flex flex-col items-center justify-center w-full lg:mt-0 mt-10">
       {/* 🟠 Main dashboard card */}
-      <div className="container-style w-10/12 lg:w-[600px] mx-auto mb-4">
+      <div className="container-style w-10/12 lg:w-[600px] mx-auto mb-2">
         {/* 1️⃣ Header */}
-        <div className="font-bold text-center underline text-black text-4xl whitespace-nowrap">
+        <div className="font-bold text-center underline text-black lg:text-4xl text-2xl whitespace-nowrap">
           Welcome {session?.user?.name || 'User'}
         </div>
       </div>
@@ -60,11 +60,11 @@ export default function UserDashboard() {
 
       {/* 🟣 Free Trial Panel (socket-powered) */}
       <div className="w-full lg:w-[600px] mx-auto">
-        <FreeTrials user_id={session?.user?.user_id} />
+        <FreeTrials user_id={session?.user?.user_id} className="container-style-sm mb-6" />
       </div>
       {/* 🔵 “Is Admin Online?” indicator */}
       <div className="container-style w-11/12 lg:w-[600px] mx-auto">
-        <IsAdminOnline />
+        <IsAdminOnline user_id={session?.user?.user_id} />
       </div>
     </div>
   );

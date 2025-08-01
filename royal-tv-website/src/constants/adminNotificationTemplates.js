@@ -108,7 +108,7 @@ export const adminNotificationTemplates = {
     link: `/admin/subscriptions/${data.subscription_id}`
   }),
 
-  // 💸 Payment Received
+  // 💸 Payment Received (Admin)
   [NotificationType.PAYMENT]: (data) => ({
     title: '💸 Payment Received',
     body:
@@ -117,19 +117,21 @@ export const adminNotificationTemplates = {
       `• Email: ${data.email || 'N/A'}\n` +
       `• Username: ${data.username || 'N/A'}\n` +
       `• User ID: ${data.user_id}\n` +
-      (data.amount_paid ? `• Amount Paid: ${data.amount_paid} ${data.currency || ''}\n` : '') +
-      (data.amount_received
-        ? `• Amount Received: ${data.amount_received} ${data.currency || ''}\n`
+      (data.amount_paid && data.price_currency
+        ? `• Amount Paid (Fiat): ${data.amount_paid} ${data.price_currency}\n`
+        : '') +
+      (data.actually_paid && data.pay_currency
+        ? `• Amount Received (Crypto): ${data.actually_paid} ${data.pay_currency}\n`
         : '') +
       (data.pay_currency ? `• Payment currency: ${data.pay_currency}\n` : '') +
       (data.network ? `• Network: ${data.network}\n` : '') +
       (data.pay_address ? `• Payment address: ${data.pay_address}\n` : '') +
       (data.invoice_id ? `• Invoice: ${data.invoice_id}\n` : '') +
-      (data.payment_id ? `• Invoice: ${data.payment_id}\n` : '') +
+      (data.payment_id ? `• Payment ID: ${data.payment_id}\n` : '') +
       (data.received_at ? `• Received at: ${formatDate(data.received_at)}\n` : '') +
-      `• Subscription ID: ${data.subscription_id}\n` +
+      `• Subscription ID: ${data.subscription_id || 'N/A'}\n` +
       (data.order_id ? `• Order ID: ${data.order_id}\n` : '') +
-      `• Status: ${data.status}\n` +
+      `• Status: ${data.status || 'N/A'}\n` +
       `\n👉 Click Open to confirm payment and activate subscription if needed.`,
     link: `/admin/subscriptions/${data.subscription_id}`
   }),
