@@ -53,7 +53,7 @@ const IsAdminOnline = ({ user_id }) => {
   // 4️⃣ Render everything, clean/compact
   return (
     <div className="flex flex-col items-center gap-1">
-      <span className="font-bold text-lg underline<">Admin Info</span>
+      <span className="font-bold text-lg underline">Admin Info</span>
       <span className="text-lg flex items-center gap-2">Is Admin Online: {statusLabel}</span>
       {adminLine}
     </div>

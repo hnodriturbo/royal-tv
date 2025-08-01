@@ -383,12 +383,6 @@ const useSocketHub = () => {
     requestOnlineUsers,
     onOnlineUsersUpdate,
 
-    // 🎟️ Free Trials
-    requestFreeTrialStatus,
-    onFreeTrialStatus,
-    freeTrialStatusUpdate,
-    onFreeTrialStatusUpdate,
-
     // 🛎️ Notifications
     requestNotifications,
     onNotificationsUpdate,
@@ -398,15 +392,12 @@ const useSocketHub = () => {
     onNotificationMarkedRead,
     refreshNotifications,
     onNotificationReceived,
-
     createNotificationForBoth,
     createNotificationForAdmin,
     createNotificationForUser,
-
     deleteNotification,
     clearNotifications,
     onNotificationsError,
-
     onTransactionFinished,
 
     // Subscriptions & Payments
@@ -421,7 +412,7 @@ const useSocketHub = () => {
     onSubscriptionCreated,
     onPaymentStatusUpdated,
 
-    // Free Trials
+    // 🎟️ Free Trials
     requestFreeTrialStatus,
     onFreeTrialStatus,
     fetchFullFreeTrial,
@@ -429,7 +420,7 @@ const useSocketHub = () => {
     freeTrialStatusUpdate,
     onFreeTrialStatusUpdate,
 
-    // Log Page Visits
+    // 🔗 Miscellaneous
     logPageVisit
   };
 };
