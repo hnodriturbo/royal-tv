@@ -67,6 +67,7 @@ model LiveChatMessage {
 model Subscription {
   subscription_id         String             @id @default(uuid()) @db.Uuid
   user_id                 String             @db.Uuid
+  order_id                String             @unique
   megaott_id              Int?
   username                String?
   password                String?
@@ -75,8 +76,8 @@ model Subscription {
   package_name            String?
   template                String?
   max_connections         Int?
-  forced_country          String?
-  adult                   Boolean?
+  forced_country          String?            @default("ALL")
+  adult                   Boolean?           @default(false)
   note                    String?
   whatsapp_telegram       String?
   paid                    Boolean?
@@ -84,7 +85,7 @@ model Subscription {
   dns_link                String?
   dns_link_for_samsung_lg String?
   portal_link             String?
-  status                  SubscriptionStatus @default(active)
+  status                  SubscriptionStatus @default(pending)
   createdAt               DateTime           @default(now())
   updatedAt               DateTime           @updatedAt
 
@@ -99,6 +100,7 @@ model SubscriptionPayment {
   id                String        @id @default(uuid()) @db.Uuid
   user_id           String        @db.Uuid
   subscription_id   String?       @db.Uuid
+  package_slug      String?
   payment_id        String?
   purchase_id       String?
   invoice_id        String?
@@ -123,6 +125,7 @@ model SubscriptionPayment {
 
   @@index([payment_id])
   @@index([invoice_id])
+  @@index([order_id])
   @@index([user_id])
 }
 
@@ -137,8 +140,8 @@ model FreeTrial {
   package_name            String?
   template                String?
   max_connections         Int?
-  forced_country          String?
-  adult                   Boolean?
+  forced_country          String?         @default("ALL")
+  adult                   Boolean?        @default(false)
   note                    String?
   whatsapp_telegram       String?
   paid                    Boolean?
@@ -146,7 +149,7 @@ model FreeTrial {
   dns_link                String?
   dns_link_for_samsung_lg String?
   portal_link             String?
-  status                  FreeTrialStatus @default(disabled)
+  status                  FreeTrialStatus @default(pending)
   claimedAt               DateTime        @default(now())
   createdAt               DateTime        @default(now())
   updatedAt               DateTime        @updatedAt

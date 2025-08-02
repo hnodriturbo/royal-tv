@@ -32,6 +32,7 @@ export async function POST(request) {
     paymentRecord = await prisma.subscriptionPayment.create({
       data: {
         user_id,
+        package_slug,
         status: 'waiting',
         order_description
       }
@@ -50,7 +51,7 @@ export async function POST(request) {
       price_amount: price,
       price_currency: 'usd',
       pay_currency: 'btc',
-      order_id: paymentId, // Use UUID as anchor
+      order_id: paymentId,
       order_description,
       is_fee_paid_by_user: true,
       ipn_callback_url: 'https://royal-tv.tv/api/nowpayments/ipn',

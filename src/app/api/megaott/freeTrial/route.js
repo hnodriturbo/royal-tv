@@ -32,23 +32,27 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
   }
 
-  // 📨 Parse all fields from the frontend
-  /*   const formData = await request.json();
-  const { ...trialFields } = formData; */
-
+  /*
+  Commented out because we manage all fields sent to the megaott here in this api... 
+  i want also later to make this into a socket event so the free trial part can 
+  continue to be socket driven but that is for later...
+   // 📨 Parse all fields from the frontend
+  //  const formData = await request.json();
+  //  const { ...trialFields } = formData;
+ */
   // 🛡️ Check for existing active trial for user
-  /*   const existing = await prisma.freeTrial.findFirst({
+  const existing = await prisma.freeTrial.findFirst({
     where: { user_id }
-  }); */
+  });
 
   // 🧠 Only 1 trial is allowd per user so is user has already asked for a trial he cannot ask for another one
-  /*   if (existing) {
+  if (existing) {
     // 🚫 Only one active trial per user
     return NextResponse.json(
       { error: 'You already have requested a free trial !' },
       { status: 409 }
     );
-  } */
+  }
 
   // 🍪 Setup cookie jar + axios client
   const cookieJar = new CookieJar();
@@ -70,13 +74,13 @@ export async function POST(request) {
   // 2️⃣ Build the payload for MegaOTT (merge defaults + frontend fields)
   const payload = {
     // 👤 Always generate a unique username for the trial!
+    type: 'M3U',
     username: generateRandomUsername(),
     package_id: '2', // 📦 Always use Free Trial 2 as requested
-    type: 'M3U',
     max_connections: '1',
     forced_country: 'ALL',
     adult: '0',
-    note: '1 Day Free Trial',
+    note: '1 Day Free Trial', // this will be order_id in subscriptions
     enable_vpn: '0',
     paid: '0'
     /* ...trialFields */ // 🚦 Frontend fields override any of the above if provided!

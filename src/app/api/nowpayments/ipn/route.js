@@ -174,6 +174,10 @@ export async function POST(request) {
     return NextResponse.json({ error: 'DB error (find user)' }, { status: 500 });
   }
 
+  // Extract useful fields from payment and user
+  const { user_id, package_slug, order_description: stored_order_description } = paymentRecord;
+  const { whatsapp, telegram } = user || {};
+
   // 10. Create subscription if payment status is valid AND not already created ✅
   let subscription = null;
   const latestPayment = await prisma.subscriptionPayment.findUnique({
@@ -186,9 +190,9 @@ export async function POST(request) {
     try {
       subscription = await prisma.subscription.create({
         data: {
-          user_id: paymentRecord.user_id,
+          user_id,
           order_id: paymentRecord.id,
-          order_description: paymentRecord.order_description,
+          order_description: stored_order_description,
           status: 'pending',
           payments: { connect: { id: paymentId } }
         }
@@ -224,7 +228,7 @@ export async function POST(request) {
         logger.log('📢 [ipn] transactionFinished emitted for:', paymentId);
 
         // 🔥 Call the panel API sync
-        const subscriptionCreation = await axios.post('/api/panel/subscription', {
+        const subscriptionCreation = await axios.post('/api/megaott/subscription', {
           subscription_id: subscription.subscription_id,
           user_id,
           package_slug,
