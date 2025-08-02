@@ -187,30 +187,38 @@ export async function POST(request) {
     ['confirmed', 'paid', 'completed', 'finished'].includes(payment_status) &&
     !latestPayment.subscription_id
   ) {
+    // 🔥 Call MegaOTT subscription creation route clearly and correctly
     try {
-      subscription = await prisma.subscription.create({
-        data: {
+      const subscriptionCreation = await axios.post(
+        `${process.env.NEXTAUTH_URL}/api/megaott/subscription`,
+        {
           user_id,
-          order_id: paymentRecord.id,
+          package_slug,
+          order_id: paymentRecord.id, // ✅ Crucial anchor from IPN
           order_description: stored_order_description,
-          status: 'pending',
-          payments: { connect: { id: paymentId } }
+          whatsapp,
+          telegram,
+          adult: false // Adjust dynamically if needed
         }
-      });
+      );
+
+      // 📢 Response clearly logged from MegaOTT subscription route
+      logger.log('📢 [ipn] MegaOTT subscription route response:', subscriptionCreation.data);
+
+      const { subscription } = subscriptionCreation.data;
+
       // 🎉 Subscription created
-      logger.log('🎉 [ipn] Subscription created:', subscription.subscription_id);
+      logger.log('🎉 [ipn] MegaOtt Subscription created:', subscription);
 
       await prisma.subscriptionPayment.update({
         where: { id: paymentId },
         data: { subscription_id: subscription.subscription_id }
       });
-      // 🔗 Payment linked to subscription
-      logger.log(
-        '🔗 [ipn] Payment linked to subscription:',
+
+      logger.log('🔗 [ipn] Payment linked to subscription:', {
         paymentId,
-        '->',
-        subscription.subscription_id
-      );
+        subscription_id: subscription.subscription_id
+      });
 
       // Emit event to socket server
       try {
@@ -226,27 +234,15 @@ export async function POST(request) {
         });
         // 📢 Transaction event sent
         logger.log('📢 [ipn] transactionFinished emitted for:', paymentId);
-
-        // 🔥 Call the panel API sync
-        const subscriptionCreation = await axios.post('/api/megaott/subscription', {
-          subscription_id: subscription.subscription_id,
-          user_id,
-          package_slug,
-          order_description,
-          whatsapp,
-          telegram
-        });
-        // 📢 POST sent to the megaott subscription creator
-        logger.log(
-          '📢 [ipn] POST sent to the megaott subscription creator /panel/subscription/route.js:',
-          subscriptionCreation
-        );
       } catch (error) {
         logger.error('❌ [ipn] Error emitting transactionFinished:', error);
       }
     } catch (error) {
-      logger.error('❌ [ipn] DB error (create subscription):', error);
-      return NextResponse.json({ error: 'DB error (create subscription)' }, { status: 500 });
+      logger.error(
+        '❌ [ipn] MegaOTT Subscription Creation failed:',
+        error?.response?.data || error
+      );
+      return NextResponse.json({ error: 'MegaOTT subscription creation error' }, { status: 500 });
     }
   } else {
     logger.log(

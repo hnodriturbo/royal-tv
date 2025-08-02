@@ -1,109 +1,164 @@
 /**
- * ================================================
- * POST /api/panel/subscribe
- * Royal TV — Provider Panel API Sync 🎬
- * ================================================
- * Called automatically after payment is confirmed and a Subscription is created.
+ * Royal TV — MegaOTT Subscription Creation 🎬
+ * ===========================================
+ * Automatically called from IPN after successful payment.
  *
  * Responsibilities:
- *   • Maps local package slug to external provider's package_id and template_id
- *   • Generates a unique username for every new subscription
- *   • Calls the provider (Panel) API to create the subscription
- *   • Saves PanelSubscription info to the database and links it to Subscription
+ *   • Maps local package_slug to MegaOTT's package_id & template.
+ *   • Generates unique username.
+ *   • Calls MegaOTT API to create subscription.
+ *   • Saves Subscription details locally in DB.
  *
- * Expects:
- *   • subscription_id      (UUID, local subscription)
- *   • user_id              (UUID, owner)
- *   • package_slug         (string, matches your internal package slug)
- *   • order_description    (string, user-friendly name)
- *   • whatsapp, telegram   (optional, for contact info)
+ * Expects (JSON Body):
+ *   • user_id              (UUID)
+ *   • package_slug         (string)
+ *   • order_id             (string, unique from payment)
+ *   • order_description    (string)
+ *   • whatsapp, telegram   (optional)
+ *   • adult                (boolean, optional)
  *
  * Returns:
- *   • PanelSubscription database record (linked to Subscription)
- * ================================================
+ *   • subscription database record (MegaOTT subscription)
+ * ===========================================
  */
 
 import logger from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import axios from 'axios';
-import { getPanelPackageInfo } from '@/lib/panelPackageMap';
+import { CookieJar } from 'tough-cookie';
+import { wrapper } from 'axios-cookiejar-support';
+import { paymentPackages } from '@/packages/data/packages';
 import { NextResponse } from 'next/server';
+import generateRandomUsername from '@/lib/generateUsername';
 
 export async function POST(request) {
   try {
-    // 📨 Parse JSON body
-    const body = await request.json();
-    const { subscription_id, user_id, package_slug, order_description, whatsapp, telegram } = body;
+    // 📌 Extract user from middleware headers (security check)
+    const user_id = request.headers.get('x-user-id');
+    const role = request.headers.get('x-user-role');
 
-    // 🗺️ Map slug to panel package/template IDs
-    const { package_id, template_id } = getPanelPackageInfo(package_slug);
+    if (role !== 'user') {
+      logger.error('🚫 Unauthorized access attempt:', { user_id, role });
+      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+    }
 
-    // 🔐 Generate unique username for the user/subscription
-    const username = `ROYAL${Math.floor(Math.random() * 1000000)}${Date.now().toString().slice(-5)}`;
+    // 📨 Get required data from IPN webhook
+    const {
+      package_slug,
+      order_id,
+      order_description,
+      whatsapp,
+      telegram,
+      adult = false
+    } = await request.json();
 
-    // 📝 Prepare data for external panel API
-    const apiData = {
+    logger.log('📥 [megaott/subscription] Received data from IPN:', {
+      user_id,
+      package_slug,
+      order_id,
+      order_description,
+      whatsapp,
+      telegram,
+      adult
+    });
+
+    // 🔍 Get MegaOTT package details from slug clearly
+    const packageDetails = paymentPackages.find((p) => p.slug === package_slug);
+    if (!packageDetails) {
+      logger.error('🚫 Package slug not found:', package_slug);
+      return NextResponse.json({ error: 'Invalid package_slug' }, { status: 400 });
+    }
+
+    // 🔐 Generate unique username for subscription
+    const username = generateRandomUsername();
+
+    // 📝 Prepare MegaOTT API payload
+    const megaottPayload = {
       type: 'M3U',
       username,
-      package_id,
-      max_connections: 1,
-      template_id,
+      package_id: packageDetails.package_id, // ✅ crucial ID
+      max_connections: packageDetails.devices,
+      template_id: packageDetails.megaTemplateId || null, // Adjust if template is used
       forced_country: 'ALL',
-      adult: false,
-      note: order_description, // Most readable for admin!
+      adult,
+      note: order_description,
       whatsapp_telegram: whatsapp || telegram || '',
       enable_vpn: false,
       paid: true
     };
 
-    // 🌐 Call the panel API
-    const apiKey = process.env.MEGAOTT_API_KEY; // Use your .env secret!
-    const panelRes = await axios.post('https://megaott.net/api/v1/subscriptions', apiData, {
+    logger.log('📡 [megaott/subscription] Sending payload to MegaOTT:', megaottPayload);
+
+    // 🌐 MegaOTT API call setup
+    const apiKey = process.env.MEGAOTT_API_KEY;
+    const cookieJar = new CookieJar();
+    const client = wrapper(axios.create({ jar: cookieJar, withCredentials: true }));
+
+    // 🍪 Acquire session cookies from MegaOTT
+    await client.get('https://megaott.net/api/v1/user', {
       headers: {
         Accept: 'application/json',
         Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
+        'User-Agent': 'Mozilla/5.0',
+        Origin: 'https://megaott.net'
       }
     });
-    const panelData = panelRes.data;
 
-    // 💾 Create PanelSubscription and link it
-    const panelSub = await prisma.panelSubscription.create({
+    logger.log('🍪 [megaott/subscription] Session cookies acquired.');
+
+    // 🌐 Send POST request to MegaOTT for subscription creation
+    const megaottRes = await client.post(
+      'https://megaott.net/api/v1/subscriptions',
+      megaottPayload,
+      {
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    const megaottResponse = megaottRes.data;
+    logger.log('✅ [megaott/subscription] MegaOTT response:', megaottResponse);
+
+    // 🎯 Clearly save MegaOTT subscription details locally
+    const subscription = await prisma.subscription.create({
       data: {
-        panel_subscription_id: panelData.id,
-        subscription_id,
-        type: panelData.type,
-        username: panelData.username,
-        password: panelData.password,
-        mac_address: panelData.mac_address,
-        package_id: panelData.package?.id,
-        package_name: panelData.package?.name,
-        template_id: panelData.template?.id,
-        template_name: panelData.template?.name,
-        max_connections: panelData.max_connections,
-        forced_country: panelData.forced_country,
-        adult: panelData.adult,
-        note: panelData.note,
-        whatsapp_telegram: panelData.whatsapp_telegram,
-        paid: panelData.paid,
-        dns_link: panelData.dns_link,
-        dns_link_for_samsung_lg: panelData.dns_link_for_samsung_lg,
-        portal_link: panelData.portal_link,
-        expiring_at: panelData.expiring_at ? new Date(panelData.expiring_at) : null
+        user_id,
+        order_id, // ✅ Clearly from IPN webhook
+        megaott_id: megaottResponse.id, // ✅ Crucial MegaOTT subscription ID
+        username: megaottResponse.username,
+        password: megaottResponse.password,
+        mac_address: megaottResponse.mac_address,
+        package_id: megaottResponse.package?.id,
+        package_name: megaottResponse.package?.name,
+        template: megaottResponse.template,
+        max_connections: megaottResponse.max_connections,
+        forced_country: megaottResponse.forced_country || 'ALL',
+        adult: megaottResponse.adult,
+        note: megaottResponse.note,
+        whatsapp_telegram: megaottResponse.whatsapp_telegram,
+        paid: megaottResponse.paid,
+        expiring_at: megaottResponse.expiring_at ? new Date(megaottResponse.expiring_at) : null,
+        dns_link: megaottResponse.dns_link,
+        dns_link_for_samsung_lg: megaottResponse.dns_link_for_samsung_lg,
+        portal_link: megaottResponse.portal_link,
+        status: 'pending'
       }
     });
 
-    // 🔗 Link PanelSubscription to Subscription
-    await prisma.subscription.update({
-      where: { subscription_id },
-      data: { panel_subscription_id: panelSub.panel_subscription_id }
-    });
+    logger.log('🎉 [megaott/subscription] Subscription created locally:', subscription);
 
-    return NextResponse.json({ ok: true, panelSub });
+    // 🚀 Return the subscription clearly to IPN webhook
+    return NextResponse.json({ ok: true, subscription });
   } catch (err) {
-    logger.error('❌ Panel subscribe error:', err?.response?.data || err.message);
+    logger.error('❌ [megaott/subscription] Error:', err?.response?.data || err.message);
     return NextResponse.json(
-      { error: 'Panel subscribe error', detail: err?.response?.data || err.message },
+      {
+        error: 'MegaOTT subscription creation error',
+        detail: err?.response?.data || err.message
+      },
       { status: 500 }
     );
   }
