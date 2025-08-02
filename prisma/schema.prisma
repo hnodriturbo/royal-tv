@@ -1,0 +1,251 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  user_id               String                 @id @default(uuid()) @db.Uuid
+  name                  String
+  email                 String                 @unique
+  username              String                 @unique
+  password              String
+  role                  Role                   @default(user)
+  whatsapp              String?
+  telegram              String?
+  preferredContactWay   PreferredContactWay    @default(email)
+  sendEmails            Boolean                @default(true)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  freeTrials            FreeTrial[]            @relation("UserFreeTrials")
+  liveChatConversations LiveChatConversation[] @relation("LiveConversations")
+  liveChatMessages      LiveChatMessage[]      @relation("LiveMessages")
+  notifications         Notification[]         @relation("UserNotifications")
+  subscriptions         Subscription[]         @relation("UserSubscriptions")
+  subscriptionPayments  SubscriptionPayment[]  @relation("UserSubscriptionPayments")
+  logs                  Log[]                  @relation("UserLogs")
+
+  @@index([username])
+  @@index([email])
+}
+
+model LiveChatConversation {
+  conversation_id String            @id @default(uuid()) @db.Uuid
+  owner_id        String            @db.Uuid
+  subject         String?
+  read            Boolean           @default(false)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  owner           User              @relation("LiveConversations", fields: [owner_id], references: [user_id], onDelete: Cascade, map: "LiveChatConversation_user_id_fkey")
+  messages        LiveChatMessage[] @relation("LiveMessages")
+
+  @@index([owner_id], map: "LiveChatConversation_user_id_idx")
+}
+
+model LiveChatMessage {
+  message_id      String               @id @default(uuid()) @db.Uuid
+  conversation_id String               @db.Uuid
+  sender_id       String?              @db.Uuid
+  guest_id        String?
+  sender_is_admin Boolean              @default(false)
+  message         String
+  status          MessageStatus        @default(sent)
+  readAt          DateTime?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  conversation    LiveChatConversation @relation("LiveMessages", fields: [conversation_id], references: [conversation_id], onDelete: Cascade)
+  sender          User?                @relation("LiveMessages", fields: [sender_id], references: [user_id], onDelete: Cascade, map: "LiveChatMessage_user_id_fkey")
+
+  @@index([conversation_id])
+  @@index([status])
+  @@index([sender_id], map: "LiveChatMessage_user_id_idx")
+}
+
+model Subscription {
+  subscription_id         String             @id @default(uuid()) @db.Uuid
+  user_id                 String             @db.Uuid
+  megaott_id              Int?
+  username                String?
+  password                String?
+  mac_address             String?
+  package_id              Int?
+  package_name            String?
+  template                String?
+  max_connections         Int?
+  forced_country          String?
+  adult                   Boolean?
+  note                    String?
+  whatsapp_telegram       String?
+  paid                    Boolean?
+  expiring_at             DateTime?
+  dns_link                String?
+  dns_link_for_samsung_lg String?
+  portal_link             String?
+  status                  SubscriptionStatus @default(active)
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+
+  user     User                  @relation("UserSubscriptions", fields: [user_id], references: [user_id], onDelete: Cascade)
+  payments SubscriptionPayment[]
+
+  @@index([user_id])
+  @@index([megaott_id])
+}
+
+model SubscriptionPayment {
+  id                String        @id @default(uuid()) @db.Uuid
+  user_id           String        @db.Uuid
+  subscription_id   String?       @db.Uuid
+  payment_id        String?
+  purchase_id       String?
+  invoice_id        String?
+  order_id          String?
+  order_description String?
+  pay_address       String?
+  pay_currency      String?
+  pay_amount        Float?
+  price_currency    String?
+  amount_paid       Float?
+  actually_paid     Float?
+  outcome_amount    Float?
+  outcome_currency  String?
+  network           String?
+  received_at       DateTime?
+  status            PaymentStatus
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  subscription Subscription? @relation(fields: [subscription_id], references: [subscription_id], onDelete: Cascade)
+  user         User          @relation("UserSubscriptionPayments", fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([payment_id])
+  @@index([invoice_id])
+  @@index([user_id])
+}
+
+model FreeTrial {
+  trial_id                String          @id @default(uuid()) @db.Uuid
+  user_id                 String          @db.Uuid
+  megaott_id              Int?
+  username                String?
+  password                String?
+  mac_address             String?
+  package_id              Int?
+  package_name            String?
+  template                String?
+  max_connections         Int?
+  forced_country          String?
+  adult                   Boolean?
+  note                    String?
+  whatsapp_telegram       String?
+  paid                    Boolean?
+  expiring_at             DateTime?
+  dns_link                String?
+  dns_link_for_samsung_lg String?
+  portal_link             String?
+  status                  FreeTrialStatus @default(disabled)
+  claimedAt               DateTime        @default(now())
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+
+  user User @relation("UserFreeTrials", fields: [user_id], references: [user_id], onDelete: Cascade)
+}
+
+model Notification {
+  notification_id String           @id @default(uuid()) @db.Uuid
+  user_id         String           @db.Uuid
+  title           String
+  body            String
+  link            String?
+  type            NotificationType
+  is_read         Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  user            User             @relation("UserNotifications", fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id])
+}
+
+model Log {
+  log_id      String   @id @default(uuid()) @db.Uuid
+  user_id     String?  @db.Uuid
+  guest_id    String?
+  event       String
+  page        String?
+  description String?
+  ip_address  String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User?    @relation("UserLogs", fields: [user_id], references: [user_id], onDelete: SetNull)
+
+  @@index([ip_address])
+  @@index([user_id])
+  @@index([createdAt])
+}
+
+enum Role {
+  admin
+  user
+}
+
+enum PreferredContactWay {
+  email
+  whatsapp
+  telegram
+  website
+}
+
+enum MessageStatus {
+  sent
+  read
+  deleted
+  edited
+}
+
+enum SubscriptionStatus {
+  active
+  expired
+  canceled
+  pending
+  disabled
+}
+
+enum PaymentStatus {
+  waiting
+  confirming
+  confirmed
+  finished
+  failed
+  expired
+  refunded
+  sending
+  partially_paid
+  completed
+  paying
+  partially_paid_expired
+  overpaid
+  underpaid
+  paid
+  pending
+  confirm
+}
+
+enum FreeTrialStatus {
+  active
+  expired
+  canceled
+  pending
+  disabled
+}
+
+enum NotificationType {
+  subscription
+  payment
+  freeTrial
+  liveChatMessage
+  newUserRegistration
+}

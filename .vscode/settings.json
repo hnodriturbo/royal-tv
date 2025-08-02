@@ -28,5 +28,7 @@
         [ "cn\\(([^)]*)\\)", 1 ],
         [ "class\\s*=\\s*[\"'`]([^\"'`]*)[\"'`]", 1 ]
     ],
-    "editor.quickSuggestions": { "other": true, "comments": false, "strings": true }
+    "editor.quickSuggestions": { "other": true, "comments": false, "strings": true },
+    "search.exclude": { "**/.next": true },
+    "explorer.fileNesting.enabled": false
 }
