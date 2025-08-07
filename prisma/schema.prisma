@@ -78,6 +78,7 @@ model Subscription {
   max_connections         Int?
   forced_country          String?            @default("ALL")
   adult                   Boolean?           @default(false)
+  enable_vpn              Boolean?           @default(false)
   note                    String?
   whatsapp_telegram       String?
   paid                    Boolean?
@@ -101,6 +102,8 @@ model SubscriptionPayment {
   user_id           String        @db.Uuid
   subscription_id   String?       @db.Uuid
   package_slug      String?
+  adult             Boolean?      @default(false)
+  enable_vpn        Boolean?      @default(false)
   payment_id        String?
   purchase_id       String?
   invoice_id        String?
@@ -142,6 +145,7 @@ model FreeTrial {
   max_connections         Int?
   forced_country          String?         @default("ALL")
   adult                   Boolean?        @default(false)
+  enable_vpn              Boolean?        @default(false)
   note                    String?
   whatsapp_telegram       String?
   paid                    Boolean?

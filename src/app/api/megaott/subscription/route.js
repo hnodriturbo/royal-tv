@@ -25,11 +25,11 @@
 import logger from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import axios from 'axios';
+import generateRandomUsername from '@/lib/generateUsername';
 import { CookieJar } from 'tough-cookie';
 import { wrapper } from 'axios-cookiejar-support';
 import { paymentPackages } from '@/packages/data/packages';
 import { NextResponse } from 'next/server';
-import generateRandomUsername from '@/lib/generateUsername';
 
 export async function POST(request) {
   try {
@@ -43,14 +43,8 @@ export async function POST(request) {
     }
 
     // 📨 Get required data from IPN webhook
-    const {
-      package_slug,
-      order_id,
-      order_description,
-      whatsapp,
-      telegram,
-      adult = false
-    } = await request.json();
+    const { package_slug, order_id, order_description, whatsapp, telegram, adult, enable_vpn } =
+      await request.json();
 
     logger.log('📥 [megaott/subscription] Received data from IPN:', {
       user_id,
@@ -59,7 +53,8 @@ export async function POST(request) {
       order_description,
       whatsapp,
       telegram,
-      adult
+      adult,
+      enable_vpn
     });
 
     // 🔍 Get MegaOTT package details from slug clearly
@@ -80,11 +75,11 @@ export async function POST(request) {
       max_connections: packageDetails.devices,
       template_id: packageDetails.megaTemplateId || null, // Adjust if template is used
       forced_country: 'ALL',
-      adult,
+      adult: adult ? 1 : 0, // ✅ boolean to 1/0
+      enable_vpn: enable_vpn ? 1 : 0, // ✅ boolean to 1/0
       note: order_description,
-      whatsapp_telegram: whatsapp || telegram || '',
-      enable_vpn: false,
-      paid: true
+      whatsapp_telegram: [user?.whatsapp, user?.telegram].filter(Boolean).join(' / '),
+      paid: 1
     };
 
     logger.log('📡 [megaott/subscription] Sending payload to MegaOTT:', megaottPayload);
@@ -126,8 +121,8 @@ export async function POST(request) {
     const subscription = await prisma.subscription.create({
       data: {
         user_id,
-        order_id, // ✅ Clearly from IPN webhook
-        megaott_id: megaottResponse.id, // ✅ Crucial MegaOTT subscription ID
+        order_id,
+        megaott_id: megaottResponse.id,
         username: megaottResponse.username,
         password: megaottResponse.password,
         mac_address: megaottResponse.mac_address,

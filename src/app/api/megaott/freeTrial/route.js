@@ -11,35 +11,39 @@
  *
  * Creates only one active free trial per user.
  */
-
-import { NextResponse } from 'next/server';
-import generateRandomUsername from '@/lib/generateUsername';
+import logger from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import axios from 'axios';
+import generateRandomUsername from '@/lib/generateUsername';
 import { CookieJar } from 'tough-cookie';
 import { wrapper } from 'axios-cookiejar-support';
-import util from 'util';
+import { NextResponse } from 'next/server';
 
 export async function POST(request) {
   // 📌 Set the user_id from headers
   const user_id = request.headers.get('x-user-id');
-  console.log('got user id from request headers from middleware x-user-id: ', user_id);
+  logger.log('got user id from request headers from middleware x-user-id: ', user_id);
   // 🛡️ Check for user role in headers
   const role = request.headers.get('x-user-role');
 
-  console.log('got user role from request headers from middleware x-user-role: ', role);
+  logger.log('got user role from request headers from middleware x-user-role: ', role);
   if (role !== 'user') {
     return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
   }
 
-  /*
-  Commented out because we manage all fields sent to the megaott here in this api... 
-  i want also later to make this into a socket event so the free trial part can 
-  continue to be socket driven but that is for later...
-   // 📨 Parse all fields from the frontend
-  //  const formData = await request.json();
-  //  const { ...trialFields } = formData;
- */
+  const user = await prisma.user.findUnique({
+    where: { user_id },
+    select: {
+      whatsapp: true,
+      telegram: true
+    }
+  });
+
+  // 🛑 If not found, return 404
+  if (!user) {
+    return NextResponse.json({ error: 'User not found' }, { status: 404 });
+  }
+
   // 🛡️ Check for existing active trial for user
   const existing = await prisma.freeTrial.findFirst({
     where: { user_id }
@@ -76,14 +80,14 @@ export async function POST(request) {
     // 👤 Always generate a unique username for the trial!
     type: 'M3U',
     username: generateRandomUsername(),
-    package_id: '2', // 📦 Always use Free Trial 2 as requested
+    package_id: '2', // 📦 Always use Free Trial 2 (That is one day free trial)
     max_connections: '1',
     forced_country: 'ALL',
     adult: '0',
-    note: '1 Day Free Trial', // this will be order_id in subscriptions
+    note: `24 Hour Free Trial`,
     enable_vpn: '0',
-    paid: '0'
-    /* ...trialFields */ // 🚦 Frontend fields override any of the above if provided!
+    paid: '1',
+    whatsapp_telegram: [user?.whatsapp, user?.telegram].filter(Boolean).join(' / ')
   };
 
   // 3️⃣ Build x-www-form-urlencoded body
@@ -103,10 +107,10 @@ export async function POST(request) {
     });
     res = response.data;
     // 🟢 Successfully created trial!
-    console.log('🚀 MegaOTT trial created:', res);
+    logger.log('🚀 MegaOTT trial created:', res);
   } catch (error) {
     // 🔴 MegaOTT API error!
-    console.log('❌ MegaOTT error:', error.response?.data || error.message);
+    logger.log('❌ MegaOTT error:', error.response?.data || error.message);
     return NextResponse.json(
       { error: error.response?.data || error.message },
       { status: error.response?.status || 500 }
@@ -137,12 +141,9 @@ export async function POST(request) {
         portal_link: res.portal_link || null
       }
     });
-    console.log('Saved trial to database:', trial);
-    console.log('Saved trial to database:\n' + JSON.stringify(trial, null, 2));
-
-    console.log('Saved trial →', util.inspect(trial, { depth: null, colors: true }));
+    logger.log('Saved Trial To Database: ', JSON.stringify(trial, null, 2));
   } catch (error) {
-    console.log(error.message);
+    logger.log(error.message);
   }
 
   // 6️⃣ Respond to frontend with trial info

@@ -229,7 +229,7 @@ It includes extra utilities and components that are not included in the default 
   border-radius: 8px;
 }
 
-/* Button glow effect */
+/* ✨ Button glow effect */
 .btn-glow {
   transition: box-shadow 0.5s ease;
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
@@ -239,7 +239,7 @@ It includes extra utilities and components that are not included in the default 
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
 }
 
-/* Button glow effect */
+/* ✨ Button glow effect */
 .btn-glow-2 {
   transition: box-shadow 0.5s ease;
   box-shadow: 0 0 10px rgba(48, 51, 151, 0.5);
@@ -248,7 +248,115 @@ It includes extra utilities and components that are not included in the default 
 .btn-glow-2:hover {
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
 }
+/* ✨ Custom Text Glow Effect */
+.text-glow {
+  text-shadow:
+    0 0 8px #fff,
+    0 0 12px #38bdf8,
+    0 0 16px #38bdf8;
+}
 
+/* ✨ Text glow effect with hover effect */
+.text-glow-with-hover {
+  transition: text-shadow 0.5s ease;
+  text-shadow:
+    0 0 8px #fff,
+    0 0 12px #38bdf8,
+    0 0 16px #38bdf8;
+}
+
+/* ✨ Even more glow on hover */
+.text-glow-with-hover:hover {
+  text-shadow:
+    0 0 16px #fff,
+    0 0 24px #38bdf8,
+    0 0 32px #38bdf8;
+}
+
+/* ✨ Subtle white-cyan glow */
+.text-glow-soft {
+  transition: text-shadow 0.4s ease;
+  text-shadow:
+    0 0 16px rgba(255, 255, 255, 0.7),
+    0 0 32px rgba(56, 189, 248, 0.7);
+}
+/* 
+.text-glow-soft:hover {
+  text-shadow:
+    0 0 16px rgba(255, 255, 255, 0.7),
+    0 0 32px rgba(56, 189, 248, 0.7);
+}
+ */
+/* 🟣 Purple Glow */
+.text-glow-purple {
+  transition: text-shadow 0.4s;
+  text-shadow:
+    0 0 20px #a855f7,
+    0 0 40px #8b5cf6;
+}
+/* 
+.text-glow-purple:hover {
+  text-shadow:
+    0 0 20px #a855f7,
+    0 0 40px #8b5cf6;
+}
+ */
+/* 🟠 Amber/Orange Glow */
+.text-glow-amber {
+  transition: text-shadow 0.4s;
+  text-shadow:
+    0 0 20px #fbbf24,
+    0 0 36px #f59e42;
+}
+/* 
+.text-glow-amber:hover {
+  text-shadow:
+    0 0 20px #fbbf24,
+    0 0 36px #f59e42;
+}
+ */
+/* 🟢 Green Glow */
+.text-glow-green {
+  transition: text-shadow 0.4s;
+  text-shadow:
+    0 0 20px #22c55e,
+    0 0 36px #84cc16;
+}
+/* 
+.text-glow-green:hover {
+  text-shadow:
+    0 0 20px #22c55e,
+    0 0 36px #84cc16;
+}
+ */
+/* 🔴 Red Glow */
+.text-glow-red {
+  transition: text-shadow 0.4s;
+  text-shadow:
+    0 0 18px #ef4444,
+    0 0 38px #dc2626;
+}
+/* 
+.text-glow-red:hover {
+  text-shadow:
+    0 0 18px #ef4444,
+    0 0 38px #dc2626;
+}
+ */
+/* 🩵 Sky/Blue Glow */
+.text-glow-sky {
+  transition: text-shadow 0.4s;
+  text-shadow:
+    0 0 20px #38bdf8,
+    0 0 44px #0ea5e9;
+}
+/* 
+.text-glow-sky:hover {
+  text-shadow:
+    0 0 20px #38bdf8,
+    0 0 44px #0ea5e9;
+}
+ */
 /* Custom outline alert styles */
 .alert-outline-danger {
   border: 1px solid #dc3545;
@@ -315,7 +423,7 @@ It includes extra utilities and components that are not included in the default 
   box-shadow: 0 0 8px 0 #007bff;
   transition: box-shadow 0.9s ease-in-out;
   border: 2px solid transparent;
-  animation: glow-primarys infinite alternate;
+  animation: glow-primary infinite alternate;
 }
 
 @keyframes glow-primary {

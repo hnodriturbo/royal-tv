@@ -1,148 +1,157 @@
 /**
- *   ====================== AdminEditSubscriptionPage.js ======================
- * 📦
- * HEADLINE: Admin Subscription Detail/Edit
- * - Shows and edits a single subscription for a user.
- * - Allows status, username, password, URL, etc, to be changed.
- * - User info displayed at top.
- * - Uses admin guard, loader, and modal for delete.
+ *   ====================== AdminUserSubscriptionsPage.js ======================
+ * 🦸‍♂️
+ * Admin page: Shows ALL subscriptions for a user in card format.
+ * - Displays all new schema fields.
+ * - Payments for each subscription shown below card.
+ * - Admin-only actions can be added (edit, delete, etc.)
  * ========================================================================
  */
 
 'use client';
-
-import logger from '@/lib/logger';
+import React from 'react';
 import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import axiosInstance from '@/lib/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useAuthGuard from '@/hooks/useAuthGuard';
-import { useSession } from 'next-auth/react';
+import { useRouter, useParams } from 'next/navigation';
+import { userSubscriptionSortOptions, getUserSubscriptionSortFunction } from '@/lib/sorting';
+import SortDropdown from '@/components/reusableUI/SortDropdown';
+import calculateMonthsDaysLeft from '@/lib/calculateMonthsDaysLeft';
 import useModal from '@/hooks/useModal';
-/* import useSocketHub from '@/hooks/socket/useSocketHub'; */
-import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
 
-export default function AdminEditSubscriptionPage() {
-  // 🦸 Admin session/auth setup
+/* =================== Main Component =================== */
+export default function AdminUserSubscriptionsPage() {
+  // 🦸 Admin session/auth
   const { data: session, status } = useSession();
-  const { displayMessage, showLoader, hideLoader } = useAppHandlers();
-  const [loading, setLoading] = useState(false);
-  const { isAllowed, redirect } = useAuthGuard('admin');
-  const { openModal, hideModal } = useModal();
   const router = useRouter();
+  const { isAllowed, redirect } = useAuthGuard('admin');
+  // ✨ Modal and App Handlers States
+  const { displayMessage, showLoader, hideLoader } = useAppHandlers();
+  const { openModal, hideModal } = useModal();
+
   const params = useParams();
   const { subscription_id } = params;
-  /* const { subscriptionStatusUpdate } = useSocketHub(); */
-  const { createSubscriptionActivatedNotification } = useCreateNotifications();
 
-  const [subscription, setSubscription] = useState(null);
-  const [formData, setFormData] = useState({});
-  const [previousStatus, setPreviousStatus] = useState('');
+  // 📦 State
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [userInfo, setUserInfo] = useState(null);
+  const [sortOrder, setSortOrder] = useState('status_active_first');
 
-  // 1️⃣ Fetch Subscription
-  const fetchSubscription = async () => {
+  /*   // Payment modal states:
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState(null);
+
+  // 🪙 Handle Payment Click: open modal and set payment
+  function handlePaymentClick(payment) {
+    setSelectedPayment(payment);
+    setShowPaymentModal(true);
+  }
+ */
+  // 📥 Fetch all subscriptions for this user
+  const fetchUserSubscriptions = async () => {
+    showLoader({ text: 'Loading subscriptions...' });
     try {
-      showLoader({ text: 'Loading subscription...' });
       const response = await axiosInstance.get(`/api/admin/subscriptions/${subscription_id}`);
-      setSubscription(response.data.subscription);
-      setFormData(response.data.subscription);
-      setPreviousStatus(response.data.subscription.status);
+      setSubscriptions(response.data.subscriptions || []);
+      setUserInfo(response.data.user || null);
+      displayMessage('All subscriptions loaded!', 'success');
     } catch (err) {
-      displayMessage('❌ Failed to load subscription', 'error');
+      displayMessage(
+        `❌ Failed to load subscriptions ${err?.response?.data?.error ? `: ${err.response.data.error}` : ''}`,
+        'error'
+      );
     } finally {
       hideLoader();
     }
   };
 
-  // 2️⃣ Handle input change
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  // 🔀 Sort logic
+  const sortedSubscriptions = [...subscriptions].sort(getUserSubscriptionSortFunction(sortOrder));
 
-  function toDatetimeLocalString(dateInput) {
-    if (!dateInput) return '';
-    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-    const pad = (n) => n.toString().padStart(2, '0');
-    const year = date.getFullYear();
-    const month = pad(date.getMonth() + 1);
-    const day = pad(date.getDate());
-    const hours = pad(date.getHours());
-    const minutes = pad(date.getMinutes());
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  // 💸 Show Payment Details Modal (admin-only)
+  function handleShowPaymentDetails(payment) {
+    openModal('paymentDetails', {
+      title: 'Payment Details',
+      description: getPaymentDetailsDescriptionJSX(payment),
+      size: 'lg', // 👈 use a wider modal
+      textClass: 'white', // 👈 blue text
+      /* customClass: 'text-shadow-dark-2', */ // 👈 more custom
+      confirmButtonText: 'Close',
+      confirmButtonType: 'Secondary',
+      onConfirm: hideModal
+    });
   }
 
-  // 3️⃣ Handle the Update process
-  const handleUpdate = async () => {
-    // ⛔ Don't proceed if subscription/formData isn't loaded yet!
-    if (!formData.subscription_id) {
-      displayMessage('⏳ Please wait, loading subscription data...', 'info');
-      return;
-    }
-    showLoader({ text: 'Updating subscription...' });
-    setLoading(true);
-    try {
-      // 🧹 Clean PATCH data: Remove 'user' and 'payments'
-      const { user, payments, ...patchData } = formData;
-      if (patchData.startDate) patchData.startDate = new Date(patchData.startDate).toISOString();
-      if (patchData.endDate) patchData.endDate = new Date(patchData.endDate).toISOString();
+  // 💸 Formats payment info as a clean multi-line string
+  function getPaymentDetailsDescriptionJSX(payment) {
+    if (!payment) return <div>No payment data.</div>;
 
-      // 🛰️ PATCH request: Send update to backend API
-      const response = await axiosInstance.patch(
-        `/api/admin/subscriptions/${subscription_id}`,
-        patchData
-      );
+    const fields = [
+      { label: 'Payment ID', value: payment.payment_id },
+      { label: 'Purchase ID', value: payment.purchase_id },
+      { label: 'Invoice ID', value: payment.invoice_id },
 
-      // 🧩 Destructure and rename 'subscription' to 'updatedSubscription'
-      const { subscription: updatedSubscription, previousStatus } = response.data;
-
-      // 🕵️‍♂️ DEBUG: Log what comes back from backend
-      logger.log('🔎 [DEBUG] updatedSubscription:', updatedSubscription);
-      logger.log('🔎 [DEBUG] previousStatus:', previousStatus);
-
-      // 🎉 UI feedback
-      displayMessage('✅ Subscription updated successfully', 'success');
-
-      // 2️⃣ Notify if status changed to active
-      if (
-        previousStatus !== updatedSubscription.status &&
-        updatedSubscription.status === 'active'
-      ) {
-        // 🕵️‍♂️ DEBUG: Log what is being sent to notification
-        logger.log('📬 [DEBUG] Notifying with user:', updatedSubscription.user);
-        logger.log('📬 [DEBUG] Notifying with subscription:', updatedSubscription);
-
-        // 🚨 Trigger notification for subscription activation
-        createSubscriptionActivatedNotification(updatedSubscription.user, updatedSubscription);
+      { label: 'Pay Address', value: payment.pay_address },
+      { label: 'Pay Currency', value: payment.pay_currency },
+      { label: 'Pay Amount', value: payment.pay_amount },
+      { label: 'Price Currency', value: payment.price_currency },
+      { label: 'Amount Paid', value: payment.amount_paid },
+      { label: 'Actually Paid', value: payment.actually_paid },
+      { label: 'Outcome Amount', value: payment.outcome_amount },
+      { label: 'Outcome Currency', value: payment.outcome_currency },
+      { label: 'Network', value: payment.network },
+      {
+        label: 'Received At',
+        value: payment.received_at ? new Date(payment.received_at).toLocaleString() : ''
+      },
+      { label: 'Status', value: payment.status },
+      {
+        label: 'Created At',
+        value: payment.createdAt ? new Date(payment.createdAt).toLocaleString() : ''
       }
+    ];
 
-      setTimeout(() => {
-        router.push('/admin/subscriptions/main');
-      }, 2000);
-    } catch (err) {
-      displayMessage('❌ Failed to update subscription', 'error');
-      // Log every possible detail!
-      logger.error('❌ [DEBUG] PATCH error:', err, err?.response, err?.toJSON?.());
-      alert(
-        JSON.stringify(
-          {
-            message: err.message,
-            responseData: err?.response?.data,
-            responseStatus: err?.response?.status,
-            responseHeaders: err?.response?.headers
-          },
-          null,
-          2
-        )
-      ); // TEMP for dev!
-    } finally {
-      hideLoader();
-      setLoading(false);
-    }
-  };
+    return (
+      <>
+        {fields
+          .filter((f) => f.value !== undefined && f.value !== null && f.value !== '')
+          .map((field, idx) => (
+            <span key={idx}>
+              <strong>{field.label}:</strong> <span className="font-mono">{field.value}</span>
+              <br />
+            </span>
+          ))}
+      </>
+    );
+  }
 
-  // 4️⃣ Handle delete (modal)
-  const handleDelete = () => {
+  // 👤 Show user info if present
+  const renderUserInfo = () =>
+    userInfo && (
+      <div className="container-style border rounded-xl shadow-md p-6 mb-6 w-full lg:w-1/2 mx-auto">
+        <h2 className="text-lg font-bold mb-2">👤 User Information</h2>
+        <p>
+          <strong>Name:</strong> {userInfo.name || 'N/A'}
+        </p>
+        <p>
+          <strong>Email:</strong> {userInfo.email || 'N/A'}
+        </p>
+        <p>
+          <strong>WhatsApp:</strong> {userInfo.whatsapp || 'N/A'}
+        </p>
+        <p>
+          <strong>Telegram:</strong> {userInfo.telegram || 'N/A'}
+        </p>
+        <p>
+          <strong>User ID:</strong> {userInfo.user_id}
+        </p>
+      </div>
+    );
+
+  // 🗑️ Show Delete Subscription Modal
+  const handleDelete = (subscription_id) => {
     openModal('deleteSubscription', {
       title: 'Delete Subscription',
       description: 'Are you sure you want to delete this subscription? This cannot be undone.',
@@ -153,12 +162,12 @@ export default function AdminEditSubscriptionPage() {
         try {
           showLoader({ text: 'Deleting subscription...' });
           await axiosInstance.delete(`/api/admin/subscriptions/${subscription_id}`);
-          displayMessage('✅ Subscription deleted!', 'success');
-          hideModal();
-          router.replace('/admin/subscriptions/main');
+          displayMessage('🗑️ Subscription deleted!', 'success');
+          fetchUserSubscriptions();
         } catch (err) {
-          displayMessage('❌ Delete failed: ' + err.message, 'error');
+          displayMessage(`❌ Delete failed: ${err.message}`, 'error');
         } finally {
+          hideModal();
           hideLoader();
         }
       },
@@ -169,291 +178,345 @@ export default function AdminEditSubscriptionPage() {
     });
   };
 
-  const renderStatusBadge = (status) => {
-    const colorMap = {
-      active: 'bg-green-600',
-      pending: 'bg-yellow-500',
-      expired: 'bg-gray-400',
-      canceled: 'bg-red-500',
-      disabled: 'bg-gray-500'
-    };
-    return (
-      <span
-        className={`text-white text-center px-4 py-2 rounded text-sm ${colorMap[status] || 'bg-gray-400'}`}
-      >
-        {status}
-      </span>
-    );
-  };
-
+  // ⚡ Fetch user subscription(s) if admin is allowed
   useEffect(() => {
-    if (subscription_id && status === 'authenticated') {
-      fetchSubscription();
+    if (status === 'authenticated' && isAllowed) {
+      fetchUserSubscriptions();
     }
-  }, [subscription_id, status]);
+  }, [status, isAllowed]);
 
+  // Redirect if not allowed
   useEffect(() => {
     if (status !== 'loading' && !isAllowed && redirect) {
       router.replace(redirect);
     }
   }, [status, isAllowed, redirect, router]);
 
-  if (!isAllowed || !subscription) return null;
+  if (!isAllowed) return null;
 
   return (
     <div className="flex flex-col items-center justify-center w-full">
-      <div className="container-style">
-        {/*         <h1 className="text-2xl font-bold mb-4">
-          Edit Subscription For {subscription.user?.name || 'unknown user'}
-        </h1> */}
-        {/* ================= Responsive Info + Payments Row ================= */}
-        <div className="flex flex-col gap-6 w-full">
-          {/* 👤 User info */}
-          {subscription.user && (
-            <div className="flex justify-center">
-              <div className="container-style border rounded-xl shadow-md p-6 mb-6 w-1/2">
-                <h2 className="text-lg font-bold mb-2">👤 User Information</h2>
-                <p>
-                  <strong>Name:</strong> {subscription.user.name || 'N/A'}
-                </p>
-                <p>
-                  <strong>Email:</strong> {subscription.user.email || 'N/A'}
-                </p>
-                <p>
-                  <strong>WhatsApp:</strong> {subscription.user.whatsapp || 'N/A'}
-                </p>
-                <p>
-                  <strong>Telegram:</strong> {subscription.user.telegram || 'N/A'}
-                </p>
-                <p>
-                  <strong>User ID:</strong> {subscription.user.user_id}
-                </p>
+      {renderUserInfo()}
+
+      <div className="container-style lg:w-10/12 w-11/12 max-w-3xl">
+        <div className="flex flex-col items-center text-center justify-center w-full">
+          <h1 className="text-black lg:text-5xl text-3xl mb-0 tracking-widest font-extrabold">
+            User Subscriptions
+          </h1>
+          <hr className="border border-gray-400 w-8/12 my-4" />
+        </div>
+
+        {/* 🃏 Sorting Dropdown */}
+        {subscriptions.length > 1 && (
+          <div className="flex justify-end w-full mb-4">
+            <SortDropdown
+              options={userSubscriptionSortOptions}
+              value={sortOrder}
+              onChange={setSortOrder}
+            />
+          </div>
+        )}
+
+        {/* 🃏 All Subscription Cards */}
+        <div className="flex flex-col gap-8 w-full mt-6">
+          {sortedSubscriptions.map((sub) => {
+            // 🕒 Calculate time left (months, days)
+            const timeLeft = calculateMonthsDaysLeft(sub.expiring_at);
+
+            // 🎨 Status badge and colors
+            let borderColor = 'border-gray-400',
+              bgColor = 'bg-black';
+            if (sub.status === 'active') {
+              borderColor = 'border-green-700';
+              bgColor = 'bg-black';
+            } else if (sub.status === 'pending') {
+              borderColor = 'border-yellow-500';
+              bgColor = 'bg-yellow-100/10';
+            } else if (sub.status === 'expired' || sub.status === 'disabled') {
+              borderColor = 'border-red-700';
+              bgColor = 'bg-red-100/10';
+            }
+
+            let statusLabel = '';
+            if (sub.status === 'active') statusLabel = '✅ ACTIVE';
+            else if (sub.status === 'pending') statusLabel = '🕒 PENDING';
+            else if (sub.status === 'expired') statusLabel = '❌ EXPIRED';
+            else if (sub.status === 'disabled') statusLabel = '🚫 DISABLED';
+            else statusLabel = `❔ ${sub.status?.toUpperCase()}`;
+
+            return (
+              <div
+                key={sub.subscription_id}
+                className={`relative flex flex-col ${borderColor} border-4 rounded-2xl mb-8 p-4 shadow overflow-hidden`}
+              >
+                {/* 🟢 Overlay */}
+                <div className="absolute inset-0 bg-black/60 z-0 rounded-2xl pointer-events-none" />
+                {/* 🟩 Card content */}
+                <div className="relative z-10">
+                  {/* === Header with status and package === */}
+                  <div className="flex flex-col gap-1 items-center justify-center mb-4">
+                    <span className="text-wonderful-5">
+                      {statusLabel === '✅ ACTIVE'
+                        ? '✅'
+                        : statusLabel === '🕒 PENDING'
+                          ? '🕒'
+                          : statusLabel === '❌ EXPIRED'
+                            ? '❌'
+                            : statusLabel === '🚫 DISABLED'
+                              ? '🚫'
+                              : '❔'}{' '}
+                      <span className="text-3xl text-glow-soft">
+                        {statusLabel.replace(/^[^ ]+ /, '')}
+                      </span>
+                    </span>
+                    <span className="font-bold text-2xl tracking-wide mt-1">
+                      {sub.order_description || sub.package_name || 'Subscription'}{' '}
+                      {sub.status === 'active' && sub.expiring_at && (
+                        <span className="text-base text-green-200 font-semibold ms-5">
+                          ({timeLeft || 'Expired'} left)
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  {/* === GRID OF ALL FIELDS === */}
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 w-full max-w-2xl mx-auto lg:text-lg text-base">
+                    {/* Show most fields from new schema */}
+                    {sub.megaott_id && (
+                      <>
+                        <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                          📌 MegaOTT ID:
+                        </span>
+                        <span className="font-bold flex items-center tracking-wide">
+                          {sub.megaott_id}
+                        </span>
+                      </>
+                    )}
+                    {sub.username && (
+                      <>
+                        <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                          👤 Username:
+                        </span>
+                        <span className="font-mono font-bold flex items-center tracking-wide">
+                          {sub.username}
+                        </span>
+                      </>
+                    )}
+                    {sub.password && (
+                      <>
+                        <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                          🔑 Password:
+                        </span>
+                        <span className="font-mono font-bold flex items-center tracking-wide">
+                          {sub.password}
+                        </span>
+                      </>
+                    )}
+                    {sub.mac_address && (
+                      <>
+                        <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                          💻 MAC Address:
+                        </span>
+                        <span className="font-bold flex items-center tracking-wide">
+                          {sub.mac_address}
+                        </span>
+                      </>
+                    )}
+                    {sub.package_id && (
+                      <>
+                        <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                          🆔 Package ID:
+                        </span>
+                        <span className="font-bold flex items-center tracking-wide">
+                          {sub.package_id}
+                        </span>
+                      </>
+                    )}
+                    {sub.package_name && (
+                      <>
+                        <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                          📦 Package Name:
+                        </span>
+                        <span className="font-bold flex items-center tracking-wide">
+                          {sub.package_name}
+                        </span>
+                      </>
+                    )}
+                    {/*                     {sub.template && (
+                      <>
+                        <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                          🧩 Template:
+                        </span>
+                        <span className="font-bold flex items-center tracking-wide">
+                          {sub.template}
+                        </span>
+                      </>
+                    )} */}
+                    {sub.max_connections && (
+                      <>
+                        <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                          🔢 Max Connections:
+                        </span>
+                        <span className="font-bold flex items-center tracking-wide">
+                          {sub.max_connections}
+                        </span>
+                      </>
+                    )}
+                    {sub.forced_country && (
+                      <>
+                        <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                          🌍 Country:
+                        </span>
+                        <span className="font-bold flex items-center tracking-wide">
+                          {sub.forced_country}
+                        </span>
+                      </>
+                    )}
+                    <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                      🔞 Adult:
+                    </span>
+                    <span className="font-bold flex items-center tracking-wide">
+                      {sub.adult ? '✅ Yes' : '❌ No'}
+                    </span>
+                    <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                      🛡️ VPN:
+                    </span>
+                    <span className="font-bold flex items-center tracking-wide">
+                      {sub.enable_vpn ? '✅ Yes' : '❌ No'}
+                    </span>
+                    {sub.note && (
+                      <>
+                        <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                          📝 Note:
+                        </span>
+                        <span className="font-bold flex items-center tracking-wide">
+                          {sub.note}
+                        </span>
+                      </>
+                    )}
+                    {sub.whatsapp_telegram && (
+                      <>
+                        <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                          💬 WhatsApp/Telegram:
+                        </span>
+                        <span className="font-bold flex items-center tracking-wide">
+                          {sub.whatsapp_telegram}
+                        </span>
+                      </>
+                    )}
+                    <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                      💸 Paid:
+                    </span>
+                    <span className="font-bold flex items-center tracking-wide">
+                      {sub.paid ? '💸 Yes' : '⏳ Not Paid'}
+                    </span>
+                    {sub.dns_link && (
+                      <>
+                        <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                          🔗 DNS Link:
+                        </span>
+                        <span className="font-bold flex items-center tracking-wide">
+                          {sub.dns_link}
+                        </span>
+                      </>
+                    )}
+                    {sub.dns_link_for_samsung_lg && (
+                      <>
+                        <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                          📺 Samsung/LG DNS:
+                        </span>
+                        <span className="font-bold flex items-center tracking-wide">
+                          {sub.dns_link_for_samsung_lg}
+                        </span>
+                      </>
+                    )}
+                    {sub.portal_link && (
+                      <>
+                        <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                          🌐 Portal Link:
+                        </span>
+                        <span className="font-bold flex items-center tracking-wide">
+                          {sub.portal_link}
+                        </span>
+                      </>
+                    )}
+                    <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                      ⏰ Expires At:
+                    </span>
+                    <span className="font-bold flex items-center tracking-wide">
+                      {sub.expiring_at
+                        ? new Date(sub.expiring_at).toLocaleString()
+                        : 'Will start on first login'}
+                    </span>
+                    <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                      📆 Created At:
+                    </span>
+                    <span className="font-bold flex items-center tracking-wide">
+                      {sub.createdAt ? new Date(sub.createdAt).toLocaleString() : '--'}
+                    </span>
+                  </div>
+                  {/* === PAYMENTS FIELD BELOW === */}
+                  <div className="my-4">
+                    <strong className="text-lg mb-2 block">Payments:</strong>
+                    <div className="flex flex-col gap-4 items-center justify-center">
+                      {sub.payments && sub.payments.length > 0 ? (
+                        sub.payments.map((pay) => (
+                          <div
+                            key={pay.id}
+                            className="group flex items-center rounded-xl shadow-lg bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 p-3 gap-4 cursor-pointer"
+                            onClick={() => handleShowPaymentDetails(pay)}
+                            title="View Payment Details"
+                          >
+                            <div className="flex-1 flex flex-wrap gap-4">
+                              <span className="text-xl">🔖 {pay.status?.toUpperCase()}</span>
+                              <span className="text-xl">📄 Inv: {pay.invoice_id}</span>
+                              {pay.amount_paid && (
+                                <span className="text-xl">
+                                  💰 {pay.amount_paid} {pay.pay_currency}
+                                </span>
+                              )}
+                              {pay.createdAt && (
+                                <span className="text-xl">
+                                  ⏰ {new Date(pay.createdAt).toLocaleString()}
+                                </span>
+                              )}
+                            </div>
+                            <div>
+                              {pay.status === 'confirmed' || pay.status === 'finished' ? (
+                                <span className="text-2xl text-green-400 bg-green-800">✔️</span>
+                              ) : pay.status === 'pending' ? (
+                                <span className="text-2xl text-yellow-400">⏳</span>
+                              ) : pay.status === 'failed' ? (
+                                <span className="text-2xl text-red-400">❌</span>
+                              ) : (
+                                <span className="text-2xl text-gray-400">❔</span>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <span className="text-gray-400 pl-2">No payments yet.</span>
+                      )}
+                    </div>
+                  </div>
+                  {/* End of payment fields */}
+                  <div className="flex flex-col bg-red-400 rounded-lg items-center justify-center p-4">
+                    <div className="text-2xl font-bold tracking-widest text-outline-dark-1 text-center mb-4">
+                      Danger Zone !!!
+                    </div>
+                    <button
+                      className="btn-danger w-1/2 mx-auto"
+                      onClick={handleDelete}
+                      type="button"
+                    >
+                      🗑️ Delete Subscription
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* ================= Responsive Edit Block ================= */}
-        <div className="flex flex-col items-center justify-center w-full">
-          <div className="w-full max-w-2xl bg-gray-900/90 border border-gray-700 rounded-2xl shadow-md p-4 sm:p-6 md:p-8 mb-8">
-            {/* 1️⃣ Status badge */}
-            <div className="flex flex-col lg:flex-row items-start lg:items-center w-full gap-2 mb-4">
-              <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">
-                Current Status
-              </label>
-              <div>{renderStatusBadge(formData.status)}</div>
-            </div>
-            {/* 2️⃣ Product/Order */}
-            <div className="flex flex-row items-start lg:items-center justify-center w-full gap-2 mb-4">
-              <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">Product :</label>
-              <span className="w-full lg:max-w-md text-left font-bold underline text-2xl">
-                {formData.order_description || ''}
-              </span>
-            </div>
-            {/* 3️⃣ Username */}
-            <div className="flex flex-col lg:flex-row items-start lg:items-center w-full gap-2 mb-4">
-              <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">
-                Subscription Username
-              </label>
-              <input
-                className="input w-full lg:max-w-md"
-                name="subscription_username"
-                placeholder="Username"
-                value={formData.subscription_username || ''}
-                onChange={handleChange}
-              />
-            </div>
-            {/* 4️⃣ Password */}
-            <div className="flex flex-col lg:flex-row items-start lg:items-center w-full gap-2 mb-4">
-              <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">
-                Subscription Password
-              </label>
-              <input
-                className="input w-full lg:max-w-md"
-                name="subscription_password"
-                placeholder="Password"
-                value={formData.subscription_password || ''}
-                onChange={handleChange}
-              />
-            </div>
-            {/* 5️⃣ Portal URL */}
-            <div className="flex flex-col lg:flex-row items-start lg:items-center w-full gap-2 mb-4">
-              <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">Portal URL</label>
-              <input
-                className="input w-full lg:max-w-md"
-                name="subscription_url"
-                placeholder="Portal URL"
-                value={formData.subscription_url || ''}
-                onChange={handleChange}
-              />
-            </div>
-            {/* 6️⃣ Other Short Info */}
-            <div className="flex flex-col lg:flex-row items-start lg:items-center w-full gap-2 mb-4">
-              <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">
-                Other Short Info
-              </label>
-              <input
-                className="input w-full lg:max-w-md"
-                name="subscription_other"
-                placeholder="Other short info"
-                value={formData.subscription_other || ''}
-                onChange={handleChange}
-              />
-            </div>
-            {/* 7️⃣ Additional Details */}
-            <div className="flex flex-col lg:flex-row items-start lg:items-center w-full gap-2 mb-4">
-              <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">
-                Additional Details
-              </label>
-              <textarea
-                className="input w-full lg:max-w-md"
-                name="additional_info"
-                placeholder="Additional details"
-                value={formData.additional_info || ''}
-                onChange={handleChange}
-              />
-            </div>
-            {/* 8️⃣ Status Select */}
-            <div className="flex flex-col lg:flex-row items-start lg:items-center w-full gap-2 mb-4">
-              <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">Status</label>
-              <select
-                className="input w-full lg:max-w-md"
-                name="status"
-                value={formData.status || ''}
-                onChange={handleChange}
-              >
-                <option value="">Select Status</option>
-                <option value="pending">🕓 Pending</option>
-                <option value="active">✅ Active</option>
-                <option value="expired">⏳ Expired</option>
-                <option value="canceled">❌ Canceled</option>
-                <option value="disabled">🚫 Disabled</option>
-              </select>
-            </div>
-            {/* 9️⃣ Start Date */}
-            <div className="flex flex-col lg:flex-row items-start lg:items-center w-full gap-2 mb-4">
-              <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">Start Date</label>
-              <input
-                type="datetime-local"
-                className="input w-full"
-                name="startDate"
-                value={toDatetimeLocalString(formData.startDate)}
-                onChange={handleChange}
-              />
-            </div>
-            {/* 9️⃣ End Date (editable) */}
-            <div className="flex flex-col lg:flex-row items-start lg:items-center w-full gap-2 mb-4">
-              <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">End Date</label>
-              <input
-                type="datetime-local"
-                className="input w-full"
-                name="endDate"
-                value={toDatetimeLocalString(formData.endDate)}
-                onChange={handleChange}
-              />
-            </div>
-            {/* 🔟 Buttons */}
-            <div className="flex flex-row gap-2 mt-6 w-full justify-between">
-              <button
-                onClick={handleDelete}
-                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 w-1/4"
-                type="button"
-              >
-                Delete Subscription
-              </button>
-              <button
-                onClick={handleUpdate}
-                className={`bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-1/4 transition-all duration-200 ${
-                  loading ? 'opacity-60 cursor-not-allowed' : ''
-                }`}
-                type="button"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <span className="loader mr-2"></span> Saving...
-                  </>
-                ) : (
-                  'Save Changes'
-                )}
-              </button>
-            </div>
-          </div>
-          <div className="flex flex-col items-center justify-center w-full">
-            <div className="w-full max-w-2xl bg-gray-900/90 border border-gray-700 rounded-2xl shadow-md p-4 sm:p-6 md:p-8 mb-8">
-              {/* 💸 Payments container */}
-              <PaymentsDetails payments={subscription.payments || []} />
-            </div>{' '}
-          </div>
-          <div className="w-full flex justify-center">
-            <button
-              className="btn-secondary btn-lg"
-              onClick={() => router.push('/admin/subscriptions/main')}
-              type="button"
-            >
-              Return To Subscriptions
-            </button>
-          </div>
+            );
+          })}
         </div>
       </div>
-    </div>
-  );
-}
-
-/**
- * 💸 PaymentsDetails – shows ALL payment fields in a readable format
- */
-function PaymentsDetails({ payments }) {
-  if (!payments || payments.length === 0) {
-    return (
-      <div className="container-style border rounded-xl shadow-md p-6 mb-6 w-full lg:w-1/2">
-        <h2 className="text-lg font-bold mb-2">💸 Payment Information</h2>
-        <p className="text-gray-300">No payments found for this subscription.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="container-style border rounded-xl shadow-md p-6 mb-6 w-full overflow-x-auto">
-      <h2 className="text-lg font-bold mb-4">💸 Payment Information</h2>
-      {payments.map((payment, index) => (
-        <div
-          key={payment.id}
-          className="mb-4 border-b border-gray-700 pb-4 last:mb-0 last:border-b-0"
-        >
-          {/* 🔍 Payment detail rows */}
-          <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-sm">
-            <div className="font-bold">Payment ID:</div>
-            <div>{payment.payment_id || 'N/A'}</div>
-            <div className="font-bold">Order ID:</div>
-            <div>{payment.order_id}</div>
-            <div className="font-bold">Invoice ID:</div>
-            <div>{payment.invoice_id || 'N/A'}</div>
-            <div className="font-bold">Status:</div>
-            <div>{payment.status}</div>
-            <div className="font-bold">Currency:</div>
-            <div>{payment.currency || 'N/A'}</div>
-            <div className="font-bold">Amount Paid:</div>
-            <div>{payment.amount_paid != null ? payment.amount_paid : 'N/A'}</div>
-            <div className="font-bold">Amount Received:</div>
-            <div>{payment.amount_received != null ? payment.amount_received : 'N/A'}</div>
-            <div className="font-bold">Pay Currency:</div>
-            <div>{payment.pay_currency || 'N/A'}</div>
-            <div className="font-bold">Pay Address:</div>
-            <div>{payment.pay_address || 'N/A'}</div>
-            <div className="font-bold">Network:</div>
-            <div>{payment.network || 'N/A'}</div>
-            <div className="font-bold">Received At:</div>
-            <div>
-              {payment.received_at ? new Date(payment.received_at).toLocaleString() : 'N/A'}
-            </div>
-            <div className="font-bold">Created At:</div>
-            <div>{payment.createdAt ? new Date(payment.createdAt).toLocaleString() : 'N/A'}</div>
-            <div className="font-bold">Updated At:</div>
-            <div>{payment.updatedAt ? new Date(payment.updatedAt).toLocaleString() : 'N/A'}</div>
-          </div>
-        </div>
-      ))}
     </div>
   );
 }

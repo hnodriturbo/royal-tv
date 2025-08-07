@@ -175,11 +175,10 @@ export async function POST(request) {
   }
 
   // Extract useful fields from payment and user
-  const { user_id, package_slug, order_description: stored_order_description } = paymentRecord;
+  const { user_id, package_slug, adult, enable_vpn } = paymentRecord;
   const { whatsapp, telegram } = user || {};
 
   // 10. Create subscription if payment status is valid AND not already created ✅
-  let subscription = null;
   const latestPayment = await prisma.subscriptionPayment.findUnique({
     where: { id: paymentId }
   });
@@ -195,10 +194,11 @@ export async function POST(request) {
           user_id,
           package_slug,
           order_id: paymentRecord.id, // ✅ Crucial anchor from IPN
-          order_description: stored_order_description,
+          order_description,
           whatsapp,
           telegram,
-          adult: false // Adjust dynamically if needed
+          adult: paymentRecord.adult === true, // ensure it's boolean
+          enable_vpn: paymentRecord.enable_vpn === true // ensure it's boolean
         }
       );
 

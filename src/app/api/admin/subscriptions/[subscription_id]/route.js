@@ -1,9 +1,17 @@
 /**
  *   ========== /api/admin/subscriptions/[subscription_id] ==========
  * 📦
- * GET:   View single subscription (+user)
- * PATCH: Update subscription & notify if status changes
- * DELETE: Remove subscription
+ * GET:
+ *    - Returns ALL subscriptions for the user who owns this subscription.
+ *    - Each subscription includes all its payments.
+ *    - The "main" subscription (by subscription_id) is the first in the array.
+ *    - Merges into a single array: "subscriptions"
+ * DELETE:
+ *    - Deletes a subscription by subscription_id.
+ * ==================================================================
+ * 🧑‍💻 For Admin Use:
+ *   - Fetches one or all subscriptions for user card view.
+ *   - Also returns user object (as "user") for UI.
  * ==================================================================
  */
 
@@ -11,67 +19,63 @@ import logger from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
+// 📦 GET: Returns all subscriptions for the user (main sub is first in array)
 export async function GET(request, context) {
-  const { subscription_id } = await context.params;
+  // 1️⃣ Read user role from header
+  const userRole = request.headers.get('x-user-role');
 
-  const subscription = await prisma.subscription.findUnique({
+  // 2️⃣ Reject if not admin
+  if (userRole !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized. Admins only.' }, { status: 403 });
+  }
+
+  const { subscription_id } = context.params;
+
+  // 🔍 Find the main subscription (include user & payments)
+  const mainSubscription = await prisma.subscription.findUnique({
     where: { subscription_id },
     include: { user: true, payments: true }
   });
 
-  if (!subscription) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  return NextResponse.json({ subscription });
-}
-
-/**
- * PATCH: Update subscription & notify user/admin on status change!
- * - Notifies user & all admins when sub is activated (status: 'active')
- * - Only sends if status *actually* changes
- */
-export async function PATCH(request, context) {
-  try {
-    const { subscription_id } = await context.params;
-    const data = await request.json();
-
-    // 🔍 Fetch previous Subscription with user info
-    const prev = await prisma.subscription.findUnique({
-      where: { subscription_id },
-      include: { user: true }
-    });
-    if (!prev) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    }
-
-    // 🟢 Ensure ISO date format
-    if (data.startDate) data.startDate = new Date(data.startDate).toISOString();
-    if (data.endDate) data.endDate = new Date(data.endDate).toISOString();
-
-    // 📝 Update the Subscription
-    await prisma.subscription.update({
-      where: { subscription_id },
-      data
-    });
-
-    // 🧑‍💻 Fetch updated subscription with user (for client/email/notification)
-    const updatedSubscription = await prisma.subscription.findUnique({
-      where: { subscription_id },
-      include: { user: true }
-    });
-
-    // ✅ Always return updated subscription + previous status for frontend socket logic
-    return NextResponse.json({
-      message: 'Subscription updated successfully',
-      subscription: updatedSubscription,
-      previousStatus: prev.status
-    });
-  } catch (error) {
-    logger.error('PATCH /api/admin/subscriptions/[subscription_id] failed:', error);
-    return NextResponse.json({ error: error.message || 'Unknown server error' }, { status: 500 });
+  // ❌ Not found
+  if (!mainSubscription) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
+
+  // 🧑‍💻 Get all subscriptions for this user (with payments)
+  const user_id = mainSubscription.user.user_id;
+  let allSubs = await prisma.subscription.findMany({
+    where: { user_id },
+    include: { payments: true }
+  });
+
+  // 🔗 Ensure the "main" subscription is first in the array
+  // (If it's not, move it to the start)
+  allSubs = [mainSubscription, ...allSubs.filter((sub) => sub.subscription_id !== subscription_id)];
+
+  // 🟢 Respond with:
+  // - subscriptions: all (main sub is first)
+  // - user: user object (from main sub)
+  return NextResponse.json({
+    subscriptions: allSubs, // Array of ALL subscriptions for this user (main sub first)
+    user: mainSubscription.user
+  });
 }
 
+// 🗑️ DELETE: Remove a subscription by ID (admin)
 export async function DELETE(request, context) {
   const { subscription_id } = context.params;
+
+  // 🔍 Check if exists for logging/error
+  const exists = await prisma.subscription.findUnique({ where: { subscription_id } });
+  if (!exists) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
+  // 🗑️ Delete & log
   await prisma.subscription.delete({ where: { subscription_id } });
+  logger.log(`🗑️ Deleted subscription: ${subscription_id}`);
+
+  // ✅ Success
   return NextResponse.json({ ok: true });
 }

@@ -9,13 +9,11 @@
 
 'use client';
 
+import logger from '@/lib/logger';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import logger from '@/lib/logger';
-import FreeTrials from '@/components/reusableUI/socket/FreeTrials';
-import useFreeTrialStatus from '@/hooks/socket/useFreeTrials';
 import UserSubscriptionDropdown from '@/components/reusableUI/UserSubscriptionDropdown';
 
 // 📦 Packages Grid (Drop this wherever you want your packages to show on the homepage)
@@ -39,7 +37,7 @@ export default function HomePage() {
   const [countdown, setCountdown] = useState(10);
 
   // Get the free trial status for the logged in user
-  const { freeTrialStatus } = useFreeTrialStatus(session?.user?.user_id);
+  /* const { freeTrialStatus } = useFreeTrialStatus(session?.user?.user_id); */
 
   // Search parameters to check if user came through the form page
   const searchParams = useSearchParams();
@@ -98,7 +96,7 @@ export default function HomePage() {
             double the satisfaction—guaranteed!
           </p>
           {/* 🟢 Switch: If NOT authenticated, show register button. If authenticated, show free trial logic. */}
-          {!authenticated ? (
+          {/*           {!authenticated ? (
             <Link href="/auth/signup">
               <button className="my-btn-dark-box-shadow btn-secondary btn-lg text-xl font-bold tracking-wider shadow-lg transition duration-1000 hover:scale-110 uppercase">
                 Register Now & Claim Your FREE 1-Day Trial Access!
@@ -106,7 +104,7 @@ export default function HomePage() {
             </Link>
           ) : (
             <>
-              {/* If expired or disabled, show Buy Subscription */}
+         
               {freeTrialStatus === 'disabled' || freeTrialStatus === 'expired' ? (
                 <UserSubscriptionDropdown />
               ) : (
@@ -114,7 +112,7 @@ export default function HomePage() {
                 <FreeTrials user_id={user?.user_id} className="w-full" />
               )}
             </>
-          )}
+          )} */}
         </div>
 
         {/* The guide from packages/data/guide.js */}
@@ -137,189 +135,4 @@ export default function HomePage() {
       </div>
     </>
   );
-}
-
-{
-  /* 📦 Packages Responsive Grid */
-}
-{
-  /* <div className="lg:w-11/12 w-10/12 mb-8 px-2">
-          <div
-            className="
-    grid 
-    grid-cols-1 
-    sm:grid-cols-2 
-    xl:grid-cols-3 
-    gap-6
-    "
-          >
-            {packages.map((pkg) => (
-              <div key={pkg.id} className="flex">
-                <div className="container-style flex flex-col justify-between items-center w-full">
-                  <div>
-                    <h3 className="text-2xl font-semibold mb-2">{pkg.title}</h3>
-                    <p className="text-lg mb-4">{pkg.description}</p>
-                    <p className="text-xl font-bold mb-4">{pkg.price}</p>
-                  </div>
-                  <div className="flex flex-col space-y-2 whitespace-nowrap w-full items-center">
-                    {authenticated && user?.role === 'user' ? (
-                      <>
-                        <Link href="/user/liveChat/createConversation" className="w-full">
-                          <button className="w-10/12 bg-green-500 py-2 px-4 rounded-xl hover:bg-green-600 transition whitespace-nowrap overflow-hidden text-ellipsis text-center">
-                            Send message to admin
-                          </button>
-                        </Link>
-                        <Link href={pkg.buyNow} className="w-full">
-                          <button className="w-10/12 bg-red-500 py-2 px-4 rounded-xl hover:bg-red-600 transition whitespace-nowrap overflow-hidden text-ellipsis text-center">
-                            Buy Now
-                          </button>
-                        </Link>
-                      </>
-                    ) : (
-                      <>
-                        <Link href="/auth/signup" className="w-full">
-                          <button className="w-10/12 bg-green-500 py-2 px-4 rounded-xl hover:bg-green-600 transition whitespace-nowrap overflow-hidden text-ellipsis text-center">
-                            Register To Buy
-                          </button>
-                        </Link>
-                        <Link href={pkg.detailsUrl} className="w-full">
-                          <button className="w-10/12 bg-blue-500 py-2 px-4 rounded-xl hover:bg-blue-600 transition whitespace-nowrap overflow-hidden text-ellipsis text-center">
-                            More Details
-                          </button>
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div> */
-}
-
-{
-  /* 🎬 INSTRUCTIONS + IPTV APPS SECTION */
-}
-{
-  /*         <div className="w-full flex flex-col items-center justify-center">
-          <div className="container-style mb-8 py-8 bg-smooth-gradient-light-2">
-            <ul className="list-disc list-inside space-y-6 text-lg font-semibold">
-              Step 1:{' '}
-              <li>
-                <span className="text-yellow-300 font-bold">Register for a Royal TV account</span>.
-                It’s quick, secure, and lets you unlock every exclusive feature—including a full day
-                of free streaming!
-                <br />
-                <span className="text-cyan-400">
-                  Sign up and join our rapidly growing community of happy streamers!
-                </span>
-              </li>
-              Step 2:
-              <li>
-                <span className="text-green-400 font-bold">Request your free trial</span>. After
-                registering, you’ll have to log in to your dashboard and click "Request My Free
-                Trial" button
-                <br />
-                <span className="text-blue-200">
-                  Our system works around the clock, so you never miss a moment of entertainment.
-                </span>
-              </li>
-              Step 3:
-              <li>
-                <span className="text-pink-400 font-bold">Wait for your credentials.</span>
-                Our system will notify you directly in your dashboard the moment your
-                trial/subscription is ready.
-                <br />
-                <br />
-                <span className="text-purple-200">
-                  Everything is automated, super safe, and totally hassle-free!
-                </span>
-              </li>
-            </ul>
-
-         
-            <div className="mt-8">
-              <h2 className="text-3xl font-extrabold underline text-cyan-300 drop-shadow-2xl mb-4">
-                Prepare Your Streaming Setup:
-              </h2>
-              <div className="w-full flex flex-col md:flex-row gap-10 text-lg">
-             
-                <div className="flex-1 flex flex-col items-center gap-3">
-                  <h3 className="text-xl font-bold text-yellow-200 drop-shadow-lg">
-                    Smart TV Apps 📺
-                  </h3>
-                  <ul className="list-disc list-inside ml-4 space-y-1 text-cyan-100 drop-shadow">
-                    <li>
-                      <Link
-                        className="text-blue-400 hover:text-pink-400 underline transition"
-                        href="https://www.smartersiptvplayer.com/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        IPTV Smarters Player
-                      </Link>
-                    </li>
-                    <li>
-                      Just open your TV’s app store and search for the latest IPTV apps—dozens are
-                      available for every brand!
-                    </li>
-                    <li>
-                      Explore and find the player that fits your preferences—Royal TV works with
-                      almost every modern app.
-                    </li>
-                  </ul>
-                </div>
-                
-                <div className="flex-1 flex flex-col items-center gap-3">
-                  <h3 className="text-xl font-bold text-green-200 drop-shadow-lg">
-                    Android TV & More 🤖
-                  </h3>
-                  <ul className="list-disc list-inside ml-4 space-y-1 text-green-100 drop-shadow">
-                    <li>
-                      <Link
-                        className="text-blue-400 hover:text-pink-400 underline transition"
-                        href="https://maxplayer.tv/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        MaxPlayer (our top pick!)
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        className="text-blue-400 hover:text-pink-400 underline transition"
-                        href="https://tivimate.com/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        TiviMate (for Android, Firestick, Android TV)
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        className="text-blue-400 hover:text-pink-400 underline transition"
-                        href="https://www.smartersiptvplayer.com/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Smarters TV Player (iOS, Android, Windows, Mac)
-                      </Link>
-                    </li>
-                    <li>
-                      Try any modern IPTV app—Royal TV is compatible with virtually all platforms
-                      for double the viewing freedom!
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-            <h2 className="mt-8 text-xl font-bold text-center text-cyan-200">
-              After you register, system will update you instantly in your dashboard the moment your
-              subscription or free trial is ready.
-              <br /> <br />
-              Double the alerts. Double the streaming. Only at{' '}
-              <span className="text-yellow-200 font-extrabold">Royal TV!</span>
-            </h2>
-          </div>
-        </div> */
 }

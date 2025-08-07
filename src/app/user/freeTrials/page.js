@@ -1,11 +1,11 @@
 /**
  *   ======================= page.js ========================
  * 🛡️
- * USER FREE TRIAL REQUEST PAGE
+ * USER FREE TRIAL DETAILS PAGE (2025 schema, full info)
  * ----------------------------------------------------------
- * - Renders user's free trial status in a clean card.
- * - No direct font classes—uses bold/semantic tags.
- * - Status always shown at the top if trial exists.
+ * - Renders user's free trial in a styled card.
+ * - All fields, grouped, status always shown at the top.
+ * - No auto-refresh; always says "ready" if API succeeded.
  * - Uses app-wide loader only (showLoader/hideLoader).
  * ==========================================================
  */
@@ -15,12 +15,11 @@
 import { useSession } from 'next-auth/react';
 import { useState, useCallback, useEffect } from 'react';
 import axiosInstance from '@/lib/axiosInstance';
-import RefreshCountdownTimer from '@/components/reusableUI/RefreshCountdownTimer';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import { useRouter } from 'next/navigation';
 
-export default function UserFreeTrialRequestPage() {
+export default function UserFreeTrialDetailsPage() {
   // 🟢 Auth/session logic
   const { data: session, status } = useSession();
   const { isAllowed, redirect } = useAuthGuard('user');
@@ -51,11 +50,10 @@ export default function UserFreeTrialRequestPage() {
 
   // 🚦 On mount: fetch trial after login
   useEffect(() => {
-    if (status === 'authenticated') {
+    if (status === 'authenticated' && isAllowed) {
       fetchFreeTrial();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [status, isAllowed]);
 
   // 🚧 Redirect if not allowed
   useEffect(() => {
@@ -70,166 +68,176 @@ export default function UserFreeTrialRequestPage() {
   // ——— MAIN RENDER —————————————————————————
   return (
     <div className="flex flex-col items-center justify-center w-full lg:mt-0 mt-20">
-      {/* 🧊 Status Card */}
-      <div className="container-style max-w-full lg:max-w-lg mx-auto min-h-[60vh] rounded-2xl shadow-lg p-6">
-        {/* 📝 Page Title */}
-        <h1 className="text-2xl font-bold mb-6 text-center">🎁 Free Trial Status</h1>
-        {/* 🟦 STATUS BADGE AT TOP */}
-        {!loading && freeTrial && (
-          <div className="mb-4 flex items-center justify-center gap-2">
-            <span style={{ fontWeight: 700 }}>Status:</span>
-            <span
-              className={
-                freeTrial.status === 'pending'
-                  ? 'text-yellow-600 dark:text-yellow-300'
-                  : freeTrial.status === 'active'
-                    ? 'text-green-700 dark:text-green-400'
-                    : 'text-gray-500'
-              }
-              style={{ fontWeight: 700, letterSpacing: '0.02em' }}
-            >
-              {freeTrial.status
-                ? freeTrial.status.charAt(0).toUpperCase() + freeTrial.status.slice(1)
-                : 'Unknown'}
-            </span>
-          </div>
-        )}
+      <div className="container-style max-w-full lg:max-w-2xl mx-auto min-h-fit rounded-2xl shadow-lg p-6">
+        {/* 🎁 Free Trial Details Heading */}
+        <h1 className="font-bold mb-6 text-center text-4xl">🎁 Free Trial Details</h1>
 
-        {/* 🎉 TRIAL GRANTED: Show credentials */}
+        {/* === READY/ACTIVE TRIAL ALWAYS SHOWS AS "READY" === */}
+        {/* === READY/ACTIVE TRIAL ALWAYS SHOWS AS "READY" === */}
         {!loading &&
           freeTrial &&
-          freeTrial.status === 'active' &&
-          freeTrial.free_trial_username &&
-          freeTrial.free_trial_password && (
-            <div className="flex flex-col gap-4">
-              {/* 🥳 Success Title */}
-              <div className="flex flex-col gap-1 items-center justify-center">
-                <span className="text-3xl">✅</span>
-                <span
-                  className="text-green-700 dark:text-green-400"
-                  style={{ fontWeight: 700, fontSize: '1.13rem' }}
-                >
-                  Your free trial is ready!
-                </span>
-              </div>
-              {/* 🔑 Credentials – Tailwind only, stylish and readable */}
-              <div className="flex w-full items-center justify-center">
-                <div className="flex flex-col gap-4 p-3 text-lg items-center justify-center">
-                  {/* 👤 Username */}
-                  <div className="flex gap-3 items-center">
-                    <span className="font-bold min-w-[90px] tracking-wide text-base sm:text-lg">
-                      Username:
-                    </span>
-                    <span className="font-mono text-base sm:text-lg break-all">
-                      {freeTrial.free_trial_username}
-                    </span>
-                  </div>
-                  {/* 🔒 Password */}
-                  <div className="flex gap-3 items-center">
-                    <span className="font-bold min-w-[90px] tracking-wide text-base sm:text-lg">
-                      Password:
-                    </span>
-                    <span className="font-mono text-base sm:text-lg break-all">
-                      {freeTrial.free_trial_password}
-                    </span>
-                  </div>
-                  {/* 🌐 URL (optional) */}
-                  {freeTrial.free_trial_url && (
-                    <div className="flex gap-3 items-center">
-                      <span className="font-bold min-w-[90px] tracking-wide text-base sm:text-lg">
-                        URL:
+          freeTrial.status !== 'disabled' &&
+          freeTrial.status !== 'expired' && (
+            <div className="relative flex flex-col border-4 border-green-700 rounded-2xl mb-6 p-4 shadow overflow-hidden">
+              {/* 🔲 Black overlay background, only affects background */}
+              <div className="absolute inset-0 bg-black/60 z-0 rounded-2xl pointer-events-none" />
+              {/* 💡 Card content stays fully opaque */}
+              <div className="relative z-10">
+                <div className="flex flex-col gap-1 items-center justify-center mb-4">
+                  {/* 🏆 Title with emoji and soft glow */}
+                  <span className="text-wonderful-5">
+                    ✅ <span className="text-3xl text-glow-soft">Your free trial is ready!</span>
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 w-full max-w-lg mx-auto lg:text-lg">
+                  <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                    👤 Username:
+                  </span>
+                  <span className="font-mono font-bold flex items-center tracking-wide">
+                    {freeTrial.username}
+                  </span>
+
+                  <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                    🔑 Password:
+                  </span>
+                  <span className="font-mono font-bold flex items-center tracking-wide">
+                    {freeTrial.password}
+                  </span>
+
+                  {freeTrial.portal_link && (
+                    <>
+                      <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                        🌐 Portal Link:
                       </span>
-                      <span className="text-base sm:text-lg break-all">
-                        {freeTrial.free_trial_url}
+                      <span className="font-bold flex items-center tracking-wide">
+                        {freeTrial.portal_link}
                       </span>
-                    </div>
+                    </>
                   )}
-                  {/* 📝 Other info (optional) */}
-                  {freeTrial.free_trial_other && (
-                    <div className="flex gap-3 items-center">
-                      <span className="font-bold min-w-[90px] tracking-wide text-base sm:text-lg">
-                        Other info:
+                  {freeTrial.dns_link && (
+                    <>
+                      <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                        🔗 DNS Link:
                       </span>
-                      <span className="text-base sm:text-lg">{freeTrial.free_trial_other}</span>
-                    </div>
-                  )}
-                  {/* 📝 Other info (optional) */}
-                  {freeTrial.additional_info && (
-                    <div className="flex gap-3 items-center">
-                      <span className="font-bold min-w-[90px] tracking-wide text-base sm:text-lg">
-                        Additional Info:
+                      <span className="font-bold flex items-center tracking-wide">
+                        {freeTrial.dns_link}
                       </span>
-                      <span className="text-base sm:text-lg">{freeTrial.additional_info}</span>
-                    </div>
+                    </>
                   )}
-                  {/* 🗓️ Dates */}
-                  <div className="flex flex-col gap-1 mt-2 text-sm text-black text-center">
-                    <div>
-                      <strong className="tracking-wide">Start:</strong>{' '}
-                      {freeTrial.startDate ? new Date(freeTrial.startDate).toLocaleString() : '—'}
-                    </div>
-                    <div>
-                      <strong className="tracking-wide">End:</strong>{' '}
-                      {freeTrial.endDate ? new Date(freeTrial.endDate).toLocaleString() : '—'}
-                    </div>
-                  </div>
+                  {freeTrial.dns_link_for_samsung_lg && (
+                    <>
+                      <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                        📺 DNS Link (Samsung/LG):
+                      </span>
+                      <span className="font-bold flex items-center tracking-wide">
+                        {freeTrial.dns_link_for_samsung_lg}
+                      </span>
+                    </>
+                  )}
+                  {freeTrial.package_name && (
+                    <>
+                      <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                        📦 Package:
+                      </span>
+                      <span className="font-bold flex items-center tracking-wide">
+                        {freeTrial.package_name}
+                      </span>
+                    </>
+                  )}
+                  {freeTrial.mac_address && (
+                    <>
+                      <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                        💻 MAC Address:
+                      </span>
+                      <span className="font-bold flex items-center tracking-wide">
+                        {freeTrial.mac_address}
+                      </span>
+                    </>
+                  )}
+                  {freeTrial.note && (
+                    <>
+                      <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                        🗒️ Note:
+                      </span>
+                      <span className="font-bold flex items-center tracking-wide">
+                        {freeTrial.note}
+                      </span>
+                    </>
+                  )}
+                  {freeTrial.whatsapp_telegram && (
+                    <>
+                      <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                        💬 WhatsApp/Telegram:
+                      </span>
+                      <span className="font-bold flex items-center tracking-wide">
+                        {freeTrial.whatsapp_telegram ||
+                          session?.user?.whatsapp ||
+                          session?.user?.telegram}
+                      </span>
+                    </>
+                  )}
+
+                  {/* Expiring At */}
+                  <>
+                    <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                      ⏰ Expiring At:
+                    </span>
+                    <span className="font-bold flex items-center tracking-wide">
+                      {freeTrial.expiring_at
+                        ? new Date(freeTrial.expiring_at).toLocaleString()
+                        : 'Will start counting on first login'}
+                    </span>
+                  </>
+
+                  {/* Claimed At */}
+                  <>
+                    <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                      🎯 Claimed At:
+                    </span>
+                    <span className="font-bold flex items-center tracking-wide">
+                      {new Date(freeTrial.claimedAt).toLocaleString()}
+                    </span>
+                  </>
+
+                  {/* Updated At */}
+                  <>
+                    <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
+                      📝 Updated At:
+                    </span>
+                    <span className="font-bold flex items-center tracking-wide">
+                      {new Date(freeTrial.updatedAt).toLocaleString()}
+                    </span>
+                  </>
                 </div>
               </div>
             </div>
           )}
 
-        {/* ⏳ PENDING: Waiting for credentials */}
+        {/* ❌ Disabled/Expired Trial */}
         {!loading &&
           freeTrial &&
-          (!freeTrial.free_trial_username || !freeTrial.free_trial_password) && (
-            <div className="flex flex-col gap-5 items-center justify-center">
-              <span className="text-3xl">⏳</span>
-              <span className="text-yellow-600 dark:text-yellow-300" style={{ fontWeight: 600 }}>
-                Your free trial request is being processed...
-              </span>
-              <RefreshCountdownTimer
-                onRefresh={fetchFreeTrial}
-                intervalSeconds={3600}
-                showManualRefreshButton={true}
-                className="mt-1"
-              />
-              <div className="text-xs text-center">
-                This page will auto-refresh every hour.
+          (freeTrial.status === 'disabled' || freeTrial.status === 'expired') && (
+            <div className="flex flex-col border-4 border-red-700 bg-red-300 rounded-2xl mb-6 p-4 shadow">
+              <span className="text-3xl">❌</span>
+              <span className="text-black font-bold">Your free trial has expired.</span>
+              <span className="text-md text-black text-center">
+                You have already used your free trial.
                 <br />
-                As soon as your free trial information is ready, it will appear here!
-              </div>
+                <span className="font-bold text-black">
+                  🛒 Please purchase a subscription to continue enjoying our service!
+                </span>
+              </span>
             </div>
           )}
 
-        {/* 🚫 DISABLED/EXPIRED: Show expired message */}
-        {!loading && freeTrial && freeTrial.status === 'disabled' && (
-          <div className="flex flex-col gap-4 items-center justify-center">
-            <span className="text-3xl">❌</span>
-            <span className="text-red-600 dark:text-red-400 font-bold">
-              Your free trial has expired.
-            </span>
-            <span className="text-md text-gray-400 text-center">
-              You have already used your free trial. Please purchase a subscription to continue
-              enjoying our service!
-            </span>
-
-            {/*             <div className="mt-2 text-md text-gray-500">
-              Expired Credentials:
-              <br />
-              Username: {freeTrial.free_trial_username}
-              <br />
-              Password: {freeTrial.free_trial_password}
-            </div> */}
-          </div>
-        )}
-
-        {/* 🙅‍♂️ NO TRIAL */}
+        {/* 🙅‍♂️ No Trial Found */}
         {!loading && !freeTrial && (
-          <div className="flex flex-col gap-4 items-center">
+          <div className="flex flex-col border-4 border-orange-500 bg-orange-300 rounded-2xl mb-6 p-4 shadow">
             <span className="text-3xl">🙅‍♂️</span>
-            <span>No free trial request found.</span>
-            <span className="text-xs text-gray-400 text-center">
-              If you believe this is a mistake, please contact support.
+            <span className="text-2xl text-black">No free trial request found.</span>
+            <span className="text-lg text-center text-black">
+              <span className="font-extrabold text-black">🤔</span> If you believe this is a
+              mistake, please contact support.
             </span>
           </div>
         )}

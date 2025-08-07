@@ -14,7 +14,14 @@ import { NextResponse } from 'next/server';
 export async function POST(request) {
   logger.log('➡️ [create-invoice] Request received');
   const user_id = request.headers.get('x-user-id');
-  const { package_slug, order_description, price, customer_email } = await request.json();
+  const {
+    package_slug,
+    order_description,
+    price,
+    customer_email,
+    adult = false,
+    enable_vpn = false
+  } = await request.json();
 
   if (!user_id || !package_slug || !price || !order_description) {
     logger.warn('⚠️ [create-invoice] Missing required info:', {
@@ -34,7 +41,9 @@ export async function POST(request) {
         user_id,
         package_slug,
         status: 'waiting',
-        order_description
+        order_description,
+        adult,
+        enable_vpn
       }
     });
     logger.log('🆕 [create-invoice] Created DB record:', paymentRecord);

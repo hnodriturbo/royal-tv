@@ -47,9 +47,9 @@ export default function AdminSubscriptionsPage() {
   const fetchSubscriptions = async () => {
     try {
       showLoader({ text: 'Loading subscriptions...' });
-      const res = await axiosInstance.get('/api/admin/subscriptions/main');
-      setSubscriptions(res.data.subscriptions || []);
-      displayMessage('Subscriptions loaded!', 'success');
+      const response = await axiosInstance.get('/api/admin/subscriptions/main');
+      setSubscriptions(response.data.subscriptions || []);
+      displayMessage('All Subscriptions loaded!', 'success');
     } catch (err) {
       displayMessage(
         `Failed to load subscriptions${err?.response?.data?.error ? `: ${err.response.data.error}` : ''}`,
@@ -72,7 +72,7 @@ export default function AdminSubscriptionsPage() {
         try {
           showLoader({ text: 'Deleting subscription...' });
           await axiosInstance.delete(`/api/admin/subscriptions/${subscription_id}`);
-          displayMessage('Subscription deleted!', 'success');
+          displayMessage('🗑️ Subscription deleted!', 'success');
           fetchSubscriptions();
         } catch (err) {
           displayMessage(`❌ Delete failed: ${err.message}`, 'error');
@@ -88,7 +88,7 @@ export default function AdminSubscriptionsPage() {
     });
   };
 
-  // Local sorting and pagination (client only)
+  // Local sorting and pagination (client side only sorting)
   const sortedSubscriptions = useLocalSorter(
     subscriptions,
     sortOrder,
@@ -153,40 +153,41 @@ export default function AdminSubscriptionsPage() {
                   <th className="border border-gray-300 px-4 py-2">Username</th>
                   <th className="border border-gray-300 px-4 py-2">Status</th>
                   <th className="border border-gray-300 px-4 py-2">Created</th>
-                  <th className="border border-gray-300 px-4 py-2">Start</th>
-                  <th className="border border-gray-300 px-4 py-2">End</th>
+                  <th className="border border-gray-300 px-4 py-2">Expiring At</th>
                   <th className="border border-gray-300 px-4 py-2">Actions</th>
                 </tr>
               </thead>
               <tbody className="text-center">
                 {pagedSubscriptions.map((sub) => (
                   <tr key={sub.subscription_id} className="hover:bg-gray-400">
+                    {/* 👤 User */}
                     <td className="border border-gray-300 px-4 py-2">{sub.user?.name || '-'}</td>
-                    <td className="border border-gray-300 px-4 py-2">{sub.product || '-'}</td>
-                    <td className="border border-gray-300 px-4 py-2">
-                      {sub.subscription_username || '-'}
-                    </td>
+                    {/* 📦 Product */}
+                    <td className="border border-gray-300 px-4 py-2">{sub.package_name || '-'}</td>
+                    {/* 👤 Username */}
+                    <td className="border border-gray-300 px-4 py-2">{sub.username || '-'}</td>
+                    {/* 🟢 Status */}
                     <td
                       className={`border border-gray-300 px-4 py-2 font-bold ${STATUS_COLOR_MAP[sub.status]}`}
                     >
                       {sub.status}
                     </td>
+                    {/* 🕒 Created */}
                     <td className="border border-gray-300 px-4 py-2">
                       {sub.createdAt ? new Date(sub.createdAt).toLocaleString() : '—'}
                     </td>
+                    {/* ⏳ Expires */}
                     <td className="border border-gray-300 px-4 py-2">
-                      {sub.startDate ? new Date(sub.startDate).toLocaleString() : '—'}
+                      {sub.expiring_at ? new Date(sub.expiring_at).toLocaleString() : '—'}
                     </td>
-                    <td className="border border-gray-300 px-4 py-2">
-                      {sub.endDate ? new Date(sub.endDate).toLocaleString() : '—'}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2">
+                    {/* 🛠️ Actions */}
+                    <td className="flex border border-gray-300 px-4 py-2 justify-center">
                       <div className="flex flex-row gap-2 w-fit justify-center">
                         <Link href={`/admin/subscriptions/${sub.subscription_id}`}>
-                          <button className="btn-primary btn-sm">View/Edit</button>
+                          <button className="btn-primary">View/Edit</button>
                         </Link>
                         <button
-                          className="btn-danger btn-sm"
+                          className="btn-danger"
                           onClick={() => handleDelete(sub.subscription_id)}
                         >
                           Delete
@@ -208,12 +209,7 @@ export default function AdminSubscriptionsPage() {
               className="border border-gray-300 rounded-2xl p-4 shadow-sm bg-gray-600 text-base-100 font-bold"
             >
               <div className="flex justify-between mb-2">
-                <h3 className="font-semibold text-lg">
-                  {sub.user?.name || '-'}
-                  <span className="ml-2 text-xs text-muted">
-                    {sub.product && `(${sub.product})`}
-                  </span>
-                </h3>
+                <h3 className="font-semibold text-lg">{sub.user?.name || '-'}</h3>
                 <span
                   className={`px-4 py-2 rounded text-sm font-bold ${STATUS_COLOR_MAP[sub.status]}`}
                 >
@@ -222,18 +218,18 @@ export default function AdminSubscriptionsPage() {
               </div>
               <div className="space-y-1 text-sm">
                 <div>
-                  <strong>Username:</strong> {sub.subscription_username || '-'}
+                  <strong>Product:</strong> {sub.order_description || sub.package_name || '-'}
+                </div>
+                <div>
+                  <strong>Username:</strong> {sub.username || '-'}
                 </div>
                 <div>
                   <strong>Created:</strong>{' '}
                   {sub.createdAt ? new Date(sub.createdAt).toLocaleString() : '—'}
                 </div>
                 <div>
-                  <strong>Start:</strong>{' '}
-                  {sub.startDate ? new Date(sub.startDate).toLocaleString() : '—'}
-                </div>
-                <div>
-                  <strong>End:</strong> {sub.endDate ? new Date(sub.endDate).toLocaleString() : '—'}
+                  <strong>Expires:</strong>{' '}
+                  {sub.expiring_at ? new Date(sub.expiring_at).toLocaleString() : '—'}
                 </div>
               </div>
               <div className="flex flex-row gap-3 mt-4 w-full">

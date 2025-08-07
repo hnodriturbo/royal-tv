@@ -15,8 +15,9 @@
 // ✅ Import core logic for this page
 import logger from '@/lib/logger';
 import { useEffect, useMemo, useCallback, useState } from 'react';
-import { useParams, notFound, useRouter } from 'next/navigation';
+import { useParams, notFound, useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+
 import axiosInstance from '@/lib/axiosInstance'; // 🪄 Custom axios instance
 import useAuthGuard from '@/hooks/useAuthGuard'; // 🛡️ Guard
 import useAppHandlers from '@/hooks/useAppHandlers'; // 🛠️ Loader/message
@@ -30,6 +31,9 @@ import PaymentInstructions from '@/packages/data/PaymentInstructions'; // 📝 C
 export default function PackageBuyNowPage() {
   // 🌈 Get the slug from URL params
   const { slug } = useParams();
+
+  // 🖥️ Search params for getting values from the url
+  const searchParams = useSearchParams();
 
   // 🗺️ Next router for navigation
   const router = useRouter();
@@ -58,13 +62,15 @@ export default function PackageBuyNowPage() {
   // 🚧 If package not found, show 404
   if (!paymentPackage) return notFound();
 
+  // 🧠 Get user-selected options from query params in the URL
+  const adult = searchParams.get('adult') === '1';
+  const enable_vpn = searchParams.get('vpn') === '1';
+  const customPrice = Number(searchParams.get('price'));
+  const price = Number.isFinite(customPrice) ? customPrice : paymentPackage.price;
+
   // 👂 Listen for transactionFinished event from socket server
   const { onTransactionFinished } = useSocketHub();
-  /* 
-  // 🛠️ Create notification helpers -- NOT IN USE! server handles creating these notifications now
-  const { createSubscriptionCreatedNotification, createPaymentReceivedNotification } =
-    useCreateNotifications();
- */
+
   // 🌐 Store widgetUrl for iframe
   const [widgetUrl, setWidgetUrl] = useState(null);
 
@@ -77,8 +83,10 @@ export default function PackageBuyNowPage() {
       const { data } = await axiosInstance.post('/api/nowpayments/create-invoice', {
         package_slug: paymentPackage.slug,
         order_description: paymentPackage.order_description,
-        price: paymentPackage.price,
-        customer_email: session.user.email || undefined
+        price,
+        customer_email: session.user.email || undefined,
+        adult,
+        enable_vpn
       });
 
       if (data.widget_url && data.order_id) {
@@ -95,7 +103,7 @@ export default function PackageBuyNowPage() {
     } finally {
       hideLoader();
     }
-  }, [session?.user, paymentPackage, showLoader, hideLoader, displayMessage]);
+  }, [session?.user, paymentPackage, price, adult, enable_vpn]);
 
   // 🕹️ Run once after login & allowed & package found
   useEffect(() => {
@@ -105,30 +113,7 @@ export default function PackageBuyNowPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, isAllowed]);
 
-  /**
-   * This is older version of transactionFinished where this created the notifications
-   * and sent them and emails to user and admin. Now this is handled purely by
-   * emit/transactionFinished on the socket server.
-   * 
-  // 👂 Listen for real-time payment success
-  useEffect(() => {
-    const unsubscribe = onTransactionFinished(({ user, payment, subscription }) => {
-      displayMessage('✅ Payment received! Subscription is pending admin approval.', 'success');
-      createPaymentReceivedNotification(user, payment);
-      createSubscriptionCreatedNotification(user, subscription);
-      router.push('/user/subscriptions?paymentSuccess=1');
-    });
-    return unsubscribe;
-  }, [
-    onTransactionFinished,
-    router,
-    createPaymentReceivedNotification,
-    createSubscriptionCreatedNotification,
-    displayMessage
-  ]);
- */
-  // 🚦 Only handle real-time UI updates, do NOT trigger notification/email here!
-
+  // 🚦 Handle real-time UI updates - UPDATE PAYMENT STATUS &
   useEffect(() => {
     if (!currentOrderId) return;
     // 1. Listen for backend real-time updates
@@ -156,7 +141,7 @@ export default function PackageBuyNowPage() {
     onSubscriptionPaymentStatus
   ]);
 
-  // All notifications/emails are now sent from the backend when transaction is finished.
+  // Send the notifications and emails using backend when transactionFinished
   useEffect(() => {
     const unsubscribeFromTransactionFinished = onTransactionFinished(() => {
       // 🎉 Show user a toast and redirect to their subscriptions page
@@ -187,7 +172,7 @@ export default function PackageBuyNowPage() {
           Buy {paymentPackage.order_description} Subscription
         </h1>
         <p className="text-4xl text-cyan-200 mb-4">
-          Only <span className="font-bold text-yellow-300">${paymentPackage.price}</span>
+          Only <span className="font-bold text-yellow-300">${price}</span>
         </p>
         {/* ⚠️ User pays all BTC transaction fees - transparent info */}
         <p className="text-lg text-red-400 mb-4 border border-red-600 bg-red-950 rounded-xl p-3 font-semibold">

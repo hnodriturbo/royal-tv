@@ -11,7 +11,7 @@
  */
 
 import Link from 'next/link';
-
+import { useState } from 'react';
 /**
  * Royal TV Payment Packages & Shared Features
  * ==========================================
@@ -20,37 +20,27 @@ import Link from 'next/link';
 export const packageFeatures = [
   'Full HD Channels',
   'Premium Movies & Sports',
-  '24/7 Support',
   '20,000 channels from all over the world',
-  'Premium service'
-  /* 'Adult content for extra 10$' */
+  'All Icelandic Channels Included!',
+  'VPN on your connection for extra 10$',
+  'Adult content for extra 10$'
 ];
 
 // 💰 Main packages array, auto-generates detailsUrl and buyNowUrl
 export const paymentPackages = [
-  /*   {
-    slug: 'tester',
-    order_id: 'tester',
-    order_description: 'Tester Period',
-    devices: 1,
-    price: 30
-    megaPackageId: 1,
-    megaTemplateId: 7,
-    paid: true
-  }, */
   {
     id: 1,
-    slug: 'trial_4h',
-    order_id: 'trial_4h',
-    order_description: '4-Hour Trial',
-    duration: '4 Hours',
+    slug: '3m',
+    order_id: '3m',
+    order_description: '3 Months',
+    duration: '3 Months',
     devices: 1,
-    price: 0,
-    package_id: 1,
-
-    paid: false,
-    isTrial: true
+    price: 40,
+    package_id: 6,
+    paid: true,
+    isTrial: false
   },
+
   {
     id: 2,
     slug: 'trial_24h',
@@ -60,7 +50,7 @@ export const paymentPackages = [
     devices: 1,
     price: 0,
     package_id: 2,
-    paid: 1,
+    paid: true,
     isTrial: true
   },
   {
@@ -72,8 +62,7 @@ export const paymentPackages = [
     devices: 1,
     price: 80,
     package_id: 3,
-    paid: true,
-    isTrial: false
+    paid: true
   },
   {
     id: 4,
@@ -84,8 +73,7 @@ export const paymentPackages = [
     devices: 2,
     price: 120,
     package_id: 3,
-    paid: true,
-    isTrial: false
+    paid: true
   },
   {
     id: 5,
@@ -96,8 +84,7 @@ export const paymentPackages = [
     devices: 1,
     price: 140,
     package_id: 5,
-    paid: true,
-    isTrial: false
+    paid: true
   },
   {
     id: 6,
@@ -108,8 +95,7 @@ export const paymentPackages = [
     devices: 2,
     price: 200,
     package_id: 5,
-    paid: true,
-    isTrial: false
+    paid: true
   }
 ].map((pkg) => ({
   ...pkg,
@@ -117,41 +103,67 @@ export const paymentPackages = [
   buyNowUrl: `/packages/${pkg.slug}/buyNow`
 }));
 
+/**
+ * PackagesGrid
+ * Main export, renders all non-trial packages.
+ * Each card gets checkboxes for add-ons and calculates total price.
+ */
 const PackagesGrid = ({ authenticated }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-8 w-full max-w-6xl mx-auto justify-center items-center justify-items-center">
     {paymentPackages
-      .filter((pkg) => pkg.id !== 1 && pkg.id !== 2)
+      .filter((pkg) => !pkg.isTrial)
       .map((pkg) => (
-        <div
-          key={pkg.slug}
-          className="justify-center
-          relative border-2 max-w-2xl
-          container-style rounded-2xl p-8 flex flex-col items-center shadow-2xl
-          transition-transform duration-300 hover:-translate-y-2 hover:scale-102 hover:shadow-[0_8px_40px_0_rgba(0,0,0,0.40)]
-          backdrop-blur-lg
-        "
-        >
-          {/* 🏷️ Device Badge */}
-          <div className="absolute top-4 right-4 bg-wonderful-4 text-black px-3 py-1 rounded-full text-xs font-bold shadow-lg uppercase">
-            {pkg.devices === 1 ? 'Single Device' : '2 Devices'}
-          </div>
-          {/* 🏆 Name */}
-          <h3 className="text-3xl font-bold text-yellow-300 mb-2 drop-shadow-xl">
-            {pkg.order_description}
-          </h3>
-          {/* 💵 Price */}
-          <div className="mb-2 flex items-center gap-2">
-            <span className="text-3xl font-extrabold text-pink-400 drop-shadow-lg">
-              ${pkg.price}
-            </span>
-            <span className="text-lg font-semibold text-white/80">USD</span>
-          </div>
-          {/* ⏳ Duration */}
-          <div className="mb-1 text-lg text-blue-200 font-bold tracking-wide uppercase">
-            {pkg.duration}
-          </div>
-          {/* 🎁 Shared Features */}
-          <ul className="mb-6 mt-2 text-cyan-100 text-base font-medium space-y-1 text-left w-full max-w-[260px]">
+        <PackageCard key={pkg.slug} pkg={pkg} authenticated={authenticated} />
+      ))}
+  </div>
+);
+
+function PackageCard({ pkg, authenticated }) {
+  // 🧩 Add-on states (Adult/VPN)
+  const [adultChecked, setAdultChecked] = useState(false);
+  const [vpnChecked, setVpnChecked] = useState(false);
+
+  // 💰 Calculate total price based on selections
+  const totalPrice = pkg.price + (adultChecked ? 10 : 0) + (vpnChecked ? 10 : 0);
+
+  // 🔗 Prepare buyNow URL with selected options
+  const buyNowUrl = `${pkg.buyNowUrl}?adult=${adultChecked ? 1 : 0}&vpn=${vpnChecked ? 1 : 0}&price=${totalPrice}`;
+
+  return (
+    // ✅ Render the package details html
+    <div
+      className="justify-center
+        relative border-2 max-w-2xl
+        container-style rounded-2xl p-8 flex flex-col items-center shadow-2xl
+        transition-transform duration-300 hover:-translate-y-2 hover:scale-102 hover:shadow-[0_8px_40px_0_rgba(0,0,0,0.40)]
+        backdrop-blur-lg
+        min-h-fit max-h-[200px]"
+    >
+      {/* 🏷️ Device badge */}
+      <div className="absolute top-4 right-4 bg-wonderful-4 text-black px-3 py-1 rounded-full text-xs font-bold shadow-lg uppercase">
+        {pkg.devices === 1 ? 'Single Device' : '2 Devices'}
+      </div>
+      {/* 🏆 Package name */}
+      <h3 className="text-3xl font-bold text-yellow-300 mb-2 drop-shadow-xl text-glow-amber">
+        {pkg.order_description}
+      </h3>
+
+      {/* 💵 Base price */}
+      <div className="mb-2 flex items-center gap-2">
+        <span className="text-3xl font-extrabold text-pink-400 drop-shadow-lg text-glow-purple">
+          ONLY ${pkg.price}
+        </span>
+        <span className="text-2xl font-semibold text-glow-purple">USD</span>
+      </div>
+      {/* ⏳ Duration */}
+      {/*       <div className="mb-1 text-lg text-blue-200 font-bold tracking-wide uppercase">
+        {pkg.duration}
+      </div> */}
+      {/* 📦 Centered Card */}
+      <div className="flex flex-col items-center justify-center w-full mb-4">
+        <div className="max-w-lg w-full mx-auto bg-black/50 rounded-2xl p-6 shadow-xl">
+          {/* 📝 Features list, left-aligned with left padding */}
+          <ul className="mb-6 mt-2 text-cyan-100 text-base font-medium space-y-1 text-left pl-6">
             {packageFeatures.map((feature, i) => (
               <li key={i} className="flex items-center gap-2">
                 <span className="text-wonderful-5">✔️</span>
@@ -159,30 +171,63 @@ const PackagesGrid = ({ authenticated }) => (
               </li>
             ))}
           </ul>
-          {/* 🔗 Buttons */}
-          <div className="flex flex-col gap-2 w-full mt-auto">
-            {authenticated ? (
-              <Link href={pkg.buyNowUrl} className="w-full">
-                <button className="btn-primary w-full py-3 rounded-xl font-bold text-xl tracking-wide shadow-xl transition hover:scale-105">
-                  Buy Now
-                </button>
-              </Link>
-            ) : (
-              <Link href="/auth/signup" className="w-full">
-                <button className="btn-secondary w-full py-3 rounded-xl font-bold text-xl tracking-wide shadow-xl transition hover:scale-105">
-                  Register to Buy
-                </button>
-              </Link>
+
+          {pkg.devices === 2 && (
+            <div className="flex items-center gap-2 text-green-300 font-bold pl-6 mb-3">
+              <span className="text-green-500">🖥️</span>
+              Watch on 2 devices at once
+            </div>
+          )}
+          {/* 🗳️ Add-on checkboxes, also left-aligned with left padding */}
+          <div className="flex flex-col gap-1 w-full mb-3 text-left pl-6">
+            <label className="flex items-center gap-2">
+              Adult content (+$10)
+              <input
+                type="checkbox"
+                checked={adultChecked}
+                onChange={() => setAdultChecked(!adultChecked)}
+              />
+            </label>
+            {adultChecked && (
+              <div className="ml-6 mt-2 text-sm text-pink-200">
+                Unlocks <span className="font-bold text-yellow-300">200+ Adult Live Channels</span>
+                <br />& unlimited adult movies, exclusive on Royal TV.
+              </div>
             )}
-            <Link href={pkg.detailsUrl} className="w-full">
-              <button className="btn-info w-full py-3 rounded-xl font-bold text-lg tracking-wide shadow-lg hover:scale-105">
-                More Info
-              </button>
-            </Link>
+            <label className="flex items-center gap-2 text-white">
+              VPN protection (+$10)
+              <input
+                type="checkbox"
+                checked={vpnChecked}
+                onChange={() => setVpnChecked(!vpnChecked)}
+              />
+            </label>
           </div>
         </div>
-      ))}
-  </div>
-);
+      </div>
 
+      {/* 🔗 Buttons */}
+      <div className="flex flex-col gap-2 w-full mt-auto">
+        {authenticated ? (
+          <Link href={buyNowUrl} className="w-full">
+            <button className="btn-primary w-full py-3 rounded-xl font-bold text-xl tracking-wide shadow-xl transition hover:scale-105">
+              Buy Now
+            </button>
+          </Link>
+        ) : (
+          <Link href="/auth/signup" className="w-full">
+            <button className="btn-secondary w-full py-3 rounded-xl font-bold text-xl tracking-wide shadow-xl transition hover:scale-105">
+              Register to Buy
+            </button>
+          </Link>
+        )}
+        <Link href={pkg.detailsUrl} className="w-full">
+          <button className="btn-info w-full py-3 rounded-xl font-bold text-lg tracking-wide shadow-lg hover:scale-105">
+            More Info
+          </button>
+        </Link>
+      </div>
+    </div>
+  );
+}
 export default PackagesGrid;

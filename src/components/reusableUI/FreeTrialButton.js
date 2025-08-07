@@ -1,91 +1,91 @@
 /**
- *   ===================== FreeTrialButton.js =====================
- * 🆓
- * FREE TRIAL BUTTON (status-only version)
- * - Shows correct UI for free trial status string.
- * ==============================================================
- * ⚙️ PROPS:
- *   freeTrialStatus: string|null // One of: null, 'pending', 'active', 'disabled', etc.
- *   loading: boolean
- *   error: string|null
- *   onClick: func
- * ==============================================================
+ * ===========================================
+ * FreeTrialButton.js
+ * 🎟️ Free Trial Request Button (with Modal)
+ * -------------------------------------------
+ * - Lets user request a free trial (one time)
+ * - Shows confirmation modal before action
+ * - Uses app-wide loader and displayMessage
+ * - Notifies user on success/fail
+ * ===========================================
  */
 
-import Link from 'next/link';
+'use client';
 
-export default function FreeTrialButton({ freeTrialStatus, loading, error, onClick }) {
-  // 1️⃣ No trial exists: Show request button
-  if (!freeTrialStatus) {
-    return (
-      <div>
-        <button
-          onClick={onClick}
-          disabled={loading}
-          className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg mb-4 disabled:opacity-50 cursor-pointer"
-        >
-          {loading ? 'Requesting…' : 'Request My Free Trial'}
-        </button>
-        {error && <p className="text-red-500 mt-2">{error}</p>}
-      </div>
-    );
-  }
+import { useState } from 'react';
+import useModal from '@/hooks/useModal'; // 🌟 Modal hook for confirmation
+import useAppHandlers from '@/hooks/useAppHandlers'; // 🛠️ App handler for loader/messages
+import axiosInstance from '@/lib/axiosInstance';
 
-  // 2️⃣ Pending status
-  if (freeTrialStatus === 'pending') {
-    return (
-      <div className="px-4 py-3 bg-yellow-300 text-yellow-900 rounded-xl mb-4 w-2/3">
-        {/* ⏳ Pending message */}
-        <div>⏳ Your free trial request is pending. You’ll be notified within 24 hours.</div>
-        <div className="mt-2 w-full">
-          <Link href="/user/freeTrials" className="btn-success w-1/2">
-            View Your Free Trial Status
-          </Link>
-        </div>
-      </div>
-    );
-  }
+export default function FreeTrialButton({ user_id, refreshStatus }) {
+  // 🌀 Local loading state
+  const [loading, setLoading] = useState(false);
 
-  // 3️⃣ Active status
-  if (freeTrialStatus === 'active') {
-    return (
-      <div className="px-4 py-3 bg-green-300 text-green-800 rounded-xl mb-4 w-2/3">
-        {/* ✅ Active message */}
-        <div>✅ Your free trial is active! Use the button below!.</div>
-        <div className="mt-2 w-full">
-          <Link href="/user/freeTrials" className="btn-success w-1/2">
-            View Your Free Trial Credentials
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // 🔮 Modal handlers
+  const { openModal, hideModal } = useModal();
 
-  // 4️⃣ Disabled/Expired status
-  if (freeTrialStatus === 'disabled') {
-    return (
-      <div className="px-4 py-3 bg-red-300 text-gray-600 rounded-xl mb-4 w-2/3">
-        {/* ⏳ Expired message */}
-        <div>🚫 Your free trial has expired.</div>
-        <div className="mt-2 w-full">
-          <Link href="/user/freeTrials" className="btn-success w-1/2">
-            View Your Free Trial Info
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // 🛠️ App-wide feedback
+  const { showLoader, hideLoader, displayMessage } = useAppHandlers();
 
-  // 5️⃣ Fallback for unknown status
+  // 🖱️ Button click: open confirm modal first!
+  const handleOpenModal = () => {
+    openModal('confirmFreeTrial', {
+      title: 'Confirm Free Trial Request',
+      description:
+        'Are you sure you want to request your free trial? You can only get one per account. You will be notified as soon as it is ready! 🎉',
+      confirmButtonType: 'Purple',
+      confirmButtonText: 'Yes, request my free trial!',
+      cancelButtonText: 'Cancel',
+      onConfirm: handleRequestTrial, // Will call the actual API logic below
+      onCancel: () => hideModal()
+    });
+  };
+
+  // 🚀 The actual free trial API logic (called from modal onConfirm)
+  const handleRequestTrial = async () => {
+    setLoading(true);
+    showLoader({ text: 'Requesting your free trial…' }); // ⏳
+
+    try {
+      await axiosInstance.post('/api/megaott/freeTrial', {});
+      displayMessage(
+        '✅ Free trial requested! You will receive a notification when it is ready.',
+        'success'
+      );
+      refreshStatus && refreshStatus(); // 🔄
+      hideModal(); // 🧹
+    } catch (err) {
+      displayMessage(
+        `❗ ${err.response?.data?.error || 'Trial request failed. Try again later.'}`,
+        'error'
+      );
+    } finally {
+      setLoading(false);
+      hideLoader();
+    }
+  };
+
   return (
-    <div className="px-4 py-3 bg-gray-100 text-gray-600 rounded-xl mb-4 w-2/3">
-      {/* ⚠️ Unknown status */}
-      <div>⚠️ Unknown free trial status.</div>
-      <div className="mt-2 w-full">
-        <Link href="/user/freeTrials" className="btn-success w-1/2">
-          View Your Free Trial Info
-        </Link>
-      </div>
-    </div>
+    <button
+      className="w-full py-4 mt-4 text-xl font-bold rounded-2xl shadow-lg 
+                flex items-center justify-center transition-all duration-300 
+                bg-purple-600 hover:bg-purple-800 active:bg-purple-900 
+                ring-2 ring-purple-400 hover:scale-105 focus:outline-none 
+                focus:ring-4 focus:ring-purple-500"
+      disabled={loading}
+      onClick={handleOpenModal} // or handleRequestTrial, if no modal
+    >
+      {loading ? (
+        <>
+          <span className="animate-spin mr-3">⏳</span>
+          Requesting…
+        </>
+      ) : (
+        <>
+          <span>🎟️</span>
+          <span className="ml-3">Request Free Trial</span>
+        </>
+      )}
+    </button>
   );
 }

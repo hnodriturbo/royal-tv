@@ -5,6 +5,7 @@
  * - Triggers all core notification types in Royal TV.
  * - Always sends user and data separately.
  * - Backend merges and shapes the data for templates.
+ * - Templates now only use "created" for subscription/trial as those are instantly active!
  * ================================================================
  */
 
@@ -13,28 +14,20 @@ import useSocketHub from '@/hooks/socket/useSocketHub';
 
 // 🏰 Royal TV: One source of truth for all notifications!
 export function useCreateNotifications() {
-  // 🎛️ Grab notification emitters from socket hub
+  // 🎛️ Get socket notification emitters
   const { createNotificationForBoth, createNotificationForAdmin, createNotificationForUser } =
     useSocketHub();
 
-  // 1️⃣ Free trial requested (both)
-  const createFreeTrialRequestedNotification = useCallback(
+  // 🎁 Free trial created & active (both)
+  const createFreeTrialCreatedNotification = useCallback(
     (user, freeTrial) => {
       // 📤 Backend merges user + freeTrial for templates!
-      createNotificationForBoth('freeTrial', 'requested', user, freeTrial);
+      createNotificationForBoth('freeTrial', 'created', user, freeTrial);
     },
     [createNotificationForBoth]
   );
 
-  // 2️⃣ Free trial activated (both)
-  const createFreeTrialActivatedNotification = useCallback(
-    (user, freeTrial) => {
-      createNotificationForBoth('freeTrial', 'activated', user, freeTrial);
-    },
-    [createNotificationForBoth]
-  );
-
-  // 3️⃣ Subscription created (both)
+  // 📦 Subscription created & active (both)
   const createSubscriptionCreatedNotification = useCallback(
     (user, subscription) => {
       createNotificationForBoth('subscription', 'created', user, subscription);
@@ -42,15 +35,7 @@ export function useCreateNotifications() {
     [createNotificationForBoth]
   );
 
-  // 4️⃣ Subscription activated (both)
-  const createSubscriptionActivatedNotification = useCallback(
-    (user, subscription) => {
-      createNotificationForBoth('subscription', 'activated', user, subscription);
-    },
-    [createNotificationForBoth]
-  );
-
-  // 5️⃣ Payment received (both)
+  // 💸 Payment received (both)
   const createPaymentReceivedNotification = useCallback(
     (user, payment) => {
       createNotificationForBoth('payment', null, user, payment);
@@ -58,7 +43,7 @@ export function useCreateNotifications() {
     [createNotificationForBoth]
   );
 
-  // 6️⃣ Live chat message (both: admin & user)
+  // 💬 Live chat message (both: admin & user)
   const createLiveChatMessageNotification = useCallback(
     (user, message, conversation) => {
       createNotificationForBoth('liveChatMessage', null, user, {
@@ -69,10 +54,9 @@ export function useCreateNotifications() {
     [createNotificationForBoth]
   );
 
-  // 7️⃣ Live chat message (admin only)
+  // 🛠️ Live chat message (admin only)
   const createLiveChatMessageNotificationForAdminOnly = useCallback(
     (user, message, conversation) => {
-      // 💡 Always send user as separate param or inside payload (backend expects user, data)
       createNotificationForAdmin('liveChatMessage', null, user, {
         ...(message || {}),
         ...(conversation || {})
@@ -81,7 +65,7 @@ export function useCreateNotifications() {
     [createNotificationForAdmin]
   );
 
-  // 8️⃣ Live chat message (user only)
+  // 🗣️ Live chat message (user only)
   const createLiveChatMessageNotificationForUserOnly = useCallback(
     (user, message, conversation) => {
       createNotificationForUser('liveChatMessage', null, user, {
@@ -92,7 +76,7 @@ export function useCreateNotifications() {
     [createNotificationForUser]
   );
 
-  // 9️⃣ User registration (both)
+  // 🧑 User registration (both)
   const createUserRegistrationNotification = useCallback(
     (user) => {
       createNotificationForBoth('newUserRegistration', null, user, {});
@@ -100,12 +84,10 @@ export function useCreateNotifications() {
     [createNotificationForBoth]
   );
 
-  // 🛎️ Return all Royal TV notification creators
+  // 🛎️ Return all notification creators for Royal TV
   return {
-    createFreeTrialRequestedNotification,
-    createFreeTrialActivatedNotification,
+    createFreeTrialCreatedNotification,
     createSubscriptionCreatedNotification,
-    createSubscriptionActivatedNotification,
     createPaymentReceivedNotification,
     createLiveChatMessageNotification,
     createLiveChatMessageNotificationForAdminOnly,
