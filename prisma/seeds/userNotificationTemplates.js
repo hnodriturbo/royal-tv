@@ -1,3 +1,12 @@
+/**
+ * 📲 User Notification Templates for Royal TV
+ * -------------------------------------------
+ * Generates notification objects for user-facing events:
+ *   - Registration, free trial, subscription, payment, chat
+ *
+ * ⚡ These are used for both app notifications and transactional emails.
+ * Each object includes a title, message body, and a relevant link for user action.
+ */
 import { NotificationType } from './notificationTypes.js';
 
 // 📅 Helper for nice date formatting
@@ -13,116 +22,81 @@ const formatDate = (date) =>
     : 'N/A';
 
 export const userNotificationTemplates = {
-  /**
-   * 🎉 Registration Success
-   * - Welcome notification when user registers.
-   */
+  // 🎉 Registration success/welcome
   [NotificationType.NEW_USER_REGISTRATION]: (data) => ({
     title: '🎉 Welcome to Royal IPTV!',
     body:
-      `Hello${data.name ? ` ${data.name}` : ''}, and thank you for joining Royal IPTV! 🎊\n` +
-      `Your account (${data.email || 'no email'}) was created on ${formatDate(data.createdAt)}.\n` +
+      `Hello ${data.name ? `${data.name}` : ''}, and thank you for joining Royal IPTV! 🎊\n` +
+      `Your account (${data.email || ''}) was created on ${formatDate(data.createdAt)}.\n` +
       (data.username ? `Username: ${data.username}\n` : '') +
       (data.preferredContactWay ? `Preferred contact: ${data.preferredContactWay}\n` : '') +
-      `\n👉 Request your free trial to start watching—just open your dashboard!\n` +
+      (data.sendEmails
+        ? 'We will send you notifications as email also.\n'
+        : 'We will only send you notifications on your dashboard and not emails.\n') +
+      `\n👉 Request your free trial by clicking the request free trial button!\n` +
       `If you have questions, login and use Live Chat for help!`,
-    link: null
+    link: `/user/profile`
   }),
 
-  /**
-   * 1️⃣ Free Trial Requested
-   * - User has requested a free trial.
-   */
-  [`${NotificationType.FREE_TRIAL}_requested`]: (data) => ({
-    title: '⏳ Free Trial Requested',
+  // 🎁 Free trial info & credentials (user)
+  [`${NotificationType.FREE_TRIAL}_created`]: (data) => ({
+    title: '🎁 Your Free Trial Information!',
     body:
-      `We received your request for a free 24-hour trial on ${formatDate(data.createdAt)}.\n` +
-      `Status: ${data.status || 'pending'}.\n` +
-      (data.preferredContactWay ? `We’ll contact you via: ${data.preferredContactWay}\n` : '') +
-      `We'll notify you as soon as your trial is active.\n` +
-      `Questions? Login and use Live Chat to get instant support!`,
-    link: '/user/freeTrials'
-  }),
-
-  /**
-   * 2️⃣ Free Trial Activated
-   * - User’s free trial is now active.
-   */
-  [`${NotificationType.FREE_TRIAL}_activated`]: (data) => ({
-    title: '🎁 Free Trial Activated!',
-    body:
-      `Your free 24-hour trial is now active as of ${formatDate(data.activatedAt || data.startDate || data.updatedAt)}.\n` +
-      `Status: ${data.status || 'active'}\n` +
-      (data.startDate ? `Starts: ${formatDate(data.startDate)}\n` : '') +
-      (data.endDate ? `Expires: ${formatDate(data.endDate)}\n` : '') +
-      (data.free_trial_username ? `Username: ${data.free_trial_username}\n` : '') +
-      (data.free_trial_password ? `Password: ${data.free_trial_password}\n` : '') +
-      (data.free_trial_url ? `URL: ${data.free_trial_url}\n` : '') +
-      `\nUse these credentials in your favorite IPTV app.\n` +
-      `Need help? Login and use Live Chat!`,
+      `Hi ${data.name ? `${data.name}` : ''}!\n\n` +
+      `Your free trial will automatically be activated on your first official login.\n` +
+      (data.package_name ? `• Package: ${data.package_name}\n` : '') +
+      `• Expires exactly 1 day after you first login! So use your time wisely and try to enjoy Royal IPTV to the full.\n` +
+      (data.username ? `• Username: ${data.username}\n` : '') +
+      (data.password ? `• Password: ${data.password}\n` : '') +
+      (data.dns_link ? `• DNS: ${data.dns_link}\n` : '') +
+      (data.dns_link_for_samsung_lg ? `• Samsung/LG DNS: ${data.dns_link_for_samsung_lg}\n` : '') +
+      (data.portal_link ? `• Portal Link: ${data.portal_link}\n` : '') +
+      `\n🎬 Use these credentials in your IPTV app to enjoy your free trial right away!\n` +
+      `Need help? Login and use Live Chat for support.`,
     link: `/user/freeTrials`
   }),
 
-  /**
-   * 1️⃣ Subscription Created
-   * - User has placed a new subscription order.
-   */
+  // 📦 Subscription created & credentials (user)
   [`${NotificationType.SUBSCRIPTION}_created`]: (data) => ({
-    title: '🆕 Subscription Created',
+    title: '🎉 Subscription Ready – Start Watching Now!',
     body:
-      `Your new subscription was created on ${formatDate(data.createdAt)}.\n` +
-      (data.order_id ? `Order ID: ${data.order_id}\n` : '') +
-      `Status: ${data.status || 'pending'}\n` +
-      `\n👉 Please complete payment if you haven't already.\n` +
-      `We'll activate your subscription and send your login details as soon as payment is confirmed!\n` +
+      `Hi ${data.name ? `${data.name}` : ''}!\n\n` +
+      `Your subscription was created as of ${formatDate(data.createdAt)}.\n` +
+      (data.package_name || data.package?.name
+        ? `• Package: ${data.package_name || data.package?.name}\n`
+        : '') +
+      (data.order_description ? `• Order: ${data.order_description}\n` : '') +
+      (data.expiring_at ? `• Expires: ${formatDate(data.expiring_at)}\n` : '') +
+      (data.dns_link ? `• DNS: ${data.dns_link}\n` : '') +
+      (data.dns_link_for_samsung_lg ? `• Samsung/LG DNS: ${data.dns_link_for_samsung_lg}\n` : '') +
+      (data.max_connections ? `• Devices Allowed: ${data.max_connections}\n` : '') +
+      `\n🚀 Use these credentials in your IPTV app and start watching immediately!\n` +
       `Need help? Login and use Live Chat for support.`,
-    link: '/user/subscriptions'
-  }),
-
-  /**
-   * 2️⃣ Subscription Activated
-   * - User’s subscription is now fully active.
-   */
-  [`${NotificationType.SUBSCRIPTION}_activated`]: (data) => ({
-    title: '🟢 Subscription Active',
-    body:
-      `Your subscription is now fully active!\n` +
-      (data.plan_name ? `Plan: ${data.plan_name}\n` : '') +
-      (data.startDate ? `Start: ${formatDate(data.startDate)}\n` : '') +
-      (data.endDate ? `Expires: ${formatDate(data.endDate)}\n` : '') +
-      `Status: ${data.status || 'active'}\n` +
-      (data.subscription_username ? `Username: ${data.subscription_username}\n` : '') +
-      (data.subscription_password ? `Password: ${data.subscription_password}\n` : '') +
-      (data.subscription_url ? `URL: ${data.subscription_url}\n` : '') +
-      (data.subscription_other ? `Other: ${data.subscription_other}\n` : '') +
-      `\n🚀 Enter these details into your IPTV app to start watching now.\n` +
-      `If you need help, login and use Live Chat for fastest support!`,
     link: `/user/subscriptions`
   }),
 
-  /**
-   * 💸 Payment Confirmed
-   * - Payment for user’s subscription was successful.
-   */
+  // 💸 Payment confirmed receipt (user)
   [NotificationType.PAYMENT]: (data) => ({
     title: '💸 Payment Confirmed',
     body:
-      `Thank you! We received ${data.amount_paid ? `${data.amount_paid} ${data.currency || ''}` : 'your payment'} for order #${data.order_id || 'N/A'}.\n` +
-      `Status: ${data.status || 'completed'}.\n` +
-      (data.pay_currency ? `Payment currency: ${data.pay_currency}\n` : '') +
-      (data.network ? `Network: ${data.network}\n` : '') +
-      (data.pay_address ? `Payment address: ${data.pay_address}\n` : '') +
-      (data.invoice_id ? `Invoice: ${data.invoice_id}\n` : '') +
-      (data.received_at ? `Received at: ${formatDate(data.received_at)}\n` : '') +
+      `Thank you! Your payment for order #${data.order_id || 'N/A'} has been received.\n\n` +
+      (data.amount_paid && data.price_currency
+        ? `• Amount Paid: ${data.amount_paid} ${data.price_currency}\n`
+        : '') +
+      (data.actually_paid && data.pay_currency
+        ? `• Amount Sent (Crypto): ${data.actually_paid} ${data.pay_currency}\n`
+        : '') +
+      (data.network ? `• Network: ${data.network}\n` : '') +
+      (data.pay_address ? `• Payment Address: ${data.pay_address}\n` : '') +
+      (data.invoice_id ? `• Invoice ID: ${data.invoice_id}\n` : '') +
+      (data.received_at ? `• Received: ${formatDate(data.received_at)}\n` : '') +
+      `• Status: ${data.status || 'confirmed'}\n` +
       `\nYou'll get another notification when your subscription is activated.\n` +
       `Questions? Login and use Live Chat!`,
     link: '/user/subscriptions'
   }),
 
-  /**
-   * 💬 Live Chat Message (User)
-   * - Support has sent a reply in Live Chat.
-   */
+  // 💬 Live chat message (user)
   [NotificationType.LIVE_CHAT_MESSAGE]: (data) => ({
     title: '💬 New Live Chat Message',
     body:
@@ -131,5 +105,15 @@ export const userNotificationTemplates = {
       (data.message ? `Message: ${data.message}\n` : '') +
       `\nLogin and use Live Chat for fastest support!`,
     link: `/user/liveChat/${data.conversation_id}`
+  }),
+
+  // 🧯 User error message notification
+  [NotificationType.ERROR]: (data) => ({
+    title: '⚠️ Error occurred',
+    body:
+      (data.errorTitle ? `• Error Title: ${data.errorTitle}\n` : '') +
+      (data.errorMessage ? `• Error Message: ${data.errorMessage}\n` : '') +
+      (data.errorDetails ? `• Details: ${data.errorDetails}\n` : '')
+    /* link: 'N/A' */
   })
 };

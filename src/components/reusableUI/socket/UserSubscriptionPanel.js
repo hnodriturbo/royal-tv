@@ -5,10 +5,12 @@ import useAppHandlers from '@/hooks/useAppHandlers';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 import { paymentPackages } from '@/packages/data/packages';
 
-const packageOptions = paymentPackages.map((packageItem) => ({
-  value: packageItem.slug,
-  label: packageItem.order_description
-}));
+const packageOptions = paymentPackages
+  .filter((pkg) => !pkg.isTrial) // 👈 Exclude free trial
+  .map((packageItem) => ({
+    value: packageItem.slug,
+    label: packageItem.order_description
+  }));
 
 export default function UserSubscriptionPanel({ user_id }) {
   const [subscriptions, setSubscriptions] = useState([]);

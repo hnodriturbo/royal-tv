@@ -9,19 +9,6 @@
 import { NotificationType } from './notificationTypes.js'; // 🎯 Type enum
 import { adminNotificationTemplates } from './adminNotificationTemplates.js'; // 👑 Admin templates
 import { userNotificationTemplates } from './userNotificationTemplates.js'; // 👤 User templates
-console.log(
-  'DEBUG: NotificationType.NEW_USER_REGISTRATION:',
-  NotificationType.NEW_USER_REGISTRATION
-);
-console.log('DEBUG: adminNotificationTemplates keys:', Object.keys(adminNotificationTemplates));
-console.log(
-  'DEBUG: adminNotificationTemplates["newUserRegistration"]:',
-  adminNotificationTemplates['newUserRegistration']
-);
-console.log(
-  'DEBUG: typeof adminNotificationTemplates["newUserRegistration"]:',
-  typeof adminNotificationTemplates['newUserRegistration']
-);
 
 // 🧩 Utility for interpolating tokens in text (for future)
 function interpolate(template, data) {
@@ -43,17 +30,11 @@ function mapUserData(user = {}) {
     updatedAt: user.updatedAt
   };
 }
-function mapFreeTrialData(freeTrial = {}, user = {}) {
-  return { ...mapUserData(user), ...freeTrial };
-}
-function mapSubscriptionData(subscription = {}, user = {}) {
-  return { ...mapUserData(user), ...subscription };
-}
-function mapPaymentData(payment = {}, user = {}) {
-  return { ...mapUserData(user), ...payment };
-}
-function mapChatMessageData(message = {}, conversation = {}, user = {}) {
-  return { ...mapUserData(user), ...message, ...conversation };
+
+// 🧩 Merge user and payload into a single object
+export function mergeUserAndPayload(user = {}, payload = {}) {
+  // 🟢 User fields merged first, payload fields can overwrite or add
+  return { ...mapUserData(user), ...payload };
 }
 
 // 🟢 SAFETY WRAPPER: Ensure every notification template is a function
@@ -68,10 +49,14 @@ function safeTemplateCall(templates, key, data, errorCtx) {
   return fn(data);
 }
 
-// 👤 USER Notification Builders
+/**
+ * 👤 USER Notification Builders
+ * ✨ Always (user, payload)
+ */
 export const userNotificationBuilder = {
   newUserRegistration: (user) => {
-    const data = mapUserData(user);
+    // 🧩 Only user data for registration
+    const data = mergeUserAndPayload(user);
     const template = safeTemplateCall(
       userNotificationTemplates,
       NotificationType.NEW_USER_REGISTRATION,
@@ -85,8 +70,9 @@ export const userNotificationBuilder = {
       type: NotificationType.NEW_USER_REGISTRATION
     };
   },
-  freeTrialRequested: (freeTrial, user) => {
-    const data = mapFreeTrialData(freeTrial, user);
+
+  freeTrialRequested: (user, freeTrial) => {
+    const data = mergeUserAndPayload(user, freeTrial);
     const key = `${NotificationType.FREE_TRIAL}_requested`;
     const template = safeTemplateCall(userNotificationTemplates, key, data, 'free trial requested');
     return {
@@ -96,8 +82,9 @@ export const userNotificationBuilder = {
       type: NotificationType.FREE_TRIAL
     };
   },
-  freeTrialActivated: (freeTrial, user) => {
-    const data = mapFreeTrialData(freeTrial, user);
+
+  freeTrialActivated: (user, freeTrial) => {
+    const data = mergeUserAndPayload(user, freeTrial);
     const key = `${NotificationType.FREE_TRIAL}_activated`;
     const template = safeTemplateCall(userNotificationTemplates, key, data, 'free trial activated');
     return {
@@ -107,8 +94,9 @@ export const userNotificationBuilder = {
       type: NotificationType.FREE_TRIAL
     };
   },
-  subscriptionCreated: (subscription, user) => {
-    const data = mapSubscriptionData(subscription, user);
+
+  subscriptionCreated: (user, subscription) => {
+    const data = mergeUserAndPayload(user, subscription);
     const key = `${NotificationType.SUBSCRIPTION}_created`;
     const template = safeTemplateCall(userNotificationTemplates, key, data, 'subscription created');
     return {
@@ -118,8 +106,9 @@ export const userNotificationBuilder = {
       type: NotificationType.SUBSCRIPTION
     };
   },
-  subscriptionActivated: (subscription, user) => {
-    const data = mapSubscriptionData(subscription, user);
+
+  subscriptionActivated: (user, subscription) => {
+    const data = mergeUserAndPayload(user, subscription);
     const key = `${NotificationType.SUBSCRIPTION}_activated`;
     const template = safeTemplateCall(
       userNotificationTemplates,
@@ -134,8 +123,9 @@ export const userNotificationBuilder = {
       type: NotificationType.SUBSCRIPTION
     };
   },
-  paymentReceived: (payment, user) => {
-    const data = mapPaymentData(payment, user);
+
+  paymentReceived: (user, payment) => {
+    const data = mergeUserAndPayload(user, payment);
     const template = safeTemplateCall(
       userNotificationTemplates,
       NotificationType.PAYMENT,
@@ -149,8 +139,9 @@ export const userNotificationBuilder = {
       type: NotificationType.PAYMENT
     };
   },
-  liveChatMessage: (message, conversation, user) => {
-    const data = mapChatMessageData(message, conversation, user);
+
+  liveChatMessage: (user, messageAndConversation) => {
+    const data = mergeUserAndPayload(user, messageAndConversation);
     const template = safeTemplateCall(
       userNotificationTemplates,
       NotificationType.LIVE_CHAT_MESSAGE,
@@ -163,13 +154,34 @@ export const userNotificationBuilder = {
       link: template.link,
       type: NotificationType.LIVE_CHAT_MESSAGE
     };
+  },
+
+  // ❌ USER builder for error
+  error: (user = {}, error) => {
+    const data = mergeUserAndPayload(user, error);
+    const template = safeTemplateCall(
+      userNotificationTemplates,
+      NotificationType.ERROR,
+      data,
+      'user error'
+    );
+    return {
+      title: template.title,
+      body: template.body,
+      link: template.link,
+      type: NotificationType.ERROR
+    };
   }
 };
 
-// 👑 ADMIN Notification Builders
+/**
+ * 👑 ADMIN Notification Builders
+ * ✨ Always (user, payload)
+ */
 export const adminNotificationBuilder = {
   newUserRegistration: (user) => {
-    const data = mapUserData(user);
+    // 🧩 Only user data for registration
+    const data = mergeUserAndPayload(user);
     const template = safeTemplateCall(
       adminNotificationTemplates,
       NotificationType.NEW_USER_REGISTRATION,
@@ -183,8 +195,9 @@ export const adminNotificationBuilder = {
       type: NotificationType.NEW_USER_REGISTRATION
     };
   },
-  freeTrialRequested: (freeTrial, user) => {
-    const data = mapFreeTrialData(freeTrial, user);
+
+  freeTrialRequested: (user, freeTrial) => {
+    const data = mergeUserAndPayload(user, freeTrial);
     const key = `${NotificationType.FREE_TRIAL}_requested`;
     const template = safeTemplateCall(
       adminNotificationTemplates,
@@ -199,8 +212,9 @@ export const adminNotificationBuilder = {
       type: NotificationType.FREE_TRIAL
     };
   },
-  freeTrialActivated: (freeTrial, user) => {
-    const data = mapFreeTrialData(freeTrial, user);
+
+  freeTrialActivated: (user, freeTrial) => {
+    const data = mergeUserAndPayload(user, freeTrial);
     const key = `${NotificationType.FREE_TRIAL}_activated`;
     const template = safeTemplateCall(
       adminNotificationTemplates,
@@ -215,8 +229,9 @@ export const adminNotificationBuilder = {
       type: NotificationType.FREE_TRIAL
     };
   },
-  subscriptionCreated: (subscription, user) => {
-    const data = mapSubscriptionData(subscription, user);
+
+  subscriptionCreated: (user, subscription) => {
+    const data = mergeUserAndPayload(user, subscription);
     const key = `${NotificationType.SUBSCRIPTION}_created`;
     const template = safeTemplateCall(
       adminNotificationTemplates,
@@ -231,8 +246,9 @@ export const adminNotificationBuilder = {
       type: NotificationType.SUBSCRIPTION
     };
   },
-  subscriptionActivated: (subscription, user) => {
-    const data = mapSubscriptionData(subscription, user);
+
+  subscriptionActivated: (user, subscription) => {
+    const data = mergeUserAndPayload(user, subscription);
     const key = `${NotificationType.SUBSCRIPTION}_activated`;
     const template = safeTemplateCall(
       adminNotificationTemplates,
@@ -247,8 +263,9 @@ export const adminNotificationBuilder = {
       type: NotificationType.SUBSCRIPTION
     };
   },
-  paymentReceived: (payment, user) => {
-    const data = mapPaymentData(payment, user);
+
+  paymentReceived: (user, payment) => {
+    const data = mergeUserAndPayload(user, payment);
     const template = safeTemplateCall(
       adminNotificationTemplates,
       NotificationType.PAYMENT,
@@ -262,8 +279,9 @@ export const adminNotificationBuilder = {
       type: NotificationType.PAYMENT
     };
   },
-  liveChatMessage: (message, conversation, user) => {
-    const data = mapChatMessageData(message, conversation, user);
+
+  liveChatMessage: (user, messageAndConversation) => {
+    const data = mergeUserAndPayload(user, messageAndConversation);
     const template = safeTemplateCall(
       adminNotificationTemplates,
       NotificationType.LIVE_CHAT_MESSAGE,
@@ -275,6 +293,22 @@ export const adminNotificationBuilder = {
       body: template.body,
       link: template.link,
       type: NotificationType.LIVE_CHAT_MESSAGE
+    };
+  },
+  // 👑 ADMIN builder for error
+  error: (user = {}, error) => {
+    const data = mergeUserAndPayload(user, error);
+    const template = safeTemplateCall(
+      adminNotificationTemplates,
+      NotificationType.ERROR,
+      data,
+      'admin error'
+    );
+    return {
+      title: template.title,
+      body: template.body,
+      link: template.link,
+      type: NotificationType.ERROR
     };
   }
 };
@@ -315,5 +349,6 @@ export default {
   userNotificationBuilder,
   adminNotificationBuilder,
   getUserNotification,
-  getAdminNotification
+  getAdminNotification,
+  mergeUserAndPayload
 };

@@ -5,17 +5,26 @@
  * =============================================
  */
 
-import './src/lib/socketServer.js'; // Your Socket.IO server
-import { sweepAndExpireSubscriptions } from './src/lib/expireServer.js';
+import './src/lib/server/socketServer.js'; // Your Socket.IO server
+import {
+  sweepAndExpireSubscriptions,
+  sweepAndExpireFreeTrials
+} from './src/lib/server/expireServer.js';
 
-// 🕒 Interval (e.g. 1 hour)
 const ONE_HOUR = 60 * 60 * 1000;
 
-// Run every hour
+// 🧹 Helper to run both sweepers with nice log
+async function runSweepers() {
+  await sweepAndExpireFreeTrials();
+  await sweepAndExpireSubscriptions();
+}
+
+// 🕒 Run every hour
 setInterval(() => {
-  sweepAndExpireSubscriptions().catch(console.error);
+  runSweepers().catch(console.error);
 }, ONE_HOUR);
 
-sweepAndExpireSubscriptions().catch(console.error);
+// 🚀 Run immediately on startup
+runSweepers().catch(console.error);
 
 console.log('🎯 [Main server] Socket.IO and expiry sweeper are both running.');

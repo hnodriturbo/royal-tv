@@ -84,6 +84,28 @@ export function useCreateNotifications() {
     [createNotificationForBoth]
   );
 
+  // ❌ Error Notification For Admin Only
+  const createAdminErrorNotification = useCallback(
+    (user, error) => {
+      createNotificationForAdmin('error', null, user, error);
+    },
+    [createNotificationForAdmin]
+  );
+  // ❌ Error Notification For User Only
+  const createUserErrorNotification = useCallback(
+    (user, error) => {
+      createNotificationForUser('error', null, user, error);
+    },
+    [createNotificationForUser]
+  );
+
+  // ❌ Error Notification For Both User & Admin
+  const createErrorNotificationForBoth = useCallback(
+    (user, error) => {
+      createNotificationForBoth('error', null, user, error);
+    },
+    [createNotificationForBoth]
+  );
   // 🛎️ Return all notification creators for Royal TV
   return {
     createFreeTrialCreatedNotification,
@@ -92,6 +114,9 @@ export function useCreateNotifications() {
     createLiveChatMessageNotification,
     createLiveChatMessageNotificationForAdminOnly,
     createLiveChatMessageNotificationForUserOnly,
-    createUserRegistrationNotification
+    createUserRegistrationNotification,
+    createAdminErrorNotification,
+    createUserErrorNotification,
+    createErrorNotificationForBoth
   };
 }

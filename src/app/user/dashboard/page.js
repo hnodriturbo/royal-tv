@@ -52,7 +52,10 @@ export default function UserDashboard() {
       {/*       <div className="lg:w-[600px] w-full mx-auto">
         <FreeTrialPanel user_id={session?.user?.user_id} />
       </div> */}
-
+      {/* 🟣 Free Trial Panel (socket-powered) */}
+      <div className="w-full lg:w-[600px] mx-auto mb-4">
+        <FreeTrialPanel user_id={session?.user?.user_id} className="container-style-sm" />
+      </div>
       {/* 🔵 User Subscription Panel */}
       <div className="lg:w-[600px] w-full mx-auto">
         <UserSubscriptionPanel user_id={session?.user?.user_id} />
@@ -62,10 +65,6 @@ export default function UserDashboard() {
         <NotificationCenter userRole="user" />
       </div>
 
-      {/* 🟣 Free Trial Panel (socket-powered) */}
-      <div className="w-full lg:w-[600px] mx-auto mb-4">
-        <FreeTrialPanel user_id={session?.user?.user_id} className="container-style-sm" />
-      </div>
       {/* 🔵 “Is Admin Online?” indicator */}
       <div className="container-style w-11/12 lg:w-[600px] mx-auto">
         <IsAdminOnline user_id={session?.user?.user_id} />

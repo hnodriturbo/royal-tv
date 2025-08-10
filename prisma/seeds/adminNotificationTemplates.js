@@ -1,3 +1,16 @@
+/**
+ * 📢 Admin Notification Templates for Royal TV
+ * --------------------------------------------
+ * Generates notification objects for admin actions:
+ *   - New user registration
+ *   - Free trial created/activated
+ *   - Subscription created/activated
+ *   - Payment received
+ *   - Live chat messages
+ *
+ * ⚡ These templates are used for both real-time app notifications and transactional emails sent to admins.
+ * Each object contains a title, message body, and link for the admin panel.
+ */
 import { NotificationType } from './notificationTypes.js';
 
 // 📅 Date formatter for admin notifications
@@ -13,11 +26,7 @@ const formatDate = (date) =>
     : 'N/A';
 
 export const adminNotificationTemplates = {
-  /**
-   * 👤 New User Registration
-   * - A new user has registered.
-   * - 🟢 Action: Click Open to review this user profile.
-   */
+  // 👤 New user registration alert
   [NotificationType.NEW_USER_REGISTRATION]: (data) => ({
     title: '👤 New User Registered',
     body:
@@ -34,133 +43,77 @@ export const adminNotificationTemplates = {
     link: `/admin/users/${data.user_id}`
   }),
 
-  /**
-   * 1️⃣ Free Trial Requested
-   * - A user requested a free trial.
-   * - 🟢 Action: Click Open to activate or reject this free trial request.
-   */
-  [`${NotificationType.FREE_TRIAL}_requested`]: (data) => ({
-    title: '⏳ Free Trial Requested',
-    body:
-      `A user requested a free trial:\n\n` +
-      `• Name: ${data.user?.name || 'N/A'}\n` +
-      `• Email: ${data.user?.email || 'N/A'}\n` +
-      `• Username: ${data.user?.username || 'N/A'}\n` +
-      `• User ID: ${data.user?.user_id || data.user_id}\n` +
-      `• Trial ID: ${data.trial_id}\n` +
-      `• Requested: ${formatDate(data.createdAt)}\n` +
-      `• Status: ${data.status}\n` +
-      `\n👉 Click Open to review and activate or reject this free trial request.`,
-    link: `/admin/freeTrials/${data.trial_id}`
-  }),
-
-  /**
-   * 2️⃣ Free Trial Activated
-   * - Free trial was activated for a user.
-   * - 🟢 Action: Click Open to see trial credentials and details.
-   */
-  [`${NotificationType.FREE_TRIAL}_activated`]: (data) => ({
+  // 🎁 Free trial creation/activation alert
+  [`${NotificationType.FREE_TRIAL}_created`]: (data) => ({
     title: '🎁 Free Trial Activated',
     body:
-      `A free trial was activated for a user:\n\n` +
-      `• Name: ${data.user?.name || 'N/A'}\n` +
-      `• Email: ${data.user?.email || 'N/A'}\n` +
-      `• Username: ${data.user?.username || 'N/A'}\n` +
+      `A new free trial was just created and is active:\n\n` +
+      `• Name: ${data.name || 'N/A'}\n` +
+      `• Email: ${data.email || 'N/A'}\n` +
+      `• Username: ${data.username || 'N/A'}\n` +
       `• User ID: ${data.user_id}\n` +
       `• Trial ID: ${data.trial_id}\n` +
-      (data.free_trial_username ? `• Trial Username: ${data.free_trial_username}\n` : '') +
-      (data.free_trial_password ? `• Trial Password: ${data.free_trial_password}\n` : '') +
-      (data.free_trial_url ? `• URL: ${data.free_trial_url}\n` : '') +
-      (data.free_trial_other ? `• Other: ${data.free_trial_other}\n` : '') +
-      (data.additional_info ? `• Notes: ${data.additional_info}\n` : '') +
-      (data.startDate ? `• Start: ${formatDate(data.startDate)}\n` : '') +
-      (data.endDate ? `• End: ${formatDate(data.endDate)}\n` : '') +
-      `• Status: ${data.status}\n` +
-      `\n👉 Click Open to review trial credentials and monitor usage.`,
+      (data.package_name ? `• Package: ${data.package_name}\n` : '') +
+      (typeof data.adult === 'boolean'
+        ? `• Adult Channels: ${data.adult ? 'Enabled' : 'Disabled'}\n`
+        : '') +
+      `\n👉 Open to view the full trial details.`,
     link: `/admin/freeTrials/${data.trial_id}`
   }),
 
-  /**
-   * 1️⃣ Subscription Created
-   * - New subscription order has been placed.
-   * - 🟢 Action: Click Open to review and activate this subscription after payment.
-   */
+  // 📦 Subscription creation/activation alert
   [`${NotificationType.SUBSCRIPTION}_created`]: (data) => ({
-    title: '🆕 Subscription Created',
+    title: '🆕 Subscription Created & Activated',
     body:
-      `A new subscription was created:\n\n` +
-      `• Name: ${data.user?.name || 'N/A'}\n` +
-      `• Email: ${data.user?.email || 'N/A'}\n` +
-      `• Username: ${data.user?.username || 'N/A'}\n` +
-      `• User ID: ${data.user_id}\n` +
+      `A new subscription was automatically created and activated:\n\n` +
+      `• Name: ${data.name || 'N/A'}\n` +
+      `• Email: ${data.email || 'N/A'}\n` +
+      `• Username: ${data.username || 'N/A'}\n` +
+      `• User ID: ${data.name}\n` +
       `• Subscription ID: ${data.subscription_id}\n` +
       (data.order_id ? `• Order ID: ${data.order_id}\n` : '') +
-      `• Created: ${formatDate(data.createdAt)}\n` +
-      `\n👉 Click Open to view this subscription, confirm payment, and activate when ready.`,
+      (data.package_name ? `• Package: ${data.package_name}\n` : '') +
+      (data.expiring_at ? `• Expires: ${formatDate(data.expiring_at)}\n` : '') +
+      (data.max_connections ? `• Devices Allowed: ${data.max_connections}\n` : '') +
+      (typeof data.adult === 'boolean'
+        ? `• Adult Channels: ${data.adult ? 'Enabled' : 'Disabled'}\n`
+        : '') +
+      (typeof data.enable_vpn === 'boolean'
+        ? `• VPN: ${data.enable_vpn ? 'Enabled' : 'Disabled'}\n`
+        : '') +
+      `\n👉 Open to review subscription details or manage user access.`,
     link: `/admin/subscriptions/${data.subscription_id}`
   }),
 
-  /**
-   * 2️⃣ Subscription Activated
-   * - A subscription is now fully active.
-   * - 🟢 Action: Click Open to view credentials and manage subscription.
-   */
-  [`${NotificationType.SUBSCRIPTION}_activated`]: (data) => ({
-    title: '🟢 Subscription Activated',
-    body:
-      `A subscription is now active for a user:\n\n` +
-      `• Name: ${data.user?.name || 'N/A'}\n` +
-      `• Email: ${data.user?.email || 'N/A'}\n` +
-      `• Username: ${data.user?.username || 'N/A'}\n` +
-      `• User ID: ${data.user_id}\n` +
-      `• Subscription ID: ${data.subscription_id}\n` +
-      (data.order_id ? `• Order ID: ${data.order_id}\n` : '') +
-      (data.subscription_username ? `• Username: ${data.subscription_username}\n` : '') +
-      (data.subscription_password ? `• Password: ${data.subscription_password}\n` : '') +
-      (data.subscription_url ? `• URL: ${data.subscription_url}\n` : '') +
-      (data.subscription_other ? `• Other: ${data.subscription_other}\n` : '') +
-      (data.additional_info ? `• Notes: ${data.additional_info}\n` : '') +
-      (data.startDate ? `• Start: ${formatDate(data.startDate)}\n` : '') +
-      (data.endDate ? `• End: ${formatDate(data.endDate)}\n` : '') +
-      `• Status: ${data.status}\n` +
-      `\n👉 Click Open to review subscription credentials and manage user access.`,
-    link: `/admin/subscriptions/${data.subscription_id}`
-  }),
-
-  /**
-   * 💸 Payment Received
-   * - Payment received for a subscription/order.
-   * - 🟢 Action: Click Open to confirm and match payment with order.
-   */
+  // 💸 Payment received alert
   [NotificationType.PAYMENT]: (data) => ({
     title: '💸 Payment Received',
     body:
       `A payment was received:\n\n` +
-      `• Name: ${data.user?.name || 'N/A'}\n` +
-      `• Email: ${data.user?.email || 'N/A'}\n` +
-      `• Username: ${data.user?.username || 'N/A'}\n` +
+      `• Name: ${data.name || 'N/A'}\n` +
+      `• Email: ${data.email || 'N/A'}\n` +
+      `• Username: ${data.username || 'N/A'}\n` +
       `• User ID: ${data.user_id}\n` +
-      (data.amount_paid ? `• Amount Paid: ${data.amount_paid} ${data.currency || ''}\n` : '') +
-      (data.amount_received
-        ? `• Amount Received: ${data.amount_received} ${data.currency || ''}\n`
+      (data.amount_paid && data.price_currency
+        ? `• Amount Paid (Fiat): ${data.amount_paid} ${data.price_currency}\n`
+        : '') +
+      (data.actually_paid && data.pay_currency
+        ? `• Amount Received (Crypto): ${data.actually_paid} ${data.pay_currency}\n`
         : '') +
       (data.pay_currency ? `• Payment currency: ${data.pay_currency}\n` : '') +
       (data.network ? `• Network: ${data.network}\n` : '') +
       (data.pay_address ? `• Payment address: ${data.pay_address}\n` : '') +
       (data.invoice_id ? `• Invoice: ${data.invoice_id}\n` : '') +
+      (data.payment_id ? `• Payment ID: ${data.payment_id}\n` : '') +
       (data.received_at ? `• Received at: ${formatDate(data.received_at)}\n` : '') +
-      `• Subscription ID: ${data.subscription_id}\n` +
+      `• Subscription ID: ${data.subscription_id || 'N/A'}\n` +
       (data.order_id ? `• Order ID: ${data.order_id}\n` : '') +
-      `• Status: ${data.status}\n` +
+      `• Status: ${data.status || 'N/A'}\n` +
       `\n👉 Click Open to confirm payment and activate subscription if needed.`,
     link: `/admin/subscriptions/${data.subscription_id}`
   }),
 
-  /**
-   * 💬 Live Chat (Admin)
-   * - User sent a message in live chat.
-   * - 🟢 Action: Click Open to reply instantly in Live Chat.
-   */
+  // 💬 Live chat message alert
   [NotificationType.LIVE_CHAT_MESSAGE]: (data) => ({
     title: '💬 New Live Chat Message',
     body:
@@ -169,5 +122,18 @@ export const adminNotificationTemplates = {
       (data.message ? `Message: ${data.message}\n` : '') +
       `\n👉 Click Open to reply via Live Chat.`,
     link: `/admin/liveChat/${data.conversation_id}`
+  }),
+
+  // 🧯 Admin error notification
+  [NotificationType.ERROR]: (data) => ({
+    title: '❌ Error occurred',
+    body:
+      `An error occurred!\n` +
+      (data.user_id ? `• user_id: ${data.user_id}\n` : '') +
+      (data.name ? `• User Name: ${data.name}\n` : '') +
+      (data.errorTitle ? `• Error Title: ${data.errorTitle}\n` : '') +
+      (data.errorMessage ? `• Error Message: ${data.errorMessage}\n` : '') +
+      (data.errorDetails ? `• Details: ${data.errorDetails}\n` : '')
+    /*  link: 'N/A' */
   })
 };

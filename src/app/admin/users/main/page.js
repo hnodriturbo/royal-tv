@@ -118,7 +118,7 @@ export default function AdminUsersMainPage() {
           {pagedUsers.map((user) => (
             <div
               key={user.user_id}
-              className="border border-gray-300 rounded-2xl p-5 shadow-md bg-gray-600 text-base-100"
+              className="border border-gray-300 rounded-2xl p-5 shadow-md bg-gray-600 text-base-100 relative"
             >
               {/* 🆔 Top: Name, Username, Email */}
               <div className="flex flex-col md:flex-row justify-between mb-2 items-center">
@@ -129,7 +129,7 @@ export default function AdminUsersMainPage() {
                     <span className="ml-2 text-xs text-muted">({user.username})</span>
                   </h3>
                   <div className="text-sm mt-1">
-                    <strong>Email:</strong> {user.email}
+                    <span>Email: {user.email}</span>
                   </div>
                   <div className="text-xs text-muted">
                     <span>
@@ -140,7 +140,7 @@ export default function AdminUsersMainPage() {
                 </div>
                 <div className="flex flex-col gap-1 items-end mt-2 md:mt-0">
                   {/* 🔑 User Role */}
-                  <span className="px-3 py-1 rounded-lg bg-purple-800 text-sm font-bold uppercase tracking-wider">
+                  <span className="absolute right-2 top-2 px-3 py-1 rounded-lg bg-purple-800 text-sm font-bold uppercase tracking-wider">
                     {user.role}
                   </span>
                 </div>

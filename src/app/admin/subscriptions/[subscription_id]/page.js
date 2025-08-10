@@ -76,8 +76,7 @@ export default function AdminUserSubscriptionsPage() {
       title: 'Payment Details',
       description: getPaymentDetailsDescriptionJSX(payment),
       size: 'lg', // 👈 use a wider modal
-      textClass: 'white', // 👈 blue text
-      /* customClass: 'text-shadow-dark-2', */ // 👈 more custom
+      textClass: 'white',
       confirmButtonText: 'Close',
       confirmButtonType: 'Secondary',
       onConfirm: hideModal

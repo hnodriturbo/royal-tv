@@ -122,5 +122,18 @@ export const adminNotificationTemplates = {
       (data.message ? `Message: ${data.message}\n` : '') +
       `\n👉 Click Open to reply via Live Chat.`,
     link: `/admin/liveChat/${data.conversation_id}`
+  }),
+
+  // 🧯 Admin error notification
+  [NotificationType.ERROR]: (data) => ({
+    title: '❌ Error occurred',
+    body:
+      `An error occurred!\n` +
+      (data.user_id ? `• user_id: ${data.user_id}\n` : '') +
+      (data.name ? `• User Name: ${data.name}\n` : '') +
+      (data.errorTitle ? `• Error Title: ${data.errorTitle}\n` : '') +
+      (data.errorMessage ? `• Error Message: ${data.errorMessage}\n` : '') +
+      (data.errorDetails ? `• Details: ${data.errorDetails}\n` : '')
+    /*  link: 'N/A' */
   })
 };

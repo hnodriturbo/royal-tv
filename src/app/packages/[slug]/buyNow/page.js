@@ -65,8 +65,10 @@ export default function PackageBuyNowPage() {
   // 🧠 Get user-selected options from query params in the URL
   const adult = searchParams.get('adult') === '1';
   const enable_vpn = searchParams.get('vpn') === '1';
-  const customPrice = Number(searchParams.get('price'));
-  const price = Number.isFinite(customPrice) ? customPrice : paymentPackage.price;
+  const price =
+    searchParams.has('price') && searchParams.get('price') !== ''
+      ? Number(searchParams.get('price'))
+      : paymentPackage.price;
 
   // 👂 Listen for transactionFinished event from socket server
   const { onTransactionFinished } = useSocketHub();
@@ -86,9 +88,20 @@ export default function PackageBuyNowPage() {
         price,
         customer_email: session.user.email || undefined,
         adult,
-        enable_vpn
+        enable_vpn,
+        package_id: paymentPackage.package_id,
+        max_connections: paymentPackage.devices,
+        forced_country: 'ALL'
       });
-
+      console.log(`
+        package_slug: ${paymentPackage.slug}
+        order_description: ${paymentPackage.order_description}
+        price: ${price}
+        adult: ${adult}
+        enable_vpn: ${enable_vpn}
+        package_id: ${paymentPackage.package_id}
+        max_connections: ${paymentPackage.devices}
+        `);
       if (data.widget_url && data.order_id) {
         setWidgetUrl(data.widget_url);
         setCurrentOrderId(data.order_id); // <- Set UUID anchor for all status!
@@ -149,7 +162,7 @@ export default function PackageBuyNowPage() {
         '✅ Payment complete! Your subscription will now be created and admin will activate it as soon as possible..',
         'success'
       );
-      router.push('/user/subscriptions?paymentSucess=1');
+      router.push('/user/subscriptions?paymentSuccess=1');
     });
     return unsubscribeFromTransactionFinished;
   }, [onTransactionFinished, router, displayMessage]);
@@ -180,30 +193,24 @@ export default function PackageBuyNowPage() {
           <span className="font-bold text-yellow-200">Note:</span> The total amount you will pay
           includes both your subscription price and all required Bitcoin payment network fees.
           <br />
-          <br />
-          <span className="text-cyan-200 font-normal">
-            These fees are paid by you to ensure a secure, fast, and verifiable blockchain
-            transaction. You will see the exact total before you confirm payment.
+          <br />{' '}
+          <span className="text-cyan-200">
+            Crypto payments may sometimes take several minutes to be confirmed, depending on network
+            congestion.
           </span>
-          {/* 🕰️ Patience notice: Don’t close window during crypto payment */}
           {/*/ Remind user to keep this window open until payment is fully processed /*/}
           <br />
           <br />
-          <span className="text-cyan-200 font-normal">
-            Crypto payments may sometimes take several minutes to be confirmed, depending on network
-            congestion.
-            <br />
-            <span className="font-bold">Patience is key!</span> This window will automatically
-            update when your payment is received.
-            <br />
-          </span>
-          <br />
+          <span className="font-bold">Patience is key!</span> This window will automatically update
+          when your payment is received.
           <br />
           <span className="font-bold text-yellow-200">Important:</span> Please{' '}
           <span className="underline underline-offset-4 text-yellow-400">do not close</span> or
           navigate away from this page while your payment is processing.
+          <br />
+          <br />
+          <p className="text-2xl text-cyan-200 mb-4">Instructions are below!</p>
         </p>
-        <p className="text-2xl text-cyan-200 mb-4">Instructions are below!</p>
 
         <div className="w-full flex justify-center mt-2">
           <StatusBadge status={currentPaymentStatus} />

@@ -60,34 +60,6 @@ export default function AdminSubscriptionsPage() {
     }
   };
 
-  // Modal Delete logic
-  const handleDelete = (subscription_id) => {
-    openModal('deleteSubscription', {
-      title: 'Delete Subscription',
-      description: 'Are you sure you want to delete this subscription? This cannot be undone.',
-      confirmButtonText: 'Delete',
-      confirmButtonType: 'Danger',
-      cancelButtonText: 'Cancel',
-      onConfirm: async () => {
-        try {
-          showLoader({ text: 'Deleting subscription...' });
-          await axiosInstance.delete(`/api/admin/subscriptions/${subscription_id}`);
-          displayMessage('🗑️ Subscription deleted!', 'success');
-          fetchSubscriptions();
-        } catch (err) {
-          displayMessage(`❌ Delete failed: ${err.message}`, 'error');
-        } finally {
-          hideModal();
-          hideLoader();
-        }
-      },
-      onCancel: () => {
-        displayMessage('🛑 Deletion cancelled.', 'info');
-        hideModal();
-      }
-    });
-  };
-
   // Local sorting and pagination (client side only sorting)
   const sortedSubscriptions = useLocalSorter(
     subscriptions,
@@ -120,7 +92,7 @@ export default function AdminSubscriptionsPage() {
   const STATUS_COLOR_MAP = {
     active: 'bg-green-600',
     pending: 'bg-yellow-500',
-    expired: 'bg-gray-400',
+    expired: 'bg-red-400',
     canceled: 'bg-red-500',
     disabled: 'bg-gray-500'
   };
@@ -130,22 +102,26 @@ export default function AdminSubscriptionsPage() {
       <div className="container-style">
         {/* 🏷️ Title & Divider */}
         <div className="flex flex-col items-center text-center justify-center relative w-full">
-          <h1 className="text-wonderful-5 text-2xl mb-0">All Subscriptions</h1>
+          <h1 className="text-4xl mb-0 text-glow-sky font-extrabold">All Subscriptions</h1>
           <hr className="border border-gray-400 w-8/12 my-4" />
         </div>
-        {/* 🔄 Sorting */}
-        <div className="flex justify-center items-center w-full mb-4">
-          <SortDropdown
-            options={userSubscriptionSortOptions}
-            value={sortOrder}
-            onChange={setSortOrder}
-          />
+        <div className="flex justify-center items-center">
+          {/* 🔄 Sorting */}
+          <div className="flex justify-center items-center lg:w-full w-1/2 mb-4">
+            <SortDropdown
+              options={userSubscriptionSortOptions}
+              value={sortOrder}
+              onChange={setSortOrder}
+            />
+          </div>
         </div>
-
+        <div className="flex justify-center items-center">
+          <hr className="border border-gray-400 w-8/12 my-4" />
+        </div>
         {/* Desktop Table */}
         <div className="hidden xl:flex justify-center w-full">
           <div className="w-full max-w-full overflow-x-auto">
-            <table className="min-w-[850px] w-full border-separate border-spacing-0">
+            <table className="min-w-[850px] w-full border-separate border-spacing-0 text-shadow-dark-1">
               <thead>
                 <tr className="bg-gray-600 text-base-100 font-bold">
                   <th className="border border-gray-300 px-4 py-2">User</th>
@@ -182,16 +158,15 @@ export default function AdminSubscriptionsPage() {
                     </td>
                     {/* 🛠️ Actions */}
                     <td className="flex border border-gray-300 px-4 py-2 justify-center">
-                      <div className="flex flex-row gap-2 w-fit justify-center">
+                      <div className="flex flex-row gap-2 justify-center w-full">
                         <Link href={`/admin/subscriptions/${sub.subscription_id}`}>
-                          <button className="btn-primary">View/Edit</button>
+                          <button
+                            className="btn-primary btn-lg btn-glow"
+                            style={{ width: '100%', padding: '0 40px' }}
+                          >
+                            View
+                          </button>
                         </Link>
-                        <button
-                          className="btn-danger"
-                          onClick={() => handleDelete(sub.subscription_id)}
-                        >
-                          Delete
-                        </button>
                       </div>
                     </td>
                   </tr>
@@ -232,20 +207,14 @@ export default function AdminSubscriptionsPage() {
                   {sub.expiring_at ? new Date(sub.expiring_at).toLocaleString() : '—'}
                 </div>
               </div>
-              <div className="flex flex-row gap-3 mt-4 w-full">
-                <Link
-                  href={`/admin/subscriptions/${sub.subscription_id}`}
-                  className="flex-1 flex justify-start"
-                >
-                  <button className="btn-primary w-full">View/Edit</button>
-                </Link>
-                <div className="flex-1 flex justify-end">
-                  <button
-                    className="btn-danger w-full"
-                    onClick={() => handleDelete(sub.subscription_id)}
+              <div className="flex gap-3 mt-4 w-full justify-center">
+                <div className="flex justify-center w-full">
+                  <Link
+                    href={`/admin/subscriptions/${sub.subscription_id}`}
+                    className="flex justify-center !w-full"
                   >
-                    Delete
-                  </button>
+                    <button className="btn-primary">View</button>
+                  </Link>
                 </div>
               </div>
             </div>

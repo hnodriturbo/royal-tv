@@ -115,7 +115,7 @@ const ConversationsPage = () => {
         <div className="hidden xl:flex justify-center w-full">
           {/* 🖱️ Enables horizontal scroll only when table can't shrink further */}
           <div className="w-full max-w-full overflow-x-auto">
-            <table className="min-w-[500px] w-full border-separate border-spacing-0">
+            <table className="min-w-[500px] w-full border-separate border-spacing-0 text-shadow-dark-1">
               <thead>
                 <tr className="bg-gray-600">
                   <th className="border border-gray-300 px-4 py-2">User</th>

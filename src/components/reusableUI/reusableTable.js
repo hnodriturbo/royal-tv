@@ -31,7 +31,7 @@ const ReusableTable = ({
     <>
       {/* Desktop: Scrollable table */}
       <div className="overflow-x-auto w-full lg:block hidden">
-        <table className="w-full border-collapse border border-gray-300">
+        <table className="w-full border-collapse border border-gray-300 text-shadow-dark-1">
           {/* Table Header */}
           <thead>
             <tr className="border-b-2 bg-gray-600">

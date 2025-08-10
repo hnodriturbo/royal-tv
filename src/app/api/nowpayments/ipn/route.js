@@ -1,7 +1,8 @@
 /**
  * ===============================================
  * /api/nowpayments/ipn/route.js
- * - Milestone logs kept, one-line per action! 👀
+ * - Reads concrete MegaOTT fields from DB
+ * - Forwards full payload to subscription route
  * ===============================================
  */
 
@@ -10,40 +11,35 @@ import crypto from 'crypto';
 import prisma from '@/lib/prisma';
 import axios from 'axios';
 import { NextResponse } from 'next/server';
+// 🔔 Error notifications to socket bridge
+import { sendBackendErrorNotification } from '@/lib/notifications/errorNotificationBackend';
 
 export async function POST(request) {
-  // 🚦 Incoming request
   logger.log('🚦 [ipn] IPN webhook received:', new Date().toISOString());
 
-  // 1. Get raw body and signature
   const rawBody = await request.text();
   const signature = request.headers.get('x-nowpayments-sig');
 
-  // 2. Compute expected signature
   const expectedSig = crypto
     .createHmac('sha512', process.env.NOWPAYMENTS_IPN_KEY)
     .update(rawBody)
     .digest('hex');
 
-  // 3. Validate signature
   if (signature !== expectedSig) {
     logger.error('❌ [ipn] Invalid IPN signature!');
     return NextResponse.json({ error: 'Invalid signature' }, { status: 403 });
   }
   logger.log('🔏 [ipn] Valid signature for webhook!');
 
-  // 4. Parse body
   let body;
   try {
     body = JSON.parse(rawBody);
-    // 📦 Log incoming summary
     logger.log('📦 [ipn] Body: ', body);
   } catch (error) {
     logger.error('❌ [ipn] JSON parse failed:', error);
     return NextResponse.json({ error: 'Bad Request (body parse failed)' }, { status: 400 });
   }
 
-  // 5. Extract fields
   const {
     payment_id,
     payment_status,
@@ -61,7 +57,7 @@ export async function POST(request) {
     invoice_id,
     purchase_id
   } = body;
-  // 🧾 Log the extracted/aliased fields your code uses
+
   logger.log('🧾 [ipn] Extracted Fields:', {
     payment_id,
     payment_status,
@@ -80,20 +76,15 @@ export async function POST(request) {
     purchase_id
   });
 
-  // 6. Use order_id as DB anchor
   const paymentId = order_id;
   if (!paymentId) {
     logger.error('❌ [ipn] No paymentId (order_id) in IPN');
     return NextResponse.json({ error: 'No paymentId in IPN' }, { status: 400 });
   }
 
-  // 7. Find payment record by id
   let paymentRecord;
   try {
-    paymentRecord = await prisma.subscriptionPayment.findUnique({
-      where: { id: paymentId }
-    });
-    // 🔎 Searched by id
+    paymentRecord = await prisma.subscriptionPayment.findUnique({ where: { id: paymentId } });
     logger.log('🔎 [ipn] Searched by id:', paymentId, 'Found:', !!paymentRecord);
   } catch (error) {
     logger.error('❌ [ipn] DB error (find by id):', error);
@@ -105,7 +96,7 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Payment record not found' }, { status: 404 });
   }
 
-  // 8. Update payment record
+  // 💾 Update payment row with latest NP info (unchanged)
   try {
     await prisma.subscriptionPayment.update({
       where: { id: paymentId },
@@ -117,7 +108,7 @@ export async function POST(request) {
         order_description: order_description ?? null,
         status: payment_status,
         amount_paid: parseFloat(price_amount),
-        price_currency: price_currency ?? null, // 💰 ADD THIS
+        price_currency: price_currency ?? null,
         actually_paid: actually_paid ? parseFloat(actually_paid) : null,
         pay_address: pay_address ?? null,
         pay_currency: pay_currency ?? null,
@@ -132,12 +123,12 @@ export async function POST(request) {
             : undefined)
       }
     });
+
     const alreadyFinished =
       paymentRecord.subscription_id &&
       ['confirmed', 'paid', 'completed', 'finished'].includes(paymentRecord.status);
 
     if (!alreadyFinished) {
-      // Send socket update through socketServer bridge
       const SOCKET_SERVER_URL = process.env.SOCKET_SERVER_URL || 'http://localhost:3001';
       await axios.post(`${SOCKET_SERVER_URL}/emit/paymentStatusUpdated`, {
         userId: paymentRecord.user_id,
@@ -145,82 +136,73 @@ export async function POST(request) {
         newStatus: payment_status
       });
       logger.log(
-        `💾 [ipn] Sent POST request to /emit/paymentStatusUpdated | userId: ${paymentRecord.user_id} | orderId: ${paymentRecord.id} | New Status:, ${payment_status}`
+        `💾 [ipn] Sent POST /emit/paymentStatusUpdated | userId=${paymentRecord.user_id} | orderId=${paymentRecord.id} | status=${payment_status}`
       );
     }
-    // 💾 Payment updated
+
     logger.log('💾 [ipn] Payment updated:', paymentId, '| New Status:', payment_status);
   } catch (error) {
     logger.error('❌ [ipn] DB error (update payment):', error);
     return NextResponse.json({ error: 'DB error (update payment)' }, { status: 500 });
   }
 
-  // 9. Fetch user and strip password field 🛡️
+  // 👤 Fetch user (strip password)
   let user = null;
   try {
-    user = await prisma.user.findUnique({
-      where: { user_id: paymentRecord.user_id }
-    });
-    // ✂️ Remove password property if present
+    user = await prisma.user.findUnique({ where: { user_id: paymentRecord.user_id } });
     if (user && user.password) {
       const { password, ...userWithoutPassword } = user;
       user = userWithoutPassword;
     }
-    // 👤 User fetched for payment — password never sent!
     logger.log('👤 [ipn] User fetched for payment:', paymentRecord.user_id, '| Found:', !!user);
   } catch (error) {
-    // ❌ DB error (find user)
     logger.error('❌ [ipn] DB error (find user):', error);
     return NextResponse.json({ error: 'DB error (find user)' }, { status: 500 });
   }
 
-  // Extract useful fields from payment and user
-  const { user_id, package_slug, adult, enable_vpn } = paymentRecord;
+  // 🧾 Pull everything we need for the MegaOTT hop
+  const { user_id, adult, enable_vpn, package_id, max_connections, forced_country } = paymentRecord;
   const { whatsapp, telegram } = user || {};
 
-  // 10. Create subscription if payment status is valid AND not already created ✅
-  const latestPayment = await prisma.subscriptionPayment.findUnique({
-    where: { id: paymentId }
-  });
+  // ✅ Create subscription if paid and not already linked
+  const latestPayment = await prisma.subscriptionPayment.findUnique({ where: { id: paymentId } });
   if (
     ['confirmed', 'paid', 'completed', 'finished'].includes(payment_status) &&
     !latestPayment.subscription_id
   ) {
-    // 🔥 Call MegaOTT subscription creation route clearly and correctly
+    logger.log('📢 [ipn] Calling MegaOTT subscription route!!!');
     try {
       const subscriptionCreation = await axios.post(
         `${process.env.NEXTAUTH_URL}/api/megaott/subscription`,
         {
           user_id,
-          package_slug,
-          order_id: paymentRecord.id, // ✅ Crucial anchor from IPN
-          order_description,
+          order_id: paymentRecord.id, // 🧲 anchor
+          order_description, // 📝 label
           whatsapp,
           telegram,
-          adult: paymentRecord.adult === true, // ensure it's boolean
-          enable_vpn: paymentRecord.enable_vpn === true // ensure it's boolean
-        }
+          adult: !!adult, // 🔞
+          enable_vpn: !!enable_vpn, // 🛡️
+          package_id, // 📦 concrete
+          max_connections, // 🔢 concrete
+          forced_country // 🌍 concrete/default
+        },
+        { headers: { 'x-megaott-secret': process.env.MEGAOTT_SECRET } }
       );
 
-      // 📢 Response clearly logged from MegaOTT subscription route
       logger.log('📢 [ipn] MegaOTT subscription route response:', subscriptionCreation.data);
 
       const { subscription } = subscriptionCreation.data;
-
-      // 🎉 Subscription created
       logger.log('🎉 [ipn] MegaOtt Subscription created:', subscription);
 
       await prisma.subscriptionPayment.update({
         where: { id: paymentId },
         data: { subscription_id: subscription.subscription_id }
       });
-
       logger.log('🔗 [ipn] Payment linked to subscription:', {
         paymentId,
         subscription_id: subscription.subscription_id
       });
 
-      // Emit event to socket server
       try {
         const updatedPayment = await prisma.subscriptionPayment.findUnique({
           where: { id: paymentId }
@@ -232,7 +214,6 @@ export async function POST(request) {
           payment: updatedPayment,
           subscription
         });
-        // 📢 Transaction event sent
         logger.log('📢 [ipn] transactionFinished emitted for:', paymentId);
       } catch (error) {
         logger.error('❌ [ipn] Error emitting transactionFinished:', error);
@@ -242,15 +223,28 @@ export async function POST(request) {
         '❌ [ipn] MegaOTT Subscription Creation failed:',
         error?.response?.data || error
       );
+      // 🔔 Notify both admin and user — payment succeeded but subscription didn’t
+      try {
+        await sendBackendErrorNotification(
+          'both',
+          {
+            user_id: user?.user_id || paymentRecord.user_id,
+            name: user?.name || user?.email || 'User'
+          },
+          'Subscription creation failed after payment',
+          // 💬 Exact user-facing message you requested:
+          'Payment was processed but the subscription did not get created properly. Please contact the admin through the Live Chat to let them know.',
+          JSON.stringify(error?.response?.data || { message: String(error) })
+        );
+      } catch {}
       return NextResponse.json({ error: 'MegaOTT subscription creation error' }, { status: 500 });
     }
   } else {
     logger.log(
-      `⏭️ [ipn] Subscription creation skipped | status: ${payment_status} alreadyLinked to subscription: ${!!paymentRecord.subscription_id}`
+      `⏭️ [ipn] Subscription creation skipped | status: ${payment_status} alreadyLinked: ${!!paymentRecord.subscription_id}`
     );
   }
 
-  // ✅ Done!
   logger.log('✅ [ipn] IPN processed successfully for id:', paymentId);
   return NextResponse.json({ ok: true }, { status: 200 });
 }

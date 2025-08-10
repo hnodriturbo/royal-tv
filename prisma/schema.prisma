@@ -68,6 +68,7 @@ model Subscription {
   subscription_id         String             @id @default(uuid()) @db.Uuid
   user_id                 String             @db.Uuid
   order_id                String             @unique
+  order_description       String?
   megaott_id              Int?
   username                String?
   password                String?
@@ -104,6 +105,10 @@ model SubscriptionPayment {
   package_slug      String?
   adult             Boolean?      @default(false)
   enable_vpn        Boolean?      @default(false)
+  package_id        Int?
+  max_connections   Int?
+  template_id       Int?          @default(0)
+  forced_country    String?       @default("ALL")
   payment_id        String?
   purchase_id       String?
   invoice_id        String?
@@ -153,7 +158,7 @@ model FreeTrial {
   dns_link                String?
   dns_link_for_samsung_lg String?
   portal_link             String?
-  status                  FreeTrialStatus @default(pending)
+  status                  FreeTrialStatus @default(active)
   claimedAt               DateTime        @default(now())
   createdAt               DateTime        @default(now())
   updatedAt               DateTime        @updatedAt
@@ -255,4 +260,5 @@ enum NotificationType {
   freeTrial
   liveChatMessage
   newUserRegistration
+  error
 }

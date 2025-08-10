@@ -140,7 +140,7 @@ const UserConversations = () => {
           {pagedConversations.length === 0 ? (
             <p className="text-center">No conversations found.</p>
           ) : (
-            <table className="w-full border-collapse border border-gray-300 min-w-[600px]">
+            <table className="w-full border-collapse border border-gray-300 min-w-[600px] text-shadow-dark-1">
               <thead>
                 <tr className="bg-gray-700 text-white">
                   <th className="border border-gray-300 px-4 py-2">ID</th>

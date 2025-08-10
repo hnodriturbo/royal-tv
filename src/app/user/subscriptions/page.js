@@ -23,6 +23,7 @@ import { useSearchParams } from 'next/navigation';
 import Countdown from '@/components/ui/countdown/Countdown';
 import RefreshCountdownTimer from '@/components/reusableUI/RefreshCountdownTimer';
 import calculateMonthsDaysLeft from '@/lib/calculateMonthsDaysLeft';
+import UserSubscriptionPanel from '@/components/reusableUI/socket/UserSubscriptionPanel';
 
 export default function UserSubscriptionsMainPage() {
   // 🧑‍💻 Auth/session logic
@@ -45,6 +46,16 @@ export default function UserSubscriptionsMainPage() {
       return () => clearTimeout(timer);
     }
   }, [showSuccess]);
+
+  // 🧪 Expiry helper — safe anywhere
+  const isExpiredDate = (value) => {
+    // 🧷 Parse defensively
+    const d = value ? new Date(value) : null;
+    // ⛔ Invalid or missing? Not expired
+    if (!(d instanceof Date) || isNaN(d)) return false;
+    // ⏰ Compare to now
+    return d <= new Date();
+  };
 
   // 📥 Fetch user subscriptions
   const fetchSubscriptions = async () => {
@@ -124,18 +135,8 @@ export default function UserSubscriptionsMainPage() {
         <div className="flex flex-col gap-8 w-full mt-6">
           {/* 🚫 No subscriptions message */}
           {pagedSubscriptions.length === 0 && (
-            <div className="flex flex-col items-center justify-center my-10">
-              <RefreshCountdownTimer
-                onRefresh={fetchSubscriptions}
-                intervalSeconds={3600}
-                showManualRefreshButton={true}
-                className="mt-2"
-              />
-              <div className="text-lg text-center mt-2">
-                This page will auto-refresh every hour.
-                <br />
-                As soon as your subscription is ready, it will appear here!
-              </div>
+            <div className="lg:w-[600px] w-full mx-auto">
+              <UserSubscriptionPanel user_id={session?.user?.user_id} />
             </div>
           )}
 
@@ -153,8 +154,14 @@ export default function UserSubscriptionsMainPage() {
           {/* 🃏 Subscription Cards - Free Trial style for each subscription */}
           <div className="flex flex-col gap-8 w-full mt-6">
             {pagedSubscriptions.map((sub) => {
-              // ✅ Get the time left on the subscription
-              const timeLeft = calculateMonthsDaysLeft(subscriptions.expiring_at);
+              // 🧭 Parse & guards
+              const expiringDate = sub?.expiring_at ? new Date(sub.expiring_at) : null;
+              const hasValidExpiry = expiringDate instanceof Date && !isNaN(expiringDate);
+              const isValidFutureExpiry = hasValidExpiry && expiringDate > new Date();
+
+              // ⏳ Time left only when truly in the future
+              const timeLeft = isValidFutureExpiry ? calculateMonthsDaysLeft(expiringDate) : null;
+
               // 🌈 Border & background by status
               let borderColor = 'border-gray-400',
                 bgColor = 'bg-black';
@@ -203,10 +210,17 @@ export default function UserSubscriptionsMainPage() {
                         </span>
                       </span>
                       <span className="font-bold text-2xl tracking-wide mt-1">
-                        {sub.order_description || sub.package_name || 'Subscription'}{' '}
-                        {sub.status === 'active' && sub.expiring_at && (
+                        {sub.order_description || sub.package_name} Subscription
+                        {/* ⏳ Only show "(X left)" when we actually have time left */}
+                        {timeLeft && (
                           <span className="text-base text-green-200 font-semibold ms-5">
-                            ({timeLeft || 'Expired'} left)
+                            ({timeLeft} left)
+                          </span>
+                        )}
+                        {/* ❌ Only show (Expired) if date exists and is truly past */}
+                        {!timeLeft && isExpiredDate(sub.expiring_at) && (
+                          <span className="text-base text-red-300 font-semibold ms-5">
+                            (Expired)
                           </span>
                         )}
                       </span>
@@ -367,9 +381,7 @@ export default function UserSubscriptionsMainPage() {
                         ⏰ Expires At:
                       </span>
                       <span className="font-bold flex items-center tracking-wide">
-                        {sub.expiring_at
-                          ? new Date(sub.expiring_at).toLocaleString()
-                          : 'Will start on first login'}
+                        {new Date(sub.expiring_at).toLocaleString()}
                       </span>
                       <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
                         📆 Created At:

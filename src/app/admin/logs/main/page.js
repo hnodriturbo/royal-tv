@@ -184,7 +184,7 @@ export default function AdminLogsMainPage() {
         {/* 💻 Desktop Table View */}
         <div className="hidden xl:flex justify-center w-full">
           <div className="w-full max-w-full overflow-x-auto">
-            <table className="min-w-[950px] w-full border-separate border-spacing-0">
+            <table className="min-w-[950px] w-full border-separate border-spacing-0 text-shadow-dark-1">
               <thead>
                 <tr className="bg-gray-600 text-base-100 font-bold">
                   <th className="border px-2 py-1">IP Address</th>

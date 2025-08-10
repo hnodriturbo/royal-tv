@@ -20,14 +20,12 @@ import { wrapper } from 'axios-cookiejar-support';
 import { NextResponse } from 'next/server';
 
 export async function POST(request) {
-  // 📌 Set the user_id from headers
+  // 📌 Extract user ID and role from middleware
   const user_id = request.headers.get('x-user-id');
-  logger.log('got user id from request headers from middleware x-user-id: ', user_id);
-  // 🛡️ Check for user role in headers
-  const role = request.headers.get('x-user-role');
+  const user_role = request.headers.get('x-user-role');
 
-  logger.log('got user role from request headers from middleware x-user-role: ', role);
-  if (role !== 'user') {
+  // 🛡️ Only allow if a real user is making the request
+  if (!user_id || user_role !== 'user') {
     return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
   }
 
@@ -118,8 +116,9 @@ export async function POST(request) {
   }
 
   // 5️⃣ Save the trial to your local database
+  let trial;
   try {
-    const trial = await prisma.freeTrial.create({
+    trial = await prisma.freeTrial.create({
       data: {
         user_id,
         megaott_id: res.id || null,
@@ -127,7 +126,7 @@ export async function POST(request) {
         password: res.password || null,
         mac_address: res.mac_address || null,
         package_id: res.package?.id || null,
-        package_name: res.package?.name || null,
+        package_name: 'Free Trial For 24H' || null,
         template: res.template || null,
         max_connections: res.max_connections ?? null,
         forced_country: res.forced_country || null,
@@ -144,8 +143,29 @@ export async function POST(request) {
     logger.log('Saved Trial To Database: ', JSON.stringify(trial, null, 2));
   } catch (error) {
     logger.log(error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // 6️⃣ Respond to frontend with trial info
-  return NextResponse.json({ trial: res }, { status: 201 });
+  // 5.5️⃣ Fetch the full user object (safe fields only!)
+  let fullUser;
+  try {
+    fullUser = await prisma.user.findUnique({
+      where: { user_id },
+      // Select only safe fields you want to send to the frontend!
+      select: {
+        user_id: true,
+        name: true,
+        email: true,
+        whatsapp: true,
+        telegram: true
+        // add more if needed, but never send password, etc!
+      }
+    });
+  } catch (error) {
+    logger.log(error.message);
+    fullUser = null;
+  }
+
+  // 6️⃣ Respond to frontend with trial info AND user
+  return NextResponse.json({ user: fullUser, trial }, { status: 201 });
 }

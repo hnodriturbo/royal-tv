@@ -33,20 +33,8 @@ export default function FreeTrialPanel({ user_id, className }) {
             ✅ Your Free Trial is <span className="underline">ACTIVE</span>!
           </div>
           <div className="mt-2">
-            <span className="text-green-700">Enjoy your access 🎉</span>
-          </div>
-        </div>
-      )}
-
-      {/* ⏳ Show PENDING status */}
-      {freeTrialStatus === 'pending' && (
-        <div className="bg-yellow-200 text-cyan-500 w-full p-4 rounded-2xl mb-2 flex flex-col items-center shadow">
-          <div className="font-bold text-lg">
-            ⏳ Your Free Trial request is <span>PENDING</span>.
-          </div>
-          <div className="mt-2">
             <Link href="/user/freeTrials">
-              <span className="text-yellow-900">See More Info Here 🕒</span>
+              <span className="text-yellow-900">✅ Click here to see your login credentials!</span>
             </Link>
           </div>
         </div>

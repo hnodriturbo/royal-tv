@@ -141,7 +141,7 @@ const AdminSeeUserConversations = () => {
         <div className="hidden xl:flex justify-center w-full">
           {/* 🖱️ Enables horizontal scroll if needed */}
           <div className="w-full max-w-full overflow-x-auto">
-            <table className="min-w-[750px] w-full border-separate border-spacing-0">
+            <table className="min-w-[750px] w-full border-separate border-spacing-0 text-shadow-dark-1">
               <thead className="text-center">
                 <tr className="bg-gray-600">
                   <th className="border border-gray-300 px-4 py-2">Conversation ID</th>

@@ -9,7 +9,7 @@
  * import PackagesGrid from '@/components/ui/PackagesGrid';
  * <PackagesGrid authenticated={authenticated} />
  */
-
+'use client';
 import Link from 'next/link';
 import { useState } from 'react';
 /**
@@ -30,37 +30,36 @@ export const packageFeatures = [
 export const paymentPackages = [
   {
     id: 1,
-    slug: '3m',
-    order_id: '3m',
-    order_description: '3 Months',
-    duration: '3 Months',
-    devices: 1,
-    price: 40,
-    package_id: 6,
-    paid: true,
-    isTrial: false
-  },
-
-  {
-    id: 2,
     slug: 'trial_24h',
     order_id: 'trial_24h',
-    order_description: '24‑Hour Trial (Paid)',
-    duration: '24 Hours',
+    order_description: '24H Free Trial (FREE)',
+    duration: '24H Free Trial (FREE)',
     devices: 1,
     price: 0,
     package_id: 2,
     paid: true,
     isTrial: true
   },
+  /*   {
+    id: 2,
+    slug: '3m',
+    order_id: '3m',
+    order_description: '3 Months',
+    duration: '3 Months (40$)',
+    devices: 1,
+    price: 40,
+    package_id: 6,
+    paid: true,
+    isTrial: false
+  }, */
   {
     id: 3,
     slug: '6m',
     order_id: '6m',
     order_description: '6 Months',
-    duration: '6 Months',
+    duration: '6 Months (60$)',
     devices: 1,
-    price: 80,
+    price: 60,
     package_id: 3,
     paid: true
   },
@@ -68,10 +67,10 @@ export const paymentPackages = [
     id: 4,
     slug: '6m_extra',
     order_id: '6m_extra',
-    order_description: '6 Months + 2 Devices',
-    duration: '6 Months',
+    order_description: '6 Months + Extra Device',
+    duration: '6 Months + Extra Device (100$)',
     devices: 2,
-    price: 120,
+    price: 100,
     package_id: 3,
     paid: true
   },
@@ -79,10 +78,10 @@ export const paymentPackages = [
     id: 5,
     slug: '12m',
     order_id: '12m',
-    order_description: '12 Months',
-    duration: '12 Months',
+    order_description: '1 Year (Most Popular)',
+    duration: '1 Year (Most Popular) (100$)',
     devices: 1,
-    price: 140,
+    price: 100,
     package_id: 5,
     paid: true
   },
@@ -90,11 +89,33 @@ export const paymentPackages = [
     id: 6,
     slug: '12m_extra',
     order_id: '12m_extra',
-    order_description: '12 Months + 2 Devices',
-    duration: '12 Months',
+    order_description: '1 Year + Extra Device',
+    duration: '1 Year + Extra Device (160$)',
     devices: 2,
-    price: 200,
+    price: 160,
     package_id: 5,
+    paid: true
+  },
+  {
+    id: 7,
+    slug: '24m',
+    order_id: '24m',
+    order_description: '2 Years',
+    duration: '2 Years (160$)',
+    devices: 2,
+    price: 160,
+    package_id: 8,
+    paid: true
+  },
+  {
+    id: 8,
+    slug: '24m_extra',
+    order_id: '24m_extra',
+    order_description: '2 Years + Extra Device',
+    duration: '2 Years + Extra Device (240$)',
+    devices: 2,
+    price: 240,
+    package_id: 8,
     paid: true
   }
 ].map((pkg) => ({
@@ -135,7 +156,7 @@ function PackageCard({ pkg, authenticated }) {
       className="justify-center
         relative border-2 max-w-2xl
         container-style rounded-2xl p-8 flex flex-col items-center shadow-2xl
-        transition-transform duration-300 hover:-translate-y-2 hover:scale-102 hover:shadow-[0_8px_40px_0_rgba(0,0,0,0.40)]
+        transition-transform duration-300 hover:scale-102 hover:shadow-[0_8px_40px_0_rgba(0,0,0,0.40)]
         backdrop-blur-lg
         min-h-fit max-h-[200px]"
     >
@@ -163,10 +184,10 @@ function PackageCard({ pkg, authenticated }) {
       <div className="flex flex-col items-center justify-center w-full mb-4">
         <div className="max-w-lg w-full mx-auto bg-black/50 rounded-2xl p-6 shadow-xl">
           {/* 📝 Features list, left-aligned with left padding */}
-          <ul className="mb-6 mt-2 text-cyan-100 text-base font-medium space-y-1 text-left pl-6">
+          <ul className="mb-2 mt-2 text-cyan-100 text-base font-medium space-y-1 text-left pl-6">
             {packageFeatures.map((feature, i) => (
               <li key={i} className="flex items-center gap-2">
-                <span className="text-wonderful-5">✔️</span>
+                <span className="text-2xl">✔️</span>
                 {feature}
               </li>
             ))}
@@ -210,19 +231,19 @@ function PackageCard({ pkg, authenticated }) {
       <div className="flex flex-col gap-2 w-full mt-auto">
         {authenticated ? (
           <Link href={buyNowUrl} className="w-full">
-            <button className="btn-primary w-full py-3 rounded-xl font-bold text-xl tracking-wide shadow-xl transition hover:scale-105">
+            <button className="btn-primary text-glow btn-glow text-black w-full py-3 rounded-xl font-bold text-xl tracking-wide shadow-xl hover:scale-102">
               Buy Now
             </button>
           </Link>
         ) : (
           <Link href="/auth/signup" className="w-full">
-            <button className="btn-secondary w-full py-3 rounded-xl font-bold text-xl tracking-wide shadow-xl transition hover:scale-105">
+            <button className="btn-secondary text-glow btn-glow text-black w-full py-3 rounded-xl font-bold text-xl tracking-wide shadow-xl hover:scale-102">
               Register to Buy
             </button>
           </Link>
         )}
         <Link href={pkg.detailsUrl} className="w-full">
-          <button className="btn-info w-full py-3 rounded-xl font-bold text-lg tracking-wide shadow-lg hover:scale-105">
+          <button className="btn-info text-glow text-black w-full py-3 rounded-xl font-bold text-lg tracking-wide shadow-lg hover:scale-102">
             More Info
           </button>
         </Link>

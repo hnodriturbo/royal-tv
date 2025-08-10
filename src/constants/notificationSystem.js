@@ -49,7 +49,10 @@ function safeTemplateCall(templates, key, data, errorCtx) {
   return fn(data);
 }
 
-// 👤 USER Notification Builders – always (user, payload)
+/**
+ * 👤 USER Notification Builders
+ * ✨ Always (user, payload)
+ */
 export const userNotificationBuilder = {
   newUserRegistration: (user) => {
     // 🧩 Only user data for registration
@@ -67,6 +70,7 @@ export const userNotificationBuilder = {
       type: NotificationType.NEW_USER_REGISTRATION
     };
   },
+
   freeTrialRequested: (user, freeTrial) => {
     const data = mergeUserAndPayload(user, freeTrial);
     const key = `${NotificationType.FREE_TRIAL}_requested`;
@@ -78,6 +82,7 @@ export const userNotificationBuilder = {
       type: NotificationType.FREE_TRIAL
     };
   },
+
   freeTrialActivated: (user, freeTrial) => {
     const data = mergeUserAndPayload(user, freeTrial);
     const key = `${NotificationType.FREE_TRIAL}_activated`;
@@ -89,6 +94,7 @@ export const userNotificationBuilder = {
       type: NotificationType.FREE_TRIAL
     };
   },
+
   subscriptionCreated: (user, subscription) => {
     const data = mergeUserAndPayload(user, subscription);
     const key = `${NotificationType.SUBSCRIPTION}_created`;
@@ -100,6 +106,7 @@ export const userNotificationBuilder = {
       type: NotificationType.SUBSCRIPTION
     };
   },
+
   subscriptionActivated: (user, subscription) => {
     const data = mergeUserAndPayload(user, subscription);
     const key = `${NotificationType.SUBSCRIPTION}_activated`;
@@ -116,6 +123,7 @@ export const userNotificationBuilder = {
       type: NotificationType.SUBSCRIPTION
     };
   },
+
   paymentReceived: (user, payment) => {
     const data = mergeUserAndPayload(user, payment);
     const template = safeTemplateCall(
@@ -131,6 +139,7 @@ export const userNotificationBuilder = {
       type: NotificationType.PAYMENT
     };
   },
+
   liveChatMessage: (user, messageAndConversation) => {
     const data = mergeUserAndPayload(user, messageAndConversation);
     const template = safeTemplateCall(
@@ -145,10 +154,30 @@ export const userNotificationBuilder = {
       link: template.link,
       type: NotificationType.LIVE_CHAT_MESSAGE
     };
+  },
+
+  // ❌ USER builder for error
+  error: (user = {}, error) => {
+    const data = mergeUserAndPayload(user, error);
+    const template = safeTemplateCall(
+      userNotificationTemplates,
+      NotificationType.ERROR,
+      data,
+      'user error'
+    );
+    return {
+      title: template.title,
+      body: template.body,
+      link: template.link,
+      type: NotificationType.ERROR
+    };
   }
 };
 
-// 👑 ADMIN Notification Builders – always (user, payload)
+/**
+ * 👑 ADMIN Notification Builders
+ * ✨ Always (user, payload)
+ */
 export const adminNotificationBuilder = {
   newUserRegistration: (user) => {
     // 🧩 Only user data for registration
@@ -166,6 +195,7 @@ export const adminNotificationBuilder = {
       type: NotificationType.NEW_USER_REGISTRATION
     };
   },
+
   freeTrialRequested: (user, freeTrial) => {
     const data = mergeUserAndPayload(user, freeTrial);
     const key = `${NotificationType.FREE_TRIAL}_requested`;
@@ -182,6 +212,7 @@ export const adminNotificationBuilder = {
       type: NotificationType.FREE_TRIAL
     };
   },
+
   freeTrialActivated: (user, freeTrial) => {
     const data = mergeUserAndPayload(user, freeTrial);
     const key = `${NotificationType.FREE_TRIAL}_activated`;
@@ -198,6 +229,7 @@ export const adminNotificationBuilder = {
       type: NotificationType.FREE_TRIAL
     };
   },
+
   subscriptionCreated: (user, subscription) => {
     const data = mergeUserAndPayload(user, subscription);
     const key = `${NotificationType.SUBSCRIPTION}_created`;
@@ -214,6 +246,7 @@ export const adminNotificationBuilder = {
       type: NotificationType.SUBSCRIPTION
     };
   },
+
   subscriptionActivated: (user, subscription) => {
     const data = mergeUserAndPayload(user, subscription);
     const key = `${NotificationType.SUBSCRIPTION}_activated`;
@@ -230,6 +263,7 @@ export const adminNotificationBuilder = {
       type: NotificationType.SUBSCRIPTION
     };
   },
+
   paymentReceived: (user, payment) => {
     const data = mergeUserAndPayload(user, payment);
     const template = safeTemplateCall(
@@ -245,6 +279,7 @@ export const adminNotificationBuilder = {
       type: NotificationType.PAYMENT
     };
   },
+
   liveChatMessage: (user, messageAndConversation) => {
     const data = mergeUserAndPayload(user, messageAndConversation);
     const template = safeTemplateCall(
@@ -258,6 +293,22 @@ export const adminNotificationBuilder = {
       body: template.body,
       link: template.link,
       type: NotificationType.LIVE_CHAT_MESSAGE
+    };
+  },
+  // 👑 ADMIN builder for error
+  error: (user = {}, error) => {
+    const data = mergeUserAndPayload(user, error);
+    const template = safeTemplateCall(
+      adminNotificationTemplates,
+      NotificationType.ERROR,
+      data,
+      'admin error'
+    );
+    return {
+      title: template.title,
+      body: template.body,
+      link: template.link,
+      type: NotificationType.ERROR
     };
   }
 };

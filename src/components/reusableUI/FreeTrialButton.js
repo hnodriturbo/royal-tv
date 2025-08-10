@@ -12,15 +12,19 @@
 
 'use client';
 
+import logger from '@/lib/logger';
 import { useState } from 'react';
 import useModal from '@/hooks/useModal'; // 🌟 Modal hook for confirmation
 import useAppHandlers from '@/hooks/useAppHandlers'; // 🛠️ App handler for loader/messages
 import axiosInstance from '@/lib/axiosInstance';
+import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
 
 export default function FreeTrialButton({ user_id, refreshStatus }) {
   // 🌀 Local loading state
   const [loading, setLoading] = useState(false);
 
+  const { createFreeTrialCreatedNotification } = useCreateNotifications();
+  const [freeTrial, setFreeTrial] = useState([]);
   // 🔮 Modal handlers
   const { openModal, hideModal } = useModal();
 
@@ -43,25 +47,30 @@ export default function FreeTrialButton({ user_id, refreshStatus }) {
 
   // 🚀 The actual free trial API logic (called from modal onConfirm)
   const handleRequestTrial = async () => {
-    setLoading(true);
-    showLoader({ text: 'Requesting your free trial…' }); // ⏳
-
     try {
-      await axiosInstance.post('/api/megaott/freeTrial', {});
-      displayMessage(
-        '✅ Free trial requested! You will receive a notification when it is ready.',
-        'success'
-      );
-      refreshStatus && refreshStatus(); // 🔄
-      hideModal(); // 🧹
+      showLoader({ text: 'Requesting your free trial…' }); // ⏳
+      // ✨ Call the endpoint and get the user and trial from the response
+      const response = await axiosInstance.post('/api/megaott/freeTrial', {});
+      const { user, trial } = response.data;
+
+      // ✅ Set the free trial and display a success message
+      setFreeTrial(trial);
+      displayMessage('✅ Free trial requested! You can start watching right now!', 'success');
+
+      // ♻️ Refresh the status of the free trial
+      refreshStatus && refreshStatus();
+
+      // 📌 Create the notification both for admin and user (plus emails)
+      createFreeTrialCreatedNotification(user, trial);
+      logger.log('Created free trial notifications!');
     } catch (err) {
       displayMessage(
         `❗ ${err.response?.data?.error || 'Trial request failed. Try again later.'}`,
         'error'
       );
     } finally {
-      setLoading(false);
       hideLoader();
+      hideModal(); // ⚡ Hide the modal
     }
   };
 
