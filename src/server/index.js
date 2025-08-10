@@ -8,7 +8,7 @@
  * ===========================================
  */
 
-import logger from '../lib/logger.js';
+import logger from '../lib/core/logger.js';
 import registerMessageEvents from './messageEvents.js';
 import registerRoomEvents from './roomEvents.js';
 import registerUserEvents from './userEvents.js';

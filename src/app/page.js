@@ -9,7 +9,7 @@
 
 'use client';
 
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';

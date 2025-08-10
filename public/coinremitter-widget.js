@@ -1,4 +1,4 @@
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 /**
  * ===============================================
  * 🚀 Coinremitter Payment Button Widget Integrator

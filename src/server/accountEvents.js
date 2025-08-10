@@ -25,8 +25,8 @@
  * ======================================================
  */
 
-import prisma from '../lib/prisma.js';
-import logger from '../lib/logger.js'; // 🪵 Centralized logger for all logs
+import prisma from '../lib/core/prisma.js';
+import logger from '../lib/core/logger.js'; // 🪵 Centralized logger for all logs
 
 export default function registerAccountEvents(io, socket) {
   /* ------------- Subscription Socket Events ------------- */

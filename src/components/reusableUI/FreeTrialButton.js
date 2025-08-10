@@ -12,11 +12,11 @@
 
 'use client';
 
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import { useState } from 'react';
 import useModal from '@/hooks/useModal'; // 🌟 Modal hook for confirmation
 import useAppHandlers from '@/hooks/useAppHandlers'; // 🛠️ App handler for loader/messages
-import axiosInstance from '@/lib/axiosInstance';
+import axiosInstance from '@/lib/core/axiosInstance';
 import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
 
 export default function FreeTrialButton({ user_id, refreshStatus }) {

@@ -15,8 +15,8 @@
  * ==================================================================
  */
 
-import logger from '@/lib/logger';
-import prisma from '@/lib/prisma';
+import logger from '@/lib/core/logger';
+import prisma from '@/lib/core/prisma';
 import { NextResponse } from 'next/server';
 
 // 📦 GET: Returns all subscriptions for the user (main sub is first in array)

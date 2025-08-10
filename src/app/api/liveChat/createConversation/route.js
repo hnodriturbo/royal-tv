@@ -11,9 +11,9 @@
  * 🏰 Royal TV rule: Only USERS can own conversations! Admins can create, but never own.
  */
 
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import prisma from '@/lib/core/prisma';
 
 export async function POST(request) {
   const { subject, message, user_id } = await request.json();

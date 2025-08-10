@@ -18,8 +18,8 @@
  */
 
 import { NextResponse } from 'next/server';
-import logger from '@/lib/logger';
-import prisma from '@/lib/prisma';
+import logger from '@/lib/core/logger';
+import prisma from '@/lib/core/prisma';
 import axios from 'axios';
 import { CookieJar } from 'tough-cookie';
 import { wrapper } from 'axios-cookiejar-support';

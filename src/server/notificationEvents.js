@@ -9,9 +9,9 @@
  * ===============================================================
  */
 
-import logger from '../lib/logger.js';
+import logger from '../lib/core/logger.js';
 import notificationSystem from '../constants/notificationSystem.js';
-import prisma from '../lib/prisma.js';
+import prisma from '../lib/core/prisma.js';
 import { sendEmailToAdmin } from '../lib/email/sendEmailToAdmin.js';
 import { sendEmailToUser } from '../lib/email/sendEmailToUser.js';
 

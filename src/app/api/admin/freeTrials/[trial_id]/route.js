@@ -7,8 +7,8 @@
  * ===========================================================
  */
 
-import logger from '@/lib/logger';
-import prisma from '@/lib/prisma';
+import logger from '@/lib/core/logger';
+import prisma from '@/lib/core/prisma';
 import { NextResponse } from 'next/server';
 
 export async function GET(request, context) {

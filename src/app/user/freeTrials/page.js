@@ -14,7 +14,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useState, useCallback, useEffect } from 'react';
-import axiosInstance from '@/lib/axiosInstance';
+import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import { useRouter } from 'next/navigation';

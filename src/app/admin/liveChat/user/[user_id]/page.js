@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import axiosInstance from '@/lib/axiosInstance';
+import axiosInstance from '@/lib/core/axiosInstance';
 import Link from 'next/link';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useAuthGuard from '@/hooks/useAuthGuard';

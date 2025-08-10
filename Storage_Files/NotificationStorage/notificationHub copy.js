@@ -14,8 +14,8 @@
 
 // ========= Imports =========
 import { NotificationType, NotificationLinks, getNotificationLink } from './notificationTypes';
-import AdminNotificationTemplates from '../adminNotificationTemplates';
-import UserNotificationTemplates from '../userNotificationTemplates';
+import AdminNotificationTemplates from '../../src/constants/adminNotificationTemplates';
+import UserNotificationTemplates from '../../src/constants/userNotificationTemplates';
 
 // ========= Template getters =========
 

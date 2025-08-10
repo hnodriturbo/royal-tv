@@ -11,7 +11,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import axiosInstance from '@/lib/axiosInstance'; // ✅ Custom Axios instance
+import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers'; // ✅ Custom message/loader hooks
 import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications'; // ✅ Custom Create Notifications hook
 

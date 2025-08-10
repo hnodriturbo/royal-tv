@@ -4,8 +4,8 @@
  * Allows ANY number of admins and ANY number of users per room!
  */
 
-import logger from '../lib/logger.js';
-import prisma from '../lib/prisma.js';
+import logger from '../lib/core/logger.js';
+import prisma from '../lib/core/prisma.js';
 
 export default function registerRoomEvents(io, socket, globalState) {
   // 1️⃣ Room join handler: allow anyone to join, multiple times (dev-friendly)

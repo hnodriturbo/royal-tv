@@ -1,5 +1,5 @@
 // pages/admin/users.js
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ReusableTable from '@/components/ui/ReusableTable';
@@ -20,7 +20,7 @@ export default function UsersPage() {
   // 2️⃣ Table columns definition
   const columns = [
     { key: 'name', title: 'Name', dataIndex: 'name' },
-    { key: 'email', title: 'Email', dataIndex: 'email' },
+    { key: 'email', title: 'Email', dataIndex: 'email' }
   ];
 
   // 3️⃣ State for users
@@ -29,9 +29,7 @@ export default function UsersPage() {
   // 4️⃣ Actions renderer for each row
   const renderActions = (row) => (
     <Link href={`/admin/users/${row.id}`}>
-      <button className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
-        View
-      </button>
+      <button className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">View</button>
     </Link>
   );
 

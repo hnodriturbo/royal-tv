@@ -8,9 +8,9 @@
  *   • x-user-role: must be "admin"
  */
 
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import prisma from '@/lib/core/prisma';
 export async function GET(request) {
   // 🛡️ Check for admin role in headers
   const role = request.headers.get('x-user-role');

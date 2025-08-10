@@ -4,7 +4,7 @@
  * Inserts a real subscription (id: 8647612) for testing
  */
 
-import prisma from '../../src/lib/prisma.js'; // Adjust if your prisma.js path differs
+import prisma from '../../src/lib/core/prisma.js'; // Adjust if your prisma.js path differs
 
 async function seedRealMegaottSubscription() {
   const userId = '0038bb49-5d65-423a-a55c-445c064dccc8';

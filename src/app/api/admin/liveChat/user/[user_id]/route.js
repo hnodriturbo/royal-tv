@@ -5,9 +5,9 @@
  * No pagination: client does all pagination and sorting!
  * --------------------------------------
  */
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import prisma from '@/lib/core/prisma';
 
 export async function GET(request, context) {
   // 1️⃣ Extract path param

@@ -8,7 +8,7 @@
  * - Royal TV real-time emoji commenting everywhere! 🦁✨
  */
 
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import clsx from 'clsx'; // 🎨 Utility for clean conditional classes
 import dayjs from 'dayjs'; // 🕒 Dates formatting

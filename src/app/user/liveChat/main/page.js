@@ -13,7 +13,7 @@ import { useSession } from 'next-auth/react';
 
 // Local imports
 import Link from 'next/link';
-import axiosInstance from '@/lib/axiosInstance';
+import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useModal from '@/hooks/useModal';
 import useAuthGuard from '@/hooks/useAuthGuard';

@@ -8,16 +8,16 @@
  * ==================================================================
  */
 
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import prisma from '@/lib/prisma.js';
+import prisma from '@/lib/core/prisma.js';
 
 // 📧 Email helpers & templates
 import { sendEmailToAdmin } from '@/lib/email/sendEmailToAdmin.js';
 import { sendEmailToUser } from '@/lib/email/sendEmailToUser.js';
-import { adminNewUserEmail } from '@/lib/email/premade/adminNewUserEmail.js';
-import { userNewUserEmail } from '@/lib/email/premade/userNewUserEmail.js';
+import { adminNewUserEmail } from 'Storage_Files/emailStorage/adminNewUserEmail.js';
+import { userNewUserEmail } from 'Storage_Files/emailStorage/userNewUserEmail.js';
 
 // 🆕 Unified notification system import!
 import notificationSystem from '@/constants/notificationSystem.js';

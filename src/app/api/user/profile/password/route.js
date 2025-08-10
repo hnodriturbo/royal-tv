@@ -1,8 +1,8 @@
 'use server';
 
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import prisma from '@/lib/core/prisma';
 import bcrypt from 'bcryptjs';
 
 export async function PUT(request) {

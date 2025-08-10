@@ -23,7 +23,7 @@
 
 import { NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import logger from './lib/logger.js';
+import logger from './lib/core/logger.js';
 
 export async function middleware(request) {
   // 🍪 Figure out cookie name based on environment

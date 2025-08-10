@@ -8,8 +8,8 @@
  */
 
 import { NotificationType } from './notificationHub.js';
-import userTemplates from '../userNotificationTemplates.js';
-import adminTemplates from '../adminNotificationTemplates.js';
+import userTemplates from '../../src/constants/userNotificationTemplates.js';
+import adminTemplates from '../../src/constants/adminNotificationTemplates.js';
 
 // Interpolator (for {key} tokens in template strings)
 function interpolate(template, data) {

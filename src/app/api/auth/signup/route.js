@@ -8,10 +8,10 @@
  * ==================================================================
  */
 
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import prisma from '@/lib/prisma.js';
+import prisma from '@/lib/core/prisma.js';
 
 export async function POST(request) {
   const { name, username, email, password, whatsapp, telegram, preferredContactWay, sendEmails } =

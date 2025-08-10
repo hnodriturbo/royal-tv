@@ -1,6 +1,26 @@
-import logger from '@/lib/logger';
+/**
+ * GET /api/admin/liveChat/[conversation_id]
+ * ------------------------------------------
+ * Fetches full details for a single live chat conversation.
+ * Includes all messages in chronological order and unread count.
+ * Admin-only route! Used by the admin panel to view conversation history.
+ *
+ * Path Params:
+ *   • conversation_id: string (ID of the live chat conversation)
+ *
+ * Headers:
+ *   • x-user-role: must be "admin"
+ *
+ * Response:
+ *   • conversation_id, subject, updatedAt
+ *   • owner (user_id, name, email, username)
+ *   • messages[] (all fields + timestamps)
+ *   • unreadCount: number of unread user messages
+ */
+
+import logger from '@/lib/core/logger';
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import prisma from '@/lib/core/prisma';
 
 export async function GET(request, context) {
   const { conversation_id } = await context.params;

@@ -16,7 +16,7 @@
  * =========================================================
  */
 
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import { useCallback } from 'react';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 

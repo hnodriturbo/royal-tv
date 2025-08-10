@@ -7,7 +7,7 @@
  */
 
 import { NextResponse } from 'next/server'; // 📤
-import prisma from '@/lib/prisma'; // 🗄️
+import prisma from '@/lib/core/prisma'; // 🗄️
 
 export async function GET(request) {
   // 🔒 Admin check

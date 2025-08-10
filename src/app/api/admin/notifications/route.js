@@ -6,9 +6,9 @@
  * - Reads user_id from x-user-id header, never from query!
  * =================================================================
  */
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma.js';
+import prisma from '@/lib/core/prisma.js';
 
 export async function GET(request) {
   // 1️⃣ Get user_id from headers (always, never from URL)

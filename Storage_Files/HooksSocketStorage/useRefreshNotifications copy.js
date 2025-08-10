@@ -7,7 +7,7 @@
  * ================================================
  */
 
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 
 export default function useRefreshNotifications(userId) {

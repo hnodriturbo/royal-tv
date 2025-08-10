@@ -6,7 +6,7 @@
  * ------------------------------------------
  */
 
-import prisma from '../../src/lib/prisma.js'; // ✅ Adjust if needed
+import prisma from '../../src/lib/core/prisma.js'; // ✅ Adjust if needed
 
 // 📅 Helper: Add N days to current date
 function getFutureDate(daysAhead) {

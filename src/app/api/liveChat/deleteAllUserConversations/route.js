@@ -6,9 +6,9 @@
  *   • user_id : string (UUID)  ← required
  * Middleware: Requires admin role
  */
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import prisma from '@/lib/core/prisma';
 
 export async function DELETE(request) {
   try {

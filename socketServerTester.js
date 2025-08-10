@@ -1,4 +1,4 @@
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { instrument } from '@socket.io/admin-ui';

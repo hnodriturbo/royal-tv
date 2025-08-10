@@ -2,7 +2,7 @@
 // ✅ PROVIDE SAFE INITIAL DEFAULT VALUES
 'use client';
 
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import { createContext, useEffect, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { useSession } from 'next-auth/react';

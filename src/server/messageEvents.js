@@ -7,9 +7,9 @@
  * ==============================================
  */
 
-import logger from '../lib/logger.js';
+import logger from '../lib/core/logger.js';
 import dayjs from 'dayjs'; // 🗓️ For consistent dates (optional)
-import prisma from '../lib/prisma.js'; // 📦 Prisma client singleton
+import prisma from '../lib/core/prisma.js'; // 📦 Prisma client singleton
 
 // 🧪 UUID checker – always validate IDs from the outside!
 const isUuid = (val) => typeof val === 'string' && /^[0-9a-fA-F-]{36}$/.test(val);

@@ -19,7 +19,7 @@
  * =====================================================================
  */
 
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import { useState, useEffect, useCallback } from 'react';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 

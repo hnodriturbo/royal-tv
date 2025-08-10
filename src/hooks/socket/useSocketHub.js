@@ -7,7 +7,7 @@
  * =====================================================================
  */
 
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import { useCallback, useRef, useEffect } from 'react';
 import useSocket from '@/hooks/socket/useSocket';
 

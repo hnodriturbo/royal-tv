@@ -13,12 +13,12 @@
 'use client';
 
 // ✅ Import core logic for this page
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import { useEffect, useMemo, useCallback, useState } from 'react';
 import { useParams, notFound, useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
-import axiosInstance from '@/lib/axiosInstance'; // 🪄 Custom axios instance
+import axiosInstance from '@/lib/core/axiosInstance';
 import useAuthGuard from '@/hooks/useAuthGuard'; // 🛡️ Guard
 import useAppHandlers from '@/hooks/useAppHandlers'; // 🛠️ Loader/message
 import useSocketHub from '@/hooks/socket/useSocketHub'; // 📡 Unified socket hub

@@ -33,7 +33,7 @@ import clsx from 'clsx';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useModal from '@/hooks/useModal';
-import axiosInstance from '@/lib/axiosInstance';
+import axiosInstance from '@/lib/core/axiosInstance';
 import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
 
 export default function ConversationActionButton({

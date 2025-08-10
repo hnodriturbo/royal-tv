@@ -9,8 +9,8 @@
  * =========================================
  */
 
-import prisma from '../lib/prisma.js'; // 🗄️ Prisma client
-import logger from '../lib/logger.js'; // 📌 Logger
+import prisma from '../lib/core/prisma.js'; // 🗄️ Prisma client
+import logger from '../lib/core/logger.js'; // 📌 Logger
 
 export default function registerLogEvents(io, socket) {
   // 🪵 Log every page visit received from the client

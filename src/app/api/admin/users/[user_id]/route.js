@@ -1,8 +1,8 @@
 'use server';
 
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import prisma from '@/lib/core/prisma';
 
 /*
  * GET /api/admin/users/[user_id]
@@ -25,8 +25,8 @@ export async function GET(request, { params }) {
         role: true,
         whatsapp: true,
         telegram: true,
-        createdAt: true,
-      },
+        createdAt: true
+      }
     });
 
     if (!user) {
@@ -67,18 +67,15 @@ export async function PATCH(request, { params }) {
         role: true,
         whatsapp: true,
         telegram: true,
-        createdAt: true,
-      },
+        createdAt: true
+      }
     });
 
     logger.log('[API PATCH] Updated user:', updatedUser);
     return NextResponse.json(updatedUser);
   } catch (error) {
     logger.error('[API PATCH] Error updating user:', error);
-    return NextResponse.json(
-      { error: 'Failed to update user' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
   }
 }
 
@@ -92,15 +89,12 @@ export async function DELETE(request, { params }) {
 
   try {
     await prisma.user.delete({
-      where: { user_id },
+      where: { user_id }
     });
     logger.log('[API DELETE] User deleted successfully');
     return NextResponse.json({ message: 'User deleted successfully' });
   } catch (error) {
     logger.error('[API DELETE] Error deleting user:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete user' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
   }
 }

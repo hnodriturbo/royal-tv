@@ -6,9 +6,9 @@
  * ===============================================
  */
 
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import crypto from 'crypto';
-import prisma from '@/lib/prisma';
+import prisma from '@/lib/core/prisma';
 import axios from 'axios';
 import { NextResponse } from 'next/server';
 // 🔔 Error notifications to socket bridge

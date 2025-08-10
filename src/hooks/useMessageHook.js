@@ -1,15 +1,13 @@
 'use client';
 
-import logger from '@/lib/logger';
+import logger from '@/lib/core/logger';
 import { useContext, useCallback } from 'react';
 import { ErrorAndMessageContext } from '@/context/ErrorAndMessageContext';
 
 const useMessageHandler = () => {
   const context = useContext(ErrorAndMessageContext);
   if (!context) {
-    throw new Error(
-      'useMessageHandler must be used within an ErrorAndMessageProvider',
-    );
+    throw new Error('useMessageHandler must be used within an ErrorAndMessageProvider');
   }
 
   const { addMessage } = context;
@@ -23,7 +21,7 @@ const useMessageHandler = () => {
         logger.error('addMessage is not defined in ErrorAndMessageContext.');
       }
     },
-    [addMessage],
+    [addMessage]
   );
 
   return { displayMessage };

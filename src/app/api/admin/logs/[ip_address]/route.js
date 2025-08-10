@@ -6,7 +6,7 @@
  * - Admins only (header x-user-role: admin)
  * ================================================
  */
-import prisma from '@/lib/prisma';
+import prisma from '@/lib/core/prisma';
 import { NextResponse } from 'next/server';
 
 // ✅ Get ALL logs for a given IP address

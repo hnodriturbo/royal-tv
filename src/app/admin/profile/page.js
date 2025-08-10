@@ -23,7 +23,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import useAppHandlers from '@/hooks/useAppHandlers';
-import axiosInstance from '@/lib/axiosInstance';
+import axiosInstance from '@/lib/core/axiosInstance';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import { useRouter } from 'next/navigation';
 
