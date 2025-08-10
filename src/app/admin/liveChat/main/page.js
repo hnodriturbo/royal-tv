@@ -17,7 +17,7 @@ import useLocalSorter from '@/hooks/useLocalSorter'; // 🧠 Local sorter hook
 import {
   userWithConversationsSortOptions,
   getUserWithConversationsSortFunction
-} from '@/lib/sorting';
+} from '@/lib/utils/sorting';
 import Pagination from '@/components/reusableUI/Pagination';
 
 const ConversationsPage = () => {

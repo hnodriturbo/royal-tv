@@ -25,7 +25,7 @@ import SortDropdown from '@/components/reusableUI/SortDropdown';
 import useLocalSorter from '@/hooks/useLocalSorter';
 
 // 📚 Get the sorting options from the sorting file
-import { logSortOptions, getLogSortFunction } from '@/lib/sorting';
+import { logSortOptions, getLogSortFunction } from '@/lib/utils/sorting';
 
 // ♻️ Auto Refresh Import
 import { useAutoRefresh } from '@/hooks/useAutoRefresh';

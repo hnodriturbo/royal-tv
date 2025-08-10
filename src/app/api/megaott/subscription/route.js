@@ -23,7 +23,7 @@ import prisma from '@/lib/core/prisma';
 import axios from 'axios';
 import { CookieJar } from 'tough-cookie';
 import { wrapper } from 'axios-cookiejar-support';
-import generateRandomUsername from '@/lib/generateUsername';
+import generateRandomUsername from '@/lib/utils/generateUsername';
 import { sendBackendErrorNotification } from '@/lib/notifications/errorNotificationBackend';
 
 export async function POST(request) {

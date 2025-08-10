@@ -26,7 +26,7 @@ import SortDropdown from '@/components/reusableUI/SortDropdown';
 import useLocalSorter from '@/hooks/useLocalSorter';
 
 // 📚 Sorting options
-import { logSortOptions, getLogSortFunction } from '@/lib/sorting';
+import { logSortOptions, getLogSortFunction } from '@/lib/utils/sorting';
 
 export default function AdminLogsByIpPage() {
   // 🛡️ Auth/session

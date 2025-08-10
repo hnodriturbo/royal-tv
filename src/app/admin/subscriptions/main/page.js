@@ -27,7 +27,7 @@ import Pagination from '@/components/reusableUI/Pagination';
 import useModal from '@/hooks/useModal';
 // Sorting
 import SortDropdown from '@/components/reusableUI/SortDropdown';
-import { userSubscriptionSortOptions, getUserSubscriptionSortFunction } from '@/lib/sorting'; // Use your user sub sort here
+import { userSubscriptionSortOptions, getUserSubscriptionSortFunction } from '@/lib/utils/sorting'; // Use your user sub sort here
 import useLocalSorter from '@/hooks/useLocalSorter';
 
 export default function AdminSubscriptionsPage() {

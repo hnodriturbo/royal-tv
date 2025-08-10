@@ -23,7 +23,7 @@ import ConversationActionButton from '@/components/reusableUI/ConversationAction
 import Pagination from '@/components/reusableUI/Pagination';
 import SortDropdown from '@/components/reusableUI/SortDropdown';
 import useLocalSorter from '@/hooks/useLocalSorter';
-import { conversationSortOptions, getConversationSortFunction } from '@/lib/sorting';
+import { conversationSortOptions, getConversationSortFunction } from '@/lib/utils/sorting';
 
 const UserConversations = () => {
   // 1️⃣ Auth helpers

@@ -14,7 +14,7 @@
 import logger from '@/lib/core/logger';
 import prisma from '@/lib/core/prisma';
 import axios from 'axios';
-import generateRandomUsername from '@/lib/generateUsername';
+import generateRandomUsername from '@/lib/utils/generateUsername';
 import { CookieJar } from 'tough-cookie';
 import { wrapper } from 'axios-cookiejar-support';
 import { NextResponse } from 'next/server';

@@ -12,7 +12,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
-import sidebarLinks from '@/lib/sidebarLinks';
+import sidebarLinks from '@/lib/utils/sidebarLinks';
 import useLogout from '@/hooks/useLogout';
 
 export default function Sidebar() {

@@ -28,7 +28,7 @@ import useModal from '@/hooks/useModal';
 import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 // Sorting
 import SortDropdown from '@/components/reusableUI/SortDropdown';
-import { freeTrialSortOptions, getFreeTrialSortFunction } from '@/lib/sorting';
+import { freeTrialSortOptions, getFreeTrialSortFunction } from '@/lib/utils/sorting';
 import useLocalSorter from '@/hooks/useLocalSorter';
 
 export default function AdminFreeTrialsPage() {

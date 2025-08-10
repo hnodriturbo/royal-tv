@@ -17,7 +17,7 @@ import useAppHandlers from '@/hooks/useAppHandlers';
 import { useSession } from 'next-auth/react';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import { useRouter } from 'next/navigation';
-import { adminUserSortOptions, getAdminUserSortFunction } from '@/lib/sorting';
+import { adminUserSortOptions, getAdminUserSortFunction } from '@/lib/utils/sorting';
 import SortDropdown from '@/components/reusableUI/SortDropdown';
 import useLocalSorter from '@/hooks/useLocalSorter';
 import Pagination from '@/components/reusableUI/Pagination';

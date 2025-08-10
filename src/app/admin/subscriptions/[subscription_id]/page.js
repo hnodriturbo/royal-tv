@@ -16,9 +16,9 @@ import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import { useRouter, useParams } from 'next/navigation';
-import { userSubscriptionSortOptions, getUserSubscriptionSortFunction } from '@/lib/sorting';
+import { userSubscriptionSortOptions, getUserSubscriptionSortFunction } from '@/lib/utils/sorting';
 import SortDropdown from '@/components/reusableUI/SortDropdown';
-import calculateMonthsDaysLeft from '@/lib/calculateMonthsDaysLeft';
+import calculateMonthsDaysLeft from '@/lib/utils/calculateMonthsDaysLeft';
 import useModal from '@/hooks/useModal';
 
 /* =================== Main Component =================== */

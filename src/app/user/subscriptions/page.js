@@ -17,12 +17,12 @@ import { useSession } from 'next-auth/react';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import { useRouter } from 'next/navigation';
 import Pagination from '@/components/reusableUI/Pagination';
-import { userSubscriptionSortOptions, getUserSubscriptionSortFunction } from '@/lib/sorting';
+import { userSubscriptionSortOptions, getUserSubscriptionSortFunction } from '@/lib/utils/sorting';
 import SortDropdown from '@/components/reusableUI/SortDropdown';
 import { useSearchParams } from 'next/navigation';
 import Countdown from '@/components/ui/countdown/Countdown';
 import RefreshCountdownTimer from '@/components/reusableUI/RefreshCountdownTimer';
-import calculateMonthsDaysLeft from '@/lib/calculateMonthsDaysLeft';
+import calculateMonthsDaysLeft from '@/lib/utils/calculateMonthsDaysLeft';
 import UserSubscriptionPanel from '@/components/reusableUI/socket/UserSubscriptionPanel';
 
 export default function UserSubscriptionsMainPage() {
