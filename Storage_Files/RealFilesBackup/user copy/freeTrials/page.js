@@ -18,83 +18,87 @@ import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import { useRouter } from 'next/navigation';
-import { useT } from '@/lib/i18n/client'; // 🌍 import translator
 
 export default function UserFreeTrialDetailsPage() {
-  // 🔐 Auth/session
+  // 🟢 Auth/session logic
   const { data: session, status } = useSession();
   const { isAllowed, redirect } = useAuthGuard('user');
   const router = useRouter();
 
-  // 🧠 Local state
+  // 🟡 Local state: trial + loading
   const [freeTrial, setFreeTrial] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 🧰 Global handlers
+  // 🌀 Global loader/app message handler
   const { showLoader, hideLoader, displayMessage } = useAppHandlers();
 
-  // 🗣️ Translator for this page
-  const t = useT('app.user.freeTrials.page');
-
-  // 🔄 Fetch latest free trial
+  // 🔄 Fetch latest free trial (callback to keep ref stable)
   const fetchFreeTrial = useCallback(async () => {
     setLoading(true);
-    showLoader({ text: t('checking_status') }); // 🌀 localized loader text
+    showLoader({ text: 'Checking your free trial status...' });
     try {
       const { data } = await axiosInstance.get('/api/user/freeTrials');
-      setFreeTrial(data || null);
+      setFreeTrial(data); // null if not found
     } catch (error) {
       setFreeTrial(null);
-      displayMessage(t('load_failed'), 'error');
+      displayMessage('Failed to load your free trial status.', 'error');
     } finally {
       setLoading(false);
       hideLoader();
     }
-  }, [showLoader, hideLoader, displayMessage, t]);
+  }, [showLoader, hideLoader, displayMessage]);
 
-  // 🚦 On mount after login
+  // 🚦 On mount: fetch trial after login
   useEffect(() => {
-    if (status === 'authenticated' && isAllowed) fetchFreeTrial();
-  }, [status, isAllowed, fetchFreeTrial]);
+    if (status === 'authenticated' && isAllowed) {
+      fetchFreeTrial();
+    }
+  }, [status, isAllowed]);
 
-  // 🔁 Redirect if not allowed
+  // 🚧 Redirect if not allowed
   useEffect(() => {
-    if (status !== 'loading' && !isAllowed && redirect) router.replace(redirect);
+    if (status !== 'loading' && !isAllowed && redirect) {
+      router.replace(redirect);
+    }
   }, [status, isAllowed, redirect, router]);
 
-  if (!isAllowed) return null; // 🚫
+  // 🛑 If not allowed, render nothing
+  if (!isAllowed) return null;
 
-  // ——— RENDER ———
+  // ——— MAIN RENDER —————————————————————————
   return (
     <div className="flex flex-col items-center justify-center w-full lg:mt-0 mt-20">
       <div className="container-style max-w-full lg:max-w-2xl mx-auto min-h-fit rounded-2xl shadow-lg p-6">
-        {/* 🎁 Heading */}
-        <h1 className="font-bold mb-6 text-center text-4xl">{t('details_heading')}</h1>
+        {/* 🎁 Free Trial Details Heading */}
+        <h1 className="font-bold mb-6 text-center text-4xl">🎁 Free Trial Details</h1>
 
-        {/* ✅ Ready/Active Trial */}
+        {/* === READY/ACTIVE TRIAL ALWAYS SHOWS AS "READY" === */}
+        {/* === READY/ACTIVE TRIAL ALWAYS SHOWS AS "READY" === */}
         {!loading &&
           freeTrial &&
           freeTrial.status !== 'disabled' &&
           freeTrial.status !== 'expired' && (
             <div className="relative flex flex-col border-4 border-green-700 rounded-2xl mb-6 p-4 shadow overflow-hidden">
+              {/* 🔲 Black overlay background, only affects background */}
               <div className="absolute inset-0 bg-black/60 z-0 rounded-2xl pointer-events-none" />
+              {/* 💡 Card content stays fully opaque */}
               <div className="relative z-10">
                 <div className="flex flex-col gap-1 items-center justify-center mb-4">
+                  {/* 🏆 Title with emoji and soft glow */}
                   <span className="text-wonderful-5">
-                    ✅ <span className="text-3xl text-glow-soft">{t('ready_title')}</span>
+                    ✅ <span className="text-3xl text-glow-soft">Your free trial is ready!</span>
                   </span>
                 </div>
-
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2 w-full max-w-lg mx-auto lg:text-lg">
                   <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
-                    👤 {t('username')}
+                    👤 Username:
                   </span>
                   <span className="font-mono font-bold flex items-center tracking-wide">
                     {freeTrial.username}
                   </span>
 
                   <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
-                    🔑 {t('password')}
+                    🔑 Password:
                   </span>
                   <span className="font-mono font-bold flex items-center tracking-wide">
                     {freeTrial.password}
@@ -103,73 +107,67 @@ export default function UserFreeTrialDetailsPage() {
                   {freeTrial.portal_link && (
                     <>
                       <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
-                        🌐 {t('portal_link')}
+                        🌐 Portal Link:
                       </span>
                       <span className="font-bold flex items-center tracking-wide">
                         {freeTrial.portal_link}
                       </span>
                     </>
                   )}
-
                   {freeTrial.dns_link && (
                     <>
                       <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
-                        🔗 {t('dns_link')}
+                        🔗 DNS Link:
                       </span>
                       <span className="font-bold flex items-center tracking-wide">
                         {freeTrial.dns_link}
                       </span>
                     </>
                   )}
-
                   {freeTrial.dns_link_for_samsung_lg && (
                     <>
                       <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
-                        📺 {t('dns_link_samsung_lg')}
+                        📺 DNS Link (Samsung/LG):
                       </span>
                       <span className="font-bold flex items-center tracking-wide">
                         {freeTrial.dns_link_for_samsung_lg}
                       </span>
                     </>
                   )}
-
                   {freeTrial.package_name && (
                     <>
                       <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
-                        📦 {t('package')}
+                        📦 Package:
                       </span>
                       <span className="font-bold flex items-center tracking-wide">
                         {freeTrial.package_name}
                       </span>
                     </>
                   )}
-
                   {freeTrial.mac_address && (
                     <>
                       <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
-                        💻 {t('mac_address')}
+                        💻 MAC Address:
                       </span>
                       <span className="font-bold flex items-center tracking-wide">
                         {freeTrial.mac_address}
                       </span>
                     </>
                   )}
-
                   {freeTrial.note && (
                     <>
                       <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
-                        🗒️ {t('note')}
+                        🗒️ Note:
                       </span>
                       <span className="font-bold flex items-center tracking-wide">
                         {freeTrial.note}
                       </span>
                     </>
                   )}
-
                   {freeTrial.whatsapp_telegram && (
                     <>
                       <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
-                        💬 {t('whatsapp_telegram')}
+                        💬 WhatsApp/Telegram:
                       </span>
                       <span className="font-bold flex items-center tracking-wide">
                         {freeTrial.whatsapp_telegram ||
@@ -179,32 +177,32 @@ export default function UserFreeTrialDetailsPage() {
                     </>
                   )}
 
-                  {/* ⏰ Expiring At */}
+                  {/* Expiring At */}
                   <>
                     <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
-                      ⏰ {t('expiring_at')}
+                      ⏰ Expiring At:
                     </span>
                     <span className="font-bold flex items-center tracking-wide">
                       {freeTrial.expiring_at
                         ? new Date(freeTrial.expiring_at).toLocaleString()
-                        : t('expiring_on_login')}
+                        : 'Will start counting on first login'}
                     </span>
                   </>
 
-                  {/* 🎯 Claimed At */}
+                  {/* Claimed At */}
                   <>
                     <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
-                      🎯 {t('claimed_at')}
+                      🎯 Claimed At:
                     </span>
                     <span className="font-bold flex items-center tracking-wide">
                       {new Date(freeTrial.claimedAt).toLocaleString()}
                     </span>
                   </>
 
-                  {/* 📝 Updated At */}
+                  {/* Updated At */}
                   <>
                     <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
-                      📝 {t('updated_at')}
+                      📝 Updated At:
                     </span>
                     <span className="font-bold flex items-center tracking-wide">
                       {new Date(freeTrial.updatedAt).toLocaleString()}
@@ -221,11 +219,13 @@ export default function UserFreeTrialDetailsPage() {
           (freeTrial.status === 'disabled' || freeTrial.status === 'expired') && (
             <div className="flex flex-col border-4 border-red-700 bg-red-300 rounded-2xl mb-6 p-4 shadow">
               <span className="text-3xl">❌</span>
-              <span className="text-black font-bold">{t('expired_title')}</span>
+              <span className="text-black font-bold">Your free trial has expired.</span>
               <span className="text-md text-black text-center">
-                {t('used_trial')}
+                You have already used your free trial.
                 <br />
-                <span className="font-bold text-black">{t('purchase_prompt')}</span>
+                <span className="font-bold text-black">
+                  🛒 Please purchase a subscription to continue enjoying our service!
+                </span>
               </span>
             </div>
           )}
@@ -234,8 +234,11 @@ export default function UserFreeTrialDetailsPage() {
         {!loading && !freeTrial && (
           <div className="flex flex-col border-4 border-orange-500 bg-orange-300 rounded-2xl mb-6 p-4 shadow">
             <span className="text-3xl">🙅‍♂️</span>
-            <span className="text-2xl text-black">{t('no_trial_title')}</span>
-            <span className="text-lg text-center text-black">{t('no_trial_message')}</span>
+            <span className="text-2xl text-black">No free trial request found.</span>
+            <span className="text-lg text-center text-black">
+              <span className="font-extrabold text-black">🤔</span> If you believe this is a
+              mistake, please contact support.
+            </span>
           </div>
         )}
       </div>

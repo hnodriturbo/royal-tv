@@ -1,0 +1,6 @@
+root = true
+
+[*.{json,js,jsx}]
+charset = utf-8          # 🌐 Enforce UTF‑8
+end_of_line = lf         # 🧵 Consistent line endings
+insert_final_newline = true

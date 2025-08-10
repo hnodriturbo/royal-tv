@@ -53,8 +53,8 @@ async function refactorFile(filePath) {
     const firstImportIndex = lines.findIndex((line) => line.trim().startsWith('import '));
     // Choose correct import path
     const importStatement = needsRelativeImport(filePath)
-      ? "import logger from '../lib/logger';"
-      : "import logger from '@/lib/logger';";
+      ? "import logger from '../lib/core/logger';"
+      : "import logger from '@/lib/core/logger';";
     if (firstImportIndex !== -1) {
       lines.splice(firstImportIndex, 0, importStatement);
     } else {

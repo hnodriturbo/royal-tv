@@ -35,24 +35,20 @@ const PaymentInstructions = () => {
 
       {/* ⏳ What happens next? */}
       <div className="mb-4 text-xl">
-        ✅{' '}
         <span className="font-bold">
-          Done ? <br />
           Just wait Here on this page and don't close it until paymnet is 100% complete..
         </span>
         <br />
-        <span className="font-bold">
-          Sometimes it takes the payment up to 1 hour to be fully complete.
-        </span>
-        <br />
         <br />
         <span className="font-bold">
-          You’ll get a confirmation notification and email as soon as payment is completed and admin
-          will activate your subscription within 24 hours.
+          You’ll get a confirmation notification and email as soon as payment is completed.
         </span>
         <br />
         <span className="font-bold">
-          You will also get notification on your dashboard and email upon activation.
+          <br />
+          <p className="text-green-500 font-extrabold tracking-widest">✅ DONE!</p>
+          <br />
+          Your subscription is activated as soon as the payment completes fully.
         </span>
       </div>
 

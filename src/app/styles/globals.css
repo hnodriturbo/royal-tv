@@ -572,7 +572,12 @@
     font-weight: 700;
     letter-spacing: 0.1em;
   */
-
+  .text-shadow-dark-1 {
+    text-shadow: var(--text-shadow-dark-1) !important;
+  }
+  .text-shadow-dark-2 {
+    text-shadow: var(--text-shadow-dark-2) !important;
+  }
   /* ----------------------------------------------------------------------------------- */
 }
 

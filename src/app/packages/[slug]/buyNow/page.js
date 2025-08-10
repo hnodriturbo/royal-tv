@@ -181,35 +181,11 @@ export default function PackageBuyNowPage() {
   return (
     <div className="flex flex-col items-center w-full lg:mt-0 mt-12">
       <div className="container-style max-w-3xl mb-6 text-center">
-        <h1 className="text-4xl font-bold text-wonderful-5 mb-2">
+        <span className="text-4xl font-bold text-outline-glow-dark-1 mb-2">
           Buy {paymentPackage.order_description} Subscription
-        </h1>
+        </span>
         <p className="text-4xl text-cyan-200 mb-4">
           Only <span className="font-bold text-yellow-300">${price}</span>
-        </p>
-        {/* ⚠️ User pays all BTC transaction fees - transparent info */}
-        <p className="text-lg text-red-400 mb-4 border border-red-600 bg-red-950 rounded-xl p-3 font-semibold">
-          {/*/ This is the official payment policy - very clear! /*/}
-          <span className="font-bold text-yellow-200">Note:</span> The total amount you will pay
-          includes both your subscription price and all required Bitcoin payment network fees.
-          <br />
-          <br />{' '}
-          <span className="text-cyan-200">
-            Crypto payments may sometimes take several minutes to be confirmed, depending on network
-            congestion.
-          </span>
-          {/*/ Remind user to keep this window open until payment is fully processed /*/}
-          <br />
-          <br />
-          <span className="font-bold">Patience is key!</span> This window will automatically update
-          when your payment is received.
-          <br />
-          <span className="font-bold text-yellow-200">Important:</span> Please{' '}
-          <span className="underline underline-offset-4 text-yellow-400">do not close</span> or
-          navigate away from this page while your payment is processing.
-          <br />
-          <br />
-          <p className="text-2xl text-cyan-200 mb-4">Instructions are below!</p>
         </p>
 
         <div className="w-full flex justify-center mt-2">
@@ -238,7 +214,34 @@ export default function PackageBuyNowPage() {
           )}
         </div>
       </div>
-
+      <div className="flex flex-col text-center lg:w-10/12 w-11/12">
+        {/* ⚠️ User pays all BTC transaction fees - transparent info */}
+        <p className="text-lg text-white mb-4 border border-red-600 bg-red-500 rounded-xl p-3 font-semibold">
+          {/*/ This is the official payment policy - very clear! /*/}
+          <span className="font-bold text-yellow-200 text-3xl text-outline-glow-dark-1">Note:</span>
+          <br />
+          The total amount you will pay includes both your subscription price and all required
+          Bitcoin payment network fees.
+          <br />
+          <br />{' '}
+          <span>
+            Crypto payments may sometimes take several minutes to be confirmed, depending on network
+            congestion.
+          </span>
+          {/*/ Remind user to keep this window open until payment is fully processed /*/}
+          <br />
+          <br />
+          <span className="font-bold">Patience is key!</span> This window will automatically update
+          when your payment is received.
+          <br />
+          <span className="font-bold text-yellow-200">Important:</span> Please{' '}
+          <span className="underline underline-offset-4 text-yellow-400">do not close</span> or
+          navigate away from this page while your payment is processing.
+          <br />
+          <br />
+          <span className="text-2xl mb-4">Instructions are below!</span>
+        </p>
+      </div>
       {/* 📄 Payment instructions always at bottom */}
       <PaymentInstructions />
     </div>

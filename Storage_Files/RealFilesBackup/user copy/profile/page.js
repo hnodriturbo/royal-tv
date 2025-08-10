@@ -26,8 +26,8 @@ import useAppHandlers from '@/hooks/useAppHandlers';
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import { useRouter } from 'next/navigation';
-import { useT } from '@/lib/i18n/client'; // 🌍 translator
 
+// 📬 contact options
 const preferredContactOptions = [
   { value: 'email', label: 'Email' },
   { value: 'whatsapp', label: 'WhatsApp' },
@@ -35,16 +35,13 @@ const preferredContactOptions = [
 ];
 
 export default function UserProfile() {
-  // 🗣️ Namespace translator
-  const t = useT('app.user.profile.page');
-
-  // 🔐 Session/guard
+  // 🦁 session + guard
   const { data: session, status } = useSession();
   const router = useRouter();
   const { isAllowed, redirect } = useAuthGuard('user');
   const { displayMessage, showLoader, hideLoader } = useAppHandlers();
 
-  // 👤 Profile state
+  // 👤 profile state
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -55,16 +52,17 @@ export default function UserProfile() {
     sendEmails: true
   });
 
-  // 🔑 Password state
+  // 🔑 password state
   const [passwordFields, setPasswordFields] = useState({
     oldPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
 
-  // 🔀 Toggle
+  // 🔀 toggle view
   const [isPasswordChangeVisible, setIsPasswordChangeVisible] = useState(false);
 
+  // 🏁 redirect helpers
   const redirectAfterProfileSave = () => {
     router.replace(`/auth/middlePage?update=profile&success=true&role=user`);
   };
@@ -72,9 +70,9 @@ export default function UserProfile() {
     router.replace(`/auth/middlePage?passwordUpdate=profile&success=true&role=user`);
   };
 
-  // 📦 Fetch profile
+  // 📦 fetch profile
   const fetchUserProfile = async () => {
-    showLoader({ text: t('fetching') });
+    showLoader({ text: 'Fetching your profile...' });
     try {
       const { data } = await axiosInstance.get('/api/user/profile');
       setFormData({
@@ -87,86 +85,101 @@ export default function UserProfile() {
         sendEmails: typeof data.sendEmails === 'boolean' ? data.sendEmails : true
       });
     } catch (error) {
-      displayMessage(error.response?.data?.error || t('error_fetching'), 'error');
+      displayMessage(error.response?.data?.error || 'Error fetching profile', 'error');
     } finally {
       hideLoader();
     }
   };
 
-  // 💾 Update profile
+  // 💾 profile submit
   const handleProfileUpdate = async (request) => {
-    request.preventDefault();
-    showLoader({ text: t('updating') });
+    request.preventDefault(); // 🛑 prevent browser submit
+    showLoader({ text: 'Updating profile...' });
     try {
       await axiosInstance.patch('/api/user/profile', { ...formData });
-      displayMessage(t('update_success'), 'success');
+      displayMessage('Profile updated successfully', 'success');
       redirectAfterProfileSave();
     } catch (error) {
-      displayMessage(error.response?.data?.error || t('error_updating'), 'error');
+      displayMessage(error.response?.data?.error || 'Error updating profile', 'error');
     } finally {
       hideLoader();
     }
   };
 
-  // 🔑 Change password
+  // 🔑 password submit
   const handlePasswordChangeSubmit = async (request) => {
-    request.preventDefault();
+    request.preventDefault(); // 🛑 prevent browser submit
     if (passwordFields.newPassword !== passwordFields.confirmPassword) {
-      displayMessage(t('password_mismatch'), 'error');
+      displayMessage('New password and confirmation do not match', 'error');
       return;
     }
-    showLoader({ text: t('password_updating') });
+    showLoader({ text: 'Updating password...' });
     try {
       await axiosInstance.put('/api/user/profile/password', {
         oldPassword: passwordFields.oldPassword,
         newPassword: passwordFields.newPassword
       });
-      displayMessage(t('password_update_success'), 'success');
+      displayMessage('Password updated successfully', 'success');
       setPasswordFields({ oldPassword: '', newPassword: '', confirmPassword: '' });
       setIsPasswordChangeVisible(false);
       redirectAfterPasswordSave();
     } catch (error) {
-      displayMessage(error.response?.data?.error || t('error_password_update'), 'error');
+      displayMessage(error.response?.data?.error || 'Error updating password', 'error');
     } finally {
       hideLoader();
     }
   };
 
-  // ✍️ handlers
+  // ✍️ field change handlers
   const handleFormFieldChange = (event) => {
     const { name, value, type, checked } = event.target;
-    setFormData((previous) => ({ ...previous, [name]: type === 'checkbox' ? checked : value }));
+    setFormData((previous) => ({
+      ...previous,
+      [name]: type === 'checkbox' ? checked : value
+    }));
   };
   const handlePasswordFieldChange = (event) => {
     const { name, value } = event.target;
-    setPasswordFields((previous) => ({ ...previous, [name]: value }));
+    setPasswordFields((previous) => ({
+      ...previous,
+      [name]: value
+    }));
   };
 
+  // 🚀 effects for auth + fetch
   useEffect(() => {
-    if (status === 'authenticated' && isAllowed && session?.user?.user_id) fetchUserProfile();
+    if (status === 'authenticated' && isAllowed && session?.user?.user_id) {
+      fetchUserProfile();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, isAllowed, session?.user?.user_id]);
+
   useEffect(() => {
-    if (status !== 'loading' && !isAllowed && redirect) router.replace(redirect);
+    if (status !== 'loading' && !isAllowed && redirect) {
+      router.replace(redirect);
+    }
   }, [status, isAllowed, redirect, router]);
-  if (!isAllowed) return null;
+
+  if (!isAllowed) return null; // 🛑 block if not allowed
 
   return (
     <div className="container-style max-w-full lg:max-w-lg mx-auto min-h-[60vh] rounded-2xl shadow-lg p-6">
       <h1 className="text-2xl font-bold text-center mb-6">
         {isPasswordChangeVisible
-          ? t('change_password')
+          ? 'Change Password'
           : session?.user?.name
-            ? `${session.user.name} ${t('profile')}`
-            : t('user_profile')}
+            ? `${session.user.name} Profile`
+            : 'User Profile'}
       </h1>
 
       {/* 📝 PROFILE FORM */}
       {!isPasswordChangeVisible ? (
         <form onSubmit={handleProfileUpdate} className="space-y-4">
+          {/* 👥 user detail fields */}
           {['name', 'email', 'username', 'whatsapp', 'telegram'].map((field) => (
             <div key={field}>
               <label htmlFor={field} className="block text-sm font-medium">
-                {t(`field.${field}`)}
+                {field.charAt(0).toUpperCase() + field.slice(1)}:
               </label>
               <input
                 id={field}
@@ -180,10 +193,10 @@ export default function UserProfile() {
             </div>
           ))}
 
-          {/* 📬 Preferred contact */}
+          {/* 📬 preferred contact */}
           <div>
             <label htmlFor="preferredContactWay" className="block text-sm font-medium">
-              {t('preferred_contact')}
+              Preferred Contact Way:
             </label>
             <select
               id="preferredContactWay"
@@ -200,7 +213,7 @@ export default function UserProfile() {
             </select>
           </div>
 
-          {/* 📧 Send emails */}
+          {/* 📧 send emails */}
           <div className="flex items-center gap-2">
             <input
               id="sendEmails"
@@ -211,28 +224,32 @@ export default function UserProfile() {
               className="h-4 w-4"
             />
             <label htmlFor="sendEmails" className="block text-sm font-medium">
-              {t('send_emails')}
+              I want to receive important emails about my account
             </label>
           </div>
-
           <div className="flex flex-col lg:flex-row items-center gap-3 mt-4 w-full">
             <button
               type="button"
               onClick={() => setIsPasswordChangeVisible(true)}
               className="btn-info w-1/2"
             >
-              {t('change_password')}
+              Change Password
             </button>
             <button type="submit" className="btn-primary w-1/2">
-              {t('update_profile')}
+              Update Profile
             </button>
           </div>
+          {/* 🔄 toggle buttons (outside form submit) */}
         </form>
       ) : (
-        <form onSubmit={handlePasswordChangeSubmit} className="space-y-4">
+        <form
+          onSubmit={handlePasswordChangeSubmit} // 📝 fires only when you click the submit below
+          className="space-y-4"
+        >
+          {/* 🔒 old password */}
           <div>
             <label htmlFor="oldPassword" className="block text-sm font-medium">
-              {t('old_password')}
+              Old Password:
             </label>
             <input
               id="oldPassword"
@@ -244,9 +261,11 @@ export default function UserProfile() {
               autoComplete="current-password"
             />
           </div>
+
+          {/* 🔓 new password */}
           <div>
             <label htmlFor="newPassword" className="block text-sm font-medium">
-              {t('new_password')}
+              New Password:
             </label>
             <input
               id="newPassword"
@@ -258,9 +277,11 @@ export default function UserProfile() {
               autoComplete="new-password"
             />
           </div>
+
+          {/* 🔁 confirm password */}
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium">
-              {t('confirm_password')}
+              Confirm Password:
             </label>
             <input
               id="confirmPassword"
@@ -272,28 +293,33 @@ export default function UserProfile() {
               autoComplete="new-password"
             />
           </div>
+
+          {/* 🚀 Action Buttons: Update & Back */}
           <div className="flex flex-col lg:flex-row items-center gap-3 mt-4 w-full">
+            {/* 🚫 does NOT submit */}
             <button
               type="button"
               onClick={() => setIsPasswordChangeVisible(false)}
               className="btn-info w-1/2"
             >
-              {t('back_to_profile')}
+              Back to Profile
             </button>
+            {/* ✅ submits the form */}
             <button type="submit" className="btn-primary w-1/2">
-              {t('update_password')}
+              Update Password
             </button>
           </div>
         </form>
       )}
 
+      {/* ↩️ return */}
       <div className="flex items-center justify-center mt-5 w-full">
         <button
           type="button"
           onClick={() => router.push('/user/dashboard')}
           className="btn-secondary w-1/2"
         >
-          {t('return_dashboard')}
+          Return to Dashboard
         </button>
       </div>
     </div>
