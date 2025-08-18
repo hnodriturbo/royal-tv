@@ -16,19 +16,22 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useT } from '@/lib/i18n/client'; // 🌐 i18n
 
 export default function RefreshCountdownTimer({
   onRefresh,
   intervalSeconds = 300,
   className = ''
 }) {
+  const t = useT(); // 🔤
+
   // 🧮 current countdown value (starts full)
   const [secondsLeft, setSecondsLeft] = useState(intervalSeconds);
 
   // ⏱️ interval tick — every 1000 ms
   useEffect(() => {
     const countdownTimer = setInterval(() => {
-      setSecondsLeft((seconds) => (seconds > 0 ? s - 1 : 0));
+      setSecondsLeft((current) => (current > 0 ? current - 1 : 0));
     }, 1_000);
     return () => clearInterval(countdownTimer);
   }, []);
@@ -45,15 +48,15 @@ export default function RefreshCountdownTimer({
   const restart = useCallback(() => {
     setSecondsLeft(intervalSeconds);
   }, [intervalSeconds]);
-}
-// ✅ Return the html we use for the nice looking timer
-return (
-  <p className={`text-center text-sm mb-4 text-gray-300 ${className}`}>
-    auto refresh in&nbsp;
-    <span className="font-semibold text-white">{secondsLeft}</span>
-  </p>
-);
 
+  // ✅ Return the html we use for the nice looking timer
+  return (
+    <p className={`text-center text-sm mb-4 text-gray-300 ${className}`}>
+      {t('components.refreshCountdownTimer.auto_refresh_in')}&nbsp;
+      <span className="font-semibold text-white">{secondsLeft}</span>
+    </p>
+  );
+}
 /* ----------- HOW TO USE IN A PAGE AS A COMPONENT ----------- */
 /* 
 import RefreshCountdownTimer from '@/components/reusableUI/RefreshCountdownTimer';

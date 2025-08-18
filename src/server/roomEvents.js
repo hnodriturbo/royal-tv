@@ -1,10 +1,9 @@
 // 🚪 roomEvents.js – LiveChat Only (bubble logic removed, dev-friendly multi-join allowed)
 /**
  * Handles joining and creating conversation rooms for liveChat only.
- * Allows ANY number of admins and ANY number of users per room!
+ * Uses plain English defaults (no i18n here, translation happens client-side/UI).
  */
 
-import logger from '../lib/core/logger.js';
 import prisma from '../lib/core/prisma.js';
 
 export default function registerRoomEvents(io, socket, globalState) {
@@ -14,24 +13,24 @@ export default function registerRoomEvents(io, socket, globalState) {
     const roomRegistry = globalState.activeUsersInLiveRoom;
     roomRegistry[conversation_id] ||= [];
 
-    // Remove any previous entries for this user_id (to prevent duplicates on reload)
+    // 🔁 Remove any previous entries for this user_id (avoid dupes on reload)
     roomRegistry[conversation_id] = roomRegistry[conversation_id].filter(
       (user) => user.user_id !== socket.userData.user_id
     );
 
-    // Add this user (each join is idempotent)
+    // ➕ Add this user (idempotent)
     roomRegistry[conversation_id].push({ ...socket.userData });
 
     socket.join(conversation_id); // 🚪 Join the socket.io room
 
-    // Emit room update to all in the room
+    // 📣 Emit room update to all in the room
     io.to(conversation_id).emit('room_users_update', {
       conversation_id,
       users: roomRegistry[conversation_id]
     });
 
-    // 📝 Log join event (no more chatType distinction)
-    logger.log(`🚪 [LiveRoom] ${socket.userData.name} joined room: ${conversation_id}`);
+    // 📝 Log join event (no chatType distinction)
+    console.log(`🚪 [LiveRoom] ${socket.userData.name} joined room: ${conversation_id}`);
   });
 
   // 2️⃣ Conversation creation (admin/user triggers for user as owner)
@@ -58,14 +57,14 @@ export default function registerRoomEvents(io, socket, globalState) {
 
       // 📝 Prepare conversation data: owner is always the recipient
       const data = {
-        subject: subject || 'Live Chat',
+        subject: subject || 'Live Chat', // 📦 plain English default
         owner: { connect: { user_id } }
       };
 
       const convo = await conversationModel.create({ data });
       const convo_id = convo.conversation_id;
 
-      // Register the creator (admin or user) as present in the room
+      // 🧭 Register the creator (admin or user) as present in the room
       roomRegistry[convo_id] = [{ ...socket.userData }];
       socket.join(convo_id);
 
@@ -76,11 +75,11 @@ export default function registerRoomEvents(io, socket, globalState) {
       });
       socket.emit('live_chat_room_ready', { conversation_id: convo_id, chatType: 'live' });
 
-      logger.log(
+      console.log(
         `➕ [LiveChatRoom Created]: ${convo_id} by ${socket.userData.name} for user ${user_id}`
       );
     } catch (err) {
-      logger.error(`❌ [LiveChatRoom creation error]`, err);
+      console.error(`❌ [LiveChatRoom creation error]`, err);
       socket.emit('room_creation_error', { error: 'Internal server error' });
     }
   });

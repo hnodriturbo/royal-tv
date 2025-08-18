@@ -3,8 +3,17 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ErrorAndMessageContext } from '@/context/ErrorAndMessageContext';
+import { useT } from '@/lib/i18n/client'; // 🌐 components.showMessages.*
 
+/**
+ * 📨 ShowMessages
+ * ---------------
+ * • Displays transient toast-like messages from context.
+ * • Does not translate message.text (it originates elsewhere).
+ * • Adds a translated tooltip title only (visible on hover).
+ */
 const ShowMessages = () => {
+  const t = useT(); // 🗣️ translator bound to current language
   const { message, clearMessage } = useContext(ErrorAndMessageContext);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -39,9 +48,10 @@ const ShowMessages = () => {
           exit={{ opacity: 0, y: 50 }}
           transition={{ duration: 0.5 }}
           className={`fixed bottom-0 left-0 w-full p-4 z-[9999] font-bold ${backgroundColor}`}
+          title={t('components.showMessages.toast_title')} // 🏷️ translated hover tooltip
         >
           <div className="container mx-auto text-center">
-            <p className="text-lg">{message.text}</p>
+            <p className="text-lg">{message.text}</p> {/* 🗣️ user-visible message from context */}
           </div>
         </motion.div>
       )}

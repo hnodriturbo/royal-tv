@@ -26,7 +26,6 @@
  */
 
 import prisma from '../lib/core/prisma.js';
-import logger from '../lib/core/logger.js'; // 🪵 Centralized logger for all logs
 
 export default function registerAccountEvents(io, socket) {
   /* ------------- Subscription Socket Events ------------- */
@@ -39,7 +38,7 @@ export default function registerAccountEvents(io, socket) {
       orderBy: { createdAt: 'desc' }
     });
     // Log the fetch action
-    logger.socket(
+    console.log(
       `📋 [SOCKET] ${socket.userData?.name || socket.userData?.user_id} fetched all subscriptions.`
     );
     // Send the subscriptions list back to the client
@@ -56,14 +55,14 @@ export default function registerAccountEvents(io, socket) {
 
     // Security: Only allow if it belongs to the current user
     if (!subscription || subscription.user_id !== socket.userData?.user_id) {
-      logger.socket(
+      console.log(
         `⛔ [SOCKET] ${socket.userData?.name || socket.userData?.user_id} tried to fetch status for unauthorized or missing subscription: ${subscription_id}`
       );
       socket.emit('subscription_status', null);
       return;
     }
 
-    logger.socket(
+    console.log(
       `📊 [SOCKET] ${socket.userData?.name || socket.userData?.user_id} fetched subscription status for ${subscription_id}:`,
       subscription.status
     );
@@ -80,7 +79,7 @@ export default function registerAccountEvents(io, socket) {
     // Find the payment record for the provided order_id
     const payment = await prisma.subscriptionPayment.findUnique({ where: { id: order_id } });
 
-    logger.socket(
+    console.log(
       `💸 [SOCKET] ${socket.userData?.name || socket.userData?.user_id} fetched subscription payment for order ${order_id}:`,
       payment ? payment.status : null
     );
@@ -97,7 +96,7 @@ export default function registerAccountEvents(io, socket) {
       select: { status: true }
     });
 
-    logger.socket(
+    console.log(
       `💵 [SOCKET] ${socket.userData?.name || socket.userData?.user_id} fetched payment status for order ${order_id}:`,
       payment ? payment.status : null
     );
@@ -113,7 +112,7 @@ export default function registerAccountEvents(io, socket) {
   socket.on('emit_subscription_created', ({ subscription }) => {
     // Safety check: require subscription object and user_id
     if (!subscription || !subscription.user_id) return;
-    logger.socket(`🆕 [SOCKET] Emitting subscription_created for user ${subscription.user_id}`);
+    console.log(`🆕 [SOCKET] Emitting subscription_created for user ${subscription.user_id}`);
     // Send the subscription_created event to the specific user
     io.to(subscription.user_id).emit('subscription_created', subscription);
   });
@@ -122,7 +121,7 @@ export default function registerAccountEvents(io, socket) {
   socket.on('emit_payment_status_updated', ({ user_id: target_id, order_id, status }) => {
     // Require all necessary fields
     if (!target_id || !order_id || !status) return;
-    logger.socket(
+    console.log(
       `🔄 [SOCKET] Emitting payment_status_updated for user ${target_id}, order ${order_id}:`,
       status
     );
@@ -139,7 +138,7 @@ export default function registerAccountEvents(io, socket) {
       select: { status: true }
     });
     // 🟢 Log: Status fetch and emit
-    logger.socket(
+    console.log(
       `🔎 [SOCKET] User ${socket.userData?.name} requested free_trial_status – emitted free_trial_status:`,
       freeTrial ? freeTrial.status : null
     );
@@ -152,7 +151,7 @@ export default function registerAccountEvents(io, socket) {
       where: { user_id: socket.userData.user_id }
     });
     // 📦 Log: Full object fetch and emit
-    logger.socket(
+    console.log(
       `🗃️ [SOCKET] User ${socket.userData?.name || socket.userData?.user_id} requested full_free_trial – emitted full_free_trial:`,
       !!freeTrial
     );
@@ -166,7 +165,7 @@ export default function registerAccountEvents(io, socket) {
       select: { status: true }
     });
     // ✉️ Log: Admin status update and emit
-    logger.socket(
+    console.log(
       `✉️ [SOCKET] Admin updated free_trial_status for user ${user_id} – emitted free_trial_status:`,
       freeTrial ? freeTrial.status : null
     );

@@ -11,34 +11,31 @@
 import { useCallback, useState } from 'react';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 import useAppHandlers from '@/hooks/useAppHandlers'; // For displayMessage
+import { useT } from '@/lib/i18n/client'; // 🌐 i18n for user-facing text
 
 export default function useRefreshNotifications(user_id) {
-  // 1️⃣ UI state for showing spinner/disable
   const [loading, setLoading] = useState(false);
-
-  // 2️⃣ SocketHub: correct refresh function, and notification event
-  const { refreshNotifications, onNotificationsUpdate } = useSocketHub();
+  const { refreshNotifications, onNotificationsList } = useSocketHub();
   const { displayMessage } = useAppHandlers();
+  const t = useT(); // 🎯 Get translator
 
-  // 3️⃣ Wrapped refresh function (useCallback)
   const refresh = useCallback(() => {
     if (!user_id) return;
     setLoading(true);
 
-    // Emit to backend—triggers notifications_list event
     refreshNotifications(user_id);
 
-    // Listen for the next notifications update, then show message & stop loading
-    // Only triggers ONCE per refresh
-    const stop = onNotificationsUpdate(() => {
+    const stop = onNotificationsList(() => {
       setLoading(false);
-      displayMessage('🔄 All notifications refreshed!');
-      stop(); // Unsubscribe after first update
+      displayMessage(
+        t('socket.hooks.useRefreshNotifications.all_notifications_refreshed') // 🌐 Translated message
+      );
+      stop();
     });
-  }, [user_id, refreshNotifications, onNotificationsUpdate, displayMessage]);
+  }, [user_id, refreshNotifications, onNotificationsList, displayMessage]);
 
   return {
-    refreshNotifications: refresh, // Call this to refresh (e.g., after REST or via button)
+    refreshNotifications: refresh,
     loading
   };
 }

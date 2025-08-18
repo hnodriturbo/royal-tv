@@ -1,43 +1,63 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation'; // Updated for App Router compatibility
+import { useRouter } from '@/lib/language'; // 🧭 App Router
+import { useT } from '@/lib/i18n/client'; // 🌐 components.countdownRedirect.*
 
+/**
+ * 🔀 CountdownRedirect
+ * --------------------
+ * • Shows a heading message (prop-controlled) and a translated "Redirecting in X seconds…" line.
+ * • Pushes to `redirectTo` when the counter hits 0.
+ * • Uses useT() so t() is bound to current locale.
+ */
 const CountdownRedirect = ({
   seconds,
   redirectTo,
-  message,
-  messageSize = 'text-3xl', // Default size for the message
-  counterSize = 'text-2xl', // Default size for the counter
-  children,
+  message, // 🗣️ supplied by parent (can be translated upstream)
+  messageSize = 'text-3xl', // 🔠 heading size
+  counterSize = 'text-2xl', // 🔢 counter size
+  children // 🧩 optional extra UI
 }) => {
-  const [counter, setCounter] = useState(seconds);
-  const router = useRouter();
+  const t = useT(); // 🗣️ translator bound to current language
+  const [counter, setCounter] = useState(seconds); // ⏱️ remaining seconds
+  const router = useRouter(); // 🧭 programmatic navigation
 
   useEffect(() => {
+    // ⏳ tick until reaching 0 then navigate
     const interval = setInterval(() => {
-      setCounter((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval); // Stop the interval
-          // Use a separate function for navigation to avoid updating state while rendering
-          setTimeout(() => router.push(redirectTo), 0);
-          return 0;
+      setCounter((previousValue) => {
+        if (previousValue <= 1) {
+          clearInterval(interval); // 🛑 stop ticking
+          setTimeout(() => router.push(redirectTo), 0); // 🚀 navigate
+          return 0; // 🧮 clamp at zero
         }
-        return prev - 1; // Decrement the counter
+        return previousValue - 1; // ➖ decrement
       });
     }, 1000);
 
-    return () => clearInterval(interval); // Cleanup interval on unmount
+    return () => clearInterval(interval); // 🧹 cleanup on unmount
   }, [redirectTo, router]);
+
+  // 🗣️ pick singular/plural label for the counter line
+  const counterKey =
+    counter === 1
+      ? 'components.countdownRedirect.redirecting_in_singular'
+      : 'components.countdownRedirect.redirecting_in_plural';
 
   return (
     <div className="flex items-center justify-center flex-col min-h-screen">
       <div className="flex items-center justify-center">
         <div className="container-style p-6 items-center justify-center">
+          {/* 🏷️ heading from parent (can be translated by caller) */}
           <h2 className={`${messageSize} font-bold text-center`}>{message}</h2>
+
+          {/* 🔢 translated counter line */}
           <p className={`${counterSize} mt-3 items-center text-center`}>
-            Redirecting in {counter} second{counter !== 1 && 's'}...
+            {t(counterKey, { seconds: counter })}
           </p>
+
+          {/* 🧩 optional trailing UI */}
           {children}
         </div>
       </div>
@@ -45,4 +65,4 @@ const CountdownRedirect = ({
   );
 };
 
-export default CountdownRedirect;
+export default CountdownRedirect; // 🚪 default export

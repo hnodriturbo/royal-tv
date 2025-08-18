@@ -8,18 +8,19 @@ datasource db {
 }
 
 model User {
-  user_id               String                 @id @default(uuid()) @db.Uuid
-  name                  String
-  email                 String                 @unique
-  username              String                 @unique
-  password              String
-  role                  Role                   @default(user)
-  whatsapp              String?
-  telegram              String?
-  preferredContactWay   PreferredContactWay    @default(email)
-  sendEmails            Boolean                @default(true)
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
+  user_id             String              @id @default(uuid()) @db.Uuid
+  name                String
+  email               String              @unique
+  username            String              @unique
+  password            String
+  role                Role                @default(user)
+  whatsapp            String?
+  telegram            String?
+  preferredContactWay PreferredContactWay @default(email)
+  sendEmails          Boolean             @default(true)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
   freeTrials            FreeTrial[]            @relation("UserFreeTrials")
   liveChatConversations LiveChatConversation[] @relation("LiveConversations")
   liveChatMessages      LiveChatMessage[]      @relation("LiveMessages")
@@ -33,31 +34,33 @@ model User {
 }
 
 model LiveChatConversation {
-  conversation_id String            @id @default(uuid()) @db.Uuid
-  owner_id        String            @db.Uuid
+  conversation_id String   @id @default(uuid()) @db.Uuid
+  owner_id        String   @db.Uuid
   subject         String?
-  read            Boolean           @default(false)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  owner           User              @relation("LiveConversations", fields: [owner_id], references: [user_id], onDelete: Cascade, map: "LiveChatConversation_user_id_fkey")
-  messages        LiveChatMessage[] @relation("LiveMessages")
+  read            Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  owner    User              @relation("LiveConversations", fields: [owner_id], references: [user_id], onDelete: Cascade, map: "LiveChatConversation_user_id_fkey")
+  messages LiveChatMessage[] @relation("LiveMessages")
 
   @@index([owner_id], map: "LiveChatConversation_user_id_idx")
 }
 
 model LiveChatMessage {
-  message_id      String               @id @default(uuid()) @db.Uuid
-  conversation_id String               @db.Uuid
-  sender_id       String?              @db.Uuid
+  message_id      String        @id @default(uuid()) @db.Uuid
+  conversation_id String        @db.Uuid
+  sender_id       String?       @db.Uuid
   guest_id        String?
-  sender_is_admin Boolean              @default(false)
+  sender_is_admin Boolean       @default(false)
   message         String
-  status          MessageStatus        @default(sent)
+  status          MessageStatus @default(sent)
   readAt          DateTime?
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
-  conversation    LiveChatConversation @relation("LiveMessages", fields: [conversation_id], references: [conversation_id], onDelete: Cascade)
-  sender          User?                @relation("LiveMessages", fields: [sender_id], references: [user_id], onDelete: Cascade, map: "LiveChatMessage_user_id_fkey")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  conversation LiveChatConversation @relation("LiveMessages", fields: [conversation_id], references: [conversation_id], onDelete: Cascade)
+  sender       User?                @relation("LiveMessages", fields: [sender_id], references: [user_id], onDelete: Cascade, map: "LiveChatMessage_user_id_fkey")
 
   @@index([conversation_id])
   @@index([status])
@@ -169,14 +172,18 @@ model FreeTrial {
 model Notification {
   notification_id String           @id @default(uuid()) @db.Uuid
   user_id         String           @db.Uuid
+  type            NotificationType
+  event           String?
   title           String
   body            String
   link            String?
-  type            NotificationType
+  for_admin       Boolean          @default(false)
+  data            Json?
   is_read         Boolean          @default(false)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
-  user            User             @relation("UserNotifications", fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  user User @relation("UserNotifications", fields: [user_id], references: [user_id], onDelete: Cascade)
 
   @@index([user_id])
 }

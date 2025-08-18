@@ -1,6 +1,7 @@
 /**
  * ===========================================
  * ⏩ Pagination Component (Smart Shortening)
+ * - Translated with i18n client via useT()
  * ===========================================
  * - Shows: first page, ..., up to 3 before/after, ..., last page
  * - Always highlights current page
@@ -8,14 +9,17 @@
  */
 
 'use client';
-import Link from 'next/link';
+import { Link } from '@/lib/language';
+import { useT } from '@/lib/i18n/client'; // 🌐 i18n
 
 const Pagination = ({ currentPage, totalPages, basePath, onPageChange }) => {
+  const t = useT(); // 🔤
+
   if (totalPages <= 1) return null;
 
   // 🧮 Helper to go to a given page
   const goTo = (page) => {
-    onPageChange ? onPageChange(page) : (window.location.href = `#{basePath}?page=${page}`);
+    onPageChange ? onPageChange(page) : (window.location.href = `${basePath}?page=${page}`);
   };
 
   // 🧩 Build pages to display
@@ -28,16 +32,16 @@ const Pagination = ({ currentPage, totalPages, basePath, onPageChange }) => {
   if (currentPage > 4) pagesToShow.push('left-ellipsis');
 
   // 👈 Up to 2 pages before current
-  for (let i = Math.max(2, currentPage - 2); i < currentPage; i++) {
-    pagesToShow.push(i);
+  for (let index = Math.max(2, currentPage - 2); index < currentPage; index++) {
+    pagesToShow.push(index);
   }
 
   // 🔵 Current page
   pagesToShow.push(currentPage);
 
   // 👉 Up to 2 pages after current
-  for (let i = currentPage + 1; i <= Math.min(totalPages - 1, currentPage + 2); i++) {
-    pagesToShow.push(i);
+  for (let index = currentPage + 1; index <= Math.min(totalPages - 1, currentPage + 2); index++) {
+    pagesToShow.push(index);
   }
 
   // … Right ellipsis if gap
@@ -46,11 +50,9 @@ const Pagination = ({ currentPage, totalPages, basePath, onPageChange }) => {
   // 🏁 Show last page if needed
   if (currentPage < totalPages - 2) pagesToShow.push(totalPages);
 
-  /* const pages = Array.from({ length: totalPages }, (_, index) => index + 1); */
-
   return (
     <div className="flex justify-center mt-4">
-      <ul className="flex space-x-2">
+      <ul className="flex space-x-2" aria-label={t('components.pagination.aria_pagination')}>
         {/* ⬅️ Previous button, but show '1' if next would be page 1 */}
         {currentPage > 1 && (
           <li>
@@ -59,11 +61,15 @@ const Pagination = ({ currentPage, totalPages, basePath, onPageChange }) => {
                 <button
                   onClick={() => goTo(1)}
                   className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded"
+                  aria-label={t('components.pagination.aria_go_to_page', { page: 1 })}
                 >
                   1
                 </button>
               ) : (
-                <Link href={`${basePath}?page=1`}>
+                <Link
+                  href={`${basePath}?page=1`}
+                  aria-label={t('components.pagination.aria_go_to_page', { page: 1 })}
+                >
                   <button className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded">1</button>
                 </Link>
               )
@@ -71,11 +77,15 @@ const Pagination = ({ currentPage, totalPages, basePath, onPageChange }) => {
               <button
                 onClick={() => goTo(currentPage - 1)}
                 className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded"
+                aria-label={t('components.pagination.previous')}
               >
                 ←
               </button>
             ) : (
-              <Link href={`${basePath}?page=${currentPage - 1}`}>
+              <Link
+                href={`${basePath}?page=${currentPage - 1}`}
+                aria-label={t('components.pagination.previous')}
+              >
                 <button className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded">←</button>
               </Link>
             )}
@@ -83,10 +93,14 @@ const Pagination = ({ currentPage, totalPages, basePath, onPageChange }) => {
         )}
 
         {/* 🔢 Page buttons & ellipses */}
-        {pagesToShow.map((page, idx) =>
+        {pagesToShow.map((page, index) =>
           page === 'left-ellipsis' || page === 'right-ellipsis' ? (
-            <li key={page + idx} className="px-2 py-2 text-gray-500 select-none">
-              ...
+            <li
+              key={`${page}-${index}`}
+              className="px-2 py-2 text-gray-500 select-none"
+              aria-hidden
+            >
+              …
             </li>
           ) : (
             <li key={page}>
@@ -99,11 +113,16 @@ const Pagination = ({ currentPage, totalPages, basePath, onPageChange }) => {
                       : 'bg-gray-400 hover:bg-gray-600'
                   } rounded`}
                   disabled={page === currentPage}
+                  aria-current={page === currentPage ? 'page' : undefined}
+                  aria-label={t('components.pagination.aria_go_to_page', { page })}
                 >
                   {page}
                 </button>
               ) : (
-                <Link href={`${basePath}?page=${page}`}>
+                <Link
+                  href={`${basePath}?page=${page}`}
+                  aria-label={t('components.pagination.aria_go_to_page', { page })}
+                >
                   <button
                     className={`px-4 py-2 ${
                       page === currentPage
@@ -111,6 +130,7 @@ const Pagination = ({ currentPage, totalPages, basePath, onPageChange }) => {
                         : 'bg-gray-400 hover:bg-gray-600'
                     } rounded`}
                     disabled={page === currentPage}
+                    aria-current={page === currentPage ? 'page' : undefined}
                   >
                     {page}
                   </button>
@@ -127,11 +147,15 @@ const Pagination = ({ currentPage, totalPages, basePath, onPageChange }) => {
                 <button
                   onClick={() => goTo(totalPages)}
                   className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded"
+                  aria-label={t('components.pagination.aria_go_to_page', { page: totalPages })}
                 >
                   {totalPages}
                 </button>
               ) : (
-                <Link href={`${basePath}?page=${totalPages}`}>
+                <Link
+                  href={`${basePath}?page=${totalPages}`}
+                  aria-label={t('components.pagination.aria_go_to_page', { page: totalPages })}
+                >
                   <button className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded">
                     {totalPages}
                   </button>
@@ -141,11 +165,15 @@ const Pagination = ({ currentPage, totalPages, basePath, onPageChange }) => {
               <button
                 onClick={() => goTo(currentPage + 1)}
                 className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded"
+                aria-label={t('components.pagination.next')}
               >
                 →
               </button>
             ) : (
-              <Link href={`${basePath}?page=${currentPage + 1}`}>
+              <Link
+                href={`${basePath}?page=${currentPage + 1}`}
+                aria-label={t('components.pagination.next')}
+              >
                 <button className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded">→</button>
               </Link>
             )}

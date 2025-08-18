@@ -3,58 +3,60 @@
  * 💬 LiveChatRoom.js – Royal TV
  * ================================
  * Live, real-time chat room for 1:1 support!
- * - Fully bubble-free, "live" chat only.
- * - Shows real-time messages, users, unread counts, typing, notifications, etc.
- * - Royal TV real-time emoji commenting everywhere! 🦁✨
+ * - Localized UI strings via useTRoot()
+ * - No `t` inside effect deps to avoid loops
  */
 
 import logger from '@/lib/core/logger';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import clsx from 'clsx'; // 🎨 Utility for clean conditional classes
-import dayjs from 'dayjs'; // 🕒 Dates formatting
-import useRoomUsers from '@/hooks/socket/useRoomUsers'; // 👥 Real-time users in room
-import useMessageEvents from '@/hooks/socket/useMessageEvents'; // 💬 Message actions/events
-import useUnreadMessages from '@/hooks/socket/useUnreadMessages'; // 🔔 Unread badge/count
-import useRefreshMessages from '@/hooks/socket/useRefreshMessages'; // 🔄 Manual refresh
-import useTypingIndicator from '@/hooks/socket/useTypingIndicator'; // 👀 Typing status
-import useAppHandlers from '@/hooks/useAppHandlers'; // 🛎️ App-wide UI (messages, loaders)
-import RefreshMessages from '@/components/reusableUI/socket/RefreshMessages'; // 🔄 Button to refresh messages
-import TypingIndicator from '@/components/reusableUI/socket/TypingIndicator'; // 👀 Typing animation/label
-import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications'; // 🔔 For message delivery
-import useSocketHub from '@/hooks/socket/useSocketHub'; // 🔌 Core socket actions
+import clsx from 'clsx';
+import dayjs from 'dayjs';
+import useRoomUsers from '@/hooks/socket/useRoomUsers';
+import useMessageEvents from '@/hooks/socket/useMessageEvents';
+import useUnreadMessages from '@/hooks/socket/useUnreadMessages';
+import useRefreshMessages from '@/hooks/socket/useRefreshMessages';
+import useTypingIndicator from '@/hooks/socket/useTypingIndicator';
+import useAppHandlers from '@/hooks/useAppHandlers';
+import RefreshMessages from '@/components/reusableUI/socket/RefreshMessages';
+import TypingIndicator from '@/components/reusableUI/socket/TypingIndicator';
+import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
+import useSocketHub from '@/hooks/socket/useSocketHub';
+import { useTRoot } from '@/lib/i18n/client'; // 🌍 translator
 
 export default function LiveChatRoom({
-  conversation_id, // 🆔 Room ID for this chat
-  initialMessages = [], // 📨 Messages at mount
-  className = '', // 🎨 Extra styling
-  session, // 👤 User session for role
-  onEditMessageModal, // ✏️ Modal handler (optional)
-  onDeleteMessageModal, // 🗑️ Modal handler (optional)
-  subject = '', // 🏷️ Conversation title/subject
-  user // 👤 The user we're chatting with (for notifications)
+  conversation_id,
+  initialMessages = [],
+  className = '',
+  session,
+  onEditMessageModal,
+  onDeleteMessageModal,
+  subject = '',
+  user
 }) {
-  // 🏷️ Who am I? Needed for admin vs user message styling
+  const t = useTRoot(); // 🌍 translation hook (render-time only)
+
+  // 🧭 who am I (for bubble styles)
   const currentUserRole = session?.user?.role;
   const { displayMessage } = useAppHandlers();
 
-  // 💬 State for all messages in the room
+  // 💬 room state
   const [messages, setMessages] = useState(initialMessages);
-  // 📝 Draft message (input box)
   const [draftMessage, setDraftMessage] = useState('');
 
-  // 👥 Get real-time user list for this room
+  // 👥 presence & unread
   const { usersInRoom } = useRoomUsers(conversation_id);
+  const { unreadCount, markAllRead } = useUnreadMessages({ conversation_id });
 
-  // 🔔 Socket-driven notification helpers (admin/user delivery)
+  // 🔔 notifications
   const {
     createLiveChatMessageNotificationForAdminOnly,
     createLiveChatMessageNotificationForUserOnly
   } = useCreateNotifications();
 
-  // 🔌 Room join/leave actions (keep room presence accurate!)
+  // 🔌 join/leave
   const { joinRoom, leaveRoom } = useSocketHub();
 
-  // 💬 Send/edit/delete + message listeners for this chat
+  // ✉️ message events
   const {
     sendMessage,
     editMessage,
@@ -64,7 +66,7 @@ export default function LiveChatRoom({
     onMessageDeleted
   } = useMessageEvents(conversation_id);
 
-  // 👀 Typing status (local and remote)
+  // ⌨️ typing
   const {
     isTyping,
     typingUser,
@@ -74,45 +76,32 @@ export default function LiveChatRoom({
     handleInputBlur
   } = useTypingIndicator(conversation_id);
 
-  // 🔔 Get unread count and mark-all-read action
-  const { unreadCount, markAllRead } = useUnreadMessages({ conversation_id });
-
-  // 🔗 Refs for scroll and focus control
+  // 🔗 refs
   const chatBoxRef = useRef(null);
   const inputRef = useRef(null);
 
-  // ===================== 👥 Room Presence (Join/Leave) =====================
+  // 🏠 join/leave
   useEffect(() => {
-    // 🏠 Join the conversation room on mount!
     joinRoom(conversation_id);
-    return () => {
-      // 🚪 Leave the room on unmount (cleanup for real-time accuracy)
-      leaveRoom(conversation_id);
-    };
+    return () => leaveRoom(conversation_id);
   }, [conversation_id, joinRoom, leaveRoom]);
 
-  // ===================== 🖱️ Focus on input when switching conversations =====================
+  // 🎯 focus input on room change
   useEffect(() => {
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 0);
+    setTimeout(() => inputRef.current?.focus(), 0);
   }, [conversation_id]);
 
-  // ===================== 💬 Real-Time Message Handling =====================
+  // 📡 live message listeners
   useEffect(() => {
-    // 👂 Listen for new messages delivered via socket
     const stopReceive = onReceiveMessage((msg) => {
-      setMessages((prevMessages) => {
-        // 🛡️ Prevent duplicates (multi-tab, multi-receive safety)
-        if (prevMessages.some((message) => message.message_id === msg.message_id))
-          return prevMessages;
-        return [...prevMessages, msg];
+      setMessages((prev) => {
+        if (prev.some((m) => m.message_id === msg.message_id)) return prev; // 🛡️ no dupes
+        return [...prev, msg];
       });
 
-      // 🟢 Always send notification on message delivery!
+      // 🔔 notify other party
       if (msg.sender_is_admin) {
-        // 👤 Notify user if admin sent (user must be loaded)
-        if (!user || !user.user_id) {
+        if (!user?.user_id) {
           logger.warn('[LiveChatRoom] Notification: user not ready, skipping...');
           return;
         }
@@ -122,32 +111,24 @@ export default function LiveChatRoom({
           { conversation_id: msg.conversation_id }
         );
       } else {
-        // 👑 Notify admin if user sent
         createLiveChatMessageNotificationForAdminOnly(
-          user, // 👤 The actual user object!
-          { ...msg, subject }, // 💬 Message fields
-          { conversation_id: msg.conversation_id } // 💬 Conversation fields
+          user,
+          { ...msg, subject },
+          { conversation_id: msg.conversation_id }
         );
       }
     });
 
-    // 👂 Listen for message edits
     const stopEdit = onMessageEdited((editedMsg) => {
-      setMessages((prevMessages) =>
-        prevMessages.map((msg) =>
-          msg.message_id === editedMsg.message_id ? { ...msg, ...editedMsg } : msg
-        )
+      setMessages((prev) =>
+        prev.map((m) => (m.message_id === editedMsg.message_id ? { ...m, ...editedMsg } : m))
       );
     });
 
-    // 👂 Listen for deletes (remove from state instantly)
     const stopDelete = onMessageDeleted((deletedMsg) => {
-      setMessages((prevMessages) =>
-        prevMessages.filter((msg) => msg.message_id !== deletedMsg.message_id)
-      );
+      setMessages((prev) => prev.filter((m) => m.message_id !== deletedMsg.message_id));
     });
 
-    // 🧹 Clean up all listeners on unmount
     return () => {
       stopReceive();
       stopEdit();
@@ -163,21 +144,35 @@ export default function LiveChatRoom({
     subject
   ]);
 
-  // ===================== 📝 Input Handlers =====================
-  // User types in the input box (handles typing events)
+  // 🛎️ mark read on room switch
+  useEffect(() => {
+    markAllRead();
+  }, [conversation_id, markAllRead]);
+
+  // ⬇️ auto-scroll
+  useEffect(() => {
+    if (chatBoxRef.current) {
+      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  // 🧭 my/other message
+  const isOwnMessage = (msg) =>
+    (currentUserRole === 'admin' && msg.sender_is_admin) ||
+    (currentUserRole !== 'admin' && !msg.sender_is_admin);
+
+  // 🖊️ input handlers
   const handleInput = (e) => {
-    setDraftMessage(handleInputChange(e)); // 👀 Typing tracking and text
+    setDraftMessage(handleInputChange(e));
   };
 
-  // 🚀 Send message (when pressing Enter or clicking button)
   const handleSend = useCallback(() => {
-    if (!draftMessage.trim()) return; // ⛔ Don't send empty messages!
+    if (!draftMessage.trim()) return;
     sendMessage(draftMessage);
-    setDraftMessage(''); // 🧽 Clear input
-    handleInputBlur(); // 👀 Stop typing signal
+    setDraftMessage('');
+    handleInputBlur();
   }, [draftMessage, sendMessage, handleInputBlur]);
 
-  // ⌨️ Handle Enter key for "send" (but allow Shift+Enter for newlines)
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -185,53 +180,26 @@ export default function LiveChatRoom({
     }
   };
 
-  // ===================== 🆔 Helper: Is This My Message? =====================
-  // Used to style message bubbles and show edit/delete only for your own messages!
-  const isOwnMessage = (msg) =>
-    (currentUserRole === 'admin' && msg.sender_is_admin) ||
-    (currentUserRole !== 'admin' && !msg.sender_is_admin);
-
-  // ===================== ✏️ Modal Triggers =====================
-  const handleEditModal = (msgId, msgContent) => {
-    if (onEditMessageModal) {
-      onEditMessageModal(msgId, msgContent, editMessage);
-    }
-  };
-  const handleDeleteModal = (msgId) => {
-    if (onDeleteMessageModal) {
-      onDeleteMessageModal(msgId, deleteMessage);
-    }
-  };
-
-  // ===================== 🔔 Mark all as read when convo changes =====================
-  useEffect(() => {
-    markAllRead();
-  }, [conversation_id, markAllRead]);
-
-  // ===================== 🔽 Scroll to bottom on new messages =====================
-  useEffect(() => {
-    if (chatBoxRef.current) {
-      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-  // ===================== 🖼️ UI RENDER =====================
+  // 🧑‍💻 UI
   return (
     <div className="text-pretty text-sm">
       <div className={clsx('container-style mx-auto flex flex-col gap-2 min-h-[400px]', className)}>
-        {/* 🏷️ Header – Subject + unread/user count */}
+        {/* 🏷️ header */}
         <div className="flex justify-between items-center">
           <h2 className="text-base font-bold">
-            Conversation Subject:<br></br>{' '}
-            <span className="text-wonderful-5 underline"> {subject}</span>
+            {t('socket.ui.chat.subject_label')}
+            <br /> <span className="text-wonderful-5 underline">{subject}</span>
           </h2>
           <span>
-            {usersInRoom.length} online <br></br>{' '}
-            <span className="whitespace-nowrap">🔔 {unreadCount} unread</span>
+            {t('socket.ui.chat.online_count_label', { count: usersInRoom.length })}
+            <br />
+            <span className="whitespace-nowrap">
+              🔔 {t('socket.ui.chat.unread_count_label', { count: unreadCount })}
+            </span>
           </span>
         </div>
 
-        {/* 💬 Message bubbles (auto-scroll, reverse order) */}
+        {/* 💬 messages */}
         <div
           className="flex-1 overflow-y-auto flex flex-col-reverse space-y-2 gap-2 max-h-[500px]"
           ref={chatBoxRef}
@@ -245,25 +213,27 @@ export default function LiveChatRoom({
                 className={clsx(
                   'w-2/3 min-w-[150px] max-w-[75%] p-2 rounded-lg',
                   isOwnMessage(message)
-                    ? 'items-end justify-end self-end bg-blue-600 text-end' // 🟦 My messages: right, blue
-                    : 'items-start justify-start self-start bg-gray-600 text-start' // 🟩 Others: left, gray
+                    ? 'items-end justify-end self-end bg-blue-600 text-end'
+                    : 'items-start justify-start self-start bg-gray-600 text-start'
                 )}
               >
                 <p className="break-words whitespace-pre-wrap">{message.message}</p>
                 <div className="flex justify-between items-center mt-2">
-                  {/* ✏️ Edit/Delete only for own messages */}
+                  {/* ✏️ edit/delete for own messages */}
                   {isOwnMessage(message) && (
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleEditModal(message.message_id, message.message)}
-                        title="Edit"
+                        onClick={() =>
+                          onEditMessageModal?.(message.message_id, message.message, editMessage)
+                        }
+                        title={t('socket.ui.common.edit')}
                         style={{ cursor: 'pointer' }}
                       >
                         ✏️
                       </button>
                       <button
-                        onClick={() => handleDeleteModal(message.message_id)}
-                        title="Delete"
+                        onClick={() => onDeleteMessageModal?.(message.message_id, deleteMessage)}
+                        title={t('socket.ui.common.delete')}
                         style={{ cursor: 'pointer' }}
                       >
                         🗑️
@@ -272,14 +242,16 @@ export default function LiveChatRoom({
                   )}
                   <span className="text-gray-300">
                     {dayjs(message.createdAt).format('HH:mm')}
-                    {message.status === 'edited' && <span className="italic ml-1">(edited)</span>}
+                    {message.status === 'edited' && (
+                      <span className="italic ml-1">{t('socket.ui.chat.edited')}</span>
+                    )}
                   </span>
                 </div>
               </div>
             ))}
         </div>
 
-        {/* 👀 Typing Indicator (fixed height so layout never shifts) */}
+        {/* 👀 typing */}
         <div className="h-6 flex justify-center items-center">
           <TypingIndicator
             isTyping={isTyping}
@@ -289,7 +261,7 @@ export default function LiveChatRoom({
           />
         </div>
 
-        {/* ✍️ Input box – Compose and send messages */}
+        {/* ✍️ input */}
         <div className="flex gap-1 p-2 border-t border-gray-600">
           <input
             ref={inputRef}
@@ -299,24 +271,24 @@ export default function LiveChatRoom({
             onBlur={handleInputBlur}
             onKeyDown={handleKeyDown}
             className="flex-1 p-2 border rounded text-lg text-black focus:outline-none"
-            placeholder="Type a message…"
+            placeholder={t('socket.ui.chat.input_placeholder')}
           />
           <button
             onClick={handleSend}
             className="px-4 py-2 bg-[#28a745] text-white rounded shadow disabled:opacity-50"
             disabled={!draftMessage.trim()}
           >
-            Send
+            {t('socket.ui.chat.send')}
           </button>
         </div>
 
-        {/* 🔄 Refresh messages button */}
+        {/* 🔄 refresh */}
         <div className="flex justify-center mt-4">
           <RefreshMessages
             conversation_id={conversation_id}
             onRefreshed={(msgs) => {
               setMessages(msgs);
-              displayMessage('Messages refreshed!', 'success');
+              displayMessage(t('socket.ui.chat.refreshed'), 'success');
             }}
           />
         </div>

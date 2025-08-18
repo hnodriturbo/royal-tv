@@ -1,35 +1,52 @@
+/**
+ * =========================================
+ * 🧭 LogPageView.js — Socket page view logs
+ * -----------------------------------------
+ * - Translated via useTRoot() 🌍
+ * - Only logs when pathname actually changes
+ * =========================================
+ */
 'use client';
+
 import { useEffect, useRef } from 'react';
-import { usePathname } from 'next/navigation'; // 🛣️ The App Router way!
+import { usePathname } from '@/lib/language';
 import useSocketHub from '@/hooks/socket/useSocketHub';
+import { useTRoot } from '@/lib/i18n/client'; // 🌍 i18n root translator
 
 export default function LogPageView() {
+  const t = useTRoot(); // 🌍 translation hook
   const { logPageVisit, socketConnected } = useSocketHub();
   const pathname = usePathname();
-  const prevPathRef = useRef();
+  const previousPathReference = useRef();
 
   useEffect(() => {
-    if (!logPageVisit || !socketConnected) {
-      return;
-    }
+    // ⛔ Skip if hub not ready or no socket
+    if (!logPageVisit || !socketConnected) return;
 
-    // Log ONLY if pathname actually changed!
-    if (prevPathRef.current !== pathname) {
-      // 👀 Decode the pathname for readable logs
-      const decodedPath = decodeURIComponent(pathname);
+    // 🔁 Only when route actually changes
+    if (previousPathReference.current !== pathname) {
+      // 🔎 Decode for readability
+      const decodedPathname = decodeURIComponent(pathname);
 
-      // 🪪 Get last segment (human-friendly, even if encoded in the URL)
-      const segments = decodedPath.replace(/\/$/, '').split('/');
-      const lastSegment = segments[segments.length - 1] || 'home';
+      // 🏷️ Human‑friendly last segment
+      const cleanedPath = decodedPathname.replace(/\/$/, '');
+      const pathSegments = cleanedPath.split('/');
+      const lastSegment = pathSegments[pathSegments.length - 1] || 'home';
 
+      // 🗒️ Use translated description with i18n placeholder interpolation
+      const description = t('socket.ui.logPageView.description', { page: lastSegment });
+
+      // 📤 Emit to socket hub
       logPageVisit({
-        page: decodedPath, // 📝 Store the DECODED path for logs!
-        event: 'page_visit',
-        description: `Visited "${lastSegment}" page`
+        page: decodedPathname, // 📝 Store decoded path
+        event: 'page_visit', // 🔖 Event key (kept as stable identifier)
+        description // 🌍 Localized description
       });
-      prevPathRef.current = pathname;
-    }
-  }, [pathname, logPageVisit, socketConnected]);
 
-  return null;
+      // 🧷 Remember path for next run
+      previousPathReference.current = pathname;
+    }
+  }, [pathname, logPageVisit, socketConnected]); // 🧩 include t safely
+
+  return null; // 🙈 Nothing visible
 }

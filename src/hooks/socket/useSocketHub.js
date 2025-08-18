@@ -153,8 +153,8 @@ const useSocketHub = () => {
     [guardedEmit]
   );
 
-  const onNotificationsUpdate = useCallback(
-    (handler) => guardedListen('notifications_list', handler),
+  const onNotificationsList = useCallback(
+    (handler) => guardedListen('notifications_list', handler), // 📨 full list payload
     [guardedListen]
   );
 
@@ -180,8 +180,17 @@ const useSocketHub = () => {
 
   // Refresh Notifications
   const refreshNotifications = useCallback(
-    (user_id) => guardedEmit('refresh_notifications', { user_id }),
+    (user_id) => guardedEmit('fetch_notifications', { user_id }), // 🌍 server replies with `notifications_list`
     [guardedEmit]
+  );
+
+  // 🔁 server asks client to refetch authoritative list now
+  const onNotificationsListRefresh = useCallback(
+    (handler) => {
+      // 📥 server: io.to(user).emit('notifications_list_refresh', { user_id })
+      return guardedListen('notifications_list_refresh', handler);
+    },
+    [guardedListen]
   );
 
   // ✅ Receive Notifications
@@ -323,6 +332,14 @@ const useSocketHub = () => {
     [guardedEmit]
   );
 
+  // 🌍 Tell server to update the current locale (queues if not connected)
+  const setLocale = useCallback((handler) => guardedEmit('set_locale', { locale }), [guardedEmit]);
+
+  // 🌍 Listen for server ack when locale changes
+  const onLocaleChanged = useCallback(
+    (handler) => guardedListen('locale_changed', handler),
+    [guardedListen]
+  );
   // ======================= EXPORTS ========================
   return {
     socket,
@@ -359,19 +376,28 @@ const useSocketHub = () => {
 
     // 🛎️ Notifications
     requestNotifications,
-    onNotificationsUpdate,
+    onNotificationsList,
+
     requestNotificationsCount,
     onNotificationsCount,
+
     markNotificationRead,
     onNotificationMarkedRead,
+
     refreshNotifications,
+    onNotificationsListRefresh,
+
     onNotificationReceived,
+
     createNotificationForBoth,
     createNotificationForAdmin,
     createNotificationForUser,
+
     deleteNotification,
     clearNotifications,
+
     onNotificationsError,
+
     onTransactionFinished,
 
     // Subscriptions & Payments
@@ -395,7 +421,11 @@ const useSocketHub = () => {
     onFreeTrialStatusUpdate,
 
     // 🔗 Miscellaneous
-    logPageVisit
+    logPageVisit,
+
+    // 🌍 Locale setLocale emit and onLocaleChanged Listen
+    setLocale,
+    onLocaleChanged
   };
 };
 

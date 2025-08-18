@@ -11,10 +11,12 @@
 import React, { createContext, useState, useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import RingLoader from '@/components/ui/Loader/RingLoader';
+import { useTRoot } from '@/lib/i18n/client'; // 🌍 translator hook
 
 const LoaderContext = createContext();
 
 export const LoaderProvider = ({ children }) => {
+  const t = useTRoot(); // 🔤 direct translator (full path)
   if (!children) {
     throw new Error('LoaderProvider must be wrapped around components as its children.');
   }
@@ -25,7 +27,7 @@ export const LoaderProvider = ({ children }) => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [loaderConfig, setLoaderConfig] = useState({
-    text: 'Loading...',
+    text: t('common.loader.loading'), // keep // ⏳ localized default
     textClassName: 'text2xl text-wonderful-5 text-center m-2 z-[9999]',
     size: 'medium',
     color: 'blue',
@@ -129,7 +131,7 @@ export const LoaderProvider = ({ children }) => {
               <RingLoader
                 size={loaderConfig.size}
                 color={loaderConfig.color}
-                text={loaderConfig.text}
+                text={loaderConfig.text || t('common.loader.loading')}
                 textClassName={loaderConfig.textClassName}
               />
               {/* Text, if not inside RingLoader */}

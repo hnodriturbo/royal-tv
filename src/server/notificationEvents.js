@@ -2,18 +2,26 @@
  * ==================== notificationEvents.js ====================
  * 🔔 Unified Socket Notification Events for Royal TV
  *
- * - Handles all notification creation for Admin & User via Socket.IO
- * - Uses premade templates/builders for DRY, human-readable notifications
- * - Real-time DB + Socket updates, emails, mark as read, counts, fetch & refresh
- * - Robust logging at every step!
- * ===============================================================
+ * ✅ DB: Always store English (single source of truth).
+ * ✅ Client emit: Send localized (user) strings based on socket locale.
+ * ✅ Emails: Users get localized; Admins always English.
+ * ✅ Translations: Loaded directly from JSON (en.json / is.json).
+ * ✅ Admin notifications stay in English on both emit and email.
+ * =================================================================
  */
 
-import logger from '../lib/core/logger.js';
-import notificationSystem from '../constants/notificationSystem.js';
-import prisma from '../lib/core/prisma.js';
-import { sendEmailToAdmin } from '../lib/email/sendEmailToAdmin.js';
-import { sendEmailToUser } from '../lib/email/sendEmailToUser.js';
+import notificationSystem from '../constants/notificationSystem.js'; // 🧩 English templates (DB truth)
+import prisma from '../lib/core/prisma.js'; // 🗄️ DB
+import { sendEmailToAdmin } from '../lib/email/sendEmailToAdmin.js'; // ✉️ admin mailer
+import { sendEmailToUser } from '../lib/email/sendEmailToUser.js'; // ✉️ user mailer
+
+// ⚡ Import readFileSync and path to read the english and icelandic dictionaries
+import { readFileSync } from 'fs';
+import path from 'path';
+
+// 🗂️ Load raw translation JSONs (only used for outbound localization)
+const enLanguage = JSON.parse(readFileSync(path.resolve('./messages/en.json'), 'utf8')); // 🌍 English JSON
+const isLanguage = JSON.parse(readFileSync(path.resolve('./messages/is.json'), 'utf8')); // 🌍 Icelandic JSON
 
 const ADMIN_USER_ID = process.env.ADMIN_USER_ID;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
@@ -22,214 +30,408 @@ if (!ADMIN_USER_ID || !ADMIN_EMAIL) {
   throw new Error('❌ Missing ADMIN_USER_ID or ADMIN_EMAIL in environment');
 }
 
-// 📦 Helper: Fetch all notifications and counts at once
-async function getAllNotifications(user_id) {
-  const [notifications, unreadCount, total] = await Promise.all([
-    prisma.notification.findMany({
-      where: { user_id },
-      orderBy: { createdAt: 'desc' }
-    }),
-    prisma.notification.count({ where: { user_id, is_read: false } }),
-    prisma.notification.count({ where: { user_id } })
-  ]);
-  return { notifications, unreadCount, total };
+/** -------------------------------------------------------------
+ * 🧩 Locale helpers (simple, dependency-free)
+ * -----------------------------------------------------------
+ */
+
+// 🧭 pick outbound locale from socket (room preference)
+function getOutboundLocale(socket) {
+  const rawLocalValue = socket?.data?.currentLocale || socket?.userData?.locale || 'en';
+  const lowerCasedLocale = String(rawLocalValue).toLowerCase();
+  return lowerCasedLocale.startsWith('is') ? 'is' : 'en';
 }
 
-// 🛠️ Main notification + email sender utility
-async function createAndEmitNotification({
+// 📚 choose dictionary by locale
+const getLanguageForLocale = (localeCode) => (localeCode === 'is' ? isLanguage : enLanguage);
+
+/**
+ * 🔄 interpolateSingleBraceTokens
+ *
+ * Replace placeholders inside a string with values from a data object.
+ *
+ * Example:
+ *   interpolateSingleBraceTokens("Hello {user.name}!", { user: { name: "Alice" } })
+ *   → "Hello Alice!"
+ */
+function interpolateSingleBraceTokens(text, data = {}) {
+  // ✅ If it's not a string, just return it (or empty string if null/undefined)
+  if (typeof text !== 'string') return text ?? ''; // '??' means "or"
+
+  // 🔍 Find all tokens like {something} in the text
+  return text.replace(/{\s*([\w.]+)\s*}/g, (_, dottetKeyPath) => {
+    // 🧩 Example: "user.name" → ["user", "name"]
+    const keyParts = String(dottetKeyPath).split('.');
+
+    // 📦 Start from the whole data object
+    let currentValue = data;
+
+    // 🚶 Walk through each part of the path (e.g. "user" → "name")
+    for (const keyPart of keyParts) {
+      // 👀 Check if this key exists at the current level
+      if (currentValue && Object.prototype.hasOwnProperty.call(currentValue, keyPart)) {
+        currentValue = currentValue[keyPart]; // ✅ Go deeper
+      } else {
+        return ''; // ❌ If missing, return empty string
+      }
+    }
+    // 🎯 Return the found value as a string, or empty if null/undefined
+    return currentValue == null ? '' : String(currentValue);
+  });
+}
+
+/* ==================== translation node lookup ==================== */
+
+// 🔎 find node under socket.ui.notifications.user[type][event?]
+function findUserNotificationNode(languageDictionary, typeKey, eventKey) {
+  const translationNode = languageDictionary?.socket?.ui?.notifications?.user?.[typeKey];
+  if (!translationNode) return null;
+  if (eventKey && translationNode[eventKey]) return translationNode[eventKey];
+  if (translationNode.body || translationNode.title) return translationNode;
+  const firstChild = Object.values(translationNode)[0];
+  return firstChild || null;
+}
+
+/* ==================== user localization ==================== */
+
+// 🪄 localize a user-facing notification (admin remains English)
+function localizeUserNotification({ locale, type, event, english, data }) {
+  const preferredNode = findUserNotificationNode(getLanguageForLocale(locale), type, event);
+  const englishNode = findUserNotificationNode(getLanguageForLocale('en'), type, event);
+
+  const titleTemplate = (preferredNode?.title ?? englishNode?.title ?? english.title) || '';
+  const bodyTemplate = (preferredNode?.body ?? englishNode?.body ?? english.body) || '';
+  const linkTemplate = (preferredNode?.link ?? englishNode?.link ?? english.link) || null;
+
+  return {
+    title: interpolateSingleBraceTokens(titleTemplate, data),
+    body: interpolateSingleBraceTokens(bodyTemplate, data),
+    link: linkTemplate ? interpolateSingleBraceTokens(linkTemplate, data) : null
+  };
+}
+
+/* ==================== create + emit + email ==================== */
+/**
+ * ✨ createAndDispatchNotification
+ * – Build English from templates (single source of truth)
+ * – Store English + raw template data
+ * – Emit: user gets localized payload; admin sees English
+ * – Email: localized for user, English for admin
+ */
+async function createAndDispatchNotification({
+  io,
+  socket,
+  isAdmin,
   recipientUserId,
   recipientEmail,
-  shouldSendEmail,
-  isAdminNotification,
-  notificationType,
-  notificationEventKey,
-  templateData,
-  io
+  shouldEmail,
+  type,
+  event, // may be null
+  data // merged templateData (user info + payload)
 }) {
-  // 📝 Build notification template for user or admin
-  const notificationTemplate = isAdminNotification
-    ? notificationSystem.getAdminNotification(notificationType, notificationEventKey, templateData)
-    : notificationSystem.getUserNotification(notificationType, notificationEventKey, templateData);
+  const englishSource = isAdmin
+    ? notificationSystem.getAdminNotification(type, event, data)
+    : notificationSystem.getUserNotification(type, event, data);
 
-  // 💾 Save notification to database
-  const createdNotification = await prisma.notification.create({
+  const createdRow = await prisma.notification.create({
     data: {
       user_id: recipientUserId,
-      title: notificationTemplate.title,
-      body: notificationTemplate.body,
-      link: notificationTemplate.link,
-      type: notificationType,
-      is_read: false,
-      createdAt: new Date()
+      title: englishSource.title,
+      body: englishSource.body,
+      link: englishSource.link,
+      type,
+      event: event || null,
+      for_admin: Boolean(isAdmin),
+      data, // raw template data for future localization on fetch
+      is_read: false
     }
   });
 
-  // 📥 Log notification creation
-  logger.log(
-    `📥 Notification created for ${isAdminNotification ? 'ADMIN' : 'USER'} [${createdNotification.notification_id}] - ${notificationType}`
-  );
+  // 📡 push: single item for instant UI (toast + prepend)
+  if (isAdmin) {
+    io.to(recipientUserId).emit('notification_received', createdRow); // admin keeps English
+  } else {
+    const outboundLocale = getOutboundLocale(socket);
+    const localized = localizeUserNotification({
+      locale: outboundLocale,
+      type,
+      event,
+      english: englishSource,
+      data
+    });
+    io.to(recipientUserId).emit('notification_received', { ...createdRow, ...localized });
+  }
 
-  // 📬 Emit notification instantly via socket
-  io.to(recipientUserId).emit('notification_received', createdNotification);
-  logger.log(
-    `📤 Notification sent to ${isAdminNotification ? 'ADMIN' : 'USER'} (${recipientUserId})`
-  );
-
-  // ✉️ Optionally send email (admin always gets email)
-  if (shouldSendEmail) {
+  // ✉️ email delivery (optional)
+  if (shouldEmail) {
     try {
-      if (isAdminNotification) {
+      if (isAdmin) {
         await sendEmailToAdmin({
-          subject: notificationTemplate.title,
-          title: notificationTemplate.title,
-          contentHtml: notificationTemplate.body.replace(/\n/g, '<br>'),
+          subject: englishSource.title?.trim() || 'Notification',
+          title: englishSource.title?.trim() || 'Notification',
+          contentHtml: (englishSource.body || '').replace(/\n/g, '<br>'),
           includeSignature: false
         });
-        logger.log(`✉️ [EMAIL] Admin email sent to ${ADMIN_EMAIL}`);
       } else {
+        const outboundLocale = getOutboundLocale(socket);
+        const { title, body } = localizeUserNotification({
+          locale: outboundLocale,
+          type,
+          event,
+          english: englishSource,
+          data
+        });
         await sendEmailToUser({
           to: recipientEmail,
-          subject: notificationTemplate.title,
-          title: notificationTemplate.title,
-          contentHtml: notificationTemplate.body.replace(/\n/g, '<br>'),
+          subject: (title || englishSource.title || 'Notification').trim(),
+          title: (title || englishSource.title || 'Notification').trim(),
+          contentHtml: (body || englishSource.body || '').replace(/\n/g, '<br>'),
           includeSignature: true
         });
-        logger.log(`✉️ [EMAIL] User email sent to ${recipientEmail}`);
       }
     } catch (emailError) {
-      logger.error('❌ [EMAIL] Failed to send email:', emailError);
+      console.error('email failed', emailError); // logs stay English per your rule
     }
   }
 
-  return createdNotification;
+  return createdRow;
+}
+/**
+ * 🛠️ Direct helper to create + emit a notification outside of socket listeners
+ * ---------------------------------------------------------------------------
+ * Used by HTTP bridges (like /emit/transactionFinished in socketServer.js)
+ * to avoid re-registering all notification events.
+ *
+ * @param {Server} io      - The Socket.IO server instance
+ * @param {Socket} socket  - The real connected socket for the target user
+ * @param {Object} options - Notification payload
+ *   • type: string (e.g. 'payment', 'subscription', 'error')
+ *   • event: string|null (e.g. 'created')
+ *   • user: User object (must include user_id)
+ *   • data: Json payload (payment/subscription/error details)
+ */
+/**
+ * 🛠️ Direct helper to create + emit a notification outside of socket listeners
+ */
+/**
+ * 🛠️ Direct helper to create + emit a notification outside of socket listeners
+ */
+export async function createEmitNotification(io, socket, { type, event, user, data }) {
+  if (!socket || !user?.user_id) {
+    console.warn('[notifications] createEmitNotification called without valid socket or user');
+    return;
+  }
+
+  const user_id = user.user_id;
+
+  // 🌍 locale of this socket
+  const outboundLocale = getOutboundLocale(socket);
+
+  // 📝 Always render English snapshot for DB
+  const englishSource = notificationSystem.getUserNotification(type, event, {
+    ...data,
+    user
+  });
+
+  // 🗄 Save canonical English row
+  const notificationRow = await prisma.notification.create({
+    data: {
+      user_id,
+      type,
+      event,
+      for_admin: false,
+      title: englishSource.title,
+      body: englishSource.body,
+      link: englishSource.link,
+      data: { ...data, user },
+      is_read: false
+    }
+  });
+
+  // 🌍 Localize for immediate emit
+  const localized = localizeUserNotification({
+    locale: outboundLocale,
+    type,
+    event,
+    english: englishSource,
+    data: { ...data, user }
+  });
+
+  // 📡 Emit to client (merged English row + localized view)
+  io.to(user_id).emit('notification_received', {
+    ...notificationRow,
+    ...localized
+  });
+
+  // 🔄 Ask client to refresh authoritative list/count
+  io.to(user_id).emit('notifications_list_refresh', { user_id });
 }
 
-// ================== MAIN EXPORT ==========================
-export default function registerNotificationEvents(io, socket) {
-  // 1️⃣ CREATE NOTIFICATION FOR BOTH ADMIN AND USER
-  socket.on('create_notification_for_both', async (payload) => {
+/* -------------------------------------------------------------
+ * 🚀 Event registrations (simple & explicit)
+ * -----------------------------------------------------------*/
+
+export default function registerNotificationEvents(io, socket, globalState) {
+  // 📨 create for both (admin + user)
+  socket.on('create_notification_for_both', async ({ type, event, user, data: payload }) => {
     try {
-      const user = await prisma.user.findUnique({ where: { user_id: payload.user.user_id } });
-      if (!user) throw new Error(`User not found: ${payload.user.user_id}`);
+      const templateData = notificationSystem.mergeUserAndPayload(user, payload);
 
-      const mergedData = { ...user, ...(payload.data || {}) };
-
-      // 👑 Admin notification (always emails)
-      const adminNotification = await createAndEmitNotification({
+      // admin row
+      await createAndDispatchNotification({
+        io,
+        socket,
+        isAdmin: true,
         recipientUserId: ADMIN_USER_ID,
         recipientEmail: ADMIN_EMAIL,
-        shouldSendEmail: true,
-        isAdminNotification: true,
-        notificationType: payload.type,
-        notificationEventKey: payload.event,
-        templateData: mergedData,
-        io
+        shouldEmail: true,
+        type,
+        event,
+        data: templateData
       });
 
-      // 👤 User notification (respects user's email preference)
-      const userNotification = await createAndEmitNotification({
-        recipientUserId: user.user_id,
-        recipientEmail: user.email,
-        shouldSendEmail: user.sendEmails,
-        isAdminNotification: false,
-        notificationType: payload.type,
-        notificationEventKey: payload.event,
-        templateData: mergedData,
-        io
+      // user row
+      const dbUser = await prisma.user.findUnique({
+        where: { user_id: user.user_id },
+        select: { user_id: true, email: true, sendEmails: true }
+      });
+      if (!dbUser) throw new Error(`User not found: ${user.user_id}`);
+
+      await createAndDispatchNotification({
+        io,
+        socket,
+        isAdmin: false,
+        recipientUserId: dbUser.user_id,
+        recipientEmail: dbUser.email,
+        shouldEmail: dbUser.sendEmails,
+        type,
+        event,
+        data: templateData
       });
 
-      socket.emit('notification_created', {
-        success: true,
-        adminNotification,
-        userNotification
-      });
-      logger.log('✅ [SOCKET] notification_created emitted with both admin and user notifications');
+      // 🔁 ask both rooms to refetch authoritative list
+      io.to(ADMIN_USER_ID).emit('notifications_list_refresh', { user_id: ADMIN_USER_ID });
+      io.to(dbUser.user_id).emit('notifications_list_refresh', { user_id: dbUser.user_id });
     } catch (error) {
-      logger.error('❌ [SOCKET] Error creating notification for both:', error);
+      console.error('create_notification_for_both', error);
       socket.emit('notifications_error', { message: 'Error creating notification for both' });
     }
   });
 
-  // 2️⃣ CREATE NOTIFICATION FOR ADMIN ONLY
-  socket.on('create_notification_for_admin', async (payload) => {
+  // 📨 create for admin only
+  socket.on('create_notification_for_admin', async ({ type, event, user, data: payload }) => {
     try {
-      const adminNotification = await createAndEmitNotification({
+      const templateData = notificationSystem.mergeUserAndPayload(user, payload);
+
+      await createAndDispatchNotification({
+        io,
+        socket,
+        isAdmin: true,
         recipientUserId: ADMIN_USER_ID,
         recipientEmail: ADMIN_EMAIL,
-        shouldSendEmail: true,
-        isAdminNotification: true,
-        notificationType: payload.type,
-        notificationEventKey: payload.event,
-        templateData: payload.data || {},
-        io
+        shouldEmail: true,
+        type,
+        event,
+        data: templateData
       });
-      socket.emit('notification_created', { success: true, adminNotification });
-      logger.log('✅ [SOCKET] notification_created emitted for admin');
+
+      io.to(ADMIN_USER_ID).emit('notifications_list_refresh', { user_id: ADMIN_USER_ID });
     } catch (error) {
-      logger.error('❌ [SOCKET] Error creating admin notification:', error);
+      console.error('create_notification_for_admin', error);
       socket.emit('notifications_error', { message: 'Error creating admin notification' });
     }
   });
 
-  // 3️⃣ CREATE NOTIFICATION FOR USER ONLY
-  socket.on('create_notification_for_user', async (payload) => {
+  // 📨 create for user only
+  socket.on('create_notification_for_user', async ({ type, event, user, data: payload }) => {
     try {
-      const targetUser = await prisma.user.findUnique({
-        where: { user_id: payload.user.user_id },
+      const templateData = notificationSystem.mergeUserAndPayload(user, payload);
+
+      const dbUser = await prisma.user.findUnique({
+        where: { user_id: user.user_id },
         select: { user_id: true, email: true, sendEmails: true }
       });
-      if (!targetUser) throw new Error(`User not found: ${payload.user.user_id}`);
+      if (!dbUser) throw new Error(`User not found: ${user.user_id}`);
 
-      const userNotification = await createAndEmitNotification({
-        recipientUserId: targetUser.user_id,
-        recipientEmail: targetUser.email,
-        shouldSendEmail: targetUser.sendEmails,
-        isAdminNotification: false,
-        notificationType: payload.type,
-        notificationEventKey: payload.event,
-        templateData: { ...targetUser, ...(payload.data || {}) },
-        io
+      await createAndDispatchNotification({
+        io,
+        socket,
+        isAdmin: false,
+        recipientUserId: dbUser.user_id,
+        recipientEmail: dbUser.email,
+        shouldEmail: dbUser.sendEmails,
+        type,
+        event,
+        data: templateData
       });
 
-      socket.emit('notification_created', { success: true, userNotification });
-      logger.log('✅ [SOCKET] notification_created emitted for user');
+      io.to(dbUser.user_id).emit('notifications_list_refresh', { user_id: dbUser.user_id });
     } catch (error) {
-      logger.error('❌ [SOCKET] Error creating user notification:', error);
+      console.error('create_notification_for_user', error);
       socket.emit('notifications_error', { message: 'Error creating user notification' });
     }
   });
 
-  // 4️⃣ FETCH ALL NOTIFICATIONS (on page load/refresh)
+  // 📥 fetch localized list for a user
   socket.on('fetch_notifications', async ({ user_id }) => {
     try {
-      const { notifications, unreadCount, total } = await getAllNotifications(user_id);
-      logger.log(
-        `🔔 [SOCKET] notifications: total=${total}, unread=${unreadCount}, user_id=${user_id}`
-      );
-      socket.emit('notifications_list', { notifications, unreadCount, total });
+      const outboundLocale = getOutboundLocale(socket);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(
+          `[notifications] fetch_notifications: user_id=${user_id} outboundLocale=${outboundLocale}`
+        );
+      }
+      const notificationRows = await prisma.notification.findMany({
+        where: { user_id },
+        orderBy: { createdAt: 'desc' }
+      });
+
+      const mappedLocalizedNotifications = notificationRows.map((notificationRow) => {
+        if (notificationRow.for_admin) return notificationRow; // admin keeps English
+        const englishSnapshot = {
+          title: notificationRow.title,
+          body: notificationRow.body,
+          link: notificationRow.link
+        };
+        const { title, body, link } = localizeUserNotification({
+          locale: outboundLocale,
+          type: notificationRow.type,
+          event: notificationRow.event,
+          english: englishSnapshot,
+          data: notificationRow.data || {}
+        });
+        return { ...notificationRow, title, body, link };
+      });
+
+      const unreadCount = await prisma.notification.count({
+        where: { user_id, is_read: false }
+      });
+
+      socket.emit('notifications_list', {
+        notifications: mappedLocalizedNotifications,
+        unreadCount,
+        total: notificationRows.length
+      });
     } catch (error) {
-      logger.error('❌ [SOCKET] Error fetching notifications:', error);
-      socket.emit('notifications_list', []);
+      console.error('fetch_notifications', error); // 🧱 keep logs in English
+      // 🧯 keep payload shape identical even on errors
+      socket.emit('notifications_list', { notifications: [], unreadCount: 0, total: 0 });
     }
   });
 
-  // 5️⃣ COUNT NOTIFICATIONS (for badge/bubble only)
+  // 🔢 unread count badge
   socket.on('count_notifications', async ({ user_id }) => {
     try {
-      const total = await prisma.notification.count({ where: { user_id } });
-      const unread = await prisma.notification.count({ where: { user_id, is_read: false } });
-      const read = total - unread;
-      logger.log(
-        `🔢 [SOCKET] notifications count: total=${total}, unread=${unread}, read=${read}, user_id=${user_id}`
-      );
-      socket.emit('notifications_count', { total, unread, read });
-    } catch (error) {
-      logger.error('❌ [SOCKET] Error counting notifications:', error);
-      socket.emit('notifications_count', { total: 0, unread: 0, read: 0 });
+      const unreadCount = await prisma.notification.count({
+        where: { user_id, is_read: false }
+      });
+      socket.emit('notifications_count', { unreadCount });
+    } catch {
+      socket.emit('notifications_count', { unreadCount: 0 });
     }
   });
 
-  // 6️⃣ MARK AS READ (single notification)
+  // ✅ mark read
   socket.on('mark_notification_read', async ({ notification_id }) => {
     try {
       await prisma.notification.update({
@@ -237,99 +439,28 @@ export default function registerNotificationEvents(io, socket) {
         data: { is_read: true }
       });
       socket.emit('notification_marked_read', { notification_id });
-      logger.log(`🟢 [SOCKET] notification ${notification_id} marked read`);
-    } catch (error) {
-      logger.error('❌ [SOCKET] Error marking notification as read:', error);
-      socket.emit('notifications_error', { message: 'Error marking as read' });
+    } catch {
+      socket.emit('notifications_error', { message: 'Error marking notification as read' });
     }
   });
 
-  // 7️⃣ REFRESH NOTIFICATIONS (manual refresh request from client)
-  socket.on('refresh_notifications', async ({ user_id }) => {
-    try {
-      const { notifications, unreadCount, total } = await getAllNotifications(user_id);
-      logger.log(
-        `🔄 [SOCKET] notifications refreshed: total=${total}, unread=${unreadCount}, user_id=${user_id}`
-      );
-      socket.emit('notifications_list', { notifications, unreadCount, total });
-    } catch (error) {
-      logger.error('❌ [SOCKET] Error refreshing notifications:', error);
-      socket.emit('notifications_list', []);
-    }
-  });
-
-  // 8️⃣ CREATE NOTIFICATION (legacy/generic for advanced/manual)
-  socket.on('create_notification', async (payload) => {
-    /**
-     * payload: {
-     *   type: NotificationType,    // required (string)
-     *   event?: string,            // (optional: for event-based templates)
-     *   user: { ...userData },     // required: recipient user (user_id, email, name, etc)
-     *   data?: { ...extra },       // additional fields (e.g. freeTrial, subscription, payment, message, etc.)
-     *   forAdmin?: boolean,        // if true, use admin templates (and type field) for content
-     * }
-     */
-    try {
-      const getNotification = payload.forAdmin
-        ? notificationSystem.getAdminNotification
-        : notificationSystem.getUserNotification;
-
-      const mergedData = {
-        ...(payload.user || {}),
-        ...(payload.data || {})
-      };
-
-      const notification = getNotification(payload.type, payload.event, mergedData);
-
-      const created = await prisma.notification.create({
-        data: {
-          user_id: payload.user.user_id,
-          title: notification.title,
-          body: notification.body,
-          link: notification.link,
-          type: payload.type,
-          is_read: false,
-          createdAt: new Date(),
-          ...((payload.data || {}).additionalPrismaFields || {})
-        }
-      });
-
-      io.to(payload.user.user_id).emit('notification_received', created);
-      socket.emit('notification_created', { success: true, notification: created });
-    } catch (error) {
-      logger.error('❌ [SOCKET] Error creating notification via socket:', error);
-      socket.emit('notifications_error', { message: 'Error creating notification' });
-    }
-  });
-
-  // 🚧 Bulk mark/delete scaffolded for future
-  // 9️⃣ DELETE A SINGLE NOTIFICATION
+  // 🗑️ delete one
   socket.on('delete_notification', async ({ notification_id, user_id }) => {
     try {
-      await prisma.notification.delete({
-        where: { notification_id }
-      });
-      // 🗑️ Emit new notification list to user after deletion
-      const { notifications, unreadCount, total } = await getAllNotifications(user_id);
-      io.to(user_id).emit('notifications_list', { notifications, unreadCount, total });
-      socket.emit('notification_deleted', [notification_id]);
-      logger.log(`🗑️ [SOCKET] notification ${notification_id} deleted`);
-    } catch (error) {
-      logger.error('❌ [SOCKET] Error deleting notification:', error);
+      await prisma.notification.delete({ where: { notification_id } });
+      io.to(user_id).emit('notifications_list_refresh', { user_id });
+    } catch {
       socket.emit('notifications_error', { message: 'Error deleting notification' });
     }
   });
 
-  // 🔥 CLEAR ALL NOTIFICATIONS (Danger Zone!)
+  // 🧹 clear all
   socket.on('clear_notifications', async ({ user_id }) => {
     try {
       await prisma.notification.deleteMany({ where: { user_id } });
-      // ⚡ Emit new (empty) notification list to user after clearing
-      io.to(user_id).emit('notifications_list', { notifications: [], unreadCount: 0, total: 0 });
-      socket.emit('notifications_cleared', { user_id });
-      logger.log(`🔥 [SOCKET] All notifications cleared for user ${user_id}`);
-    } catch (error) {
-      logger.error('❌ [SOCKET] Error clearing notifications:', error);
+      socket.emit('notifications_list', { notifications: [], unreadCount: 0, total: 0 });
+      io.to(user_id).emit('notifications_list_refresh', { user_id });
+    } catch {
       socket.emit('notifications_error', { message: 'Error clearing notifications' });
     }
   });

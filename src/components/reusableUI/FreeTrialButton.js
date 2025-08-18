@@ -3,6 +3,7 @@
  * FreeTrialButton.js
  * 🎟️ Free Trial Request Button (with Modal)
  * -------------------------------------------
+ * - Translated with i18n client via useT()
  * - Lets user request a free trial (one time)
  * - Shows confirmation modal before action
  * - Uses app-wide loader and displayMessage
@@ -18,8 +19,10 @@ import useModal from '@/hooks/useModal'; // 🌟 Modal hook for confirmation
 import useAppHandlers from '@/hooks/useAppHandlers'; // 🛠️ App handler for loader/messages
 import axiosInstance from '@/lib/core/axiosInstance';
 import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
+import { useT } from '@/lib/i18n/client'; // 🌐 i18n
 
 export default function FreeTrialButton({ user_id, refreshStatus }) {
+  const t = useT(); // 🔤
   // 🌀 Local loading state
   const [loading, setLoading] = useState(false);
 
@@ -34,12 +37,11 @@ export default function FreeTrialButton({ user_id, refreshStatus }) {
   // 🖱️ Button click: open confirm modal first!
   const handleOpenModal = () => {
     openModal('confirmFreeTrial', {
-      title: 'Confirm Free Trial Request',
-      description:
-        'Are you sure you want to request your free trial? You can only get one per account. You will be notified as soon as it is ready! 🎉',
+      title: t('components.freeTrialButton.confirm_title'),
+      description: t('components.freeTrialButton.confirm_description'),
       confirmButtonType: 'Purple',
-      confirmButtonText: 'Yes, request my free trial!',
-      cancelButtonText: 'Cancel',
+      confirmButtonText: t('components.freeTrialButton.confirm_yes'),
+      cancelButtonText: t('components.common.cancel'),
       onConfirm: handleRequestTrial, // Will call the actual API logic below
       onCancel: () => hideModal()
     });
@@ -48,14 +50,14 @@ export default function FreeTrialButton({ user_id, refreshStatus }) {
   // 🚀 The actual free trial API logic (called from modal onConfirm)
   const handleRequestTrial = async () => {
     try {
-      showLoader({ text: 'Requesting your free trial…' }); // ⏳
+      showLoader({ text: t('components.freeTrialButton.loader_requesting') }); // ⏳
       // ✨ Call the endpoint and get the user and trial from the response
       const response = await axiosInstance.post('/api/megaott/freeTrial', {});
       const { user, trial } = response.data;
 
       // ✅ Set the free trial and display a success message
       setFreeTrial(trial);
-      displayMessage('✅ Free trial requested! You can start watching right now!', 'success');
+      displayMessage(t('components.freeTrialButton.success_requested'), 'success');
 
       // ♻️ Refresh the status of the free trial
       refreshStatus && refreshStatus();
@@ -65,7 +67,7 @@ export default function FreeTrialButton({ user_id, refreshStatus }) {
       logger.log('Created free trial notifications!');
     } catch (err) {
       displayMessage(
-        `❗ ${err.response?.data?.error || 'Trial request failed. Try again later.'}`,
+        `❗ ${err.response?.data?.error || t('components.freeTrialButton.error_generic')}`,
         'error'
       );
     } finally {
@@ -86,13 +88,15 @@ export default function FreeTrialButton({ user_id, refreshStatus }) {
     >
       {loading ? (
         <>
+          {/* ⏳ Loading indicator */}
           <span className="animate-spin mr-3">⏳</span>
-          Requesting…
+          {t('components.freeTrialButton.loading_label')}
         </>
       ) : (
         <>
+          {/* 🎟️ Button label */}
           <span>🎟️</span>
-          <span className="ml-3">Request Free Trial</span>
+          <span className="ml-3">{t('components.freeTrialButton.button_label')}</span>
         </>
       )}
     </button>

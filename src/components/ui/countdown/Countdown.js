@@ -1,34 +1,46 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useT } from '@/lib/i18n/client'; // 🌐 get locale-bound translator
 
+/**
+ * ⏱️ SimpleCountdown
+ * -------------------
+ * • Shows a live seconds countdown with translated label.
+ * • Calls onComplete when the timer hits 0.
+ * • Uses useT() so t() is bound to current locale.
+ */
 const SimpleCountdown = ({ seconds, onComplete }) => {
-  const [timeLeft, setTimeLeft] = useState(seconds);
+  const t = useT(); // 🗣️ translator bound to current language
+  const [timeLeft, setTimeLeft] = useState(seconds); // 🧮 track remaining seconds
 
-  // Starting the useEffect on mounting the component
   useEffect(() => {
-    // If timer completes or gets to zero then onComplete() runs to tell the timer it's done
+    // 🧵 stop & notify when finished
     if (timeLeft <= 0) {
-      if (onComplete) {
-        onComplete();
-        return;
-      }
+      onComplete?.(); // ✅ inform parent
+      return; // 🛑 stop scheduling further intervals
     }
 
-    // Set the timer to countdown 1 second by second
+    // ⏳ tick the clock every second
     const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
+      setTimeLeft((previousSeconds) => previousSeconds - 1); // ➖ decrement
     }, 1000);
 
-    return () => clearInterval(timer); // Cleanup the interval on unmounting the component
+    return () => clearInterval(timer); // 🧹 cleanup the interval
   }, [timeLeft, onComplete]);
+
+  // 🗣️ pick singular/plural label
+  const labelKey =
+    timeLeft === 1
+      ? 'components.countdown.seconds_remaining_singular'
+      : 'components.countdown.seconds_remaining_plural';
 
   return (
     <span>
-      {timeLeft} second{timeLeft !== 1 && 's'} remaining...
+      {/* 🖨️ human-readable countdown message */}
+      {t(labelKey, { seconds: timeLeft })}
     </span>
   );
 };
 
-// Export the default simple countdown timer
-export default SimpleCountdown;
+export default SimpleCountdown; // 🚪 default export

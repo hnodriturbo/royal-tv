@@ -1,19 +1,22 @@
 import { useRef, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/language';
 import useAppHandlers from '@/hooks/useAppHandlers';
+import { useTRoot } from '@/lib/i18n/client';
 
 const useAuthGuard = (requiredRole) => {
   const { data: session, status } = useSession();
   const { displayMessage, showLoader, hideLoader } = useAppHandlers();
   const router = useRouter();
+  const t = useTRoot();
+
   const [isChecking, setIsChecking] = useState(status === 'loading');
   /* const [redirecting, setRedirecting] = useState(false); */
   const redirectingRef = useRef(false);
 
   useEffect(() => {
     if (status === 'loading') {
-      showLoader({ text: 'Checking authentication...' });
+      showLoader({ text: t('common.auth.checking') });
       setIsChecking(true);
     } else {
       if (!redirectingRef.current) hideLoader();

@@ -1,13 +1,12 @@
 /**
  *   ===================== ConversationActionButton.js =====================
- * 🧩
- * UNIVERSAL LIVE CHAT ACTION BUTTON (Admin/User)
+ * 🧩 UNIVERSAL LIVE CHAT ACTION BUTTON (Admin/User)
+ * - Translated with i18n client via useT()
  * - Handles creating, deleting, and bulk-deleting conversations (live chat only).
  * - Uses socket for creation (real-time), Axios for delete actions.
  * - Works for both admin and user by passing correct props/routes.
  * ========================================================================
- * ⚙️
- * PROPS:
+ * ⚙️ PROPS:
  *   action:           'create' | 'delete' | 'deleteAll'    // What action this button does (required)
  *   user_id:          string                               // Target user ID (required)
  *   conversation_id?: string                               // For deleting a single conversation (required for 'delete')
@@ -17,24 +16,20 @@
  *   isAdmin?:         boolean                              // Set to true for admin pages, false for users
  *   onActionSuccess?: (data) => void                       // Callback with API response on success (except create, which routes)
  *   buttonText?:      string                               // Optional custom label
- * ========================================================================
- * 📌
- * USAGE:
- *   <ConversationActionButton action="create" user_id={user_id} user={user} size="sm" isAdmin={false} />
- *   <ConversationActionButton action="delete" user_id={user_id} conversation_id={conversation_id} size="sm" isAdmin={false} onActionSuccess={refreshList} />
- *   <ConversationActionButton action="deleteAll" user_id={user_id} size="sm" isAdmin={true} onActionSuccess={refreshList} />
- * ========================================================================
  */
+
+'use client';
 
 import { useSession } from 'next-auth/react';
 import { useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/language';
 import clsx from 'clsx';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useModal from '@/hooks/useModal';
 import axiosInstance from '@/lib/core/axiosInstance';
 import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
+import { useT } from '@/lib/i18n/client'; // 🌐 i18n: hook
 
 export default function ConversationActionButton({
   action = 'create',
@@ -47,6 +42,7 @@ export default function ConversationActionButton({
   onActionSuccess,
   buttonText
 }) {
+  const t = useT(); // 🔤 activate translator
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -76,11 +72,15 @@ export default function ConversationActionButton({
     const message = textAreaRef.current?.value.trim();
 
     if (!subject || !message) {
-      displayMessage('Subject and message cannot be empty', 'error');
+      // 🚫 Guard: both fields required
+      displayMessage(
+        t('components.conversationActionButton.validation_subject_message_required'),
+        'error'
+      );
       return;
     }
 
-    showLoader({ text: 'Creating conversation...' });
+    showLoader({ text: t('components.conversationActionButton.loader_creating') }); // ⏳ Loader text
 
     try {
       // Emit event to create room (socket) - always live chat
@@ -91,7 +91,7 @@ export default function ConversationActionButton({
 
       const newConversationPromise = new Promise((resolve, reject) => {
         const timeoutId = setTimeout(() => {
-          reject(new Error('Timeout: Could not create conversation'));
+          reject(new Error(t('components.conversationActionButton.error_timeout')));
         }, 8000);
 
         socket.once(readyEvent, (payload) => {
@@ -123,14 +123,17 @@ export default function ConversationActionButton({
         createLiveChatMessageNotificationForAdminOnly(user, messageObj, conversationObj);
       } else {
         if (!user || !user.user_id) {
-          displayMessage('Notification error: missing user information', 'error');
+          displayMessage(
+            t('components.conversationActionButton.error_missing_user_for_notification'),
+            'error'
+          );
           return;
         }
         // 🧑‍💼 Admin sent message → notify user
         createLiveChatMessageNotificationForUserOnly(user, messageObj, conversationObj);
       }
 
-      displayMessage('Conversation created!', 'success');
+      displayMessage(t('components.conversationActionButton.success_created'), 'success');
       router.push(isAdmin ? `/admin/liveChat/${new_convo_id}` : `/user/liveChat/${new_convo_id}`);
 
       setTimeout(() => {
@@ -140,20 +143,23 @@ export default function ConversationActionButton({
     } catch (error) {
       hideLoader();
       hideModal();
-      displayMessage(error.message || 'Error: Could not create conversation', 'error');
+      displayMessage(
+        error.message || t('components.conversationActionButton.error_generic_create'),
+        'error'
+      );
     }
   };
 
   // 🟠 DELETE conversation handler (API/Axios)
   const handleDeleteConversation = async () => {
     try {
-      showLoader({ text: 'Deleting conversation…' });
+      showLoader({ text: t('components.conversationActionButton.loader_deleting_one') });
       const endpoint = `${baseApiRoute}/deleteConversation?conversation_id=${conversation_id}`;
       const { data } = await axiosInstance.delete(endpoint);
-      displayMessage('Conversation deleted', 'success');
+      displayMessage(t('components.conversationActionButton.success_deleted_one'), 'success');
       if (onActionSuccess) onActionSuccess(data);
     } catch (error) {
-      displayMessage('Delete failed', 'error');
+      displayMessage(t('components.conversationActionButton.error_delete_failed'), 'error');
     } finally {
       hideLoader();
       hideModal();
@@ -163,13 +169,13 @@ export default function ConversationActionButton({
   // 🟥 DELETE ALL conversations for user (admin only)
   const handleDeleteAllConversations = async () => {
     try {
-      showLoader({ text: 'Deleting all conversations…' });
+      showLoader({ text: t('components.conversationActionButton.loader_deleting_all') });
       const endpoint = `${baseApiRoute}/deleteAllUserConversations?user_id=${user_id}`;
       const { data } = await axiosInstance.delete(endpoint);
-      displayMessage('All conversations deleted', 'success');
+      displayMessage(t('components.conversationActionButton.success_deleted_all'), 'success');
       if (onActionSuccess) onActionSuccess(data);
     } catch (error) {
-      displayMessage('Delete all failed', 'error');
+      displayMessage(t('components.conversationActionButton.error_delete_all_failed'), 'error');
     } finally {
       hideLoader();
       hideModal();
@@ -183,10 +189,10 @@ export default function ConversationActionButton({
   if (action === 'create') {
     config = {
       buttonStyle: buttonClass || 'btn-success',
-      label: buttonText || 'Start New Conversation',
+      label: buttonText || t('components.conversationActionButton.btn_start_new'),
       modal: {
-        title: 'Start New Conversation',
-        description: 'Enter subject and your message below:',
+        title: t('components.conversationActionButton.modal_create_title'),
+        description: t('components.conversationActionButton.modal_create_description'),
         content: () => (
           <div className="flex flex-col gap-4 rounded-lg">
             {/* 📝 Subject field */}
@@ -194,18 +200,18 @@ export default function ConversationActionButton({
               ref={inputRef}
               type="text"
               className="border p-2 w-full text-black rounded-lg"
-              placeholder="Enter subject"
+              placeholder={t('components.conversationActionButton.placeholder_subject')}
               autoFocus
             />
             {/* 💬 First message */}
             <textarea
               ref={textAreaRef}
               className="border p-2 w-full h-24 text-black rounded-lg"
-              placeholder="Type your message here..."
+              placeholder={t('components.conversationActionButton.placeholder_message')}
             />
           </div>
         ),
-        confirmText: 'Create Conversation',
+        confirmText: t('components.conversationActionButton.modal_create_confirm'),
         onConfirm: handleCreateConversation
       }
     };
@@ -215,11 +221,11 @@ export default function ConversationActionButton({
   else if (action === 'delete') {
     config = {
       buttonStyle: buttonClass || 'btn-danger',
-      label: buttonText || 'Delete Conv.',
+      label: buttonText || t('components.conversationActionButton.btn_delete_one'),
       modal: {
-        title: 'Delete Conversation',
-        description: 'This will permanently delete the conversation and all messages within it.',
-        confirmText: 'Delete',
+        title: t('components.conversationActionButton.modal_delete_title'),
+        description: t('components.conversationActionButton.modal_delete_description'),
+        confirmText: t('components.conversationActionButton.modal_delete_confirm'),
         onConfirm: handleDeleteConversation
       }
     };
@@ -230,11 +236,11 @@ export default function ConversationActionButton({
     if (!isAdmin) return null;
     config = {
       buttonStyle: buttonClass || 'btn-danger',
-      label: buttonText || 'Delete All Conv.',
+      label: buttonText || t('components.conversationActionButton.btn_delete_all'),
       modal: {
-        title: 'Delete ALL Conversations for User',
-        description: 'This will permanently delete ALL conversations and messages for this user.',
-        confirmText: 'Delete All',
+        title: t('components.conversationActionButton.modal_delete_all_title'),
+        description: t('components.conversationActionButton.modal_delete_all_description'),
+        confirmText: t('components.conversationActionButton.modal_delete_all_confirm'),
         onConfirm: handleDeleteAllConversations
       }
     };
@@ -250,7 +256,7 @@ export default function ConversationActionButton({
       description: config.modal.description,
       customContent: config.modal.content || undefined,
       confirmButtonText: config.modal.confirmText,
-      cancelButtonText: 'Cancel',
+      cancelButtonText: t('components.common.cancel'),
       confirmButtonType: action === 'create' ? 'Success' : 'Danger',
       onConfirm: config.modal.onConfirm,
       onCancel: hideModal

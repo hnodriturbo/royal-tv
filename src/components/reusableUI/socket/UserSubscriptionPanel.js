@@ -1,39 +1,40 @@
+// 📦 UserSubscriptionPanel.js — localized text, socket-powered
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useRouter } from '@/lib/language';
+import { Link } from '@/lib/language';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useSocketHub from '@/hooks/socket/useSocketHub';
-import { paymentPackages } from '@/packages/data/packages';
+import { paymentPackages } from '@/app/[locale]/packages/data/packages';
+import { useTRoot } from '@/lib/i18n/client';
 
 const packageOptions = paymentPackages
-  .filter((pkg) => !pkg.isTrial) // 👈 Exclude free trial
+  .filter((pkg) => !pkg.isTrial) // 🛑 exclude free trial
   .map((packageItem) => ({
     value: packageItem.slug,
-    label: packageItem.order_description
+    label: packageItem.order_description // ⚠️ show translated below in render
   }));
 
 export default function UserSubscriptionPanel({ user_id }) {
+  const t = useTRoot(); // 🌍 translator
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPackage, setSelectedPackage] = useState('');
-  const { displayMessage, showLoader, hideLoader } = useAppHandlers();
+  const { displayMessage } = useAppHandlers();
   const router = useRouter();
 
-  // ⬇️ Get all relevant socket functions
+  // 🔌 socket functions
   const { fetchSubscriptions, onSubscriptionsList, onSubscriptionCreated, onPaymentStatusUpdated } =
     useSocketHub();
 
-  // ⬇️ Fetch subscriptions via socket when mounted or user_id changes
+  // 📥 load + subscribe to changes
   useEffect(() => {
     if (!user_id) return;
     setLoading(true);
     fetchSubscriptions();
-    // Subscribe to subscription updates from server
     const unsub = onSubscriptionsList((subs) => {
       setSubscriptions(subs || []);
       setLoading(false);
     });
-    // Also refresh on real-time creation or payment status updates
     const unsubCreated = onSubscriptionCreated(() => fetchSubscriptions());
     const unsubPayment = onPaymentStatusUpdated(() => fetchSubscriptions());
     return () => {
@@ -41,6 +42,7 @@ export default function UserSubscriptionPanel({ user_id }) {
       unsubCreated && unsubCreated();
       unsubPayment && unsubPayment();
     };
+    // ⚠️ no `t` in deps — avoid churn
   }, [
     user_id,
     fetchSubscriptions,
@@ -49,7 +51,7 @@ export default function UserSubscriptionPanel({ user_id }) {
     onPaymentStatusUpdated
   ]);
 
-  // Same helper as before
+  // 🔎 pick the most relevant subscription
   const getRelevantSubscription = useCallback(() => {
     return (
       subscriptions.find((s) => s.status === 'active') ||
@@ -61,24 +63,34 @@ export default function UserSubscriptionPanel({ user_id }) {
 
   const relevantSub = getRelevantSubscription();
 
-  // 🟩 "Buy Now" button handler!
+  // 🛒 buy now handler
   const handleBuyNow = () => {
+    if (!selectedPackage) {
+      displayMessage(t('socket.ui.subscriptions.select_first'), 'warning');
+      return;
+    }
     router.push(`/packages/${selectedPackage}/buyNow`);
   };
 
-  // Render unchanged, except now it's all socket-driven
+  // ⏳ loading state
   if (loading) {
-    return <div className="my-8">Loading subscriptions…</div>;
+    return <div className="my-8">{t('socket.ui.subscriptions.loading')}</div>;
   }
 
+  // 🔤 translate a status token safely
+  const transStatus = (status) => {
+    const key = `socket.ui.subscriptions.status.${status || 'unknown'}`;
+    return t(key);
+  };
+
   return (
-    <div className="container-style-sm w-11/12 lg:w-[600px] mx-auto flex flex-col items-center my-6 space-y-6">
+    <div className="container-style-sm w-11/12 lg:max-w-2xl mx-auto flex flex-col items-center my-6 space-y-6">
       {relevantSub && (
         <div className="bg-blue-900 rounded-xl p-5 w-full flex flex-col items-center">
           <span className="text-2xl mb-2">📦</span>
-          <h3 className="font-semibold mb-1">You have a subscription!</h3>
+          <h3 className="font-semibold mb-1">{t('socket.ui.subscriptions.have_one')}</h3>
           <div className="mb-2">
-            Status:{' '}
+            {t('socket.ui.subscriptions.status_label')}{' '}
             <span
               className={
                 relevantSub.status === 'active'
@@ -88,40 +100,46 @@ export default function UserSubscriptionPanel({ user_id }) {
                     : 'text-gray-400 font-bold'
               }
             >
-              {relevantSub.status.toUpperCase()}
+              {transStatus(relevantSub.status)}
             </span>
           </div>
           <Link href="/user/subscriptions" className="btn-success w-2/3 mt-2 text-center">
-            View Your Subscription
+            {t('socket.ui.subscriptions.view_yours')}
           </Link>
         </div>
       )}
+
       <div className="bg-purple-800 rounded-xl p-6 flex flex-col items-center w-full">
         <span className="text-2xl mb-2">{relevantSub ? '🛍️' : '💡'}</span>
         <h3 className="font-semibold mb-2 text-white">
-          {relevantSub ? 'Purchase Additional Subscription' : 'No Subscription Found'}
+          {relevantSub
+            ? t('socket.ui.subscriptions.buy_additional')
+            : t('socket.ui.subscriptions.none_title')}
         </h3>
         {!relevantSub && (
           <p className="text-gray-300 mb-3 text-center">
-            Purchase a subscription to start enjoying all premium features!
+            {t('socket.ui.subscriptions.none_blurb')}
           </p>
         )}
+
         <select
           value={selectedPackage}
           onChange={(e) => setSelectedPackage(e.target.value)}
           className="w-full mb-3 p-2 rounded-lg text-gray-900 text-center"
         >
           <option value="" disabled>
-            -- Select a subscription package to buy !
+            {t('socket.ui.subscriptions.select_package')}
           </option>
           {packageOptions.map((pkg) => (
             <option key={pkg.value} value={pkg.value}>
+              {/* 🏷️ if you later add per-package keys, translate here */}
               {pkg.label}
             </option>
           ))}
         </select>
+
         <button onClick={handleBuyNow} className="btn-primary w-2/3 mt-1">
-          Buy Now
+          {t('socket.ui.subscriptions.buy_now')}
         </button>
       </div>
     </div>

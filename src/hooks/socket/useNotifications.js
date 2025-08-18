@@ -27,7 +27,7 @@ export default function useNotifications(userId) {
   // 🎛️ Get all notification-related socket functions from your unified socket hub
   const {
     requestNotifications, // 🔹 Ask server for all my notifications
-    onNotificationsUpdate, // 🔹 Listen for full list (fetch/refresh)
+    onNotificationsList, // 🔹 Listen for full list (fetch/refresh)
     onNotificationReceived, // 🔹 Listen for single real-time notification pushes
     markNotificationRead, // 🔹 Ask server to mark a specific notification as read
     deleteNotification, // 🔹 Ask server to delete single notification for user / admin
@@ -57,7 +57,7 @@ export default function useNotifications(userId) {
 
     // 👂 Listen for the "notifications_list" socket event
     // Server always emits: { notifications: [...], unreadCount, total }
-    const stop = onNotificationsUpdate((data) => {
+    const stop = onNotificationsList((data) => {
       // 👀 Defensive parsing: always expect an object, fallback to empty array
       let notificationArray = [];
       let unreadCountFromServer = 0;
@@ -90,7 +90,7 @@ export default function useNotifications(userId) {
 
     // 🧹 Cleanup: remove listener when component unmounts or userId changes
     return () => stop && stop();
-  }, [userId, requestNotifications, onNotificationsUpdate]);
+  }, [userId, requestNotifications, onNotificationsList]);
 
   // ============================================================
   // 2️⃣ REAL-TIME PUSH HANDLER: New notification arrives!

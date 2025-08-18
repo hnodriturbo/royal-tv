@@ -2,6 +2,7 @@
  * ReusableTable component
  * -----------------------
  * A flexible, responsive table for desktop and card view for mobile.
+ * - Translated with i18n client via useT()
  *
  * Props:
  *  • columns            – Array of { key, title, dataIndex } defining table headers and data fields.
@@ -13,9 +14,13 @@
  *  • totalPages         – Total page count for pagination.
  *  • onPageChange       – Callback(newPage) when the page is changed.
  */
+
+'use client';
+
 import React from 'react';
-import Link from 'next/link';
+import { Link } from '@/lib/language';
 import Pagination from '@/components/ui/Pagination'; // Tailwind-styled pagination component
+import { useT } from '@/lib/i18n/client'; // 🌐 i18n
 
 const ReusableTable = ({
   columns,
@@ -27,6 +32,8 @@ const ReusableTable = ({
   totalPages,
   onPageChange
 }) => {
+  const t = useT(); // 🔤
+
   return (
     <>
       {/* Desktop: Scrollable table */}
@@ -46,7 +53,8 @@ const ReusableTable = ({
               ))}
               {enableActionColumn && (
                 <th className="border border-gray-300 px-4 py-2 text-left text-white">
-                  Actions{/* Actions header */}
+                  {/* 🔧 Actions header */}
+                  {t('components.reusableTable.actions')}
                 </th>
               )}
             </tr>

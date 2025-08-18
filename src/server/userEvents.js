@@ -4,7 +4,6 @@
  * ------------------
  * Tracks global online-users and cleans up on disconnect.
  */
-import logger from '../lib/core/logger.js';
 
 export default function registerUserEvents(io, socket, globalState) {
   // Client asks for full online list
@@ -29,6 +28,6 @@ export default function registerUserEvents(io, socket, globalState) {
       });
     }
 
-    logger.log(`❌ Disconnected: ${name}`);
+    console.log(`❌ Disconnected: ${name}`);
   });
 }

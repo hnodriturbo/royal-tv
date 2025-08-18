@@ -1,5 +1,3 @@
-'use client';
-
 /**
  * OnlineUsers Component 📡
  * ----------------------
@@ -10,55 +8,40 @@
  *   • request_online_users      – one‑shot: ask server for full list
  *   • online_users_update       – push:   receive updated array
  */
+'use client';
 
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname } from '@/lib/language';
 import useSocketHub from '@/hooks/socket/useSocketHub';
+import { useTRoot } from '@/lib/i18n/client';
 
 const OnlineUsers = () => {
-  // 🧭 detect current route
-  const currentPathname = usePathname(); // example → '/admin/liveChat/main'
+  const t = useTRoot(); // 🌍 translator
+  const currentPathname = usePathname();
+  const [onlineUsers, setOnlineUsers] = useState([]);
+  const { requestOnlineUsers, onOnlineUsersUpdate } = useSocketHub();
 
-  // 🌐 tracked list of users
-  const [onlineUsers, setOnlineUsers] = useState([]); // holds { user_id, name, role }
-
-  // 🔌 socket helpers – note the correct names from useSocketHub
-  const {
-    requestOnlineUsers, // emit('request_online_users')
-    onOnlineUsersUpdate // listen('online_users_update')
-  } = useSocketHub();
-
-  // 📡 subscribe once when component mounts
   useEffect(() => {
-    // 📨 start listening – returns an off() function
     const stopListening = onOnlineUsersUpdate(setOnlineUsers);
-    // 🆙 ask server for the current snapshot (covers hard refresh + route changes)
     requestOnlineUsers();
-    // 🧹 clean‑up subscription on unmount
     return () => stopListening();
-  }, [requestOnlineUsers, onOnlineUsersUpdate]);
+  }, [requestOnlineUsers, onOnlineUsersUpdate]); // ⚠️ no `t` here
 
-  // 🚧 hide component inside a single‑conversation page to keep UI clean
-  //     Conversation IDs are typically 24‑char Mongo IDs or 36‑char UUIDs
   const isChatRoomPage = /^\/admin\/liveChat\/([a-f\d]{24}|[a-f\d-]{36})$/i.test(currentPathname);
-  if (isChatRoomPage) return null; // // nothing to display on that page
-
-  // 💤 no users yet – prevent empty container flash
+  if (isChatRoomPage) return null;
   if (!onlineUsers.length) return null;
 
-  // 🖼️ UI
   return (
     <div className="container-style-sm mb-4">
-      {/* 🟢 headline */}
-      <h2 className="text-lg font-bold text-center mb-2">🟢 Online Users</h2>
-
-      {/* 👥 colourful list */}
+      <h2 className="text-lg font-bold text-center mb-2">{t('socket.ui.online_users.title')}</h2>
       <div className="flex flex-wrap gap-2 justify-center">
         {onlineUsers.map((singleUser) => (
           <div key={singleUser.user_id} className="text-white text-sm">
             <span className="text-green-500 mr-1">●</span>
             {singleUser.name}
-            <span className="ml-1 text-xs text-gray-300">({singleUser.role})</span>
+            <span className="ml-1 text-xs text-gray-300">
+              ({t(`socket.ui.roles.${singleUser.role || 'guest'}`)})
+            </span>
           </div>
         ))}
       </div>
@@ -66,4 +49,4 @@ const OnlineUsers = () => {
   );
 };
 
-export default OnlineUsers; // 🏁 done – plug & play 🎉
+export default OnlineUsers;

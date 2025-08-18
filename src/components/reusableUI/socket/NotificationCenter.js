@@ -15,25 +15,26 @@ import { useRef, useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import RefreshNotifications from '@/components/reusableUI/socket/RefreshNotifications';
 import useNotifications from '@/hooks/socket/useNotifications';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/language';
 import useModal from '@/hooks/useModal';
+import { useTRoot } from '@/lib/i18n/client'; // 🌍 translator
 
-const PREVIEW_COUNT = 3; // 👑 First 3 shown always
-const FIRST_DRAWER_COUNT = 7; // 📄 First batch after preview
-const DRAWER_PAGE_SIZE = 10; // 🔢 Each "See More" after that
+const PREVIEW_COUNT = 3;
+const FIRST_DRAWER_COUNT = 7;
+const DRAWER_PAGE_SIZE = 10;
 
 const notificationCardClasses = (notif) =>
   `w-4/5 mx-auto mb-2 rounded-xl shadow transition-all
-     flex flex-col justify-center
-     ${!notif.is_read ? 'border-l-4 border-blue-500 bg-gradient-to-r from-blue-950/50 via-gray-900 to-gray-900' : 'bg-gray-900/70'}`;
+   flex flex-col justify-center
+   ${!notif.is_read ? 'border-l-4 border-blue-500 bg-gradient-to-r from-blue-950/50 via-gray-900 to-gray-900' : 'bg-gray-900/70'}`;
 
 export default function NotificationCenter({ userRole = 'user' }) {
-  // 🟢 Get user_id from session
+  const t = useTRoot(); // 🌍
   const { data: session } = useSession();
   const user_id = session?.user?.user_id;
   const router = useRouter();
   const { openModal, hideModal } = useModal();
-  // 🟢 Get notifications and helpers from socket-driven hook
+
   const {
     notifications,
     unreadCount,
@@ -43,52 +44,51 @@ export default function NotificationCenter({ userRole = 'user' }) {
     resortNotifications,
     refreshNotifications,
     removeNotification,
-    clearAllNotifications,
-    loading: notificationsLoading
+    clearAllNotifications
   } = useNotifications(user_id);
 
+  // 🗑️ delete single modal (strings localized at open time)
   const handleDeleteNotificationModal = (notification_id) => {
     openModal('deleteNotification', {
-      title: 'Delete Notification',
-      description: 'Are you sure you want to delete this notification? This cannot be undone.',
+      title: t('socket.ui.notifications.modals.delete.title'),
+      description: t('socket.ui.notifications.modals.delete.description'),
       confirmButtonType: 'Danger',
-      confirmButtonText: 'Delete',
-      cancelButtonText: 'Cancel',
+      confirmButtonText: t('socket.ui.notifications.modals.delete.confirm'),
+      cancelButtonText: t('socket.ui.notifications.modals.common.cancel'),
       onConfirm: () => {
-        removeNotification(notification_id); // Your delete logic from before!
+        removeNotification(notification_id);
         hideModal();
       },
       onCancel: hideModal
     });
   };
 
+  // 🧨 clear all modal
   const handleClearAllNotificationsModal = () => {
     openModal('clearAllNotifications', {
-      title: 'Delete ALL Notifications',
-      description:
-        'Are you sure you want to permanently delete ALL notifications? This cannot be undone!',
+      title: t('socket.ui.notifications.modals.clear_all.title'),
+      description: t('socket.ui.notifications.modals.clear_all.description'),
       confirmButtonType: 'Danger',
-      confirmButtonText: 'Delete All',
-      cancelButtonText: 'Cancel',
+      confirmButtonText: t('socket.ui.notifications.modals.clear_all.confirm'),
+      cancelButtonText: t('socket.ui.notifications.modals.common.cancel'),
       onConfirm: () => {
-        clearAllNotifications(); // Your bulk clear logic
+        clearAllNotifications();
         hideModal();
       },
       onCancel: hideModal
     });
   };
 
-  // --- UI STATE ---
+  // 🔢 UI state
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerPage, setDrawerPage] = useState(1);
   const [expandedIds, setExpandedIds] = useState({});
   const [visibleDrawerCount, setVisibleDrawerCount] = useState(0);
   const prevDrawerPageRef = useRef(1);
 
-  // --- Client-side slicing ---
+  // 🔪 client slicing
   const topPreview = getPreview(PREVIEW_COUNT);
 
-  // Compute the notifications to show in the drawer
   let drawerSlice = [];
   if (drawerOpen) {
     let startIdx = PREVIEW_COUNT;
@@ -101,7 +101,7 @@ export default function NotificationCenter({ userRole = 'user' }) {
     drawerSlice = getDrawerSlice(startIdx, endIdx);
   }
 
-  // --- Animate gradual reveal in drawer on "See More" ---
+  // 🎞️ gradual reveal animation
   useEffect(() => {
     if (drawerOpen && drawerPage !== prevDrawerPageRef.current) {
       let start = visibleDrawerCount;
@@ -109,7 +109,7 @@ export default function NotificationCenter({ userRole = 'user' }) {
       let diff = end - start;
       if (diff <= 0) return;
 
-      const totalDuration = 1500; // 1.5s total animation for new batch
+      const totalDuration = 1500;
       const perNotification = totalDuration / diff;
 
       let i = start;
@@ -131,7 +131,7 @@ export default function NotificationCenter({ userRole = 'user' }) {
     }
   }, [drawerOpen, drawerPage, drawerSlice.length]);
 
-  // When opening the drawer for the first time, instantly show all in the batch
+  // 📥 when first open, show all in batch
   useEffect(() => {
     if (drawerOpen && drawerPage === 1) {
       setVisibleDrawerCount(drawerSlice.length);
@@ -139,7 +139,7 @@ export default function NotificationCenter({ userRole = 'user' }) {
     }
   }, [drawerOpen, drawerPage, drawerSlice.length]);
 
-  // --- Count logic for pagination and "See More" ---
+  // 🔢 counts for footer
   const totalNotifications = notifications.length;
   const shownCount = drawerOpen
     ? Math.min(
@@ -154,24 +154,21 @@ export default function NotificationCenter({ userRole = 'user' }) {
   const moreToShow = drawerOpen
     ? shownCount < totalNotifications
     : totalNotifications > PREVIEW_COUNT;
-
   const canSeeMore = !drawerOpen && totalNotifications > PREVIEW_COUNT;
 
-  // --- Helper: only show Open Content button for appropriate notifs ---
+  // 🧠 show open-content button?
   const shouldShowButton = (notif) => {
     if (userRole === 'admin') return Boolean(notif.link);
     return Boolean(notif.link) && notif.type !== 'newUserRegistration';
   };
 
-  // --- Expand/collapse + mark as read logic ---
+  // ⤵️ expand/collapse + mark read
   const toggleExpanded = (id, notif) => {
-    // Mark as read optimistically when opening an unread notification
     if (!notif.is_read && !expandedIds[id]) {
       markAsRead(id);
       setExpandedIds((prev) => ({ ...prev, [id]: true }));
       return;
     }
-    // Resort only after collapsing a read notification (700ms delay for animation)
     if (notif.is_read && expandedIds[id]) {
       setExpandedIds((prev) => ({ ...prev, [id]: false }));
       setTimeout(() => {
@@ -182,13 +179,12 @@ export default function NotificationCenter({ userRole = 'user' }) {
     setExpandedIds((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // --- UI render ---
   return (
     <div className="container-style flex flex-col items-center justify-center w-full max-w-2xl mx-auto p-4 lg:p-8">
-      {/* 📰 Header */}
+      {/* 📰 header */}
       <div className="flex justify-between items-center w-full mb-6 max-w-xl">
         <h2 className="text-2xl sm:text-3xl font-bold flex items-center">
-          🔔 Notifications
+          🔔 {t('socket.ui.notifications.title')}
           {unreadCount > 0 && (
             <span className="bg-red-500 text-white px-2 py-0.5 rounded-full text-sm ml-2">
               {unreadCount}
@@ -199,10 +195,10 @@ export default function NotificationCenter({ userRole = 'user' }) {
       </div>
       <hr className="border border-gray-600 w-11/12 max-w-xl mb-6" />
 
-      {/* 1️⃣ Preview */}
+      {/* 👀 preview */}
       <div className="flex flex-col items-center gap-3 mb-4 w-full">
         {topPreview.length === 0 ? (
-          <div className="text-center text-gray-400 py-8">No notifications yet.</div>
+          <div className="text-center text-gray-400 py-8">{t('socket.ui.notifications.empty')}</div>
         ) : (
           topPreview.map((notif) => (
             <div key={notif.notification_id} className={notificationCardClasses(notif)}>
@@ -235,25 +231,28 @@ export default function NotificationCenter({ userRole = 'user' }) {
                   </div>
                   {shouldShowButton(notif) && (
                     <div className="flex justify-between items-center mt-3">
-                      {/* 🗑️ Delete notification */}
                       <button
                         className="px-2 py-1 rounded bg-red-700 hover:bg-red-900 text-white text-xs border border-red-500 transition"
                         onClick={() => handleDeleteNotificationModal(notif.notification_id)}
-                        title="Delete notification"
+                        title={t('socket.ui.notifications.actions.delete')}
                       >
-                        🗑️ Delete
+                        🗑️ {t('socket.ui.notifications.actions.delete')}
                       </button>
                       <button
                         className="btn-primary btn-sm"
                         onClick={() => router.push(notif.link)}
                       >
-                        Open Content
+                        {t('socket.ui.notifications.actions.open')}
                       </button>
                     </div>
                   )}
                   <div className="mt-2 pt-3 border-t border-gray-800 text-xs text-gray-500">
                     <div>{new Date(notif.createdAt).toLocaleString()}</div>
-                    {notif.type && <div>Type: {notif.type}</div>}
+                    {notif.type && (
+                      <div>
+                        {t('socket.ui.notifications.type_label')}: {notif.type}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -262,7 +261,7 @@ export default function NotificationCenter({ userRole = 'user' }) {
         )}
       </div>
 
-      {/* 2️⃣ Bottom controls (hide when drawer open) */}
+      {/* ⬇️ bottom controls (when drawer closed) */}
       {!drawerOpen && (
         <div className="flex flex-row w-full max-w-xl justify-between items-center my-4 gap-2">
           {canSeeMore && (
@@ -273,13 +272,12 @@ export default function NotificationCenter({ userRole = 'user' }) {
                 setDrawerPage(1);
               }}
             >
-              👇 See More
+              👇 {t('socket.ui.notifications.see_more')}
             </button>
           )}
-          {/* 🧮 Total notifications count (drawer closed only) */}
           {!drawerOpen && totalNotifications > 0 && (
             <div className="w-full flex-1 justify-end mb-2 pr-2 text-sm">
-              Total Notifications: {totalNotifications}
+              {t('socket.ui.notifications.total', { count: totalNotifications })}
             </div>
           )}
           {notifications.length > 0 && (
@@ -287,18 +285,20 @@ export default function NotificationCenter({ userRole = 'user' }) {
               className="btn-outline-primary btn-sm"
               onClick={() => router.push(`/${userRole}/notifications`)}
             >
-              🗂️ See All Notifications
+              🗂️ {t('socket.ui.notifications.see_all')}
             </button>
           )}
         </div>
       )}
 
-      {/* 3️⃣ Drawer, paginated with "See More" */}
+      {/* 🗂️ drawer */}
       {drawerOpen && (
         <div className="w-full transition-all duration-700">
           <div className="flex flex-col items-center gap-3 mb-4">
             {drawerSlice.length === 0 ? (
-              <div className="text-center text-gray-400 py-4">No additional notifications.</div>
+              <div className="text-center text-gray-400 py-4">
+                {t('socket.ui.notifications.empty_more')}
+              </div>
             ) : (
               drawerSlice.slice(0, visibleDrawerCount).map((notif) => (
                 <div key={notif.notification_id} className={notificationCardClasses(notif)}>
@@ -331,25 +331,28 @@ export default function NotificationCenter({ userRole = 'user' }) {
                       </div>
                       {shouldShowButton(notif) && (
                         <div className="flex justify-between items-center mt-3">
-                          {/* 🗑️ Delete notification */}
                           <button
                             className="px-2 py-1 rounded bg-red-700 hover:bg-red-900 text-white text-xs border border-red-500 transition"
                             onClick={() => handleDeleteNotificationModal(notif.notification_id)}
-                            title="Delete notification"
+                            title={t('socket.ui.notifications.actions.delete')}
                           >
-                            🗑️ Delete
+                            🗑️ {t('socket.ui.notifications.actions.delete')}
                           </button>
                           <button
                             className="btn-primary btn-sm"
                             onClick={() => router.push(notif.link)}
                           >
-                            Open Content
+                            {t('socket.ui.notifications.actions.open')}
                           </button>
                         </div>
                       )}
                       <div className="mt-2 pt-3 border-t border-gray-800 text-xs text-gray-500">
                         <div>{new Date(notif.createdAt).toLocaleString()}</div>
-                        {notif.type && <div>Type: {notif.type}</div>}
+                        {notif.type && (
+                          <div>
+                            {t('socket.ui.notifications.type_label')}: {notif.type}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -357,16 +360,15 @@ export default function NotificationCenter({ userRole = 'user' }) {
               ))
             )}
           </div>
+
           <div className="flex flex-row w-full max-w-xl items-center my-4 gap-2">
-            {/* Left: See More or empty */}
             <div className="flex-1 flex justify-start">
               {moreToShow ? (
                 <button className="btn-primary" onClick={() => setDrawerPage((prev) => prev + 1)}>
-                  👇 See More
+                  👇 {t('socket.ui.notifications.see_more')}
                 </button>
               ) : null}
             </div>
-            {/* Center: See Less */}
             <div className="flex-1 flex justify-center">
               <button
                 className="btn btn-secondary"
@@ -375,48 +377,47 @@ export default function NotificationCenter({ userRole = 'user' }) {
                   setDrawerPage(1);
                 }}
               >
-                ⬆️ See Less
+                ⬆️ {t('socket.ui.notifications.see_less')}
               </button>
             </div>
-            {/* Right: See All */}
             {notifications.length > 0 && (
               <div className="flex-1 flex justify-end">
                 <button
                   className="btn-outline-primary"
                   onClick={() => router.push(`/${userRole}/notifications`)}
                 >
-                  🗂️ See All Notifications
+                  🗂️ {t('socket.ui.notifications.see_all')}
                 </button>
               </div>
             )}
           </div>
 
-          {/* 5️⃣ Drawer count range */}
           <div className="w-full max-w-xl flex justify-center text-sm mt-1 mb-4">
             {drawerOpen && (
               <>
-                Showing 1–{shownCount} of {totalNotifications} notifications
+                {t('socket.ui.notifications.showing_range', {
+                  start: 1,
+                  end: shownCount,
+                  total: totalNotifications
+                })}
               </>
             )}
           </div>
         </div>
       )}
-      {/* 🚨 Danger Zone: Clear All Notifications */}
+
+      {/* 🚨 danger zone */}
       {notifications.length > 0 && (
         <div className="w-full max-w-sm mx-auto border border-red-700 rounded-2xl bg-red-950/60 flex flex-col items-center p-6 shadow-lg">
           <h3 className="text-lg font-bold text-red-400 mb-2 flex items-center">
             <span className="mr-2">⚠️</span>
-            Danger Zone
+            {t('socket.ui.notifications.danger_zone')}
           </h3>
-          {/*           <p className="mb-4 text-red-300 text-sm text-center">
-            This will <b>permanently delete all notifications</b> for your account. This cannot be
-            undone!
-          </p> */}
           <button
             className="px-5 py-2 rounded-lg bg-red-700 hover:bg-red-900 border border-red-500 text-white font-bold shadow transition"
             onClick={handleClearAllNotificationsModal}
           >
-            🧨 Clear All Notifications
+            🧨 {t('socket.ui.notifications.actions.clear_all')}
           </button>
         </div>
       )}

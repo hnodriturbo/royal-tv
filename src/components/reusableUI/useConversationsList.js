@@ -1,11 +1,20 @@
 'use client';
 
+/**
+ * useConversationsList
+ * --------------------
+ * Hook that fetches conversations or user summaries.
+ * - Translated with i18n client via useT() for all UI-facing messages
+ * - Logger stays in plain English (per your rule)
+ */
+
 import logger from '@/lib/core/logger';
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useSocketHub from '@/hooks/socket/useSocketHub';
+import { useT } from '@/lib/i18n/client'; // 🌐 i18n
 
 const defaultUser = {
   user_id: null,
@@ -40,6 +49,8 @@ const useConversationsList = ({
   pageSize = 5,
   routes = {}
 }) => {
+  const t = useT(); // 🔤
+
   // 1️⃣ State
   const [items, setItems] = useState([]);
   const [currentPage, setCurrentPage] = useState(initialPage);
@@ -76,7 +87,9 @@ const useConversationsList = ({
       logger.log('[useConversationsList] Fetching:', endPointURL);
 
       if (!isSilent) {
-        const loaderText = firstFetchRef.current ? 'Fetching Data...' : 'Refreshing...';
+        const loaderText = firstFetchRef.current
+          ? t('components.useConversationsList.loader_fetching')
+          : t('components.useConversationsList.loader_refreshing');
         showLoader({ text: loaderText });
       }
 
@@ -120,7 +133,7 @@ const useConversationsList = ({
             user,
             lastMessage: lastMessageDate,
             messageData,
-            updatedAt: item.updatedAt ?? lastMessage.createdAt ?? null,
+            updatedAt: item.updatedAt ?? lastMessageDate ?? null,
             createdAt: item.createdAt ?? null,
             totalMessagesInConversation:
               item.totalMessagesInConversation ?? item.totalMessages ?? 0,
@@ -137,11 +150,11 @@ const useConversationsList = ({
         setTotalPages(data.totalPages ?? 1);
 
         if (!isSilent && firstFetchRef.current) {
-          displayMessage('Data loaded ✔️', 'success', 3);
+          displayMessage(t('components.useConversationsList.success_loaded'), 'success', 3);
         }
       } catch (error) {
         logger.error('[useConversationsList] ❌ Fetch Error:', error);
-        displayMessage('Failed to load data ❌', 'error');
+        displayMessage(t('components.useConversationsList.error_failed_load'), 'error');
         setItems([]);
         setTotalPages(1);
       } finally {
@@ -153,6 +166,7 @@ const useConversationsList = ({
     [endPointURL, currentPage, pageSize, status]
   );
   const refetch = useCallback((isSilent = true) => fetchItems(isSilent), [fetchItems]);
+
   // 5️⃣ Trigger fetch when ready (first load)
   useEffect(() => {
     if (status === 'authenticated') {

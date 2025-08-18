@@ -1,39 +1,21 @@
 /**
- *   ========================== RootLayout.js ==========================
- * 🏠
- * APPLICATION ROOT LAYOUT:
- * Main entry point for the entire website.
- * - Wraps all pages with global context providers (Session, Auth, Error/Message, Loader, Modal).
- * - Loads global CSS and style files for the whole app.
- * - Includes universal UI: Header, Footer, WhatsApp button, and more.
- * - Applies a custom background image for branding and style.
- * =====================================================================
- * ⚙️
- * PROPS:
- *   children: ReactNode // All page content rendered inside the layout.
- * =====================================================================
- * 📌
- * USAGE:
- *   Place in `/app/layout.js` to ensure all pages are wrapped.
- *   Imports and renders <AppProviders>, enabling global context and UI helpers.
- * =====================================================================
+ *   ========================== /src/app/layout.js ==========================
+ * 🏠 Root app shell (non-locale)
+ * - Loads global CSS (relative imports only)
+ * - Leaves *all* providers to /app/[locale]/layout.js
  */
 
-// Import CSS Styles Files
-import './styles/theme-utils.css';
-import './styles/border-styles.css';
-import './styles/extras.css';
-import './styles/linearGradientStyles.css';
-// End With Importing The Global CSS File And Bootstrap Icons
-import './styles/globals.css';
-import 'bootstrap-icons/font/bootstrap-icons.css';
-
-import { SessionProvider } from 'next-auth/react';
-import AppProviders from './AppProviders';
+import './styles/theme-utils.css'; // 🎨 global
+import './styles/border-styles.css'; // 🎨 global
+import './styles/extras.css'; // 🎨 global
+import './styles/linearGradientStyles.css'; // 🎨 global
+import './styles/globals.css'; // 🎨 tailwind v4 entry
+import 'bootstrap-icons/font/bootstrap-icons.css'; // 🔤 icons
 
 export default function RootLayout({ children }) {
+  // 🧱 bare shell so hydration is stable and locale providers can wrap below
   return (
-    <html>
+    <html /* 🧭 neutral; actual lang set under [locale]/layout */>
       <body
         className="w-full min-h-screen"
         style={{
@@ -41,9 +23,8 @@ export default function RootLayout({ children }) {
           backgroundSize: 'cover'
         }}
       >
-        <SessionProvider>
-          <AppProviders>{children}</AppProviders>
-        </SessionProvider>
+        {/* 🌱 child tree is wrapped by providers in /app/[locale]/layout.js */}
+        {children}
       </body>
     </html>
   );

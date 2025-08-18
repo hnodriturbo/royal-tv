@@ -30,6 +30,7 @@
 
 // 1️⃣ React goodies
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useT } from '@/lib/i18n/client'; // 🌐 i18n
 
 // 2️⃣ Helper → format seconds as "m:ss"
 function formatSecondsAsMMSS(totalSeconds) {
@@ -47,6 +48,8 @@ export default function RefreshCountdownTimer({
   showManualRefreshButton = false,
   showPauseToggle = false
 }) {
+  const t = useT(); // 🔤
+
   // 3️⃣ State → countdown & pause toggle
   const [secondsLeft, setSecondsLeft] = useState(intervalSeconds);
   const [isPaused, setIsPaused] = useState(false);
@@ -62,7 +65,7 @@ export default function RefreshCountdownTimer({
     // ▶️ Only start ticking when NOT paused
     if (!isPaused) {
       intervalIdRef.current = setInterval(() => {
-        setSecondsLeft((prevSeconds) => (prevSeconds > 0 ? prevSeconds - 1 : 0));
+        setSecondsLeft((previousSeconds) => (previousSeconds > 0 ? previousSeconds - 1 : 0));
       }, 1_000);
     }
 
@@ -78,18 +81,19 @@ export default function RefreshCountdownTimer({
     }
   }, [secondsLeft, isPaused, onRefresh, intervalSeconds]);
 
-  // 7️⃣ Manual "Refresh Now" handler
+  // 7️⃣ Manual "Refresh Now" handler
   const handleManualRefresh = useCallback(() => {
     onRefresh?.(); // ⏩ user‑triggered refresh
     setSecondsLeft(intervalSeconds); // 🔄 restart timer
   }, [onRefresh, intervalSeconds]);
 
   // 8️⃣ Pause / Resume toggle handler
-  const togglePause = useCallback(() => setIsPaused((prev) => !prev), []);
+  const togglePause = useCallback(() => setIsPaused((previous) => !previous), []);
 
   // 9️⃣ Memoised formatted time to avoid extra calculations
   const formattedTime = useMemo(
-    () => (isPaused ? 'paused' : formatSecondsAsMMSS(secondsLeft)),
+    () =>
+      isPaused ? t('components.refreshCountdownTimer.paused') : formatSecondsAsMMSS(secondsLeft),
     [secondsLeft, isPaused]
   );
 
@@ -98,7 +102,7 @@ export default function RefreshCountdownTimer({
     <div className={`flex flex-col items-center gap-2 z-[30] relative ${className}`}>
       {/* 1️⃣ Display countdown */}
       <p className="text-sm text-gray-300">
-        auto‑refresh in&nbsp;
+        {t('components.refreshCountdownTimer.auto_refresh_in')}&nbsp;
         <span className="font-semibold text-white">{formattedTime}</span>
       </p>
 
@@ -110,7 +114,7 @@ export default function RefreshCountdownTimer({
               onClick={handleManualRefresh}
               className="px-3 py-1 text-sm rounded bg-gray-600 hover:bg-blue-700 text-white whitespace-nowrap"
             >
-              🔁 Refresh Now
+              🔁 {t('components.refreshCountdownTimer.refresh_now')}
             </button>
           )}
 
@@ -119,7 +123,9 @@ export default function RefreshCountdownTimer({
               onClick={togglePause}
               className="px-3 py-1 text-sm rounded bg-gray-600 hover:bg-gray-700 text-white whitespace-nowrap"
             >
-              {isPaused ? '▶️ Resume' : '⏸️ Pause'}
+              {isPaused
+                ? `▶️ ${t('components.refreshCountdownTimer.resume')}`
+                : `⏸️ ${t('components.refreshCountdownTimer.pause')}`}
             </button>
           )}
         </div>
