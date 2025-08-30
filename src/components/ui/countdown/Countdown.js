@@ -1,17 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useT } from '@/lib/i18n/client'; // 🌐 get locale-bound translator
+import { useTranslations } from 'next-intl'; // 🌐 get locale-bound translator
 
 /**
  * ⏱️ SimpleCountdown
  * -------------------
  * • Shows a live seconds countdown with translated label.
  * • Calls onComplete when the timer hits 0.
- * • Uses useT() so t() is bound to current locale.
+ * • Uses useTranslations() so t() is bound to current locale.
  */
 const SimpleCountdown = ({ seconds, onComplete }) => {
-  const t = useT(); // 🗣️ translator bound to current language
+  const t = useTranslations(); // 🗣️ translator bound to current language
   const [timeLeft, setTimeLeft] = useState(seconds); // 🧮 track remaining seconds
 
   useEffect(() => {

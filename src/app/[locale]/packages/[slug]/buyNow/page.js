@@ -14,7 +14,7 @@
 import logger from '@/lib/core/logger';
 import { useEffect, useMemo, useCallback, useState } from 'react';
 import { useParams, notFound, useSearchParams } from 'next/navigation';
-import { useRouter } from '@/lib/language';
+import { useRouter } from '@/i18n';
 import { useSession } from 'next-auth/react';
 
 import axiosInstance from '@/lib/core/axiosInstance';
@@ -22,12 +22,12 @@ import useAuthGuard from '@/hooks/useAuthGuard'; // 🛡️ Guard user access
 import useAppHandlers from '@/hooks/useAppHandlers'; // 🛠️ Loader + message system
 import useSocketHub from '@/hooks/socket/useSocketHub'; // 📡 Socket unified hub
 
-import { paymentPackages } from '@/app/[locale]/packages/data/packages'; // 📦 All packages
-import StatusBadge from '@/app/[locale]/packages/data/statusBadge'; // 🏷️ Status component
-import PaymentInstructions from '@/app/[locale]/packages/data/PaymentInstructions'; // 📝 Extra info
+import { paymentPackages } from '@/components/packages/data/packages'; // 📦 All packages
+import StatusBadge from '@/components/packages/data/statusBadge'; // 🏷️ Status component
+import PaymentInstructions from '@/components/packages/data/PaymentInstructions'; // 📝 Extra info
 
 // 🌍 i18n
-import { useT } from '@/lib/i18n/client';
+import { useTranslations, useLocale } from 'next-intl';
 
 export default function PackageBuyNowPage() {
   // 🧾 Grab slug from params (/packages/[slug]/buyNow)
@@ -54,7 +54,7 @@ export default function PackageBuyNowPage() {
   const { onTransactionFinished } = useSocketHub();
 
   // 🌍 Translations
-  const t = useT();
+  const t = useTranslations();
 
   // 💾 State for payment
   const [currentOrderId, setCurrentOrderId] = useState(null); // store order id
@@ -66,9 +66,6 @@ export default function PackageBuyNowPage() {
     () => paymentPackages.find((packageItem) => packageItem.slug === slug),
     [slug]
   );
-
-  // 🚧 If package not found → 404
-  if (!paymentPackage) return notFound();
 
   // 🧮 Read query params (adult, vpn, price override)
   const adult = searchParams.get('adult') === '1';
@@ -114,14 +111,17 @@ export default function PackageBuyNowPage() {
     } finally {
       hideLoader();
     }
-  }, [session?.user, paymentPackage, price, adult, enable_vpn]);
-
-  // 🎬 Run once when logged in + allowed
-  useEffect(() => {
-    if (status === 'authenticated' && isAllowed) {
-      initializePaymentSession();
-    }
-  }, [status, isAllowed]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    session?.user,
+    paymentPackage,
+    price,
+    adult,
+    enable_vpn,
+    showLoader,
+    hideLoader,
+    displayMessage
+  ]);
 
   // 📡 Real-time updates for payment status
   useEffect(() => {
@@ -163,10 +163,16 @@ export default function PackageBuyNowPage() {
       router.push('/user/subscriptions?paymentSuccess=1');
     });
     return unsubscribeFromTransactionFinished;
-  }, [onTransactionFinished, router, displayMessage, t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onTransactionFinished, router, displayMessage]);
 
-  // 🚫 Not allowed → show nothing
-  if (!isAllowed) return null;
+  // 🎬 Run once when logged in + allowed
+  useEffect(() => {
+    if (status === 'authenticated' && isAllowed) {
+      initializePaymentSession();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, isAllowed]);
 
   // 🔄 Redirect if not allowed
   useEffect(() => {
@@ -174,6 +180,11 @@ export default function PackageBuyNowPage() {
       router.replace(redirect);
     }
   }, [status, isAllowed, redirect, router]);
+
+  // 🚧 If package not found → 404
+  if (!paymentPackage) return notFound();
+  // 🚫 Not allowed → show nothing
+  if (!isAllowed) return null;
 
   // ——— MAIN RENDER ——————————————————————
   return (

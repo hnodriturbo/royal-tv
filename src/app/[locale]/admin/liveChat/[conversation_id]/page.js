@@ -13,7 +13,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { useRouter } from '@/lib/language';
+import { useRouter } from '@/i18n';
 
 import useAuthGuard from '@/hooks/useAuthGuard';
 import axiosInstance from '@/lib/core/axiosInstance';

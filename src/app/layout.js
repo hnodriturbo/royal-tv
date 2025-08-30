@@ -1,21 +1,23 @@
 /**
- *   ========================== /src/app/layout.js ==========================
- * 🏠 Root app shell (non-locale)
- * - Loads global CSS (relative imports only)
- * - Leaves *all* providers to /app/[locale]/layout.js
+ * ========================== /src/app/layout.js ==========================
+ * 🏠 Root App Shell (non-locale)
+ * - Loads global CSS / assets
+ * - Wraps children in NextIntlClientProvider so client-side translations work
+ * - Leaves locale detection & messages to /app/[locale]/layout.js
+ * ========================================================================
  */
 
-import './styles/theme-utils.css'; // 🎨 global
-import './styles/border-styles.css'; // 🎨 global
-import './styles/extras.css'; // 🎨 global
-import './styles/linearGradientStyles.css'; // 🎨 global
-import './styles/globals.css'; // 🎨 tailwind v4 entry
-import 'bootstrap-icons/font/bootstrap-icons.css'; // 🔤 icons
+import { NextIntlClientProvider } from 'next-intl';
+import './styles/theme-utils.css';
+import './styles/border-styles.css';
+import './styles/extras.css';
+import './styles/linearGradientStyles.css';
+import './styles/globals.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
-export default function RootLayout({ children }) {
-  // 🧱 bare shell so hydration is stable and locale providers can wrap below
+export default function Layout({ children }) {
   return (
-    <html /* 🧭 neutral; actual lang set under [locale]/layout */>
+    <html>
       <body
         className="w-full min-h-screen"
         style={{
@@ -23,8 +25,7 @@ export default function RootLayout({ children }) {
           backgroundSize: 'cover'
         }}
       >
-        {/* 🌱 child tree is wrapped by providers in /app/[locale]/layout.js */}
-        {children}
+        <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>
     </html>
   );

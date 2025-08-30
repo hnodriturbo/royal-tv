@@ -11,12 +11,12 @@
 import React, { createContext, useState, useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import RingLoader from '@/components/ui/Loader/RingLoader';
-import { useTRoot } from '@/lib/i18n/client'; // 🌍 translator hook
+import { useTranslations, useLocale } from 'next-intl'; // 🌍 translator hook
 
 const LoaderContext = createContext();
 
 export const LoaderProvider = ({ children }) => {
-  const t = useTRoot(); // 🔤 direct translator (full path)
+  const t = useTranslations(); // 🔤 direct translator (full path)
   if (!children) {
     throw new Error('LoaderProvider must be wrapped around components as its children.');
   }

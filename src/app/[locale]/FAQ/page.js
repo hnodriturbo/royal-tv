@@ -3,7 +3,7 @@
  * ❓ /app/[locale]/faq/page.js
  * -----------------------------------------------------------
  * FAQ page with a simple accordion.
- * - All headings, questions, and answers translated via useT().
+ * - All headings, questions, and answers translated via useTranslations().
  * - Keeps Tailwind transitions with content height measurement.
  * ===========================================================
  */
@@ -11,7 +11,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useT } from '@/lib/i18n/client'; // 🌍 i18n — requested import path & style
+import { useTranslations, useLocale } from 'next-intl'; // 🌍 i18n — requested import path & style
 
 function AccordionItem({ itemIndex, isOpen, toggleItem, questionText, answerText }) {
   // 📏 content height controller for smooth expand/collapse
@@ -51,7 +51,7 @@ function AccordionItem({ itemIndex, isOpen, toggleItem, questionText, answerText
 
 export default function FaqPage() {
   // 🗣️ translation handle
-  const t = useT();
+  const t = useTranslations();
 
   // 🧾 build the list from translation keys for full i18n control
   const faqItems = [

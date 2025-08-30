@@ -12,13 +12,13 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useT } from '@/lib/i18n/client'; // 🌍 i18n access
-import PackagesGrid from '@/app/[locale]/packages/data/packages'; // 🧱 default export = grid component
-import Guide from '@/app/[locale]/packages/data/guide'; // 📘 central guide
+import { useTranslations, useLocale } from 'next-intl'; // 🌍 i18n access
+import PackagesGrid from '@/components/packages/data/packages'; // 🧱 default export = grid component
+import Guide from '@/components/packages/data/guide'; // 📘 central guide
 
 export default function AllPackagesPage() {
   // 🗣️ i18n handle for this page
-  const t = useT();
+  const t = useTranslations();
 
   // 👤 session status to drive CTAs inside grid
   const { data: session, status } = useSession();

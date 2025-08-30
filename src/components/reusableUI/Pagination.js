@@ -1,7 +1,7 @@
 /**
  * ===========================================
  * ⏩ Pagination Component (Smart Shortening)
- * - Translated with i18n client via useT()
+ * - Translated with i18n client via useTranslations()
  * ===========================================
  * - Shows: first page, ..., up to 3 before/after, ..., last page
  * - Always highlights current page
@@ -9,11 +9,11 @@
  */
 
 'use client';
-import { Link } from '@/lib/language';
-import { useT } from '@/lib/i18n/client'; // 🌐 i18n
+import { Link } from '@/i18n';
+import { useTranslations, useLocale } from 'next-intl'; // 🌐 i18n
 
 const Pagination = ({ currentPage, totalPages, basePath, onPageChange }) => {
-  const t = useT(); // 🔤
+  const t = useTranslations(); // 🔤
 
   if (totalPages <= 1) return null;
 
@@ -69,18 +69,19 @@ const Pagination = ({ currentPage, totalPages, basePath, onPageChange }) => {
                 <Link
                   href={`${basePath}?page=1`}
                   aria-label={t('components.pagination.aria_go_to_page', { page: 1 })}
+                  className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded block text-center"
                 >
-                  <button className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded">1</button>
+                  1
                 </Link>
               )
             ) : onPageChange ? (
-              <button
-                onClick={() => goTo(currentPage - 1)}
-                className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded"
+              <Link
+                href={`${basePath}?page=${currentPage - 1}`}
                 aria-label={t('components.pagination.previous')}
+                className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded block text-center"
               >
                 ←
-              </button>
+              </Link>
             ) : (
               <Link
                 href={`${basePath}?page=${currentPage - 1}`}
@@ -122,18 +123,14 @@ const Pagination = ({ currentPage, totalPages, basePath, onPageChange }) => {
                 <Link
                   href={`${basePath}?page=${page}`}
                   aria-label={t('components.pagination.aria_go_to_page', { page })}
+                  aria-current={page === currentPage ? 'page' : undefined}
+                  className={`px-4 py-2 rounded block text-center ${
+                    page === currentPage
+                      ? 'bg-blue-500 text-white pointer-events-none'
+                      : 'bg-gray-400 hover:bg-gray-600'
+                  }`}
                 >
-                  <button
-                    className={`px-4 py-2 ${
-                      page === currentPage
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-gray-400 hover:bg-gray-600'
-                    } rounded`}
-                    disabled={page === currentPage}
-                    aria-current={page === currentPage ? 'page' : undefined}
-                  >
-                    {page}
-                  </button>
+                  {page}
                 </Link>
               )}
             </li>
@@ -155,10 +152,9 @@ const Pagination = ({ currentPage, totalPages, basePath, onPageChange }) => {
                 <Link
                   href={`${basePath}?page=${totalPages}`}
                   aria-label={t('components.pagination.aria_go_to_page', { page: totalPages })}
+                  className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded block text-center"
                 >
-                  <button className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded">
-                    {totalPages}
-                  </button>
+                  {totalPages}
                 </Link>
               )
             ) : onPageChange ? (
@@ -173,8 +169,9 @@ const Pagination = ({ currentPage, totalPages, basePath, onPageChange }) => {
               <Link
                 href={`${basePath}?page=${currentPage + 1}`}
                 aria-label={t('components.pagination.next')}
+                className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded block text-center"
               >
-                <button className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded">→</button>
+                →
               </Link>
             )}
           </li>

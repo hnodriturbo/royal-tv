@@ -9,14 +9,14 @@
  */
 
 'use client';
-import React from 'react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+
 import { useSession } from 'next-auth/react';
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import { useParams } from 'next/navigation';
-import { useRouter } from '@/lib/language';
+import { useRouter } from '@/i18n';
 import { userSubscriptionSortOptions, getUserSubscriptionSortFunction } from '@/lib/utils/sorting';
 import SortDropdown from '@/components/reusableUI/SortDropdown';
 import calculateMonthsDaysLeft from '@/lib/utils/calculateMonthsDaysLeft';

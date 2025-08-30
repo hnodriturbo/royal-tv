@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from '@/lib/language'; // 🧭 App Router
-import { useT } from '@/lib/i18n/client'; // 🌐 components.countdownRedirect.*
+import { useRouter } from '@/i18n'; // 🧭 App Router
+import { useTranslations } from 'next-intl'; // 🌐 components.countdownRedirect.*
 
 /**
  * 🔀 CountdownRedirect
  * --------------------
  * • Shows a heading message (prop-controlled) and a translated "Redirecting in X seconds…" line.
  * • Pushes to `redirectTo` when the counter hits 0.
- * • Uses useT() so t() is bound to current locale.
+ * • Uses useTranslations() so t() is bound to current locale.
  */
 const CountdownRedirect = ({
   seconds,
@@ -19,7 +19,7 @@ const CountdownRedirect = ({
   counterSize = 'text-2xl', // 🔢 counter size
   children // 🧩 optional extra UI
 }) => {
-  const t = useT(); // 🗣️ translator bound to current language
+  const t = useTranslations(); // 🗣️ translator bound to current language
   const [counter, setCounter] = useState(seconds); // ⏱️ remaining seconds
   const router = useRouter(); // 🧭 programmatic navigation
 

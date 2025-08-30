@@ -17,12 +17,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Link } from '@/lib/language';
+import { Link, useRouter } from '@/i18n';
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import { useSession } from 'next-auth/react';
 import useAuthGuard from '@/hooks/useAuthGuard';
-import { useRouter } from '@/lib/language';
+
 import Pagination from '@/components/reusableUI/Pagination';
 import useModal from '@/hooks/useModal';
 // Sorting

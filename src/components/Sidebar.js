@@ -4,21 +4,22 @@
  * Universal fixed sidebar for all roles (admin/user/guest).
  * Uses one nav links file (sidebarLinks.js).
  * Sidebar is always the same visually, only links change per role.
+ * i18n: useTranslations() at root + full keys like app.navigation.<key>.
  */
 
 'use client';
 
-import { Link } from '@/lib/language';
+import { Link } from '@/i18n';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import sidebarLinks from '@/lib/utils/sidebarLinks';
 import useLogout from '@/hooks/useLogout';
-import { useT } from '@/lib/i18n/client'; // 🌍 i18n hook
+import { useTranslations, useLocale } from 'next-intl'; // 🌍 i18n hook
 
-export default function Sidebar({ activeLocale }) {
+export default function Sidebar() {
   const { data: session, status } = useSession();
-  const tNav = useT('app.navigation', activeLocale);
+  const t = useTranslations(); // 🗣️ root translator; always call with full keys
 
   // 🔐 Resolve role (guest by default)
   let role = 'guest';
@@ -65,7 +66,8 @@ export default function Sidebar({ activeLocale }) {
                     className="w-10/12 flex items-center px-6 py-3 rounded-full text-lg font-normal cursor-pointer text-red-500 transition-all duration-300 hover:bg-red-600 hover:ml-4 hover:text-white hover:font-bold focus:outline-none focus:ring-2 focus:ring-red-400"
                   >
                     <span className="mr-3">{navigationItem.emoji}</span>
-                    <span>{tNav(navigationItem.key)}</span>
+                    {/* 🔑 app.navigation.<key> */}
+                    <span>{t(`app.navigation.${navigationItem.key}`)}</span>
                   </button>
                 </li>
               ) : (
@@ -75,7 +77,8 @@ export default function Sidebar({ activeLocale }) {
                     className="flex w-10/12 mt-3 ms-2 items-center px-6 py-3 rounded-full text-lg font-normal transition-all duration-300 hover:bg-gradient-to-r hover:ml-4 hover:from-cyan-500 hover:to-blue-700 hover:text-white hover:font-bold focus:outline-none focus:ring-2 focus:ring-cyan-400"
                   >
                     <span className="mr-3">{navigationItem.emoji}</span>
-                    <span>{tNav(navigationItem.key)}</span>
+                    {/* 🔑 app.navigation.<key> */}
+                    <span>{t(`app.navigation.${navigationItem.key}`)}</span>
                   </Link>
                 </li>
               )
@@ -174,7 +177,8 @@ export default function Sidebar({ activeLocale }) {
                     className="w-10/12 flex items-center px-6 py-3 rounded-full text-lg font-normal cursor-pointer text-red-500 transition-all duration-300 hover:bg-red-600 hover:ml-4 hover:text-white hover:font-bold focus:outline-none focus:ring-2 focus:ring-red-400"
                   >
                     <span className="mr-3">{navigationItem.emoji}</span>
-                    <span>{tNav(navigationItem.key)}</span>
+                    {/* 🔑 app.navigation.<key> */}
+                    <span>{t(`app.navigation.${navigationItem.key}`)}</span>
                   </button>
                 </li>
               ) : (
@@ -185,7 +189,8 @@ export default function Sidebar({ activeLocale }) {
                     onClick={handleClose}
                   >
                     <span className="mr-3">{navigationItem.emoji}</span>
-                    <span>{tNav(navigationItem.key)}</span>
+                    {/* 🔑 app.navigation.<key> */}
+                    <span>{t(`app.navigation.${navigationItem.key}`)}</span>
                   </Link>
                 </li>
               )

@@ -15,9 +15,9 @@ import { useRef, useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import RefreshNotifications from '@/components/reusableUI/socket/RefreshNotifications';
 import useNotifications from '@/hooks/socket/useNotifications';
-import { useRouter } from '@/lib/language';
+import { useRouter } from '@/i18n';
 import useModal from '@/hooks/useModal';
-import { useTRoot } from '@/lib/i18n/client'; // 🌍 translator
+import { useTranslations } from 'next-intl'; // 🌍 translator
 
 const PREVIEW_COUNT = 3;
 const FIRST_DRAWER_COUNT = 7;
@@ -29,11 +29,14 @@ const notificationCardClasses = (notif) =>
    ${!notif.is_read ? 'border-l-4 border-blue-500 bg-gradient-to-r from-blue-950/50 via-gray-900 to-gray-900' : 'bg-gray-900/70'}`;
 
 export default function NotificationCenter({ userRole = 'user' }) {
-  const t = useTRoot(); // 🌍
+  const t = useTranslations(); // 🌍
   const { data: session } = useSession();
   const user_id = session?.user?.user_id;
   const router = useRouter();
   const { openModal, hideModal } = useModal();
+
+  // 🧠 mirror the state in a ref to avoid effect re-creation on each tick
+  const visibleCountRef = useRef(0);
 
   const {
     notifications,
@@ -101,10 +104,16 @@ export default function NotificationCenter({ userRole = 'user' }) {
     drawerSlice = getDrawerSlice(startIdx, endIdx);
   }
 
+  // 🔄 keep the ref in sync with the state
+  useEffect(() => {
+    visibleCountRef.current = visibleDrawerCount;
+  }, [visibleDrawerCount]);
+
   // 🎞️ gradual reveal animation
   useEffect(() => {
     if (drawerOpen && drawerPage !== prevDrawerPageRef.current) {
-      let start = visibleDrawerCount;
+      // 🔎 start from the *current* visible count without adding it to deps
+      let start = visibleCountRef.current; // ✅ was: visibleDrawerCount
       let end = drawerSlice.length;
       let diff = end - start;
       if (diff <= 0) return;
@@ -115,6 +124,7 @@ export default function NotificationCenter({ userRole = 'user' }) {
       let i = start;
       const interval = setInterval(() => {
         setVisibleDrawerCount((count) => {
+          // ✅ functional update = no stale captures
           if (count < end) return count + 1;
           clearInterval(interval);
           return count;
@@ -229,7 +239,7 @@ export default function NotificationCenter({ userRole = 'user' }) {
                   <div className="text-gray-300 mb-3 mt-2">
                     <p className="whitespace-pre-wrap">{notif.body}</p>
                   </div>
-                  {shouldShowButton(notif) && (
+                  {shouldShowButton(notif) && typeof notif.link === 'string' && (
                     <div className="flex justify-between items-center mt-3">
                       <button
                         className="px-2 py-1 rounded bg-red-700 hover:bg-red-900 text-white text-xs border border-red-500 transition"
@@ -338,12 +348,9 @@ export default function NotificationCenter({ userRole = 'user' }) {
                           >
                             🗑️ {t('socket.ui.notifications.actions.delete')}
                           </button>
-                          <button
-                            className="btn-primary btn-sm"
-                            onClick={() => router.push(notif.link)}
-                          >
+                          <Link href={notif.link} className="btn-primary btn-sm text-center block">
                             {t('socket.ui.notifications.actions.open')}
-                          </button>
+                          </Link>
                         </div>
                       )}
                       <div className="mt-2 pt-3 border-t border-gray-800 text-xs text-gray-500">
@@ -382,12 +389,12 @@ export default function NotificationCenter({ userRole = 'user' }) {
             </div>
             {notifications.length > 0 && (
               <div className="flex-1 flex justify-end">
-                <button
-                  className="btn-outline-primary"
-                  onClick={() => router.push(`/${userRole}/notifications`)}
+                <Link
+                  href={`/${userRole}/notifications`}
+                  className="btn-outline-primary text-center block"
                 >
                   🗂️ {t('socket.ui.notifications.see_all')}
-                </button>
+                </Link>
               </div>
             )}
           </div>

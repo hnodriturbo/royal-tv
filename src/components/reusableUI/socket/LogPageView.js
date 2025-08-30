@@ -2,19 +2,19 @@
  * =========================================
  * 🧭 LogPageView.js — Socket page view logs
  * -----------------------------------------
- * - Translated via useTRoot() 🌍
+ * - Translated via useTranslations() 🌍
  * - Only logs when pathname actually changes
  * =========================================
  */
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { usePathname } from '@/lib/language';
+import { usePathname } from '@/i18n';
 import useSocketHub from '@/hooks/socket/useSocketHub';
-import { useTRoot } from '@/lib/i18n/client'; // 🌍 i18n root translator
+import { useTranslations } from 'next-intl'; // 🌍 i18n root translator
 
 export default function LogPageView() {
-  const t = useTRoot(); // 🌍 translation hook
+  const t = useTranslations(); // 🌍 translation hook
   const { logPageVisit, socketConnected } = useSocketHub();
   const pathname = usePathname();
   const previousPathReference = useRef();
@@ -46,6 +46,7 @@ export default function LogPageView() {
       // 🧷 Remember path for next run
       previousPathReference.current = pathname;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, logPageVisit, socketConnected]); // 🧩 include t safely
 
   return null; // 🙈 Nothing visible

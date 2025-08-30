@@ -1,41 +1,36 @@
-// 🌍 localeEvents.js
 /**
- * Socket-level locale sync.
- * - Keep a per-socket currentLocale derived from the handshake.
- * - Allow client to update locale later with `set_locale`.
- * - Store English in DB elsewhere; locale is only for runtime messages/UI.
+ * ==================== localeEvents.js ====================
+ * 🌍 Socket.IO locale handling
+ *
+ * ✅ Seed from handshake (query.auth.locale or query param)
+ * ✅ Update at runtime via `set_locale`
+ * 🚫 Never read/write DB for locale (runtime only)
+ * ==========================================================
  */
 
-const SUPPORTED_LOCALES = ['en', 'is']; // 🧭 single source of truth
-
-// 🧼 Normalize any input into one of the supported locales (default: 'en')
-function normalizeToSupportedLocale(candidate) {
-  // 📝 turn anything into a lowercase string and compare
-  const value = String(candidate || '').toLowerCase();
-  return SUPPORTED_LOCALES.includes(value) ? value : 'en';
+// 🌍 Normalize locale into supported values
+function normalizeToSupportedLocale(value) {
+  const v = String(value || '').toLowerCase();
+  if (v.startsWith('is')) return 'is'; // 🇮🇸
+  return 'en'; // 🇬🇧 fallback
 }
 
 export default function registerLocaleEvents(io, socket) {
-  // 🏁 derive initial locale from handshake (auth first, then header)
-  const handshakeLocale =
-    socket.handshake?.auth?.locale ||
-    socket.handshake?.headers?.['x-locale'] ||
-    socket.handshake?.headers?.['accept-language'];
-
-  // 💾 set currentLocale on the socket
+  // 🌱 Seed locale once from handshake
+  const handshakeLocale = socket.handshake?.auth?.locale || socket.handshake?.query?.locale;
   socket.data.currentLocale = normalizeToSupportedLocale(handshakeLocale);
 
-  // 📣 let the client know what the server stored
-  socket.emit('locale_changed', { locale: socket.data.currentLocale });
-
-  // 🔄 allow the client to update locale later
+  // 🔁 Update when client sends new locale
   socket.on('set_locale', (payload) => {
-    const nextLocale = normalizeToSupportedLocale(payload?.locale);
-    if (nextLocale === socket.data.currentLocale) return;
+    const target = normalizeToSupportedLocale(payload?.locale);
+    if (target === socket.data.currentLocale) return; // ⏩ no change
 
-    socket.data.currentLocale = nextLocale;
+    // 🌍 Update runtime values
+    socket.data.currentLocale = target;
+    socket.userData = socket.userData || {};
+    socket.userData.locale = target;
 
-    // 🔔 ack back to this socket (and optionally a room if you prefer)
-    socket.emit('locale_changed', { locale: nextLocale });
+    // ✅ Confirm back to client
+    socket.emit('locale_changed', { locale: target });
   });
 }

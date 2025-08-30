@@ -27,6 +27,8 @@
  *   uiOptions: { showManualButton: true, showPauseToggle: true },
  * });
  */
+'use client';
+
 import { useCallback } from 'react';
 import RefreshCountdownTimer from '@/components/reusableUI/RefreshCountdownTimer';
 

@@ -1,3 +1,10 @@
+/**
+ * src/hooks/useLogout
+ * This file handles using the hook of logging out users
+ */
+
+'use client';
+
 import logger from '@/lib/core/logger';
 import { signOut } from 'next-auth/react';
 

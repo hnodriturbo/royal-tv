@@ -1,14 +1,16 @@
+'use client';
+
 import { useRef, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from '@/lib/language';
+import { useRouter } from '@/i18n';
 import useAppHandlers from '@/hooks/useAppHandlers';
-import { useTRoot } from '@/lib/i18n/client';
+import { useTranslations, useLocale } from 'next-intl';
 
 const useAuthGuard = (requiredRole) => {
   const { data: session, status } = useSession();
   const { displayMessage, showLoader, hideLoader } = useAppHandlers();
   const router = useRouter();
-  const t = useTRoot();
+  const t = useTranslations();
 
   const [isChecking, setIsChecking] = useState(status === 'loading');
   /* const [redirecting, setRedirecting] = useState(false); */
@@ -44,8 +46,7 @@ const useAuthGuard = (requiredRole) => {
       const query = requiredRole === 'admin' ? 'admin=false' : 'user=false';
       router.replace(`/auth/middlePage?${query}`);
     }
-
-    // ✅ else do nothing — access is allowed
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isChecking, session, requiredRole, router]);
 
   const isAllowed = session?.user?.role === requiredRole;

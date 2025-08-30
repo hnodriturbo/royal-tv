@@ -14,8 +14,8 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
-import { useRouter } from '@/lib/language';
-import { Link } from '@/lib/language';
+import { useRouter, Link } from '@/i18n';
+
 import useAuthGuard from '@/hooks/useAuthGuard';
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
@@ -63,6 +63,17 @@ export default function AdminLogsByIpPage() {
     }
   };
 
+  // 🧠 Sort logs
+  const sortedLogs = useLocalSorter(logs, sortOrder, (order) => {
+    const sortFunction = getLogSortFunction(order);
+    return (a, b) => sortFunction(a, b);
+  });
+
+  // ⚙️ Pagination
+  const pageSize = 10;
+  const totalPages = Math.ceil(sortedLogs.length / pageSize);
+  const pagedLogs = sortedLogs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   // 🔁 Fetch on load/auth change
   useEffect(() => {
     if (status === 'authenticated' && isAllowed && ip_address) {
@@ -79,18 +90,6 @@ export default function AdminLogsByIpPage() {
   }, [status, isAllowed, redirect, router]);
 
   if (!isAllowed) return null;
-
-  // 🧠 Sort logs
-  const sortedLogs = useLocalSorter(logs, sortOrder, (order) => {
-    const sortFunction = getLogSortFunction(order);
-    return (a, b) => sortFunction(a, b);
-  });
-
-  // ⚙️ Pagination
-  const pageSize = 10;
-  const totalPages = Math.ceil(sortedLogs.length / pageSize);
-  const pagedLogs = sortedLogs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-
   // 🗑️ Delete all logs for this IP (modal)
   const handleDelete = () => {
     openModal('deleteLogsByIp', {

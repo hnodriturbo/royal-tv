@@ -1,7 +1,7 @@
 /**
  *   ===================== SeeAllNotifications.js =====================
  * 🗂️ All notifications (socket-driven) — unread first, then read
- * - Translated via useTRoot() 🌍
+ * - Translated via useTranslations() 🌍
  * - Matches NotificationCenter styling
  * - Admin/user logic unchanged
  * ===================================================================
@@ -12,9 +12,9 @@ import { useState } from 'react'; // 🔄 Local expand/collapse state
 import { useSession } from 'next-auth/react'; // 👤 Session
 import RefreshNotifications from '@/components/reusableUI/socket/RefreshNotifications';
 import useNotifications from '@/hooks/socket/useNotifications'; // 🪝 Socket notifications
-import { useRouter } from '@/lib/language'; // 🧭 Navigation
+import { useRouter } from '@/i18n'; // 🧭 Navigation
 import useModal from '@/hooks/useModal';
-import { useTRoot } from '@/lib/i18n/client'; // 🌍 i18n root translator
+import { useTranslations } from 'next-intl'; // 🌍 i18n root translator
 
 // 🎨 Consistent notification card styling (stable)
 const notificationCardClasses = (singleNotification) =>
@@ -27,7 +27,7 @@ const notificationCardClasses = (singleNotification) =>
      }`;
 
 export default function SeeAllNotifications({ userRole = 'user' }) {
-  const t = useTRoot(); // 🌍 translation hook
+  const t = useTranslations(); // 🌍 translation hook
   const { data: session } = useSession(); // 🧾 current user session
   const userId = session?.user?.user_id; // 🪪 user id
   const router = useRouter(); // 🧭 router for links
@@ -197,12 +197,12 @@ export default function SeeAllNotifications({ userRole = 'user' }) {
                       </button>
 
                       {/* 🔓 Open content link */}
-                      <button
-                        className="btn-primary btn-sm"
-                        onClick={() => router.push(singleNotification.link)}
+                      <Link
+                        href={singleNotification.link}
+                        className="btn-primary btn-sm text-center block"
                       >
                         {t('socket.ui.see_all_notifications.open_content')}
-                      </button>
+                      </Link>
                     </div>
                   )}
 

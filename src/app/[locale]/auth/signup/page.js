@@ -1,23 +1,25 @@
 /**
- * ======================= SignupPage.js =======================
- * 📝 User registration form
- * 🌐 i18n: uses useT('app.signup') for all UI text
- * 🔔 Emits createUserRegistrationNotification on success
- * 🔁 Redirects to /[locale]/auth/signin (with prefilled username)
+ * ======================= /src/app/[locale]/auth/signup/page.js =======================
+ * 📝 Signup page – user registration form
+ * ------------------------------------------------------------------------------------
+ * - Posts to /api/auth/signup
+ * - Emits socket notification on success
+ * - Redirects to /auth/signin with prefilled username
+ * - Uses i18n via full-path keys with a single `const t = useT()`
  */
 
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from '@/lib/language';
+import { useRouter, Link } from '@/i18n'; // 🧭 merged: router + locale-aware Link ✅
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
-import { useT } from '@/lib/i18n/client';
+import { useTranslations, useLocale } from 'next-intl';
 
 export default function SignupPage() {
-  // 🗣️ Translator bound to this page's namespace
-  const t = useT('app.signup');
+  // 🌐 i18n (full-path keys only)
+  const t = useTranslations();
 
   // 🧭 Router + global handlers
   const router = useRouter();
@@ -48,25 +50,25 @@ export default function SignupPage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    // ⚠️ Validate preferred contact
+    // ☎️ Validate preferred contact
     if (!formState.preferredContactWay) {
       displayMessage(
-        t('selectPreferred', {}, 'Please select your preferred contact method.'),
+        t('app.signup.selectPreferred', {}, 'Please select your preferred contact method.'),
         'info'
       );
       return;
     }
 
-    // ⚠️ Validate password confirmation
+    // 🔒 Validate password confirmation
     if (formState.password !== formState.confirmPassword) {
-      displayMessage(t('passwordsDontMatch', {}, 'Passwords do not match.'), 'info');
+      displayMessage(t('app.signup.passwordsDontMatch', {}, 'Passwords do not match.'), 'info');
       return;
     }
 
     try {
-      showLoader({ text: t('creatingAccount', {}, 'Creating your account...') });
+      showLoader({ text: t('app.signup.creatingAccount', {}, 'Creating your account...') });
 
-      // 📨 Build payload
+      // 📬 Build payload
       const payload = {
         name: formState.name,
         username: formState.username,
@@ -79,7 +81,7 @@ export default function SignupPage() {
         sendEmails: formState.sendEmails
       };
 
-      // 📬 Create account
+      // 📮 Create account
       const response = await axiosInstance.post('/api/auth/signup', payload);
       const { user: createdUser } = response.data;
 
@@ -90,7 +92,7 @@ export default function SignupPage() {
 
       // ✅ Success UI
       displayMessage(
-        t('accountCreated', {}, 'Account created successfully! Check your email.'),
+        t('app.signup.accountCreated', {}, 'Account created successfully! Check your email.'),
         'success'
       );
 
@@ -104,7 +106,7 @@ export default function SignupPage() {
       if (statusCode === 400 || statusCode === 409) messageType = 'info';
 
       displayMessage(
-        messageFromServer || t('failedCreate', {}, 'Failed to create account'),
+        messageFromServer || t('app.signup.failedCreate', {}, 'Failed to create account'),
         messageType
       );
     } finally {
@@ -117,7 +119,7 @@ export default function SignupPage() {
       <div className="container-style lg:w-2/3 w-10/12 px-6 items-center justify-center">
         {/* 🏷️ Title */}
         <h2 className="lg:text-4xl text-2xl font-bold text-center text-white drop-shadow-xl mb-6">
-          {t('title', {}, 'Create Your Account And Get Your Free Trial')}
+          {t('app.signup.title', {}, 'Create Your Account And Get Your Free Trial')}
         </h2>
 
         <hr className="border border-gray-400 w-8/12 my-4" />
@@ -128,11 +130,11 @@ export default function SignupPage() {
             {/* 👤 Name */}
             <div className="flex lg:flex-row flex-col items-center justify-center gap-2 w-full">
               <label className="lg:w-1/4 hidden text-white font-medium">
-                {t('labels.name', {}, 'Name')}
+                {t('app.signup.labels.name', {}, 'Name')}
               </label>
               <input
                 name="name"
-                placeholder={t('placeholders.fullName', {}, 'Full Name')}
+                placeholder={t('app.signup.placeholders.fullName', {}, 'Full Name')}
                 value={formState.name}
                 onChange={handleChange}
                 className="border p-2 rounded-lg text-black w-11/12"
@@ -143,11 +145,11 @@ export default function SignupPage() {
             {/* 🧑 Username */}
             <div className="flex lg:flex-row flex-col items-center justify-center gap-2 w-full">
               <label className="lg:w-1/4 hidden text-white font-medium">
-                {t('labels.username', {}, 'Username')}
+                {t('app.signup.labels.username', {}, 'Username')}
               </label>
               <input
                 name="username"
-                placeholder={t('placeholders.username', {}, 'Username')}
+                placeholder={t('app.signup.placeholders.username', {}, 'Username')}
                 value={formState.username}
                 onChange={handleChange}
                 className="border p-2 rounded-lg text-black w-11/12"
@@ -158,12 +160,12 @@ export default function SignupPage() {
             {/* ✉️ Email */}
             <div className="flex lg:flex-row flex-col items-center justify-center gap-2 w-full">
               <label className="lg:w-1/4 hidden text-white font-medium items-start">
-                {t('labels.email', {}, 'Email')}
+                {t('app.signup.labels.email', {}, 'Email')}
               </label>
               <input
                 type="email"
                 name="email"
-                placeholder={t('placeholders.email', {}, 'Email Address')}
+                placeholder={t('app.signup.placeholders.email', {}, 'Email Address')}
                 value={formState.email}
                 onChange={handleChange}
                 className="border p-2 rounded-lg text-black w-11/12"
@@ -174,11 +176,11 @@ export default function SignupPage() {
             {/* 📱 WhatsApp */}
             <div className="flex lg:flex-row flex-col items-center justify-center gap-2 w-full">
               <label className="lg:w-1/4 hidden text-white font-medium">
-                {t('labels.whatsapp', {}, 'WhatsApp')}
+                {t('app.signup.labels.whatsapp', {}, 'WhatsApp')}
               </label>
               <input
                 name="whatsapp"
-                placeholder={t('placeholders.whatsapp', {}, 'WhatsApp (optional)')}
+                placeholder={t('app.signup.placeholders.whatsapp', {}, 'WhatsApp (optional)')}
                 value={formState.whatsapp}
                 onChange={handleChange}
                 className="border p-2 rounded-lg text-black w-11/12"
@@ -188,11 +190,11 @@ export default function SignupPage() {
             {/* 💬 Telegram */}
             <div className="flex lg:flex-row flex-col items-center justify-center gap-2 w-full">
               <label className="lg:w-1/4 hidden text-white font-medium">
-                {t('labels.telegram', {}, 'Telegram')}
+                {t('app.signup.labels.telegram', {}, 'Telegram')}
               </label>
               <input
                 name="telegram"
-                placeholder={t('placeholders.telegram', {}, 'Telegram (optional)')}
+                placeholder={t('app.signup.placeholders.telegram', {}, 'Telegram (optional)')}
                 value={formState.telegram}
                 onChange={handleChange}
                 className="border p-2 rounded-lg text-black w-11/12"
@@ -202,7 +204,7 @@ export default function SignupPage() {
             {/* ☎️ Preferred Contact Way */}
             <div className="flex lg:flex-row flex-col items-center justify-center gap-2 w-full">
               <label className="lg:w-1/4 hidden text-white font-medium">
-                {t('labels.preferredContact', {}, 'Contact')}
+                {t('app.signup.labels.preferredContact', {}, 'Contact')}
               </label>
               <select
                 name="preferredContactWay"
@@ -212,24 +214,26 @@ export default function SignupPage() {
                 required
               >
                 <option value="" disabled>
-                  {t('placeholders.preferredContact', {}, 'Preferred Contact Way')}
+                  {t('app.signup.placeholders.preferredContact', {}, 'Preferred Contact Way')}
                 </option>
-                <option value="email">{t('contact.email', {}, 'Email')}</option>
-                <option value="whatsapp">{t('contact.whatsapp', {}, 'WhatsApp')}</option>
-                <option value="telegram">{t('contact.telegram', {}, 'Telegram')}</option>
-                <option value="website">{t('contact.website', {}, 'From the Website')}</option>
+                <option value="email">{t('app.signup.contact.email', {}, 'Email')}</option>
+                <option value="whatsapp">{t('app.signup.contact.whatsapp', {}, 'WhatsApp')}</option>
+                <option value="telegram">{t('app.signup.contact.telegram', {}, 'Telegram')}</option>
+                <option value="website">
+                  {t('app.signup.contact.website', {}, 'From the Website')}
+                </option>
               </select>
             </div>
 
             {/* 🔒 Password */}
             <div className="flex lg:flex-row flex-col items-center justify-center gap-2 w-full">
               <label className="lg:w-1/4 hidden text-white font-medium">
-                {t('labels.password', {}, 'Password')}
+                {t('app.signup.labels.password', {}, 'Password')}
               </label>
               <input
                 type="password"
                 name="password"
-                placeholder={t('placeholders.password', {}, 'Password')}
+                placeholder={t('app.signup.placeholders.password', {}, 'Password')}
                 value={formState.password}
                 onChange={handleChange}
                 className="border p-2 rounded-lg text-black w-11/12"
@@ -240,12 +244,12 @@ export default function SignupPage() {
             {/* 🔒 Confirm Password */}
             <div className="flex lg:flex-row flex-col items-center justify-center gap-2 w-full">
               <label className="lg:w-1/4 hidden text-white font-medium items-start">
-                {t('labels.confirmPassword', {}, 'Confirm Password')}
+                {t('app.signup.labels.confirmPassword', {}, 'Confirm Password')}
               </label>
               <input
                 type="password"
                 name="confirmPassword"
-                placeholder={t('placeholders.confirmPassword', {}, 'Confirm Password')}
+                placeholder={t('app.signup.placeholders.confirmPassword', {}, 'Confirm Password')}
                 value={formState.confirmPassword}
                 onChange={handleChange}
                 className="border p-2 rounded-lg text-black w-11/12"
@@ -260,7 +264,7 @@ export default function SignupPage() {
                   htmlFor="sendEmails"
                   className="text-white font-medium whitespace-nowrap text-2xl"
                 >
-                  {t('labels.receiveEmails', {}, 'Receive e-mails ?')}
+                  {t('app.signup.labels.receiveEmails', {}, 'Receive e-mails ?')}
                 </label>
               </div>
               <div className="w-full lg:w-1/2 flex lg:justify-start justify-center pl-0 lg:pl-2">
@@ -283,7 +287,7 @@ export default function SignupPage() {
                 type="submit"
                 className="bg-blue-500 hover:bg-blue-800 transition text-white font-bold p-2 rounded-lg w-6/12"
               >
-                {t('submitButton', {}, 'Sign Up')}
+                {t('app.signup.submitButton', {}, 'Sign Up')}
               </button>
             </div>
           </form>
@@ -291,10 +295,10 @@ export default function SignupPage() {
 
         {/* 🔗 Have account prompt */}
         <p className="text-center mt-4">
-          {t('haveAccountPrompt', {}, 'Already have an account?')}{' '}
-          <a href="/auth/signin" className="underline">
-            {t('signInLink', {}, 'Sign in')}
-          </a>
+          {t('app.signup.haveAccountPrompt', {}, 'Already have an account?')}{' '}
+          <Link href="/auth/signin" className="underline">
+            {t('app.signup.signInLink', {}, 'Sign in')}
+          </Link>
         </p>
       </div>
     </div>

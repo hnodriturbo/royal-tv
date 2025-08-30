@@ -1,21 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useT } from '@/lib/i18n/client'; // 🌐 components.countdownBanner.*
+import { useTranslations } from 'next-intl'; // 🌐 components.countdownBanner.*
 
 /**
  * 🎉 CountdownBanner
  * ------------------
  * • Displays a banner message (translated by default).
  * • Counts down and fires onComplete when done.
- * • Uses useT() so t() is bound to current locale.
+ * • Uses useTranslations() so t() is bound to current locale.
  */
 const CountdownBanner = ({
   seconds = 10, // ⏲️ default duration
   onComplete, // 📣 callback when done
   message // 🗣️ optional caller-provided message (already translated upstream)
 }) => {
-  const t = useT(); // 🗣️ translator bound to current language
+  const t = useTranslations(); // 🗣️ translator bound to current language
   const [countdown, setCountdown] = useState(seconds); // 🔢 remaining seconds
 
   useEffect(() => {

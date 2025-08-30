@@ -16,14 +16,14 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useT } from '@/lib/i18n/client'; // 🌐 i18n
+import { useTranslations, useLocale } from 'next-intl'; // 🌐 i18n
 
 export default function RefreshCountdownTimer({
   onRefresh,
   intervalSeconds = 300,
   className = ''
 }) {
-  const t = useT(); // 🔤
+  const t = useTranslations(); // 🔤
 
   // 🧮 current countdown value (starts full)
   const [secondsLeft, setSecondsLeft] = useState(intervalSeconds);

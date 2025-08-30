@@ -4,7 +4,7 @@
  * - Reads active UI locale from next-intl
  * - On mount/changes: sends locale to server with set_locale (guarded)
  * - Listens for server 'locale_changed' ack
- * - Exposes: currentLocale (client), serverLocale (last ack), isInSync, setServerLocale
+ * - Exposes: currentLocale (client), serverLocale (last ack), isInSync, forceServerLocale
  */
 
 'use client';
@@ -42,13 +42,13 @@ export default function useLocale() {
     return !!serverLocale && serverLocale === currentLocale;
   }, [serverLocale, currentLocale]);
 
-  // 🔧 expose an imperative setter (rarely used directly)
-  const setServerLocale = (locale) => setLocale(locale);
+  // 🔧 expose an imperative setter (renamed to avoid collision)
+  const forceServerLocale = (locale) => setLocale(locale);
 
   return {
     currentLocale, // 🌍 from next-intl (client source of truth)
     serverLocale, // 📥 last ack from server
     isInSync, // ✅ true once server acks the same locale
-    setServerLocale // 🔧 request server-only switch
+    forceServerLocale // 🔧 request server-only switch
   };
 }

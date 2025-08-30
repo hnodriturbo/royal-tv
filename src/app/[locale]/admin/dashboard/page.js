@@ -12,11 +12,12 @@ import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
 import useLogout from '@/hooks/useLogout';
 import useAuthGuard from '@/hooks/useAuthGuard';
-import { useRouter } from '@/lib/language';
+import { useRouter } from '@/i18n';
 import DashboardActionButton from '@/components/reusableUI/DashboardActionButton';
 import NotificationCenter from '@/components/reusableUI/socket/NotificationCenter';
 import OnlineUsers from '@/components/reusableUI/socket/OnlineUsers';
 import IsAdminOnline from '@/components/reusableUI/socket/IsAdminOnline';
+
 export default function AdminDashboard() {
   // 👤 Auth/session setup
   const { data: session, status } = useSession();

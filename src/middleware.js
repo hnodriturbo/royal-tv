@@ -13,7 +13,7 @@ import { NextResponse } from 'next/server'; // 📨 Low-level response tools
 import { getToken } from 'next-auth/jwt'; // 🔐 Read session token from cookies
 import createMiddleware from 'next-intl/middleware'; // 🌍 Locale detection/redirect
 import logger from './lib/core/logger.js'; // 🪵 Central logger (English only)
-import { routing } from '@/lib/language/routing'; // 🧭 Source of truth for locales/default
+import { routing } from '@/i18n/routing.js'; // 🧭 Source of truth for locales/default
 
 // 🧭 Build the next-intl locale middleware from our routing definition
 const localeMiddleware = createMiddleware(routing);
@@ -60,7 +60,7 @@ export async function middleware(request) {
     // 🔑 Token → role & id (defaults)
     const token = await getToken({
       req: request,
-      secret: process.env.NEXTAUTH_SECRET,
+      secret: process.env.AUTH_SECRET,
       cookieName
     });
 
@@ -107,7 +107,7 @@ export async function middleware(request) {
   const cookieName = isProduction ? '__Secure-authjs.session-token' : 'authjs.session-token';
   const token = await getToken({
     req: request,
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: process.env.AUTH_SECRET,
     cookieName
   });
 

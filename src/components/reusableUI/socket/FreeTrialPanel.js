@@ -6,7 +6,7 @@
  * - Shows user's current free trial status
  * - Allows requesting a trial (one per user)
  * - Uses real-time socket-powered updates
- * - Localized with i18n client (`useTRoot`)
+ * - Localized with i18n client (`useT`)
  * ===========================================
  */
 
@@ -15,11 +15,11 @@
 import FreeTrialButton from '@/components/reusableUI/FreeTrialButton';
 import useFreeTrialStatus from '@/hooks/socket/useFreeTrialStatus';
 import clsx from 'clsx';
-import { Link } from '@/lib/language';
-import { useTRoot } from '@/lib/i18n/client';
+import { Link } from '@/i18n';
+import { useTranslations } from 'next-intl';
 
 export default function FreeTrialPanel({ user_id, className }) {
-  const t = useTRoot(); // 🌍
+  const t = useTranslations(); // 🌱 root-level translator'use client';
   // 🏷️ Hook for status, error, and refresher
   const { freeTrialStatus, error, refreshStatus } = useFreeTrialStatus(user_id);
 

@@ -13,7 +13,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { useRouter } from '@/lib/language';
+import { useRouter } from '@/i18n';
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useAuthGuard from '@/hooks/useAuthGuard';
@@ -173,6 +173,7 @@ export default function AdminEditFreeTrialPage() {
     if (trial_id && status === 'authenticated') {
       fetchFreeTrial();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trial_id, status]);
 
   // 4️⃣ Redirect if not allowed

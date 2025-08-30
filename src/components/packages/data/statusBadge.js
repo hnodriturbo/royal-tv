@@ -4,15 +4,16 @@
  * ----------------------------------
  * Renders colored status badges for crypto payments
  * Accepts a `status` prop like: waiting, confirming, completed, etc.
- * Used on BuyNow and potentially other payment pages.
+ * Uses app.payments.status.* translations
  * ==================================
  */
+
 'use client';
 import React from 'react';
-import { useT } from '@/lib/i18n/client';
+import { useTranslations, useLocale } from 'next-intl';
 
 export default function StatusBadge({ status }) {
-  const t = useT('app.payments.status'); // 🏷️ scope
+  const t = useTranslations();
 
   let badgeColor = '';
   let icon = '';
@@ -23,9 +24,9 @@ export default function StatusBadge({ status }) {
     icon = '⏳';
     text = (
       <>
-        <strong>{t('waiting.title')}</strong>
+        <strong>{t('app.payments.status.waiting.title')}</strong>
         <br />
-        <span className="font-normal">{t('waiting.desc')}</span>
+        <span className="font-normal">{t('app.payments.status.waiting.desc')}</span>
       </>
     );
   } else if (status === 'pending') {
@@ -33,23 +34,23 @@ export default function StatusBadge({ status }) {
     icon = '⌛';
     text = (
       <>
-        <strong>{t('pending.title')}</strong>
+        <strong>{t('app.payments.status.pending.title')}</strong>
         <br />
-        <span className="font-normal">{t('pending.desc')}</span>
+        <span className="font-normal">{t('app.payments.status.pending.desc')}</span>
       </>
     );
   } else if (status === 'sending') {
     badgeColor = 'bg-cyan-600';
     icon = '🚀';
-    text = <>{t('sending.title')}</>;
+    text = <>{t('app.payments.status.sending.title')}</>;
   } else if (status === 'confirming') {
     badgeColor = 'bg-blue-400';
     icon = '🔄';
     text = (
       <>
-        <strong>{t('confirming.title')}</strong>
+        <strong>{t('app.payments.status.confirming.title')}</strong>
         <br />
-        <span className="font-normal">{t('confirming.desc')}</span>
+        <span className="font-normal">{t('app.payments.status.confirming.desc')}</span>
       </>
     );
   } else if (['confirmed', 'paid', 'finished', 'completed'].includes(status)) {
@@ -57,9 +58,9 @@ export default function StatusBadge({ status }) {
     icon = '✅';
     text = (
       <>
-        <strong>🎉 {t('completed.title')} 🎉</strong>
+        <strong>🎉 {t('app.payments.status.completed.title')} 🎉</strong>
         <br />
-        <span className="font-normal">{t('completed.desc')}</span>
+        <span className="font-normal">{t('app.payments.status.completed.desc')}</span>
       </>
     );
   } else if (status === 'failed' || status === 'expired') {
@@ -67,15 +68,15 @@ export default function StatusBadge({ status }) {
     icon = '❌';
     text = (
       <>
-        <strong>{t('failed.title')}</strong>
+        <strong>{t('app.payments.status.failed.title')}</strong>
         <br />
-        <span className="font-normal">{t('failed.desc')}</span>
+        <span className="font-normal">{t('app.payments.status.failed.desc')}</span>
       </>
     );
   } else {
     badgeColor = 'bg-gray-400';
     icon = '❔';
-    text = <>{t('unknown', 'Unknown status')}</>;
+    text = <>{t('app.payments.status.unknown', 'Unknown status')}</>;
   }
 
   return (
@@ -84,7 +85,7 @@ export default function StatusBadge({ status }) {
     >
       <span className="text-2xl">{icon}</span>
       <span className="text-center">{text}</span>
-      <span className="text-xl ml-3"> ({t(`${status}.label`, status)})</span>
+      <span className="text-xl ml-3">({t(`app.payments.status.${status}.label`, status)})</span>
     </div>
   );
 }

@@ -1,21 +1,10 @@
 /**
- * User Profile Page Component
- * ---------------------------
- *
- * Routes & Endpoints:
- *   • GET    /api/user/profile                – fetch current user’s profile data
- *   • PATCH  /api/user/profile                – update name, email, username, contact info, and email-notification setting
- *   • PUT    /api/user/profile/password       – change password by providing oldPassword and newPassword
- *
- * Features:
- *   • Displays editable fields: name, email, username, WhatsApp, Telegram
- *   • Allows selection of preferred contact method (Email / WhatsApp / Telegram)
- *   • Opt-in checkbox for receiving important account emails
- *   • Seamless inline form state (no full-page reloads)
- *   • Toggle between “Edit Profile” and “Change Password” views
- *   • Client-side auth guard via NextAuth + custom useAuthGuard hook (only ‘user’ can access)
- *   • Loader indicators and toast messages during fetch and save operations
- *   • Redirects to a unified middle-page on success, preserving “user” role in query params
+ * ============================ UserProfile.js ============================
+ * 👤 User Profile Page (edit profile + change password, guarded for 'user')
+ * - Uses full-path translations: t('app.user.profile.page.*')
+ * - Inline loaders/toasts via useAppHandlers
+ * - Client guard + redirects via useAuthGuard + useRouter
+ * =======================================================================
  */
 
 'use client';
@@ -25,26 +14,27 @@ import { useSession } from 'next-auth/react';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAuthGuard from '@/hooks/useAuthGuard';
-import { useRouter } from '@/lib/language';
-import { useT } from '@/lib/i18n/client'; // 🌍 translator
+import { useRouter } from '@/i18n';
+import { useTranslations } from 'next-intl'; // 🌍 root translator (no namespace)
 
+// 📬 Preferred contact options (labels can stay brand names or be translated if you add keys)
 const preferredContactOptions = [
-  { value: 'email', label: 'Email' },
-  { value: 'whatsapp', label: 'WhatsApp' },
-  { value: 'telegram', label: 'Telegram' }
+  { value: 'email', label: 'Email' }, // ✉️
+  { value: 'whatsapp', label: 'WhatsApp' }, // 💬
+  { value: 'telegram', label: 'Telegram' } // 📡
 ];
 
 export default function UserProfile() {
-  // 🗣️ Namespace translator
-  const t = useT('app.user.profile.page');
+  // 🌍 Translator root — always use full paths
+  const t = useTranslations();
 
-  // 🔐 Session/guard
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const { isAllowed, redirect } = useAuthGuard('user');
-  const { displayMessage, showLoader, hideLoader } = useAppHandlers();
+  // 🔐 Session/guard/router
+  const { data: session, status } = useSession(); // 🔑
+  const router = useRouter(); // 🧭
+  const { isAllowed, redirect } = useAuthGuard('user'); // 🛡️
+  const { displayMessage, showLoader, hideLoader } = useAppHandlers(); // 🧰
 
-  // 👤 Profile state
+  // 👤 Form state
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -62,21 +52,22 @@ export default function UserProfile() {
     confirmPassword: ''
   });
 
-  // 🔀 Toggle
-  const [isPasswordChangeVisible, setIsPasswordChangeVisible] = useState(false);
+  // 🔀 Toggle view
+  const [isPasswordChangeVisible, setIsPasswordChangeVisible] = useState(false); // 🔁
 
+  // 🔁 Redirect helpers
   const redirectAfterProfileSave = () => {
-    router.replace(`/auth/middlePage?update=profile&success=true&role=user`);
+    router.replace(`/auth/middlePage?update=profile&success=true&role=user`); // 🚀
   };
   const redirectAfterPasswordSave = () => {
-    router.replace(`/auth/middlePage?passwordUpdate=profile&success=true&role=user`);
+    router.replace(`/auth/middlePage?passwordUpdate=profile&success=true&role=user`); // 🚀
   };
 
-  // 📦 Fetch profile
+  // 📦 Fetch profile from API
   const fetchUserProfile = async () => {
-    showLoader({ text: t('fetching') });
+    showLoader({ text: t('app.user.profile.page.fetching') }); // 🌀
     try {
-      const { data } = await axiosInstance.get('/api/user/profile');
+      const { data } = await axiosInstance.get('/api/user/profile'); // 📥
       setFormData({
         name: data.name || '',
         email: data.email || '',
@@ -87,97 +78,113 @@ export default function UserProfile() {
         sendEmails: typeof data.sendEmails === 'boolean' ? data.sendEmails : true
       });
     } catch (error) {
-      displayMessage(error.response?.data?.error || t('error_fetching'), 'error');
+      displayMessage(
+        error.response?.data?.error || t('app.user.profile.page.error_fetching'),
+        'error'
+      ); // ❌
     } finally {
-      hideLoader();
+      hideLoader(); // 🧽
     }
   };
 
-  // 💾 Update profile
+  // 💾 Submit: update profile
   const handleProfileUpdate = async (request) => {
-    request.preventDefault();
-    showLoader({ text: t('updating') });
+    request.preventDefault(); // 🛑
+    showLoader({ text: t('app.user.profile.page.updating') }); // 🌀
     try {
-      await axiosInstance.patch('/api/user/profile', { ...formData });
-      displayMessage(t('update_success'), 'success');
-      redirectAfterProfileSave();
+      await axiosInstance.patch('/api/user/profile', { ...formData }); // ✍️
+      displayMessage(t('app.user.profile.page.update_success'), 'success'); // ✅
+      redirectAfterProfileSave(); // 🔁
     } catch (error) {
-      displayMessage(error.response?.data?.error || t('error_updating'), 'error');
+      displayMessage(
+        error.response?.data?.error || t('app.user.profile.page.error_updating'),
+        'error'
+      ); // ❌
     } finally {
-      hideLoader();
+      hideLoader(); // 🧽
     }
   };
 
-  // 🔑 Change password
+  // 🔐 Submit: change password
   const handlePasswordChangeSubmit = async (request) => {
-    request.preventDefault();
+    request.preventDefault(); // 🛑
     if (passwordFields.newPassword !== passwordFields.confirmPassword) {
-      displayMessage(t('password_mismatch'), 'error');
+      displayMessage(t('app.user.profile.page.password_mismatch'), 'error'); // 🚨
       return;
     }
-    showLoader({ text: t('password_updating') });
+    showLoader({ text: t('app.user.profile.page.password_updating') }); // 🌀
     try {
       await axiosInstance.put('/api/user/profile/password', {
         oldPassword: passwordFields.oldPassword,
         newPassword: passwordFields.newPassword
-      });
-      displayMessage(t('password_update_success'), 'success');
-      setPasswordFields({ oldPassword: '', newPassword: '', confirmPassword: '' });
-      setIsPasswordChangeVisible(false);
-      redirectAfterPasswordSave();
+      }); // 🔏
+      displayMessage(t('app.user.profile.page.password_update_success'), 'success'); // ✅
+      setPasswordFields({ oldPassword: '', newPassword: '', confirmPassword: '' }); // 🧹
+      setIsPasswordChangeVisible(false); // ↩️
+      redirectAfterPasswordSave(); // 🔁
     } catch (error) {
-      displayMessage(error.response?.data?.error || t('error_password_update'), 'error');
+      displayMessage(
+        error.response?.data?.error || t('app.user.profile.page.error_password_update'),
+        'error'
+      ); // ❌
     } finally {
-      hideLoader();
+      hideLoader(); // 🧽
     }
   };
 
-  // ✍️ handlers
+  // ✍️ Form handlers
   const handleFormFieldChange = (event) => {
-    const { name, value, type, checked } = event.target;
-    setFormData((previous) => ({ ...previous, [name]: type === 'checkbox' ? checked : value }));
+    const { name, value, type, checked } = event.target; // 🧷
+    setFormData((previous) => ({ ...previous, [name]: type === 'checkbox' ? checked : value })); // 🧩
   };
   const handlePasswordFieldChange = (event) => {
-    const { name, value } = event.target;
-    setPasswordFields((previous) => ({ ...previous, [name]: value }));
+    const { name, value } = event.target; // 🔤
+    setPasswordFields((previous) => ({ ...previous, [name]: value })); // 🧩
   };
 
-  useEffect(() => {
-    if (status === 'authenticated' && isAllowed && session?.user?.user_id) fetchUserProfile();
-  }, [status, isAllowed, session?.user?.user_id]);
+  // 🚀 Fetch on auth ready
+  // 🚦 Only run if session is ready, user is allowed, and we have a user_id
+  if (status === 'authenticated' && isAllowed && session?.user?.user_id) {
+    fetchUserProfile();
+  }
 
+  // 🧭 Redirect if blocked
   useEffect(() => {
     if (status !== 'loading' && !isAllowed && redirect) router.replace(redirect);
-  }, [status, isAllowed, redirect, router]);
+  }, [status, isAllowed, redirect, router]); // 🚫 do not include t
 
+  // 🛡️ Guard rendering
   if (!isAllowed) return null;
 
+  // 🧱 UI
   return (
     <div className="container-style max-w-full lg:max-w-lg mx-auto min-h-[60vh] rounded-2xl shadow-lg p-6">
       <h1 className="text-2xl font-bold text-center mb-6">
         {isPasswordChangeVisible
-          ? t('change_password')
+          ? t('app.user.profile.page.change_password')
           : session?.user?.name
-            ? `${session.user.name} ${t('profile')}`
-            : t('user_profile')}
+            ? `${session.user.name} ${t('app.user.profile.page.profile')}`
+            : t('app.user.profile.page.user_profile')}
       </h1>
 
       {/* 📝 PROFILE FORM */}
       {!isPasswordChangeVisible ? (
         <form onSubmit={handleProfileUpdate} className="space-y-4">
-          {['name', 'email', 'username', 'whatsapp', 'telegram'].map((field) => (
-            <div key={field}>
-              <label htmlFor={field} className="block text-sm font-medium">
-                {t(`field.${field}`)}
+          {['name', 'email', 'username', 'whatsapp', 'telegram'].map((fieldKey) => (
+            <div key={fieldKey}>
+              <label htmlFor={fieldKey} className="block text-sm font-medium">
+                {t(`app.user.profile.page.field.${fieldKey}`)}
               </label>
               <input
-                id={field}
-                type={field === 'email' ? 'email' : 'text'}
-                name={field}
-                value={formData[field]}
+                id={fieldKey}
+                type={fieldKey === 'email' ? 'email' : 'text'}
+                name={fieldKey}
+                value={formData[fieldKey]}
                 onChange={handleFormFieldChange}
                 className="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 focus:outline-none text-black"
-                autoComplete={field === 'email' ? 'email' : field === 'username' ? 'username' : ''}
+                autoComplete={
+                  fieldKey === 'email' ? 'email' : fieldKey === 'username' ? 'username' : ''
+                }
               />
             </div>
           ))}
@@ -185,7 +192,7 @@ export default function UserProfile() {
           {/* 📬 Preferred contact */}
           <div>
             <label htmlFor="preferredContactWay" className="block text-sm font-medium">
-              {t('preferred_contact')}
+              {t('app.user.profile.page.preferred_contact')}
             </label>
             <select
               id="preferredContactWay"
@@ -196,7 +203,7 @@ export default function UserProfile() {
             >
               {preferredContactOptions.map(({ value, label }) => (
                 <option key={value} value={value}>
-                  {label}
+                  {label /* 🔤 keep brands as-is; can translate if you add keys */}
                 </option>
               ))}
             </select>
@@ -213,28 +220,30 @@ export default function UserProfile() {
               className="h-4 w-4"
             />
             <label htmlFor="sendEmails" className="block text-sm font-medium">
-              {t('send_emails')}
+              {t('app.user.profile.page.send_emails')}
             </label>
           </div>
 
+          {/* 💾 Actions */}
           <div className="flex flex-col lg:flex-row items-center gap-3 mt-4 w-full">
             <button
               type="button"
               onClick={() => setIsPasswordChangeVisible(true)}
               className="btn-info w-1/2"
             >
-              {t('change_password')}
+              {t('app.user.profile.page.change_password')}
             </button>
             <button type="submit" className="btn-primary w-1/2">
-              {t('update_profile')}
+              {t('app.user.profile.page.update_profile')}
             </button>
           </div>
         </form>
       ) : (
+        /* 🔐 CHANGE PASSWORD FORM */
         <form onSubmit={handlePasswordChangeSubmit} className="space-y-4">
           <div>
             <label htmlFor="oldPassword" className="block text-sm font-medium">
-              {t('old_password')}
+              {t('app.user.profile.page.old_password')}
             </label>
             <input
               id="oldPassword"
@@ -246,9 +255,10 @@ export default function UserProfile() {
               autoComplete="current-password"
             />
           </div>
+
           <div>
             <label htmlFor="newPassword" className="block text-sm font-medium">
-              {t('new_password')}
+              {t('app.user.profile.page.new_password')}
             </label>
             <input
               id="newPassword"
@@ -260,9 +270,10 @@ export default function UserProfile() {
               autoComplete="new-password"
             />
           </div>
+
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium">
-              {t('confirm_password')}
+              {t('app.user.profile.page.confirm_password')}
             </label>
             <input
               id="confirmPassword"
@@ -274,28 +285,31 @@ export default function UserProfile() {
               autoComplete="new-password"
             />
           </div>
+
+          {/* 💾 Actions */}
           <div className="flex flex-col lg:flex-row items-center gap-3 mt-4 w-full">
             <button
               type="button"
               onClick={() => setIsPasswordChangeVisible(false)}
               className="btn-info w-1/2"
             >
-              {t('back_to_profile')}
+              {t('app.user.profile.page.back_to_profile')}
             </button>
             <button type="submit" className="btn-primary w-1/2">
-              {t('update_password')}
+              {t('app.user.profile.page.update_password')}
             </button>
           </div>
         </form>
       )}
 
+      {/* ↩️ Return */}
       <div className="flex items-center justify-center mt-5 w-full">
         <button
           type="button"
           onClick={() => router.push('/user/dashboard')}
           className="btn-secondary w-1/2"
         >
-          {t('return_dashboard')}
+          {t('app.user.profile.page.return_dashboard')}
         </button>
       </div>
     </div>

@@ -3,7 +3,7 @@
  * 🌍 Root config for next-intl
  * ===================================================================
  */
-import { routing } from './src/lib/language/routing.js';
+import { routing } from './src/i18n/request.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 

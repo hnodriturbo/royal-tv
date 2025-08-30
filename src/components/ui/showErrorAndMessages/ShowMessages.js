@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ErrorAndMessageContext } from '@/context/ErrorAndMessageContext';
-import { useT } from '@/lib/i18n/client'; // 🌐 components.showMessages.*
+import { useTranslations } from 'next-intl'; // 🌐 components.showMessages.*
 
 /**
  * 📨 ShowMessages
@@ -13,7 +13,7 @@ import { useT } from '@/lib/i18n/client'; // 🌐 components.showMessages.*
  * • Adds a translated tooltip title only (visible on hover).
  */
 const ShowMessages = () => {
-  const t = useT(); // 🗣️ translator bound to current language
+  const t = useTranslations(); // 🗣️ translator bound to current language
   const { message, clearMessage } = useContext(ErrorAndMessageContext);
   const [isVisible, setIsVisible] = useState(false);
 

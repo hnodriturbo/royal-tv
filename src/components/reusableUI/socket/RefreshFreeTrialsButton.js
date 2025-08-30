@@ -4,16 +4,16 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import useFreeTrials from '@/hooks/socket/useFreeTrials';
+import useFreeTrials from '@/hooks/socket/useFreeTrialStatus';
 import { useState } from 'react';
-import { useTRoot } from '@/lib/i18n/client';
+import { useTranslations } from 'next-intl';
 
 const RefreshFreeTrialStatusButton = () => {
   const { data: session } = useSession();
   const userId = session?.user?.user_id;
-  const { refreshFreeTrialStatus } = useFreeTrials(userId);
+  const { refreshFreeTrialStatus } = useFreeTrialStatus(userId);
   const [loading, setLoading] = useState(false);
-  const t = useTRoot(); // 🌍
+  const t = useTranslations(); // 🌍
 
   const handleRefreshClick = () => {
     setLoading(true);

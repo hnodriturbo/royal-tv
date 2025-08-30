@@ -2,16 +2,17 @@
  * 🟢 IsAdminOnline.js
  * -------------------
  * Shows a compact admin online indicator & admin list for the user conversation page.
- * Localized with i18n client (`useTRoot`)
+ * Localized with i18n client (`useT`)
  * Usage: <IsAdminOnline />
  */
+'use client';
 
 import useIsAdminOnline from '@/hooks/socket/useIsAdminOnline';
 import ConversationActionButton from '@/components/reusableUI/ConversationActionButton';
-import { useTRoot } from '@/lib/i18n/client';
+import { useTranslations } from 'next-intl';
 
 const IsAdminOnline = ({ user_id }) => {
-  const t = useTRoot(); // 🌍
+  const t = useTranslations(); // 🌱 root-level translator
 
   // 1️⃣ Get status/info from hook
   const { isAdminOnline, adminInfo, singleAdmin } = useIsAdminOnline();

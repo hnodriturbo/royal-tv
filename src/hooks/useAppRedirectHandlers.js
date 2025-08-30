@@ -1,13 +1,15 @@
 // hooks/useAppRedirectHandler.js
+'use client';
+
 import { useCallback } from 'react';
 import useAppHandlers from '@/hooks/useAppHandlers';
-import { useRouter } from '@/lib/language';
-import { useTRoot } from '@/lib/i18n/client';
+import { useRouter } from '@/i18n';
+import { useTranslations } from 'next-intl';
 
 const useAppRedirectHandlers = () => {
   const { showLoader, hideLoader, displayMessage } = useAppHandlers();
   const router = useRouter();
-  const t = useTRoot();
+  const t = useTranslations();
 
   const redirectWithMessage = useCallback(
     ({
@@ -58,6 +60,7 @@ const useAppRedirectHandlers = () => {
         if (!loaderOnly) displayMessage(''); // Clear message if it was displayed
       }, pageDelay + 500); // Ensure cleanup happens after navigation
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [showLoader, hideLoader, displayMessage, router]
   );
 

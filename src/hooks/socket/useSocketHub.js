@@ -333,13 +333,29 @@ const useSocketHub = () => {
   );
 
   // 🌍 Tell server to update the current locale (queues if not connected)
-  const setLocale = useCallback((handler) => guardedEmit('set_locale', { locale }), [guardedEmit]);
+  const setLocale = useCallback(
+    (localeCode) => {
+      // 🧼 normalize to 'en' | 'is'
+      const normalized =
+        typeof localeCode === 'string' && localeCode.toLowerCase().startsWith('is') ? 'is' : 'en';
 
-  // 🌍 Listen for server ack when locale changes
+      // 🛰️ safe emit through the hub
+      guardedEmit('set_locale', { locale: normalized });
+    },
+    [guardedEmit]
+  );
+
+  // 🔔 Listen for server ack when locale changes
   const onLocaleChanged = useCallback(
-    (handler) => guardedListen('locale_changed', handler),
+    (handlerFunction) => {
+      // 🧯 ignore non-functions
+      if (typeof handlerFunction !== 'function') return () => {};
+      // 🪝 return unsubscriber from guardedListen
+      return guardedListen('locale_changed', handlerFunction);
+    },
     [guardedListen]
   );
+
   // ======================= EXPORTS ========================
   return {
     socket,

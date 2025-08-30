@@ -1,13 +1,13 @@
 /**
- * ======================= AppProvidersGlobal.js =======================
- * 🧱 Global, locale-agnostic providers shell
- * - Mounted once under SessionProvider (root layout)
- * - Keep only things that must not remount on locale change
+ * ======================= /src/app/AppProvidersGlobal.js =======================
+ * 🌍 AppProvidersGlobal (client)
+ * - Keep truly global, locale-agnostic providers here (none required right now)
+ * - Left intentionally minimal to avoid noise
  */
 
 'use client';
 
 export default function AppProvidersGlobal({ children }) {
-  // 🔁 Render global shell as-is (no locale dependence here)
+  // 🎯 No global providers at the moment
   return <>{children}</>;
 }

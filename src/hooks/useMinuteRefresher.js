@@ -17,11 +17,13 @@ const { secondsLeft, restart } = useIntervalRefresher(() => {
   refetch(true);            // silent background refresh
 }, 300);
  */
+'use client';
+
 import { useState, useEffect, useCallback } from 'react';
 
 export default function useIntervalRefresher(
   onRefresh, // 🛎️ function to trigger
-  intervalSeconds = 300, // ⏱️ default = 5 min
+  intervalSeconds = 300 // ⏱️ default = 5 min
 ) {
   /* 🧮 countdown state */
   const [secondsLeft, setSecondsLeft] = useState(intervalSeconds);
@@ -43,10 +45,7 @@ export default function useIntervalRefresher(
   }, [secondsLeft, onRefresh, intervalSeconds]);
 
   /* 🔄 manual reset helper */
-  const restart = useCallback(
-    () => setSecondsLeft(intervalSeconds),
-    [intervalSeconds],
-  );
+  const restart = useCallback(() => setSecondsLeft(intervalSeconds), [intervalSeconds]);
 
   return { secondsLeft, restart }; // 🎁 expose goodies
 }

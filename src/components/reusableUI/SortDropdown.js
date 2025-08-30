@@ -1,6 +1,6 @@
 // ======================== SortDropdown.js ========================
 // Universal sort order dropdown (use for any admin/user list page!)
-// - Translated with i18n client via useT()
+// - Translated with i18n client via useTranslations()
 // Props:
 //   - options: Array of { value: 'createdAt_desc', label: 'Newest First' }
 //   - value: current selected value
@@ -10,10 +10,10 @@
 'use client';
 
 import clsx from 'clsx';
-import { useT } from '@/lib/i18n/client'; // 🌐 i18n
+import { useTranslations, useLocale } from 'next-intl'; // 🌐 i18n
 
 export default function SortDropdown({ options, value, onChange, className, selectClassName }) {
-  const t = useT(); // 🔤
+  const t = useTranslations(); // 🔤
 
   return (
     <div className={clsx('flex items-center gap-2 w-full justify-center m-0', className)}>

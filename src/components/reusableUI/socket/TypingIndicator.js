@@ -1,6 +1,8 @@
 // 🗨️ TypingIndicator.js — localized labels, safe deps
+'use client';
+
 import { useSession } from 'next-auth/react';
-import { useTRoot } from '@/lib/i18n/client';
+import { useTranslations } from 'next-intl';
 
 export default function TypingIndicator({
   isTyping,
@@ -9,7 +11,7 @@ export default function TypingIndicator({
   showLocalForDebug = false
 }) {
   const { data: session } = useSession();
-  const t = useTRoot(); // 🌍 translator
+  const t = useTranslations(); // 🌍 translator
   const myId = session?.user?.user_id;
 
   // 🧪 decide which indicator to show

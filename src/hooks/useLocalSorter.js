@@ -6,6 +6,7 @@
  * - Returns the sorted array, memoized.
  * ========================================================
  */
+'use client';
 
 import { useMemo } from 'react';
 

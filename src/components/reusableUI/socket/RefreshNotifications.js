@@ -10,13 +10,13 @@
 
 import { useSession } from 'next-auth/react';
 import useRefreshNotifications from '@/hooks/socket/useRefreshNotifications';
-import { useTRoot } from '@/lib/i18n/client';
+import { useTranslations } from 'next-intl';
 
 export default function RefreshNotifications({ user_id: userIdProp }) {
   const { data: session } = useSession();
   const user_id = userIdProp || session?.user?.user_id;
   const { refreshNotifications, loading } = useRefreshNotifications(user_id);
-  const t = useTRoot(); // 🌍
+  const t = useTranslations(); // 🌍
 
   return (
     <button

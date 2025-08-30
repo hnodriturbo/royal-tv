@@ -25,7 +25,7 @@ import { useSession } from 'next-auth/react';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAuthGuard from '@/hooks/useAuthGuard';
-import { useRouter } from '@/lib/language';
+import { useRouter } from '@/i18n';
 
 // 📬 contact options
 const preferredContactOptions = [

@@ -1,11 +1,12 @@
 // 📦 UserSubscriptionPanel.js — localized text, socket-powered
+'use client';
+
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from '@/lib/language';
-import { Link } from '@/lib/language';
+import { Link, useRouter } from '@/i18n';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useSocketHub from '@/hooks/socket/useSocketHub';
-import { paymentPackages } from '@/app/[locale]/packages/data/packages';
-import { useTRoot } from '@/lib/i18n/client';
+import { paymentPackages } from '@/components/packages/data/packages';
+import { useTranslations } from 'next-intl';
 
 const packageOptions = paymentPackages
   .filter((pkg) => !pkg.isTrial) // 🛑 exclude free trial
@@ -15,7 +16,7 @@ const packageOptions = paymentPackages
   }));
 
 export default function UserSubscriptionPanel({ user_id }) {
-  const t = useTRoot(); // 🌍 translator
+  const t = useTranslations(); // 🌍 translator
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPackage, setSelectedPackage] = useState('');

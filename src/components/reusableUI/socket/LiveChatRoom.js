@@ -3,9 +3,10 @@
  * 💬 LiveChatRoom.js – Royal TV
  * ================================
  * Live, real-time chat room for 1:1 support!
- * - Localized UI strings via useTRoot()
+ * - Localized UI strings via useTranslations()
  * - No `t` inside effect deps to avoid loops
  */
+'use client';
 
 import logger from '@/lib/core/logger';
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -21,7 +22,7 @@ import RefreshMessages from '@/components/reusableUI/socket/RefreshMessages';
 import TypingIndicator from '@/components/reusableUI/socket/TypingIndicator';
 import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
 import useSocketHub from '@/hooks/socket/useSocketHub';
-import { useTRoot } from '@/lib/i18n/client'; // 🌍 translator
+import { useTranslations } from 'next-intl'; // 🌍 translator
 
 export default function LiveChatRoom({
   conversation_id,
@@ -33,7 +34,7 @@ export default function LiveChatRoom({
   subject = '',
   user
 }) {
-  const t = useTRoot(); // 🌍 translation hook (render-time only)
+  const t = useTranslations(); // 🌱 root-level translator
 
   // 🧭 who am I (for bubble styles)
   const currentUserRole = session?.user?.role;

@@ -30,7 +30,7 @@
 
 // 1️⃣ React goodies
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useT } from '@/lib/i18n/client'; // 🌐 i18n
+import { useTranslations, useLocale } from 'next-intl'; // 🌐 i18n
 
 // 2️⃣ Helper → format seconds as "m:ss"
 function formatSecondsAsMMSS(totalSeconds) {
@@ -48,7 +48,7 @@ export default function RefreshCountdownTimer({
   showManualRefreshButton = false,
   showPauseToggle = false
 }) {
-  const t = useT(); // 🔤
+  const t = useTranslations(); // 🔤
 
   // 3️⃣ State → countdown & pause toggle
   const [secondsLeft, setSecondsLeft] = useState(intervalSeconds);
@@ -94,6 +94,7 @@ export default function RefreshCountdownTimer({
   const formattedTime = useMemo(
     () =>
       isPaused ? t('components.refreshCountdownTimer.paused') : formatSecondsAsMMSS(secondsLeft),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [secondsLeft, isPaused]
   );
 

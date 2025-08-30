@@ -1,16 +1,12 @@
-// @ts-nocheck
-// ======================== eslint.config.mjs ========================
-// 📏 Main ESLint config for Royal TV
-// - Integrates JS, Next.js, Prettier, React Hooks rules
-// ===================================================================
-
+// eslint.config.js (ESM)
 import js from '@eslint/js';
-import pluginNext from '@next/eslint-plugin-next';
-import pluginPrettier from 'eslint-plugin-prettier';
-import pluginReactHooks from 'eslint-plugin-react-hooks';
-import prettierCfg from 'eslint-config-prettier';
+import nextPlugin from '@next/eslint-plugin-next';
+import eslintConfigPrettier from 'eslint-config-prettier';
+import prettierPlugin from 'eslint-plugin-prettier';
+import reactHooks from 'eslint-plugin-react-hooks';
+import globals from 'globals';
 
-const config = [
+export default [
   {
     ignores: [
       'node_modules/**',
@@ -30,22 +26,26 @@ const config = [
       '*.eslintignore'
     ]
   },
-  js.configs.recommended, // ✅ Base JS rules
-  pluginNext, // ⚡ Next.js & web-vitals
-  prettierCfg, // 🧹 Disables rules covered by Prettier
+  js.configs.recommended,
   {
-    files: ['**/*.{js,jsx}'],
     plugins: {
-      prettier: pluginPrettier, // 🎨 Prettier integration
-      'react-hooks': pluginReactHooks // 🪝 React Hooks linting
+      '@next/next': nextPlugin, // ⚡ Next rules namespace
+      prettier: prettierPlugin, // 🎨 Prettier as a rule
+      'react-hooks': reactHooks // 🪝 Hooks rules
+    },
+    languageOptions: {
+      ecmaVersion: 2023,
+      sourceType: 'module',
+      globals: { ...globals.browser, ...globals.node }
     },
     rules: {
-      'react-hooks/rules-of-hooks': 'error', // ❗ Enforce Rules of Hooks
-      'react-hooks/exhaustive-deps': 'warn', // ⚠️ Warn on missing deps
-      'prettier/prettier': 'warn', // 🔔 Prettier formatting issues
-      'google-font-display': '1' // 👀 Warn if Google Fonts don't use &display
+      ...nextPlugin.configs.recommended.rules,
+      //...nextPlugin.configs['core-web-vitals']?.rules, // optional
+      '@next/next/google-font-display': 'off',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+      'prettier/prettier': 'warn'
     }
-  }
+  },
+  prettierFlat
 ];
-
-export default config;

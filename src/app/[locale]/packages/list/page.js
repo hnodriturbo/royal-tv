@@ -12,11 +12,11 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import PackagesGrid from '@/app/[locale]/packages/data/packages';
-import { useT } from '@/lib/i18n/client';
+import PackagesGrid from '@/components/packages/data/packages';
+import { useTranslations, useLocale } from 'next-intl';
 
 export default function PackagesPage() {
-  const t = useT();
+  const t = useTranslations();
   // 🌐 Get session for authentication
   const { data: session, status } = useSession();
   const authenticated =

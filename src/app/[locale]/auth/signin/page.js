@@ -1,8 +1,10 @@
 /**
- * ======================= SigninPage.js =======================
- * 🔐 Sign-in form with NextAuth v5 Credentials
- * 🌐 i18n: uses useT('app.signin') for all UI text
- * 🔁 Always finishes via /[locale]/auth/middlePage to avoid loops
+ * ======================= /src/app/[locale]/auth/signin/page.js =======================
+ * 🔐 Sign-in page with NextAuth v5 Credentials
+ * ------------------------------------------------------------------------------------
+ * - Displays a simple credentials form
+ * - Uses i18n via full-path keys with a single `const t = useT()`
+ * - Routes through /auth/middlePage to avoid login loops and unify toasts
  */
 
 'use client';
@@ -10,13 +12,13 @@
 import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
-import { useRouter } from '@/lib/language';
+import { useRouter, Link } from '@/i18n'; // 🧭 merged: router + locale-aware Link ✅
 import useAppHandlers from '@/hooks/useAppHandlers';
-import { useT } from '@/lib/i18n/client';
+import { useTranslations, useLocale } from 'next-intl';
 
 export default function SigninPage() {
-  // 🗣️ Translator bound to this page's namespace
-  const t = useT('app.signin');
+  // 🌐 i18n (full-path keys only)
+  const t = useTranslations();
 
   // 🧭 Navigation + query helpers
   const router = useRouter();
@@ -38,7 +40,11 @@ export default function SigninPage() {
     // 💌 Show welcome if coming from signup
     if (isSignupFlow && initialUsername) {
       displayMessage(
-        t('signupWelcomeMessage', { username: initialUsername }, 'Welcome! Please sign in.'),
+        t(
+          'app.signin.signupWelcomeMessage',
+          { username: initialUsername },
+          'Welcome! Please sign in.'
+        ),
         'success'
       );
       return;
@@ -51,7 +57,7 @@ export default function SigninPage() {
       displayMessage(decodeURIComponent(errorOrMessage), 'error');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, displayMessage, t]);
+  }, [searchParams, displayMessage, t, isSignupFlow, initialUsername]);
 
   // 🟢 Submit handler
   const handleSignin = async (event) => {
@@ -59,11 +65,14 @@ export default function SigninPage() {
 
     // 🧪 Basic validation
     if (!usernameValue || !passwordValue) {
-      displayMessage(t('fillBothFields', {}, 'Please fill in both username and password.'), 'info');
+      displayMessage(
+        t('app.signin.fillBothFields', {}, 'Please fill in both username and password.'),
+        'info'
+      );
       return;
     }
 
-    showLoader({ text: t('loggingIn', {}, 'Logging in...') });
+    showLoader({ text: t('app.signin.loggingIn', {}, 'Logging in...') });
 
     try {
       // 🚦 Sign in with NextAuth credentials (no auto redirect)
@@ -71,17 +80,20 @@ export default function SigninPage() {
         redirect: false,
         username: usernameValue,
         password: passwordValue,
-        rememberMe: rememberMeChecked ? true : false
+        remember_me: rememberMeChecked ? 'on' : '' // 🧠 underscore key matches provider
       });
 
       if (!result?.error) {
         // 🎉 Success → middlePage will route safely
-        displayMessage(t('loginSuccess', {}, 'Login successful! Redirecting...'), 'success');
+        displayMessage(
+          t('app.signin.loginSuccess', {}, 'Login successful! Redirecting...'),
+          'success'
+        );
 
         // 🎯 Find intended redirect (if any)
         const redirectTo = searchParams?.get('redirectTo') || '';
 
-        // 🔁 Always go through middlePage (loop‑safe + toasts)
+        // 🔁 Always go through middlePage (loop-safe + toasts)
         const middlePageUrl = `/auth/middlePage?login=true${
           redirectTo ? `&redirectTo=${encodeURIComponent(redirectTo)}` : ''
         }`;
@@ -89,11 +101,11 @@ export default function SigninPage() {
         setTimeout(() => router.replace(middlePageUrl), 1000);
       } else {
         // ❌ Incorrect credentials
-        displayMessage(t('wrongCredentials', {}, 'Wrong username or password'), 'error');
+        displayMessage(t('app.signin.wrongCredentials', {}, 'Wrong username or password'), 'error');
       }
     } catch (error) {
       displayMessage(
-        t('loginError', { error: String(error) }, `Login error: ${String(error)}`),
+        t('app.signin.loginError', { error: String(error) }, `Login error: ${String(error)}`),
         'error'
       );
     } finally {
@@ -106,7 +118,7 @@ export default function SigninPage() {
       <div className="container-style lg:w-[700px] mx-auto my-12">
         {/* 🏷️ Page Title */}
         <h1 className="text-4xl font-semibold text-center mb-5 super-decorative-2">
-          {t('title', {}, 'Sign In')}
+          {t('app.signin.title', {}, 'Sign In')}
         </h1>
 
         {/* 🧾 Sign-in Form */}
@@ -116,7 +128,7 @@ export default function SigninPage() {
             id="username"
             type="text"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg text-black mb-4"
-            placeholder={t('usernamePlaceholder', {}, 'Enter your username')}
+            placeholder={t('app.signin.usernamePlaceholder', {}, 'Enter your username')}
             value={usernameValue}
             onChange={(event) => setUsernameValue(event.target.value)}
             autoFocus
@@ -127,7 +139,7 @@ export default function SigninPage() {
             id="password"
             type="password"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg text-black mb-4"
-            placeholder={t('passwordPlaceholder', {}, 'Enter your password')}
+            placeholder={t('app.signin.passwordPlaceholder', {}, 'Enter your password')}
             value={passwordValue}
             onChange={(event) => setPasswordValue(event.target.value)}
           />
@@ -140,7 +152,7 @@ export default function SigninPage() {
               onChange={(event) => setRememberMeChecked(event.target.checked)}
               className="mr-2"
             />
-            {t('rememberMe', {}, 'Remember me')}
+            {t('app.signin.rememberMe', {}, 'Remember me')}
           </label>
 
           {/* 🚀 Submit */}
@@ -148,16 +160,16 @@ export default function SigninPage() {
             type="submit"
             className="w-full py-2 text-white rounded-lg bg-blue-400 hover:bg-blue-600"
           >
-            {t('submitButton', {}, 'Sign In')}
+            {t('app.signin.submitButton', {}, 'Sign In')}
           </button>
         </form>
 
         {/* 🔗 Sign up prompt */}
         <p className="text-center mt-4">
-          {t('noAccountPrompt', {}, 'Don’t have an account?')}{' '}
-          <a href="/auth/signup" className="underline">
-            {t('signUpLink', {}, 'Sign up')}
-          </a>
+          {t('app.signin.noAccountPrompt', {}, 'Don’t have an account?')}{' '}
+          <Link href="/auth/signup" className="underline">
+            {t('app.signin.signUpLink', {}, 'Sign up')}
+          </Link>
         </p>
       </div>
     </div>

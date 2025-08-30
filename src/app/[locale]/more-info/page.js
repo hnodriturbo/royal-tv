@@ -4,22 +4,22 @@
  * -----------------------------------------------------------
  * More Info page:
  * - Shows the full setup Guide and then the Packages grid.
- * - All user-facing text is pulled from i18n via useT().
+ * - All user-facing text is pulled from i18n via useTranslations().
  * ===========================================================
  */
 
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useT } from '@/lib/i18n/client'; // 🌍 i18n — requested import path & style
-import { Link } from '@/lib/language';
+import { useTranslations, useLocale } from 'next-intl'; // 🌍 i18n — requested import path & style
+import { Link } from '@/i18n';
 
-import Guide from '@/app/[locale]/packages/data/guide'; // 🛠️ setup guide
-import PackagesGrid from '@/app/[locale]/packages/data/packages'; // 📦 packages grid
+import Guide from '@/components/packages/data/guide'; // 🛠️ setup guide
+import PackagesGrid from '@/components/packages/data/packages'; // 📦 packages grid
 
 export default function MoreInfoPage() {
   // 🗣️ translation handle
-  const t = useT();
+  const t = useTranslations();
 
   // 👤 auth status (optional for grid behaviors)
   const { data: session, status } = useSession();

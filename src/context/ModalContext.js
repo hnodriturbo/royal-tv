@@ -2,7 +2,7 @@
 
 import React, { createContext, useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
-import { useTRoot } from '@/lib/i18n/client';
+import { useTranslations, useLocale } from 'next-intl';
 
 // Create the ModalContext to provide modal functionality globally.
 const ModalContext = createContext();
@@ -10,7 +10,7 @@ const ModalContext = createContext();
 // ModalProvider holds modal state and handlers, and renders the modal via a portal.
 export const ModalProvider = ({ children }) => {
   if (!children) throw new Error('ModalProvider must wrap components.');
-  const t = useTRoot(); // 🗣️ translate button fallbacks
+  const t = useTranslations(); // 🗣️ translate button fallbacks
   // Controls if the modal is rendered.
   const [modalOpen, setModalOpen] = useState(false);
   // Controls the CSS transition for a smooth appearance/disappearance.

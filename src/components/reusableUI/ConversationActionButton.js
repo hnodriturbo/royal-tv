@@ -1,7 +1,7 @@
 /**
  *   ===================== ConversationActionButton.js =====================
  * 🧩 UNIVERSAL LIVE CHAT ACTION BUTTON (Admin/User)
- * - Translated with i18n client via useT()
+ * - Translated with i18n client via useTranslations()
  * - Handles creating, deleting, and bulk-deleting conversations (live chat only).
  * - Uses socket for creation (real-time), Axios for delete actions.
  * - Works for both admin and user by passing correct props/routes.
@@ -22,14 +22,14 @@
 
 import { useSession } from 'next-auth/react';
 import { useRef } from 'react';
-import { useRouter } from '@/lib/language';
+import { useRouter } from '@/i18n';
 import clsx from 'clsx';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useModal from '@/hooks/useModal';
 import axiosInstance from '@/lib/core/axiosInstance';
 import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
-import { useT } from '@/lib/i18n/client'; // 🌐 i18n: hook
+import { useTranslations, useLocale } from 'next-intl'; // 🌐 i18n: hook
 
 export default function ConversationActionButton({
   action = 'create',
@@ -42,7 +42,7 @@ export default function ConversationActionButton({
   onActionSuccess,
   buttonText
 }) {
-  const t = useT(); // 🔤 activate translator
+  const t = useTranslations(); // 🔤 activate translator
   const { data: session } = useSession();
   const router = useRouter();
 

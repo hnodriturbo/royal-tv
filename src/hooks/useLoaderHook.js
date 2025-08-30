@@ -1,11 +1,13 @@
+// src/hooks/useLoaderHook.js
+'use client';
+
 import { useContext } from 'react';
 import { LoaderContext } from '@/context/LoaderContext';
 import CustomRingLoader from '@/components/ui/Loader/RingLoader';
 
 // Hook to use the loader functionality
 const useLoaderHandler = () => {
-  const { showLoader, hideLoader, isLoading, loaderConfig } =
-    useContext(LoaderContext);
+  const { showLoader, hideLoader, isLoading, loaderConfig } = useContext(LoaderContext);
 
   /**
    * Executes an asynchronous function with the loader shown during execution.
@@ -27,7 +29,7 @@ const useLoaderHandler = () => {
     withLoader,
     isLoading,
     loaderConfig,
-    CustomRingLoader,
+    CustomRingLoader
   };
 };
 

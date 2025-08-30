@@ -3,7 +3,7 @@
  * FreeTrialButton.js
  * 🎟️ Free Trial Request Button (with Modal)
  * -------------------------------------------
- * - Translated with i18n client via useT()
+ * - Translated with i18n client via useTranslations()
  * - Lets user request a free trial (one time)
  * - Shows confirmation modal before action
  * - Uses app-wide loader and displayMessage
@@ -19,10 +19,10 @@ import useModal from '@/hooks/useModal'; // 🌟 Modal hook for confirmation
 import useAppHandlers from '@/hooks/useAppHandlers'; // 🛠️ App handler for loader/messages
 import axiosInstance from '@/lib/core/axiosInstance';
 import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
-import { useT } from '@/lib/i18n/client'; // 🌐 i18n
+import { useTranslations, useLocale } from 'next-intl'; // 🌐 i18n
 
 export default function FreeTrialButton({ user_id, refreshStatus }) {
-  const t = useT(); // 🔤
+  const t = useTranslations(); // 🔤
   // 🌀 Local loading state
   const [loading, setLoading] = useState(false);
 

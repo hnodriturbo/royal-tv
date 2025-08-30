@@ -34,7 +34,7 @@ export const userNotificationTemplates = {
         ? 'We will send you notifications as email also.\n'
         : 'We will only send you notifications on your dashboard and not emails.\n') +
       `\n👉 Request your free trial by clicking the request free trial button!\n` +
-      `If you have questions, login and use Live Chat for help!`,
+      `Need help? Contact us on whatsapp or use Live Chat for support !`,
     link: `/user/profile`
   }),
 
@@ -45,14 +45,10 @@ export const userNotificationTemplates = {
       `Hi ${data.name ? `${data.name}` : ''}!\n\n` +
       `Your free trial will automatically be activated on your first official login.\n` +
       (data.package_name ? `• Package: ${data.package_name}\n` : '') +
-      `• Expires exactly 1 day after you first login! So use your time wisely and try to enjoy Royal IPTV to the full.\n` +
-      (data.username ? `• Username: ${data.username}\n` : '') +
-      (data.password ? `• Password: ${data.password}\n` : '') +
-      (data.dns_link ? `• DNS: ${data.dns_link}\n` : '') +
-      (data.dns_link_for_samsung_lg ? `• Samsung/LG DNS: ${data.dns_link_for_samsung_lg}\n` : '') +
-      (data.portal_link ? `• Portal Link: ${data.portal_link}\n` : '') +
-      `\n🎬 Use these credentials in your IPTV app to enjoy your free trial right away!\n` +
-      `Need help? Login and use Live Chat for support.`,
+      `• Expires exactly 1 day after you first login! Try to enjoy the IPTV service to the full.\n` +
+      `\n🎬 Use the credentials in your IPTV app to enjoy your free trial right away!\n` +
+      `• You can find your credentials by clicking on open content in this notification.\n` +
+      `Need help? Contact us on whatsapp or use Live Chat for support !`,
     link: `/user/freeTrials`
   }),
 
@@ -67,11 +63,8 @@ export const userNotificationTemplates = {
         : '') +
       (data.order_description ? `• Order: ${data.order_description}\n` : '') +
       (data.expiring_at ? `• Expires: ${formatDate(data.expiring_at)}\n` : '') +
-      (data.dns_link ? `• DNS: ${data.dns_link}\n` : '') +
-      (data.dns_link_for_samsung_lg ? `• Samsung/LG DNS: ${data.dns_link_for_samsung_lg}\n` : '') +
-      (data.max_connections ? `• Devices Allowed: ${data.max_connections}\n` : '') +
-      `\n🚀 Use these credentials in your IPTV app and start watching immediately!\n` +
-      `Need help? Login and use Live Chat for support.`,
+      `\n🚀 Use your credentials to create a new playlist in your IPTV app and start watching immediately!\n` +
+      `Need help? Contact us on whatsapp or use Live Chat for support !`,
     link: `/user/subscriptions`
   }),
 
@@ -83,16 +76,10 @@ export const userNotificationTemplates = {
       (data.amount_paid && data.price_currency
         ? `• Amount Paid: ${data.amount_paid} ${data.price_currency}\n`
         : '') +
-      (data.actually_paid && data.pay_currency
-        ? `• Amount Sent (Crypto): ${data.actually_paid} ${data.pay_currency}\n`
-        : '') +
-      (data.network ? `• Network: ${data.network}\n` : '') +
-      (data.pay_address ? `• Payment Address: ${data.pay_address}\n` : '') +
       (data.invoice_id ? `• Invoice ID: ${data.invoice_id}\n` : '') +
       (data.received_at ? `• Received: ${formatDate(data.received_at)}\n` : '') +
-      `• Status: ${data.status || 'confirmed'}\n` +
-      `\nYou'll get another notification when your subscription is activated.\n` +
-      `Questions? Login and use Live Chat!`,
+      (data.status ? `• Status: ${data.status || 'Confirmed !'}\n` : '') +
+      `Need help? Contact us on whatsapp or use Live Chat for support !`,
     link: '/user/subscriptions'
   }),
 
@@ -103,7 +90,7 @@ export const userNotificationTemplates = {
       `You have a new message from Royal TV support on ${formatDate(data.createdAt)}.\n` +
       (data.subject ? `Subject: ${data.subject}\n` : '') +
       (data.message ? `Message: ${data.message}\n` : '') +
-      `\nLogin and use Live Chat for fastest support!`,
+      `\nNeed help? Contact us on whatsapp or use Live Chat for support !`,
     link: `/user/liveChat/${data.conversation_id}`
   }),
 
@@ -114,6 +101,5 @@ export const userNotificationTemplates = {
       (data.errorTitle ? `• Error Title: ${data.errorTitle}\n` : '') +
       (data.errorMessage ? `• Error Message: ${data.errorMessage}\n` : '') +
       (data.errorDetails ? `• Details: ${data.errorDetails}\n` : '')
-    /* link: 'N/A' */
   })
 };

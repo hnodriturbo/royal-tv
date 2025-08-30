@@ -11,13 +11,13 @@
 import { useCallback, useState } from 'react';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 import useAppHandlers from '@/hooks/useAppHandlers'; // For displayMessage
-import { useT } from '@/lib/i18n/client'; // 🌐 i18n for user-facing text
+import { useTranslations, useLocale } from 'next-intl'; // 🌐 i18n for user-facing text
 
 export default function useRefreshNotifications(user_id) {
   const [loading, setLoading] = useState(false);
   const { refreshNotifications, onNotificationsList } = useSocketHub();
   const { displayMessage } = useAppHandlers();
-  const t = useT(); // 🎯 Get translator
+  const t = useTranslations(); // 🎯 Get translator
 
   const refresh = useCallback(() => {
     if (!user_id) return;
@@ -32,6 +32,7 @@ export default function useRefreshNotifications(user_id) {
       );
       stop();
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user_id, refreshNotifications, onNotificationsList, displayMessage]);
 
   return {

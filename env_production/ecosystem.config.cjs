@@ -1,4 +1,3 @@
-// ecosystem.config.cjs
 module.exports = {
   apps: [
     {
@@ -6,7 +5,10 @@ module.exports = {
       script: 'npm',
       args: 'start',
       cwd: '/root/royal-tv',
-      env: { NODE_ENV: 'production' },
+      env: {
+        NODE_ENV: 'production',
+        MESSAGES_DIR: '/root/royal-tv/messages'
+      },
       node_args: '-r dotenv/config'
     },
     {
@@ -14,7 +16,10 @@ module.exports = {
       script: 'node',
       args: 'server.js',
       cwd: '/root/royal-tv',
-      env: { NODE_ENV: 'production' },
+      env: {
+        NODE_ENV: 'production',
+        MESSAGES_DIR: '/root/royal-tv/messages'
+      },
       node_args: '-r dotenv/config'
     }
   ]

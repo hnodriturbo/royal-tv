@@ -14,7 +14,7 @@
 
 import { useSession } from 'next-auth/react'; // 🔐 Session
 import { useEffect } from 'react'; // ⏱️ Side-effects
-import { useRouter } from '@/lib/language'; // 🧭 Navigation
+import { useRouter } from '@/i18n'; // 🧭 Navigation
 import useAuthGuard from '@/hooks/useAuthGuard'; // 🚧 Protect route by role
 import SeeAllNotifications from '@/components/reusableUI/socket/SeeAllNotifications'; // 🛎️ See all notifications
 

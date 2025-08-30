@@ -1,71 +1,47 @@
 /**
- * ======================= AppProvidersLocale.js =======================
- * 🌍 Locale-aware providers shell
- * - Receives `activeLocale` from [locale]/layout
- * - Wraps UI with I18nUiProvider so all providers can read locale
- * - Preserves your exact provider order (LogPageView → ErrorAndMessage → Loader → Modal)
- * - Leaves `useT()` workflow intact; providers can also use `useUILocale()`
+ * ======================= /src/app/AppProvidersLocale.js =======================
+ * 🗣️ AppProvidersLocale (client)
+ * - Locale-scoped UI providers that need the active locale
+ * - Order matters so consumers always see their context:
+ *   Loader → ErrorAndMessage → Socket(locale) → WhatsApp(locale) → Modal(locale)
+ * - Mounts <ShowMessages/> under ErrorAndMessageProvider so toasts work globally
  */
 
 'use client';
 
 import { useContext } from 'react';
-import { I18nUiProvider } from '@/context/storage/I18nUiContext'; // 🧭 UI-locale context
-import { SocketProvider, SocketContext } from '@/context/SocketContext'; // 🔌 socket context
-import { LoaderProvider } from '@/context/LoaderContext'; // ⏳ loader
-import { ErrorAndMessageProvider } from '@/context/ErrorAndMessageContext'; // ⚠️ errors/messages
-import { ModalProvider } from '@/context/ModalContext'; // 🪟 modal system
 
-// 🧩 UI pieces (unchanged)
-import LanguageSwitcher from '@/components/i18n/LanguageSwitcher';
-import Sidebar from '@/components/Sidebar';
-import Footer from '@/components/Footer';
-import WhatsAppLogo from '@/components/ui/whatsapp/WhatsAppBS';
+// ⬇️ Contexts
+import { ErrorAndMessageProvider, ErrorAndMessageContext } from '@/context/ErrorAndMessageContext';
+import { LoaderProvider } from '@/context/LoaderContext';
+import { ModalProvider } from '@/context/ModalContext';
+import { SocketProvider } from '@/context/SocketContext';
+import WhatsApp from '@/components/ui/whatsapp/WhatsAppBS';
+
+// ⬇️ Toast surface (consumer of ErrorAndMessageContext)
 import ShowMessages from '@/components/ui/showErrorAndMessages/ShowMessages';
-import LogPageView from '@/components/reusableUI/socket/LogPageView';
 
-function AppContent({ children }) {
-  // 🧲 Read live socket state
-  const { socketConnected } = useContext(SocketContext);
-
-  return (
-    <>
-      {/* 🪵 Track all page visits when socket is ready */}
-      {socketConnected && <LogPageView />}
-
-      {/* ⚠️ → ⏳ → 🪟  (preserve exact provider order) */}
-      <ErrorAndMessageProvider>
-        <LoaderProvider>
-          <ModalProvider>
-            <div className="min-h-screen flex flex-col">
-              <div className="min-h-screen w-full">
-                <LanguageSwitcher />
-                <Sidebar />
-                <div className="lg:ml-64 flex flex-col min-h-screen">
-                  <main className="flex-1 p-2">{children}</main>
-                  <Footer />
-                </div>
-              </div>
-
-              {/* 💬 global helpers */}
-              <WhatsAppLogo />
-              <ShowMessages />
-            </div>
-          </ModalProvider>
-        </LoaderProvider>
-      </ErrorAndMessageProvider>
-    </>
-  );
+// 🛡️ Prevent hard crash if consumer renders before provider for any reason
+function SafeShowMessages() {
+  const ctx = useContext(ErrorAndMessageContext) ?? { message: null, clearMessage: () => {} };
+  const { message } = ctx; // keep hook used
+  return <ShowMessages />;
 }
 
-export default function AppProvidersLocale({ activeLocale, children }) {
-  // 🌐 Provide UI locale first so all inner providers/components can read it
+export default function AppProvidersLocale({ children, locale = 'en' }) {
   return (
-    <I18nUiProvider locale={activeLocale}>
-      {/* 🔌 Socket wraps AppContent so LogPageView can read socketConnected */}
-      <SocketProvider>
-        <AppContent>{children}</AppContent>
-      </SocketProvider>
-    </I18nUiProvider>
+    <LoaderProvider>
+      <ErrorAndMessageProvider locale={locale}>
+        <SocketProvider locale={locale}>
+          <ModalProvider locale={locale}>
+            {/* 🔔 global toasts UI */}
+            <SafeShowMessages />
+            {/* 🌳 app tree */}
+            {children}
+          </ModalProvider>
+          <WhatsApp />
+        </SocketProvider>
+      </ErrorAndMessageProvider>
+    </LoaderProvider>
   );
 }

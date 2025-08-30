@@ -11,12 +11,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { usePathname } from '@/lib/language';
+import { usePathname } from '@/i18n';
 import useSocketHub from '@/hooks/socket/useSocketHub';
-import { useTRoot } from '@/lib/i18n/client';
+import { useTranslations } from 'next-intl';
 
 const OnlineUsers = () => {
-  const t = useTRoot(); // 🌍 translator
+  const t = useTranslations(); // 🌍 translator
   const currentPathname = usePathname();
   const [onlineUsers, setOnlineUsers] = useState([]);
   const { requestOnlineUsers, onOnlineUsersUpdate } = useSocketHub();

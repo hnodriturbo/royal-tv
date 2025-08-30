@@ -1,7 +1,7 @@
 /**
  *   ======================== RefreshMessages.js ========================
  * 🔄 Reusable "Refresh Chat Messages" button for a live chat room
- * - Translated via useTRoot() 🌍
+ * - Translated via useTranslations() 🌍
  * - Emits socket refresh for provided conversation_id
  * =====================================================================
  */
@@ -9,10 +9,10 @@
 
 import { useEffect } from 'react';
 import useRefreshMessages from '@/hooks/socket/useRefreshMessages';
-import { useTRoot } from '@/lib/i18n/client'; // 🌍 i18n root translator
+import { useTranslations } from 'next-intl'; // 🌍 i18n root translator
 
 const RefreshMessages = ({ conversation_id, onRefreshed }) => {
-  const t = useTRoot(); // 🌍 translation hook
+  const t = useTranslations(); // 🌍 translation hook
 
   // 🧠 Get refresh triggers for this room
   const { requestRefresh, onRefreshed: onRefreshedHook } = useRefreshMessages(conversation_id);

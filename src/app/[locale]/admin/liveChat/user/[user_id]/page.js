@@ -3,12 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import axiosInstance from '@/lib/core/axiosInstance';
-import { Link } from '@/lib/language';
+import { Link, useRouter } from '@/i18n';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import { useSession } from 'next-auth/react';
 import ConversationActionButton from '@/components/reusableUI/ConversationActionButton';
-import { useRouter } from '@/lib/language';
 
 // Sorting imports, AutoRefresh, Pagination
 import SortDropdown from '@/components/reusableUI/SortDropdown';

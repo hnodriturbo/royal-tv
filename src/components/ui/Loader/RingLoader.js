@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { RingLoader as Spinner } from 'react-spinners'; // 🔄 third-party spinner
-import { useT } from '@/lib/i18n/client'; // 🌐 components.ringLoader.*
+import { useTranslations } from 'next-intl'; // 🌐 components.ringLoader.*
 
 /**
  * 🟢 CustomRingLoader
@@ -12,7 +12,7 @@ import { useT } from '@/lib/i18n/client'; // 🌐 components.ringLoader.*
  * • Adds a translated tooltip/title for accessibility.
  */
 const CustomRingLoader = ({ size = 'medium', color = 'blue', text = '', textClassName = '' }) => {
-  const t = useT(); // 🗣️ translator bound to current language
+  const t = useTranslations(); // 🗣️ translator bound to current language
 
   const sizeMap = {
     small: 30,

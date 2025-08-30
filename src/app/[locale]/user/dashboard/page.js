@@ -4,13 +4,13 @@ import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import useLogout from '@/hooks/useLogout';
 import useAuthGuard from '@/hooks/useAuthGuard';
-import { useRouter } from '@/lib/language';
+import { useRouter } from '@/i18n';
 
 import UserSubscriptionPanel from '@/components/reusableUI/socket/UserSubscriptionPanel';
 import NotificationCenter from '@/components/reusableUI/socket/NotificationCenter';
 import FreeTrialPanel from '@/components/reusableUI/socket/FreeTrialPanel';
 import IsAdminOnline from '@/components/reusableUI/socket/IsAdminOnline';
-import { useT } from '@/lib/i18n/client'; // 🌍 import translator
+import { useTranslations, useLocale } from 'next-intl'; // 🌍 import translator
 
 export default function UserDashboard() {
   // 🔐 Auth/session setup
@@ -20,7 +20,7 @@ export default function UserDashboard() {
   const router = useRouter();
 
   // 🗣️ Translator for root dashboard bits
-  const tRoot = useT('app.user.dashboard.page'); // 🏷️ base: app.dashboard.page
+  const t = useTranslations(); // 🏷️ base: app.dashboard.page
 
   // 🚦 Auth-redirect
   useEffect(() => {
@@ -39,7 +39,8 @@ export default function UserDashboard() {
       <div className="container-style w-10/12 lg:w-[600px] mx-auto mb-6">
         {/* 🏷️ Header, localized */}
         <div className="font-bold text-center underline text-wonderful-1 text-black lg:text-4xl text-2xl whitespace-nowrap">
-          {tRoot('welcome')} {session?.user?.name || tRoot('user')}
+          {t('app.user.dashboard.page.welcome')}{' '}
+          {session?.user?.name || t('app.user.dashboard.page.user')}
         </div>
       </div>
 

@@ -11,12 +11,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Link } from '@/lib/language';
+import { Link, useRouter } from '@/i18n';
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import { useSession } from 'next-auth/react';
 import useAuthGuard from '@/hooks/useAuthGuard';
-import { useRouter } from '@/lib/language';
 import { adminUserSortOptions, getAdminUserSortFunction } from '@/lib/utils/sorting';
 import SortDropdown from '@/components/reusableUI/SortDropdown';
 import useLocalSorter from '@/hooks/useLocalSorter';

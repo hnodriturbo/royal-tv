@@ -1,7 +1,7 @@
 'use client';
 
 import { React } from 'react';
-import { useT } from '@/lib/i18n/client'; // 🌐 components.whatsAppBS.*
+import { useTranslations } from 'next-intl'; // 🌐 components.whatsAppBS.*
 
 /**
  * 💬 WhatsAppLogo
@@ -10,7 +10,7 @@ import { useT } from '@/lib/i18n/client'; // 🌐 components.whatsAppBS.*
  * • Adds translated title + aria-label (visible tooltip on hover).
  */
 export default function WhatsAppLogo() {
-  const t = useT(); // 🗣️ translator bound to current language
+  const t = useTranslations(); // 🗣️ translator bound to current language
 
   return (
     <a

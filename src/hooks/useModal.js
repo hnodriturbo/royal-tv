@@ -1,10 +1,10 @@
-'use client';
-
-/*
+/**
  * useModal.js
  * Custom hook to access the ModalContext.
  * Provides modal state and handlers (openModal, hideModal, etc.) to any component.
  */
+
+'use client';
 
 import { useContext } from 'react';
 import { ModalContext } from '@/context/ModalContext';

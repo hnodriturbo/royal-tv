@@ -4,7 +4,7 @@
  * useConversationsList
  * --------------------
  * Hook that fetches conversations or user summaries.
- * - Translated with i18n client via useT() for all UI-facing messages
+ * - Translated with i18n client via useTranslations() for all UI-facing messages
  * - Logger stays in plain English (per your rule)
  */
 
@@ -14,7 +14,7 @@ import { useSession } from 'next-auth/react';
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useSocketHub from '@/hooks/socket/useSocketHub';
-import { useT } from '@/lib/i18n/client'; // 🌐 i18n
+import { useTranslations, useLocale } from 'next-intl'; // 🌐 i18n
 
 const defaultUser = {
   user_id: null,
@@ -49,7 +49,7 @@ const useConversationsList = ({
   pageSize = 5,
   routes = {}
 }) => {
-  const t = useT(); // 🔤
+  const t = useTranslations(); // 🔤
 
   // 1️⃣ State
   const [items, setItems] = useState([]);

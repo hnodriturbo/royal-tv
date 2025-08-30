@@ -1,3 +1,5 @@
+'use client';
+
 import useLoaderHandler from '@/hooks/useLoaderHook';
 import useMessageHandler from '@/hooks/useMessageHook';
 import { useMemo } from 'react';

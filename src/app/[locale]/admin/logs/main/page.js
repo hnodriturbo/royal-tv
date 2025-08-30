@@ -12,8 +12,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from '@/lib/language';
-import { Link } from '@/lib/language';
+import { useRouter, Link } from '@/i18n';
+
 import useAuthGuard from '@/hooks/useAuthGuard';
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
@@ -61,24 +61,6 @@ export default function AdminLogsMainPage() {
       hideLoader(); // 🧹 Clean up
     }
   };
-
-  // 👀 Fetch logs only when user is authenticated and allowed
-  useEffect(() => {
-    if (status === 'authenticated' && isAllowed) {
-      fetchLogs();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, isAllowed]); // ✅ Don't include fetchLogs!
-
-  // 🚫 Redirect if not allowed
-  useEffect(() => {
-    if (status !== 'loading' && !isAllowed && redirect) {
-      router.replace(redirect);
-    }
-  }, [status, isAllowed, redirect, router]);
-
-  // 👻 Return nothing while loading or unauthorized
-  if (!isAllowed) return null;
 
   // ✅ Countdown timer for refresh every 10 minutes
   const { AutoRefresh } = useAutoRefresh(fetchLogs, {
@@ -156,6 +138,24 @@ export default function AdminLogsMainPage() {
       }
     });
   };
+
+  // 👀 Fetch logs only when user is authenticated and allowed
+  useEffect(() => {
+    if (status === 'authenticated' && isAllowed) {
+      fetchLogs();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, isAllowed]); // ✅ Don't include fetchLogs!
+
+  // 🚫 Redirect if not allowed
+  useEffect(() => {
+    if (status !== 'loading' && !isAllowed && redirect) {
+      router.replace(redirect);
+    }
+  }, [status, isAllowed, redirect, router]);
+
+  // 👻 Return nothing while loading or unauthorized
+  if (!isAllowed) return null;
 
   return (
     <div className="flex flex-col items-center w-full">

@@ -1,11 +1,11 @@
 /**
- *   ========================= MiddlePage.js ==========================
- * 🚦 CENTRAL REDIRECT & MESSAGING HUB (v3) – loop‑safe
- * --------------------------------------------------------------------
- * 1) Waits for session to settle; if ?login=true then wait until authenticated.
- * 2) Redirects once using a guard flag.
- * 3) Always uses redirectWithMessage (toasts + loader + delay).
- * 4) Picks correct dashboard on login by role (admin/user), else '/'.
+ * ========================= /src/app/[locale]/auth/middlePage/page.js =========================
+ * 🚦 MiddlePage – central redirect & messaging hub (loop‑safe)
+ * --------------------------------------------------------------------------------------------
+ * - Wait for session to settle; handle ?login=true without ping‑pong
+ * - Choose destination by role (admin/user) or fallback to '/'
+ * - Always route through redirectWithMessage (toasts + loader + delay)
+ * - Uses i18n with full keys via a single `const t = useTranslations()`
  */
 
 'use client';
@@ -14,25 +14,25 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import useAppRedirectHandlers from '@/hooks/useAppRedirectHandlers';
-import { useT } from '@/lib/i18n/client';
+import { useTranslations, useLocale } from 'next-intl';
 
 // 🚫 Never auto-redirect to these (prevents ping-pong)
 const forbiddenRedirects = ['/auth/login', '/auth/middlePage'];
 
 export default function MiddlePage() {
-  // 🗣️ Translator for this page namespace
-  const t = useT('app.middlePage');
+  // 🌐 i18n (full-path keys only)
+  const t = useTranslations();
 
   // 🔗 Query + session + redirect helper
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const { redirectWithMessage } = useAppRedirectHandlers();
 
-  // 🔁 Guard against double redirects
+  // 🧯 Guard against double redirects
   const [alreadyRedirected, setAlreadyRedirected] = useState(false);
 
   useEffect(() => {
-    // 🛑 Don’t run twice and don’t run while session is loading
+    // 🛑 Avoid double-run and avoid running while session is loading
     if (alreadyRedirected) return;
     if (status === 'loading') return;
 
@@ -51,9 +51,9 @@ export default function MiddlePage() {
     const updateSuccess = searchParams.get('success') === 'true';
     const paymentSuccess = searchParams.get('paymentSuccess') === 'true';
 
-    // 🔒 Prevent loop on login: wait until session says "authenticated"
+    // 🔒 When logging in, wait until NextAuth truly becomes "authenticated"
     if (loginFlag && status !== 'authenticated') {
-      return; // 💤 Wait for NextAuth to flip to authenticated after signIn
+      return; // 💤 Waiting for session flip
     }
 
     // 🎯 Compute default target from role
@@ -61,7 +61,7 @@ export default function MiddlePage() {
     if (session?.user?.role === 'admin') defaultTarget = '/admin/dashboard';
     if (session?.user?.role === 'user') defaultTarget = '/user/dashboard';
 
-    // 🧭 Respect redirectTo when safe
+    // 🧭 Respect redirectTo when it is safe
     let chosenTarget = defaultTarget;
     if (
       redirectToParam &&
@@ -77,10 +77,10 @@ export default function MiddlePage() {
     const displayName = session?.user?.name || 'User';
 
     if (status === 'authenticated') {
-      // 🎉 Login just happened → go to role dashboard (or safe redirectTo)
+      // 🎉 Login success → go to role dashboard (or safe redirectTo)
       if (loginFlag) {
         feedbackMessage = t(
-          'messages.welcome',
+          'app.middlePage.messages.welcome',
           { name: displayName },
           `Welcome ${displayName}! Redirecting…`
         );
@@ -90,7 +90,7 @@ export default function MiddlePage() {
       else if (logoutFlag) {
         signOut({ redirect: false });
         feedbackMessage = t(
-          'messages.logoutSuccess',
+          'app.middlePage.messages.logoutSuccess',
           {},
           'Logout successful. Redirecting to Home…'
         );
@@ -100,7 +100,7 @@ export default function MiddlePage() {
       // ✅ Profile updated
       else if (profileUpdated && updateSuccess) {
         feedbackMessage = t(
-          'messages.profileUpdated',
+          'app.middlePage.messages.profileUpdated',
           {},
           'Profile updated successfully! Redirecting…'
         );
@@ -109,7 +109,7 @@ export default function MiddlePage() {
       // ✅ Password updated
       else if (profilePasswordUpdated && updateSuccess) {
         feedbackMessage = t(
-          'messages.passwordUpdated',
+          'app.middlePage.messages.passwordUpdated',
           {},
           'Profile Password updated successfully! Redirecting…'
         );
@@ -118,7 +118,7 @@ export default function MiddlePage() {
       // 💳 Payment success
       else if (paymentSuccess) {
         feedbackMessage = t(
-          'messages.paymentComplete',
+          'app.middlePage.messages.paymentComplete',
           {},
           '✅ Payment complete! Your subscription is being created and pending admin approval.'
         );
@@ -128,7 +128,11 @@ export default function MiddlePage() {
       }
       // ⛔️ Role denied on an authenticated user (edge)
       else if (adminDenied || userDenied) {
-        feedbackMessage = t('messages.accessDenied', {}, 'Access denied for this section.');
+        feedbackMessage = t(
+          'app.middlePage.messages.accessDenied',
+          {},
+          'Access denied for this section.'
+        );
         uiColor = 'error';
         chosenTarget = '/';
       }
@@ -136,7 +140,7 @@ export default function MiddlePage() {
       // 🚷 Not authenticated scenarios
       if (logoutFlag) {
         feedbackMessage = t(
-          'messages.logoutSuccess',
+          'app.middlePage.messages.logoutSuccess',
           {},
           'Logout successful. Redirecting to Home…'
         );
@@ -144,7 +148,7 @@ export default function MiddlePage() {
         chosenTarget = '/';
       } else if (notLoggedInFlag || guestFlag) {
         feedbackMessage = t(
-          'messages.notAuthorized',
+          'app.middlePage.messages.notAuthorized',
           {},
           'You are not authorized! Redirecting to login…'
         );
@@ -152,7 +156,7 @@ export default function MiddlePage() {
         chosenTarget = '/auth/signin';
       } else if (adminDenied || userDenied) {
         feedbackMessage = t(
-          'messages.accessDeniedLogin',
+          'app.middlePage.messages.accessDeniedLogin',
           {},
           'Access denied! Redirecting to login…'
         );
@@ -161,17 +165,21 @@ export default function MiddlePage() {
       } else if (errorCode) {
         const errorKey =
           errorCode === 'CredentialsSignin' || errorCode === 'Configuration'
-            ? 'messages.badCredentials'
-            : 'messages.unexpectedError';
+            ? 'app.middlePage.messages.badCredentials'
+            : 'app.middlePage.messages.unexpectedError';
         feedbackMessage = t(errorKey, {}, 'Unexpected error. Please try again.');
         uiColor = 'error';
         chosenTarget = '/auth/signin';
       }
     }
 
-    // 🧭 404 handling
+    // 🧭 Handle 404 redirect with info message
     if (notFoundFlag) {
-      feedbackMessage = t('messages.pageMissing', {}, 'Page does not exist. Redirecting to Home…');
+      feedbackMessage = t(
+        'app.middlePage.messages.pageMissing',
+        {},
+        'Page does not exist. Redirecting to Home…'
+      );
       uiColor = 'info';
       chosenTarget = '/';
     }
@@ -193,7 +201,7 @@ export default function MiddlePage() {
     status,
     session,
     alreadyRedirected,
-    redirectWithMessage /* ✅ never add t here */
+    redirectWithMessage /* 🧠 never add t here */
   ]);
 
   // 👻 No UI, just logic

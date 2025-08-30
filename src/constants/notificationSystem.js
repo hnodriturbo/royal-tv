@@ -32,7 +32,7 @@ function mapUserData(user = {}) {
 }
 
 // 🧩 Merge user and payload into a single object
-export function mergeUserAndPayload(user = {}, payload = {}) {
+function mergeUserAndPayload(user = {}, payload = {}) {
   // 🟢 User fields merged first, payload fields can overwrite or add
   return { ...mapUserData(user), ...payload };
 }
@@ -314,10 +314,10 @@ export const adminNotificationBuilder = {
 };
 
 // 🧩 GENERIC DIRECT USE HELPERS – Use these for generic lookup by type+event
-export function getUserNotification(type, event, data) {
+function getUserNotification(type, event, data) {
   return getNotificationTemplate(type, event, data, false);
 }
-export function getAdminNotification(type, event, data) {
+function getAdminNotification(type, event, data) {
   return getNotificationTemplate(type, event, data, true);
 }
 
@@ -343,7 +343,7 @@ function getNotificationTemplate(type, event, data = {}, isAdmin = false) {
   };
 }
 
-// 🧩 EXPORT EVERYTHING – Centralized for easy import elsewhere
+/* // 🧩 EXPORT EVERYTHING – Centralized for easy import elsewhere
 export default {
   NotificationType,
   userNotificationBuilder,
@@ -351,4 +351,14 @@ export default {
   getUserNotification,
   getAdminNotification,
   mergeUserAndPayload
+}; */
+const notificationSystem = {
+  NotificationType,
+  userNotificationBuilder,
+  adminNotificationBuilder,
+  getUserNotification,
+  getAdminNotification,
+  mergeUserAndPayload
 };
+
+export default notificationSystem;
