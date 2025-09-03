@@ -10,7 +10,7 @@ import UserSubscriptionPanel from '@/components/reusableUI/socket/UserSubscripti
 import NotificationCenter from '@/components/reusableUI/socket/NotificationCenter';
 import FreeTrialPanel from '@/components/reusableUI/socket/FreeTrialPanel';
 import IsAdminOnline from '@/components/reusableUI/socket/IsAdminOnline';
-import { useTranslations, useLocale } from 'next-intl'; // 🌍 import translator
+import { useTranslations } from 'next-intl'; // 🌍 import translator
 
 export default function UserDashboard() {
   // 🔐 Auth/session setup

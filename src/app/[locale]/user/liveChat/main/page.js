@@ -13,7 +13,7 @@
 
 import logger from '@/lib/core/logger'; // 🪵 logging (not translated)
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from '@/i18n';
+import { Link, useRouter } from '@/i18n';
 import { useSession } from 'next-auth/react';
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
@@ -184,14 +184,13 @@ const UserConversations = () => {
                     </td>
                     <td className="border px-4 py-2">
                       <div className="flex gap-4 justify-center">
-                        <button
-                          onClick={() =>
-                            router.push(`/user/liveChat/${conversationItem.conversation_id}`)
-                          }
-                          className="bg-blue-500 text-white px-3 py-1 rounded-xl hover:bg-blue-600 transition text-sm"
+                        <Link
+                          href={`/user/liveChat/${conversationItem.conversation_id}`}
+                          className="bg-blue-500 text-white px-3 py-1 rounded-xl hover:bg-blue-600 transition text-sm inline-flex items-center gap-2"
                         >
-                          {t('app.user.liveChat.main.view')}
-                        </button>
+                          <span aria-hidden="true">💬</span>
+                          <span>{String(t('app.user.liveChat.main.view'))}</span>
+                        </Link>
                         <ConversationActionButton
                           action="delete"
                           user_id={userId}

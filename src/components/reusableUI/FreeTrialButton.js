@@ -19,7 +19,7 @@ import useModal from '@/hooks/useModal'; // 🌟 Modal hook for confirmation
 import useAppHandlers from '@/hooks/useAppHandlers'; // 🛠️ App handler for loader/messages
 import axiosInstance from '@/lib/core/axiosInstance';
 import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
-import { useTranslations, useLocale } from 'next-intl'; // 🌐 i18n
+import { useTranslations } from 'next-intl'; // 🌐 i18n
 
 export default function FreeTrialButton({ user_id, refreshStatus }) {
   const t = useTranslations(); // 🔤
@@ -78,6 +78,7 @@ export default function FreeTrialButton({ user_id, refreshStatus }) {
 
   return (
     <button
+      type="button"
       className="w-full py-4 mt-4 text-xl font-bold rounded-2xl shadow-lg 
                 flex items-center justify-center transition-all duration-300 
                 bg-purple-600 hover:bg-purple-800 active:bg-purple-900 
@@ -90,13 +91,12 @@ export default function FreeTrialButton({ user_id, refreshStatus }) {
         <>
           {/* ⏳ Loading indicator */}
           <span className="animate-spin mr-3">⏳</span>
-          {t('components.freeTrialButton.loading_label')}
+          {String(t('components.freeTrialButton.loading_label'))}
         </>
       ) : (
         <>
-          {/* 🎟️ Button label */}
-          <span>🎟️</span>
-          <span className="ml-3">{t('components.freeTrialButton.button_label')}</span>
+          <span aria-hidden="true">🎟️</span>
+          <span>{String(t('components.freeTrialButton.button_label'))}</span>
         </>
       )}
     </button>

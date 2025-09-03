@@ -1,19 +1,21 @@
 /**
- *   ====================== AdminEditFreeTrialPage.js ======================
- * 🎁
- * HEADLINE: Admin Free Trial Detail/Edit
- * - Shows and edits a single free trial for a user.
- * - Allows status, username, password, URL, etc, to be changed.
- * - User info displayed at top.
- * - Uses admin guard, loader, and modal for delete.
- * ========================================================================
+ * ========== /app/[locale]/admin/freeTrials/[trial_id]/page.js ==========
+ * 🎁 ADMIN → EDIT FREE TRIAL (Client Component)
+ * - Loads one free trial by trial_id, allows editing fields and status.
+ * - Emits notifications when status flips to "active".
+ * - Text translations → next-intl useTranslations().
+ * - Navigation → @/i18n useRouter().
+ * ======================================================================
  */
 
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { useRouter } from '@/i18n';
+import { useRouter } from '@/i18n'; // 🌍 router
+import { useTranslations } from 'next-intl'; // 🌐 i18n
+import { Link } from '@/i18n';
+
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useAuthGuard from '@/hooks/useAuthGuard';
@@ -23,302 +25,314 @@ import useSocketHub from '@/hooks/socket/useSocketHub';
 import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
 
 export default function AdminEditFreeTrialPage() {
-  // 🦸 Admin session/auth setup
+  // 🌐 translator
+  const t = useTranslations();
+
+  // 🦸 admin session/auth setup
   const { data: session, status } = useSession();
   const { displayMessage, showLoader, hideLoader } = useAppHandlers();
-  const [loading, setLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { isAllowed, redirect } = useAuthGuard('admin');
   const { openModal, hideModal } = useModal();
   const router = useRouter();
   const params = useParams();
   const { trial_id } = params;
+
+  // 📡 socket helpers
   const { freeTrialStatusUpdate } = useSocketHub();
   const { createFreeTrialActivatedNotification } = useCreateNotifications();
-  // 📝 State
+
+  // 📝 local state
   const [freeTrial, setFreeTrial] = useState(null);
   const [formData, setFormData] = useState({});
   const [previousStatus, setPreviousStatus] = useState('');
 
-  // 1️⃣ Fetch Free Trial
+  // 🔁 fetch single free trial
   const fetchFreeTrial = async () => {
     try {
-      showLoader({ text: 'Loading free trial...' });
+      showLoader({ text: t('app.admin.freeTrials.edit.loadingTrial') });
       const response = await axiosInstance.get(`/api/admin/freeTrials/${trial_id}`);
       setFreeTrial(response.data.freeTrial);
       setFormData(response.data.freeTrial);
       setPreviousStatus(response.data.freeTrial.status);
-    } catch (err) {
-      displayMessage('❌ Failed to load free trial', 'error');
+    } catch {
+      displayMessage(t('app.admin.freeTrials.edit.loadFailed'), 'error');
     } finally {
       hideLoader();
     }
   };
 
-  // 2️⃣ Handle input change
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  // ✍️ change handler
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((current) => ({ ...current, [name]: value }));
   };
 
-  /**
-   * Converts a Date (or ISO string) to "YYYY-MM-DDTHH:mm" in local time,
-   * perfect for <input type="datetime-local" /> value.
-   */
+  // ⏱️ convert Date/ISO → datetime-local
   function toDatetimeLocalString(dateInput) {
     if (!dateInput) return '';
     const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-
     const pad = (n) => n.toString().padStart(2, '0');
-
-    const year = date.getFullYear();
-    const month = pad(date.getMonth() + 1);
-    const day = pad(date.getDate());
-    const hours = pad(date.getHours());
-    const minutes = pad(date.getMinutes());
-
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+      date.getHours()
+    )}:${pad(date.getMinutes())}`;
   }
 
-  // 3️⃣ Handle the Update process
+  // 💾 update process
   const handleUpdate = async () => {
-    showLoader({ text: 'Updating free trial...' });
-    setLoading(true);
+    showLoader({ text: t('app.admin.freeTrials.edit.updatingTrial') });
+    setIsSaving(true);
     try {
       const { user, ...patchData } = formData;
       if (patchData.startDate) patchData.startDate = new Date(patchData.startDate).toISOString();
       if (patchData.endDate) patchData.endDate = new Date(patchData.endDate).toISOString();
 
-      // 1️⃣ PATCH: get response with updated trial & previousStatus
       const response = await axiosInstance.patch(`/api/admin/freeTrials/${trial_id}`, patchData);
-
       const { trial: updatedTrial, previousStatus } = response.data;
 
-      displayMessage('✅ Free trial updated successfully', 'success');
+      displayMessage(t('app.admin.freeTrials.edit.updateSuccess'), 'success');
 
-      // 2️⃣ Notify if status changed to active
       if (previousStatus !== updatedTrial.status && updatedTrial.status === 'active') {
-        // 🟢 1. Send notification to user and admin
         createFreeTrialActivatedNotification(updatedTrial.user, updatedTrial);
-        // 🟢 2. Emit a status update socket event to user, so their UI refreshes instantly
         freeTrialStatusUpdate(updatedTrial.user.user_id);
       }
 
       setTimeout(() => {
         router.push('/admin/freeTrials/main');
-      }, 2000);
-    } catch (err) {
-      displayMessage('❌ Failed to update free trial', 'error');
+      }, 1200);
+    } catch {
+      displayMessage(t('app.admin.freeTrials.edit.updateFailed'), 'error');
     } finally {
       hideLoader();
-      setLoading(false);
+      setIsSaving(false);
     }
   };
 
-  // 4️⃣ Handle delete (modal)
+  // 🗑️ delete with modal
   const handleDelete = () => {
     openModal('deleteFreeTrial', {
-      title: 'Delete Free Trial',
-      description: 'Are you sure you want to delete this free trial? This cannot be undone.',
-      confirmButtonText: 'Delete',
+      title: t('app.admin.freeTrials.edit.deleteModal.title'),
+      description: t('app.admin.freeTrials.edit.deleteModal.description'),
+      confirmButtonText: t('app.admin.freeTrials.edit.deleteModal.confirm'),
       confirmButtonType: 'Danger',
-      cancelButtonText: 'Cancel',
+      cancelButtonText: t('app.admin.freeTrials.edit.deleteModal.cancel'),
       onConfirm: async () => {
         try {
-          showLoader({ text: 'Deleting free trial...' });
+          showLoader({ text: t('app.admin.freeTrials.edit.deletingTrial') });
           await axiosInstance.delete(`/api/admin/freeTrials/${trial_id}`);
-          displayMessage('✅ Free trial deleted!', 'success');
+          displayMessage(t('app.admin.freeTrials.edit.deletedSuccess'), 'success');
           hideModal();
-          router.replace('/admin/freeTrial/main');
-        } catch (err) {
-          displayMessage('❌ Delete failed: ' + err.message, 'error');
+          router.replace('/admin/freeTrials/main');
+        } catch {
+          displayMessage(t('app.admin.freeTrials.edit.deleteFailed'), 'error');
         } finally {
           hideLoader();
         }
       },
       onCancel: () => {
-        displayMessage('🛑 Deletion cancelled.', 'info');
+        displayMessage(t('app.admin.freeTrials.edit.deletionCancelled'), 'info');
         hideModal();
       }
     });
   };
 
+  // 🗓️ keep endDate = startDate + 1 day
   useEffect(() => {
     if (formData.startDate) {
-      // Calculate endDate (startDate + 1 day) and set it in state
-      setFormData((prev) => ({
-        ...prev,
-        endDate: new Date(new Date(prev.startDate).getTime() + 24 * 60 * 60 * 1000).toISOString()
+      setFormData((current) => ({
+        ...current,
+        endDate: new Date(new Date(current.startDate).getTime() + 86400000).toISOString()
       }));
     }
   }, [formData.startDate]);
 
-  // 5️⃣ Status badge
-  const renderStatusBadge = (status) => {
-    const colorMap = {
-      active: 'bg-green-600',
-      pending: 'bg-yellow-500',
-      disabled: 'bg-gray-500'
-    };
-    return (
-      <span
-        className={`text-white text-center px-4 py-2 rounded text-sm ${colorMap[status] || 'bg-gray-400'}`}
-      >
-        {status}
-      </span>
-    );
-  };
-
-  // 6️⃣ useEffect to fetch & guard
+  // 🧭 fetch once
   useEffect(() => {
     if (trial_id && status === 'authenticated') {
       fetchFreeTrial();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trial_id, status]);
 
-  // 4️⃣ Redirect if not allowed
+  // 🔒 redirect if forbidden
   useEffect(() => {
     if (status !== 'loading' && !isAllowed && redirect) {
       router.replace(redirect);
     }
   }, [status, isAllowed, redirect, router]);
 
-  // 7️⃣ Render
+  // 🛡️ block
   if (!isAllowed || !freeTrial) return null;
 
   return (
     <div className="flex flex-col items-center justify-center w-full">
       <div className="container-style">
+        {/* 🏷️ title */}
         <h1 className="text-2xl font-bold mb-4">
-          Edit Free Trial For {freeTrial.user?.name || 'unknown user'}
+          {t('app.admin.freeTrials.edit.title', {
+            name: freeTrial.user?.name || t('app.admin.freeTrials.edit.unknownUser')
+          })}
         </h1>
-        {/* 👤 User info */}
+
+        {/* 👤 user info */}
         {freeTrial.user && (
           <div className="flex justify-center">
             <div className="container-style border rounded-xl shadow-md p-6 mb-6 w-1/2">
-              <h2 className="text-lg font-bold mb-2">👤 User Information</h2>
+              <h2 className="text-lg font-bold mb-2">
+                👤 {t('app.admin.freeTrials.edit.userInfo')}
+              </h2>
               <p>
-                <strong>Name:</strong> {freeTrial.user.name || 'N/A'}
+                <strong>{t('app.admin.freeTrials.edit.field.name')}:</strong>{' '}
+                {freeTrial.user.name || 'N/A'}
               </p>
               <p>
-                <strong>Email:</strong> {freeTrial.user.email || 'N/A'}
+                <strong>{t('app.admin.freeTrials.edit.field.email')}:</strong>{' '}
+                {freeTrial.user.email || 'N/A'}
               </p>
               <p>
-                <strong>WhatsApp:</strong> {freeTrial.user.whatsapp || 'N/A'}
+                <strong>{t('app.admin.freeTrials.edit.field.whatsapp')}:</strong>{' '}
+                {freeTrial.user.whatsapp || 'N/A'}
               </p>
               <p>
-                <strong>Telegram:</strong> {freeTrial.user.telegram || 'N/A'}
+                <strong>{t('app.admin.freeTrials.edit.field.telegram')}:</strong>{' '}
+                {freeTrial.user.telegram || 'N/A'}
               </p>
               <p>
-                <strong>User ID:</strong> {freeTrial.user.user_id}
+                <strong>{t('app.admin.freeTrials.edit.field.userId')}:</strong>{' '}
+                {freeTrial.user.user_id}
               </p>
             </div>
           </div>
         )}
 
-        {/* ================= Responsive Edit Block ================= */}
+        {/* 🧱 edit form */}
         <div className="flex flex-col items-center justify-center w-full">
           <div className="w-full max-w-2xl bg-gray-900/90 border border-gray-700 rounded-2xl shadow-md p-4 sm:p-6 md:p-8 mb-8">
-            {/* 1️⃣ Status badge */}
+            {/* 🏷️ status badge */}
             <div className="flex flex-col lg:flex-row items-start lg:items-center w-full gap-2 mb-4">
               <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">
-                Current Status
+                {t('app.admin.freeTrials.edit.field.currentStatus')}
               </label>
-              <div>{renderStatusBadge(formData.status)}</div>
+              <div>
+                <span
+                  className={`text-white text-center px-4 py-2 rounded text-sm ${
+                    formData.status === 'active'
+                      ? 'bg-green-600'
+                      : formData.status === 'pending'
+                        ? 'bg-yellow-500'
+                        : 'bg-gray-500'
+                  }`}
+                >
+                  {t(`app.admin.freeTrials.status.${formData.status || 'disabled'}`)}
+                </span>
+              </div>
             </div>
-            {/* 2️⃣ Username */}
+
+            {/* 🧾 username */}
             <div className="flex flex-col lg:flex-row items-start lg:items-center w-full gap-2 mb-4">
               <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">
-                Free Trial Username
+                {t('app.admin.freeTrials.edit.field.freeTrialUsername')}
               </label>
               <input
                 className="input w-full lg:max-w-md"
                 name="free_trial_username"
-                placeholder="Username"
+                placeholder={t('app.admin.freeTrials.edit.placeholder.username')}
                 value={formData.free_trial_username || ''}
-                onChange={handleChange}
+                onChange={handleInputChange}
               />
             </div>
-            {/* 3️⃣ Password */}
+
+            {/* 🔐 password */}
             <div className="flex flex-col lg:flex-row items-start lg:items-center w-full gap-2 mb-4">
               <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">
-                Free Trial Password
+                {t('app.admin.freeTrials.edit.field.freeTrialPassword')}
               </label>
               <input
                 className="input w-full lg:max-w-md"
                 name="free_trial_password"
-                placeholder="Password"
+                placeholder={t('app.admin.freeTrials.edit.placeholder.password')}
                 value={formData.free_trial_password || ''}
-                onChange={handleChange}
+                onChange={handleInputChange}
               />
             </div>
-            {/* 4️⃣ Portal URL */}
+
+            {/* 🌐 portal URL */}
             <div className="flex flex-col lg:flex-row items-start lg:items-center w-full gap-2 mb-4">
-              <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">Portal URL</label>
+              <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">
+                {t('app.admin.freeTrials.edit.field.portalUrl')}
+              </label>
               <input
                 className="input w-full lg:max-w-md"
                 name="free_trial_url"
-                placeholder="Portal URL"
+                placeholder={t('app.admin.freeTrials.edit.placeholder.portalUrl')}
                 value={formData.free_trial_url || ''}
-                onChange={handleChange}
+                onChange={handleInputChange}
               />
             </div>
-            {/* 5️⃣ Other Short Info */}
+
+            {/* 📝 other short info */}
             <div className="flex flex-col lg:flex-row items-start lg:items-center w-full gap-2 mb-4">
               <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">
-                Other Short Info
+                {t('app.admin.freeTrials.edit.field.otherShortInfo')}
               </label>
               <input
                 className="input w-full lg:max-w-md"
                 name="free_trial_other"
-                placeholder="Other short info"
+                placeholder={t('app.admin.freeTrials.edit.placeholder.otherShortInfo')}
                 value={formData.free_trial_other || ''}
-                onChange={handleChange}
+                onChange={handleInputChange}
               />
             </div>
-            {/* 6️⃣ Additional Details */}
+
+            {/* 📄 additional details */}
             <div className="flex flex-col lg:flex-row items-start lg:items-center w-full gap-2 mb-4">
               <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">
-                Additional Details
+                {t('app.admin.freeTrials.edit.field.additionalDetails')}
               </label>
               <textarea
                 className="input w-full lg:max-w-md"
                 name="additional_info"
-                placeholder="Additional details"
+                placeholder={t('app.admin.freeTrials.edit.placeholder.additionalDetails')}
                 value={formData.additional_info || ''}
-                onChange={handleChange}
+                onChange={handleInputChange}
               />
             </div>
-            {/* 7️⃣ Status Select */}
+
+            {/* 🔄 status select */}
             <div className="flex flex-col lg:flex-row items-start lg:items-center w-full gap-2 mb-4">
-              <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">Status</label>
+              <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">
+                {t('app.admin.freeTrials.edit.field.status')}
+              </label>
               <select
                 className="input w-full lg:max-w-md"
                 name="status"
                 value={formData.status || ''}
-                onChange={handleChange}
+                onChange={handleInputChange}
               >
-                <option value="">Select Status</option>
-                <option value="active">✅ Active</option>
-                <option value="pending">🕓 Pending</option>
-                <option value="disabled">🚫 Disabled</option>
+                <option value="">{t('app.admin.freeTrials.edit.selectStatus')}</option>
+                <option value="active">✅ {t('app.admin.freeTrials.status.active')}</option>
+                <option value="pending">🕓 {t('app.admin.freeTrials.status.pending')}</option>
+                <option value="disabled">🚫 {t('app.admin.freeTrials.status.disabled')}</option>
               </select>
             </div>
-            {/* 8️⃣ Start Date (editable) */}
+
+            {/* 🗓️ start date */}
             <div className="flex flex-col lg:flex-row items-start lg:items-center w-full gap-2 mb-4">
-              <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">Start Date</label>
+              <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0">
+                {t('app.admin.freeTrials.edit.field.startDate')}
+              </label>
               <input
                 type="datetime-local"
                 className="input w-full"
                 name="startDate"
                 value={toDatetimeLocalString(formData.startDate)}
-                onChange={handleChange}
+                onChange={handleInputChange}
               />
             </div>
-            {/* 9️⃣ End Date (informational only, not editable) */}
+
+            {/* ⏲️ end date (auto) */}
             <div className="flex flex-col lg:flex-row items-start lg:items-center w-full gap-2 mb-4">
               <label className="block font-semibold min-w-[160px] mb-1 lg:mb-0 text-gray-400">
-                End Date (auto)
+                {t('app.admin.freeTrials.edit.field.endDateAuto')}
               </label>
               <input
                 type="datetime-local"
@@ -327,7 +341,7 @@ export default function AdminEditFreeTrialPage() {
                 value={
                   formData.startDate
                     ? toDatetimeLocalString(
-                        new Date(new Date(formData.startDate).getTime() + 24 * 60 * 60 * 1000)
+                        new Date(new Date(formData.startDate).getTime() + 86400000)
                       )
                     : ''
                 }
@@ -336,42 +350,52 @@ export default function AdminEditFreeTrialPage() {
                 tabIndex={-1}
               />
             </div>
-            {/* 🔟 Buttons */}
+
+            {/* 🔘 buttons */}
             <div className="flex flex-row gap-2 mt-6 w-full justify-between">
               <button
+                type="button"
                 onClick={handleDelete}
                 className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 w-1/4"
-                type="button"
               >
-                Delete Trial
+                <span className="inline-flex items-center gap-2">
+                  <span aria-hidden="true">🗑️</span>
+                  <span>{String(t('app.admin.freeTrials.edit.deleteTrial'))}</span>
+                </span>
               </button>
               <button
                 onClick={handleUpdate}
                 className={`bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-1/4 transition-all duration-200 ${
-                  loading ? 'opacity-60 cursor-not-allowed' : ''
+                  isSaving ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
                 type="button"
-                disabled={loading}
+                disabled={isSaving}
               >
-                {loading ? (
-                  // Show a spinner or loader text
-                  <>
-                    <span className="loader mr-2"></span> Saving...
-                  </>
-                ) : (
-                  'Save Changes'
-                )}
+                <span className="inline-flex items-center gap-2">
+                  {isSaving && <span className="loader mr-2" aria-hidden="true"></span>}
+                  <span>
+                    {String(
+                      isSaving
+                        ? t('app.admin.freeTrials.edit.saving')
+                        : t('app.admin.freeTrials.edit.saveChanges')
+                    )}
+                  </span>
+                </span>
               </button>
             </div>
           </div>
+
+          {/* 🔙 back to list */}
           <div className="w-full flex justify-center">
-            <button
-              className="btn-secondary btn-lg"
-              onClick={() => router.push('/admin/freeTrials/main')}
-              type="button"
+            <Link
+              href="/admin/freeTrials/main"
+              className="btn-secondary inline-flex items-center gap-2"
             >
-              Return To Free Trials
-            </button>
+              <span className="inline-flex items-center gap-2">
+                <span aria-hidden="true">←</span>
+                <span>{String(t('app.admin.freeTrials.edit.returnToList'))}</span>
+              </span>
+            </Link>
           </div>
         </div>
       </div>

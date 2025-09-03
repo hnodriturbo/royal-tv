@@ -1,40 +1,44 @@
 /**
- *   ======================== page.js =========================
- * 👑 ADMIN NOTIFICATIONS
- * ----------------------------------------------------------
- * Shows all notifications for admins in a paginated, protected page.
- * =================================================================
- * 📦 PROPS: None (uses session, hooks)
- * =================================================================
- * 📌 USAGE: /admin/notifications
- * =================================================================
+ * ========== /app/[locale]/admin/notifications/page.js ==========
+ * 🔔 Admin Notifications
+ * - Protected admin page rendering SeeAllNotifications (admin scope).
+ * - Uses next-intl for the heading only; widget handles its own UI.
+ * ===============================================================
  */
 
 'use client';
 
-import { useSession } from 'next-auth/react'; // 🔐 Session
-import { useEffect } from 'react'; // ⏱️ Side-effects
-import { useRouter } from '@/i18n'; // 🧭 Navigation
-import useAuthGuard from '@/hooks/useAuthGuard'; // 🚧 Protect route by role
-import SeeAllNotifications from '@/components/reusableUI/socket/SeeAllNotifications'; // 🛎️ See all notifications
+import { useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from '@/i18n';
+import { useTranslations } from 'next-intl';
+
+import useAuthGuard from '@/hooks/useAuthGuard';
+import SeeAllNotifications from '@/components/reusableUI/socket/SeeAllNotifications';
 
 export default function AdminNotificationsPage() {
-  const { data: session, status } = useSession();
+  // 🌐 translator
+  const t = useTranslations();
+
+  // 🔐 auth
+  const { status } = useSession();
   const { isAllowed, redirect } = useAuthGuard('admin');
   const router = useRouter();
 
+  // 🚦 forbidden → redirect
   useEffect(() => {
-    // 🚦 Redirect if unauthorized
     if (status !== 'loading' && !isAllowed && redirect) {
       router.replace(redirect);
     }
   }, [status, isAllowed, redirect, router]);
 
-  if (!isAllowed) return null; // 🛑 Wait until allowed
+  if (!isAllowed) return null;
 
   return (
     <div className="flex flex-col items-center w-full py-6">
-      {/* 👑 SeeAllNotifications for admin */}
+      {/* 🏷️ title */}
+      <h1 className="text-2xl font-bold mb-4">{t('app.admin.notifications.title')}</h1>
+      {/* 🛎️ list */}
       <SeeAllNotifications userRole="admin" />
     </div>
   );

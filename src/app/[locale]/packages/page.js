@@ -12,7 +12,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useTranslations, useLocale } from 'next-intl'; // 🌍 i18n access
+import { useTranslations } from 'next-intl'; // 🌍 i18n access
 import PackagesGrid from '@/components/packages/data/packages'; // 🧱 default export = grid component
 import Guide from '@/components/packages/data/guide'; // 📘 central guide
 
@@ -41,6 +41,6 @@ export default function AllPackagesPage() {
 
       {/* 📘 step-by-step guide (reused component) */}
       <Guide />
-    </div>
-  );
+    </div>);
+
 }

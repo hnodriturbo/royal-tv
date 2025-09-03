@@ -10,9 +10,10 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useParams } from 'next/navigation';
-import { useRouter } from '@/i18n';
+
+import { Link, useRouter } from '@/i18n';
 import { useSession } from 'next-auth/react';
+import { useTranslations } from 'next-intl'; // 🌍 translator root (no namespace)
 
 import useAuthGuard from '@/hooks/useAuthGuard';
 import axiosInstance from '@/lib/core/axiosInstance';
@@ -22,7 +23,6 @@ import LiveChatRoom from '@/components/reusableUI/socket/LiveChatRoom';
 import IsAdminOnline from '@/components/reusableUI/socket/IsAdminOnline';
 import useModal from '@/hooks/useModal';
 import useRefreshMessages from '@/hooks/socket/useRefreshMessages';
-import { useTranslations } from 'next-intl'; // 🌍 translator root (no namespace)
 
 export default function UserConversationDetailsPage() {
   // 🗣️ Use root translator; always call full paths
@@ -215,36 +215,31 @@ export default function UserConversationDetailsPage() {
                     const unreadBg = 'bg-purple-700 text-white hover:bg-purple-500';
 
                     return (
-                      <button
-                        key={conversationItem.conversation_id}
-                        onClick={() =>
-                          router.replace(`/user/liveChat/${conversationItem.conversation_id}`)
-                        }
-                        className={`px-2 py-3 rounded-lg text-xs font-bold w-full transition-colors border
-                          ${isCurrent ? 'border-2 border-green-300' : 'border border-transparent'}
-                          ${isUnread ? unreadBg : readBg}
-                        `}
-                        style={{ minWidth: 90, width: '100%' }}
+                      <Link
+                        href={`/user/liveChat/${conversationItem.conversation_id}`}
+                        className="px-2 py-3 rounded-lg text-xs font-bold w-full transition-colors border"
                         title={
                           isUnread
                             ? t('app.user.liveChat.conversation.tooltip_unread')
                             : t('app.user.liveChat.conversation.tooltip_all_read')
                         }
                       >
-                        {/* 🏷️ Subject with fallback */}
-                        {conversationItem.subject || t('app.user.liveChat.conversation.no_subject')}
-
-                        {/* 🔔 Unread badge with pluralization */}
-                        {isUnread && (
-                          <span className="inline-block ml-2 px-2 py-0.5 rounded-full bg-blue-900 text-white text-[14px] font-bold shadow">
-                            {conversationItem.unreadCount === 1
-                              ? t('app.user.liveChat.conversation.unread_badge_one')
-                              : t('app.user.liveChat.conversation.unread_badge_other', {
-                                  count: conversationItem.unreadCount
-                                })}
+                        <span className="inline-flex items-center gap-2">
+                          <span>
+                            {conversationItem.subject ||
+                              t('app.user.liveChat.conversation.no_subject')}
                           </span>
-                        )}
-                      </button>
+                          {isUnread && (
+                            <span className="inline-block ml-2 px-2 py-0.5 rounded-full bg-blue-900 text-white text-[14px] font-bold shadow">
+                              {conversationItem.unreadCount === 1
+                                ? t('app.user.liveChat.conversation.unread_badge_one')
+                                : t('app.user.liveChat.conversation.unread_badge_other', {
+                                    count: conversationItem.unreadCount
+                                  })}
+                            </span>
+                          )}
+                        </span>
+                      </Link>
                     );
                   })}
               </div>

@@ -4,7 +4,7 @@ import { useRef, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from '@/i18n';
 import useAppHandlers from '@/hooks/useAppHandlers';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 const useAuthGuard = (requiredRole) => {
   const { data: session, status } = useSession();

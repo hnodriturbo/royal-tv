@@ -9,10 +9,10 @@
  * ===============================================================
  */
 
-import notificationSystem from '../constants/notificationSystem.js'; // 🧩 English templates
-import prisma from '../lib/core/prisma.js'; // 🗄️ DB for notifications
-import { sendEmailToAdmin } from '../lib/email/sendEmailToAdmin.js'; // ✉️ admin emails
-import { sendEmailToUser } from '../lib/email/sendEmailToUser.js'; // ✉️ user emails
+import notificationSystem from '../../src/constants/notificationSystem.js'; // 🧩 English templates
+import prisma from '../../src/lib/core/prisma.js'; // 🗄️ DB for notifications
+import { sendEmailToAdmin } from '../../src/lib/email/sendEmailToAdmin.js'; // ✉️ admin emails
+import { sendEmailToUser } from '../../src/lib/email/sendEmailToUser.js'; // ✉️ user emails
 
 // 📦 FS helpers for translations
 import { readFileSync } from 'fs';

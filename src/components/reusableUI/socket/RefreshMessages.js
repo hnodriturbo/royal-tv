@@ -26,13 +26,8 @@ const RefreshMessages = ({ conversation_id, onRefreshed }) => {
 
   // 🖱️ Render translated button
   return (
-    <button
-      onClick={requestRefresh}
-      className="btn-secondary"
-      title={t('socket.ui.refresh_messages.button_title')} // 🏷️ Tooltip text
-    >
-      {t('socket.ui.refresh_messages.button_text')}
-      {/* 🏷️ Button label */}
+    <button type="button" onClick={requestRefresh}>
+      {String(t('socket.ui.refresh_messages.button_text') ?? '')}
     </button>
   );
 };

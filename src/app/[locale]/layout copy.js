@@ -9,11 +9,11 @@
 
 import { setRequestLocale } from 'next-intl/server'; // 🧭 bind locale to segment (stable API)
 import { hasLocale } from 'next-intl'; // ✅ validate locale
-import { notFound } from 'next/navigation'; // 🚫 404 on invalid locale
+// 🚫 404 on invalid locale
 import { NextIntlClientProvider } from 'next-intl'; // 🗣️ messages + t()
 import { SessionProvider } from 'next-auth/react'; // 🔐 auth session context
 import AppProviders from '@/components/providers/AppProviders'; // 🧱 merged client providers
-import { routing } from '@/i18n/routing'; // 🧭 central list of supported locales
+import { routing } from 'i18n/routing'; // 🧭 central list of supported locales
 
 // 📦 lazy-load messages with prod-only ENV override
 import fs from 'node:fs/promises'; // 📁 file system (server only)

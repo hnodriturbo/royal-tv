@@ -15,7 +15,7 @@ import { useRouter, Link } from '@/i18n'; // 🧭 merged: router + locale-aware 
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 export default function SignupPage() {
   // 🌐 i18n (full-path keys only)

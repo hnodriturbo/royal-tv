@@ -17,7 +17,7 @@ import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import { useRouter } from '@/i18n';
-import { useTranslations, useLocale } from 'next-intl'; // 🌍 translation
+import { useTranslations } from 'next-intl'; // 🌍 translation
 
 export default function UserFreeTrialDetailsPage() {
   // 🔐 Session & auth guard

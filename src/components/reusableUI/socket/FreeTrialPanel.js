@@ -15,6 +15,7 @@
 import FreeTrialButton from '@/components/reusableUI/FreeTrialButton';
 import useFreeTrialStatus from '@/hooks/socket/useFreeTrialStatus';
 import clsx from 'clsx';
+import { safeText } from '@/lib/ui/safeText';
 import { Link } from '@/i18n';
 import { useTranslations } from 'next-intl';
 
@@ -60,7 +61,8 @@ export default function FreeTrialPanel({ user_id, className }) {
       {/* ⚠️ Error Display */}
       {error && (
         <div className="mt-2 text-red-600 flex gap-2 items-center">
-          <span>❗</span> {error}
+          {/* <span>❗</span> {error} */}
+          <span>❗</span> {safeText(error, 'FreeTrialPanel.error')}
         </div>
       )}
     </div>

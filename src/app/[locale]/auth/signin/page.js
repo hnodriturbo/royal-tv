@@ -11,10 +11,9 @@
 
 import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
-import { useRouter, Link } from '@/i18n'; // 🧭 merged: router + locale-aware Link ✅
+import { useRouter, Link, useSearchParams } from '@/i18n'; // 🧭 merged: router + locale-aware Link ✅
 import useAppHandlers from '@/hooks/useAppHandlers';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 export default function SigninPage() {
   // 🌐 i18n (full-path keys only)
@@ -152,6 +151,7 @@ export default function SigninPage() {
               onChange={(event) => setRememberMeChecked(event.target.checked)}
               className="mr-2"
             />
+
             {t('app.signin.rememberMe', {}, 'Remember me')}
           </label>
 

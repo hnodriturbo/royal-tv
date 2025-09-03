@@ -1,29 +1,28 @@
 /**
- * src/components/i18n/LanguageSwitcher.js
- * ---------------------------------------
- * 🇬🇧 / 🇮🇸 flags in the top-right corner
- * 🧭 Locale-aware router (preserve path + query)
- * 🍪 Mirrors NEXT_LOCALE + locale
- * 📡 Notifies Socket.IO via setLocale
- * 🚫 Disables switching on checkout to avoid mid-payment changes
+ * src/components/languageSwitcher/LanguageSwitcher.js
+ * --------------------------------------------------
+ * 🌍 Switch between English / Icelandic
+ * 🧭 Preserves path + query (works in admin & user sections)
+ * 🍪 Updates NEXT_LOCALE + locale cookies
+ * 📡 Notifies Socket.IO (so notifications/emails localize)
+ * 🚫 Disabled on checkout (/packages/[slug]/buyNow)
+ * 🧼 Buttons: explicit type, children wrapped, no fragments.
  */
 
 'use client';
 
-import { usePathname, useRouter } from '@/i18n'; // 🌍 locale-aware router + pathname
-import { useLocale } from 'next-intl'; // 🗣️ current active locale
-import { useSearchParams } from 'next/navigation'; // 🔎 query preservation
+import { usePathname, useRouter, useSearchParams } from '@/i18n'; // 🧭 locale-aware routing
+import { useLocale, useTranslations } from 'next-intl'; // 🗣️ active locale + translator
 import useSocketHub from '@/hooks/socket/useSocketHub'; // 📡 socket bridge
 import Flag from 'react-world-flags'; // 🚩 flags
 
-// ✅ Supported locales live here
+// ✅ Supported locales
 const SUPPORTED_LOCALES = ['en', 'is'];
 
-// 🧹 Strip `/en` or `/is` from the front of a path
+// 🧹 Remove locale segment (/en or /is) from a path
 function getPathWithoutLocale(incomingPath) {
-  // 🛡️ sanitize unexpected values
   const safePath = typeof incomingPath === 'string' && incomingPath.length > 0 ? incomingPath : '/';
-  const [, possibleLocale, ...restSegments] = safePath.split('/'); // ['', maybe-locale, ...rest]
+  const [, possibleLocale, ...restSegments] = safePath.split('/');
   if (SUPPORTED_LOCALES.includes(String(possibleLocale).toLowerCase())) {
     const rebuilt = '/' + restSegments.join('/');
     return rebuilt === '//' || rebuilt === '/' ? '/' : rebuilt;
@@ -31,69 +30,64 @@ function getPathWithoutLocale(incomingPath) {
   return safePath;
 }
 
-// 🧾 One place to set both cookies
+// 🍪 Write both NEXT_LOCALE + locale cookies
 function writeLocaleCookies(targetLocale) {
-  // 🍪 one-year lifetime
   const oneYear = 60 * 60 * 24 * 365;
   document.cookie = `NEXT_LOCALE=${targetLocale}; path=/; max-age=${oneYear}`;
   document.cookie = `locale=${targetLocale}; path=/; max-age=${oneYear}`;
 }
 
-// 🧭 Simple, resilient “is checkout” check
+// 💳 Detect if we’re on a checkout page
 function isCheckoutPath(currentPathname) {
-  // 💳 lock language on BuyNow to avoid changing amounts mid-payment
   return /\/packages\/[^/]+\/buyNow(?:\/|$)/i.test(currentPathname || '');
 }
 
 export default function LanguageSwitcher() {
-  // 🗣️ current locale (authoritative)
+  // 🗣️ current locale
   const activeLocale = useLocale();
 
-  // 🧭 path + query from Next
+  // 🗣️ translations (full key usage)
+  const t = useTranslations();
+
+  // 🧭 path + query
   const currentPathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // 📡 socket locale bridge
+  // 📡 socket bridge
   const { setLocale } = useSocketHub();
 
-  // 🚦 determine if switching should be blocked
+  // 🚦 disable if checkout
   const isLanguageSwitchingDisabled = isCheckoutPath(currentPathname);
 
-  // 🧯 Shared button classes
+  // 🎨 shared styles
   const getButtonClasses = (isActiveOrDisabled) =>
-    // 🎨 subtle ring when active/disabled, hover feedback when allowed
     `px-2 py-1 rounded-full transition ${
       isActiveOrDisabled
         ? 'ring-2 ring-white cursor-not-allowed opacity-60'
         : 'opacity-80 hover:opacity-100 cursor-pointer'
     }`;
 
-  // 🔁 Perform the actual switch
+  // 🔁 perform the switch
   const performLocaleSwitch = (targetLocale) => {
-    // 🚫 no-op if same locale or switching currently disabled
     if (targetLocale === activeLocale || isLanguageSwitchingDisabled) return;
 
-    // 🍪 store preference
     try {
       writeLocaleCookies(targetLocale);
     } catch {
       // 🤫 ignore cookie errors
     }
 
-    // 🔗 keep same route + query, only swap locale segment
     const localeLessPath = getPathWithoutLocale(currentPathname);
     const preservedQueryString = searchParams?.toString();
     const targetHref = preservedQueryString
       ? `${localeLessPath}?${preservedQueryString}`
       : localeLessPath;
 
-    // 🧭 Navigate with locale
     router.push(targetHref, { locale: targetLocale });
-    router.refresh(); // 🔄 ensure translations/UI update
+    router.refresh(); // 🔄 re-render with correct dictionary
 
-    // 📡 Inform Socket.IO server so runtime notifications/emails localize correctly
-    setLocale(targetLocale);
+    setLocale(targetLocale); // 📡 inform socket server
   };
 
   return (
@@ -104,33 +98,39 @@ export default function LanguageSwitcher() {
       {/* 🇬🇧 English */}
       <button
         type="button"
-        aria-label="Switch language to English"
+        aria-label={String(t('app.languageSwitcher.english_label'))}
         aria-current={activeLocale === 'en' ? 'true' : undefined}
         onClick={() => performLocaleSwitch('en')}
         disabled={activeLocale === 'en' || isLanguageSwitchingDisabled}
         className={getButtonClasses(activeLocale === 'en' || isLanguageSwitchingDisabled)}
-        title={isLanguageSwitchingDisabled ? 'Language switching disabled on checkout' : 'English'}
+        title={
+          isLanguageSwitchingDisabled
+            ? String(t('app.languageSwitcher.disabled_tooltip'))
+            : String(t('app.languageSwitcher.english_tooltip'))
+        }
       >
-        {/* 🏳️ render GB flag */}
-        <Flag code="GB" style={{ width: '1.5em', height: '1.5em' }} />
+        <span className="inline-flex items-center" aria-hidden="true">
+          <Flag code="GB" style={{ width: '1.5em', height: '1.5em' }} />
+        </span>
       </button>
 
       {/* 🇮🇸 Icelandic */}
       <button
         type="button"
-        aria-label="Skipta yfir á íslensku"
+        aria-label={String(t('app.languageSwitcher.icelandic_label'))}
         aria-current={activeLocale === 'is' ? 'true' : undefined}
         onClick={() => performLocaleSwitch('is')}
         disabled={activeLocale === 'is' || isLanguageSwitchingDisabled}
         className={getButtonClasses(activeLocale === 'is' || isLanguageSwitchingDisabled)}
         title={
           isLanguageSwitchingDisabled
-            ? 'Ekki er hægt að skipta um tungumál á greiðslusíðu'
-            : 'Íslenska'
+            ? String(t('app.languageSwitcher.disabled_tooltip'))
+            : String(t('app.languageSwitcher.icelandic_tooltip'))
         }
       >
-        {/* 🏳️ render IS flag */}
-        <Flag code="IS" style={{ width: '1.5em', height: '1.5em' }} />
+        <span className="inline-flex items-center" aria-hidden="true">
+          <Flag code="IS" style={{ width: '1.5em', height: '1.5em' }} />
+        </span>
       </button>
     </div>
   );

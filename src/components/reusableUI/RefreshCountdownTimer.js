@@ -30,7 +30,7 @@
 
 // 1️⃣ React goodies
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useTranslations, useLocale } from 'next-intl'; // 🌐 i18n
+import { useTranslations } from 'next-intl'; // 🌐 i18n
 
 // 2️⃣ Helper → format seconds as "m:ss"
 function formatSecondsAsMMSS(totalSeconds) {
@@ -120,13 +120,20 @@ export default function RefreshCountdownTimer({
           )}
 
           {showPauseToggle && (
-            <button
-              onClick={togglePause}
-              className="px-3 py-1 text-sm rounded bg-gray-600 hover:bg-gray-700 text-white whitespace-nowrap"
-            >
-              {isPaused
-                ? `▶️ ${t('components.refreshCountdownTimer.resume')}`
-                : `⏸️ ${t('components.refreshCountdownTimer.pause')}`}
+            <button type="button" onClick={togglePause}>
+              <span className="inline-flex items-center gap-2">
+                {isPaused ? (
+                  <>
+                    <span aria-hidden="true">▶️</span>
+                    <span>{String(t('components.refreshCountdownTimer.resume'))}</span>
+                  </>
+                ) : (
+                  <>
+                    <span aria-hidden="true">⏸️</span>
+                    <span>{String(t('components.refreshCountdownTimer.pause'))}</span>
+                  </>
+                )}
+              </span>
             </button>
           )}
         </div>

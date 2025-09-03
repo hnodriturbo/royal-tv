@@ -12,7 +12,7 @@ import { useState } from 'react'; // 🔄 Local expand/collapse state
 import { useSession } from 'next-auth/react'; // 👤 Session
 import RefreshNotifications from '@/components/reusableUI/socket/RefreshNotifications';
 import useNotifications from '@/hooks/socket/useNotifications'; // 🪝 Socket notifications
-import { useRouter } from '@/i18n'; // 🧭 Navigation
+import { useRouter, Link } from '@/i18n'; // 🧭 Navigation
 import useModal from '@/hooks/useModal';
 import { useTranslations } from 'next-intl'; // 🌍 i18n root translator
 
@@ -139,26 +139,22 @@ export default function SeeAllNotifications({ userRole = 'user' }) {
               key={singleNotification.notification_id || singleNotification.id}
               className={notificationCardClasses(singleNotification)}
             >
-              {/* 🧰 Header row: title + expand icon */}
+              {/* ➕/➖ expand row */}
               <button
+                type="button"
                 onClick={() =>
                   handleToggleExpanded(singleNotification.notification_id, singleNotification)
                 }
                 className="w-full text-left flex justify-between items-center px-5 py-3"
               >
                 <div
-                  className={`flex items-center gap-2 ${
-                    !singleNotification.is_read ? 'font-bold' : ''
-                  }`}
+                  className={`flex items-center gap-2 ${!singleNotification.is_read ? 'font-bold' : ''}`}
                 >
-                  {/* 🔵 Dot for unread */}
                   {!singleNotification.is_read && (
-                    <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                    <span className="w-2 h-2 bg-blue-500 rounded-full" />
                   )}
-                  {/* 🏷️ Title text (already localized when created) */}
-                  <span className="text-md">{singleNotification.title}</span>
+                  <span className="text-md">{String(singleNotification.title ?? '')}</span>
                 </div>
-                {/* ➕/➖ Icon */}
                 <span className="ml-2 text-lg">
                   {expandedIds[singleNotification.notification_id] ? '−' : '+'}
                 </span>
@@ -186,16 +182,20 @@ export default function SeeAllNotifications({ userRole = 'user' }) {
                   {shouldShowButton(singleNotification) && (
                     <div className="flex justify-between items-center mt-3">
                       {/* 🗑️ Delete notification */}
+
+                      {/* 🗑️ Delete single */}
                       <button
+                        type="button"
                         className="px-2 py-1 rounded bg-red-700 hover:bg-red-900 text-white text-xs border border-red-500 transition"
                         onClick={() =>
                           handleDeleteNotificationModal(singleNotification.notification_id)
                         }
-                        title={t('socket.ui.see_all_notifications.delete_notification')}
+                        title={String(
+                          t('socket.ui.see_all_notifications.delete_notification') ?? ''
+                        )}
                       >
-                        🗑️ {t('socket.ui.see_all_notifications.delete_button')}
+                        🗑️ {String(t('socket.ui.see_all_notifications.delete_button') ?? '')}
                       </button>
-
                       {/* 🔓 Open content link */}
                       <Link
                         href={singleNotification.link}
@@ -231,12 +231,14 @@ export default function SeeAllNotifications({ userRole = 'user' }) {
             {/* ⚠️ title */}
           </h3>
 
+          {/* 🧨 Clear all */}
           <button
+            type="button"
             className="px-5 py-2 rounded-lg bg-red-700 hover:bg-red-900 border border-red-500 text-white font-bold shadow transition"
             onClick={handleClearAllNotificationsModal}
+            title={String(t('socket.ui.see_all_notifications.clear_all_notifications') ?? '')}
           >
-            🧨 {t('socket.ui.see_all_notifications.clear_all_notifications')}
-            {/* 💣 CTA */}
+            🧨 {String(t('socket.ui.see_all_notifications.clear_all_notifications') ?? '')}
           </button>
         </div>
       )}

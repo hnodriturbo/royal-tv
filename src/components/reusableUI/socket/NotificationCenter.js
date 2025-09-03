@@ -15,9 +15,10 @@ import { useRef, useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import RefreshNotifications from '@/components/reusableUI/socket/RefreshNotifications';
 import useNotifications from '@/hooks/socket/useNotifications';
-import { useRouter } from '@/i18n';
 import useModal from '@/hooks/useModal';
 import { useTranslations } from 'next-intl'; // 🌍 translator
+import { safeText } from '@/lib/ui/safeText'; // Safe Text
+import { Link, useRouter } from '@/i18n'; // 🌍 add Link here
 
 const PREVIEW_COUNT = 3;
 const FIRST_DRAWER_COUNT = 7;
@@ -212,13 +213,17 @@ export default function NotificationCenter({ userRole = 'user' }) {
         ) : (
           topPreview.map((notif) => (
             <div key={notif.notification_id} className={notificationCardClasses(notif)}>
+              {/* ➕/➖ expand row */}
               <button
+                type="button"
                 onClick={() => toggleExpanded(notif.notification_id, notif)}
                 className="w-full text-left flex justify-between items-center px-5 py-3"
               >
                 <div className={`flex items-center gap-2 ${!notif.is_read ? 'font-bold' : ''}`}>
-                  {!notif.is_read && <span className="w-2 h-2 bg-blue-500 rounded-full"></span>}
-                  <span className="text-md">{notif.title}</span>
+                  {!notif.is_read && <span className="w-2 h-2 bg-blue-500 rounded-full" />}
+                  <span className="text-md">
+                    {String(safeText(notif.title, 'NotificationCenter.title') ?? '')}
+                  </span>
                 </div>
                 <span className="ml-2 text-lg">
                   {expandedIds[notif.notification_id] ? '−' : '+'}
@@ -237,22 +242,24 @@ export default function NotificationCenter({ userRole = 'user' }) {
                   }
                 >
                   <div className="text-gray-300 mb-3 mt-2">
-                    <p className="whitespace-pre-wrap">{notif.body}</p>
+                    {/* <p className="whitespace-pre-wrap">{notif.body}</p> */}
+                    <p className="whitespace-pre-wrap">
+                      {safeText(notif.body, 'NotificationCenter.body')}
+                    </p>
                   </div>
                   {shouldShowButton(notif) && typeof notif.link === 'string' && (
                     <div className="flex justify-between items-center mt-3">
+                      {/* 🗑️ Delete notif */}
                       <button
-                        className="px-2 py-1 rounded bg-red-700 hover:bg-red-900 text-white text-xs border border-red-500 transition"
+                        type="button"
                         onClick={() => handleDeleteNotificationModal(notif.notification_id)}
-                        title={t('socket.ui.notifications.actions.delete')}
+                        title={String(t('socket.ui.notifications.actions.delete') ?? '')}
                       >
-                        🗑️ {t('socket.ui.notifications.actions.delete')}
+                        🗑️ {String(t('socket.ui.notifications.actions.delete') ?? '')}
                       </button>
-                      <button
-                        className="btn-primary btn-sm"
-                        onClick={() => router.push(notif.link)}
-                      >
-                        {t('socket.ui.notifications.actions.open')}
+                      {/* 🔗 Open link */}
+                      <button type="button" onClick={() => router.push(String(notif.link ?? '/'))}>
+                        {String(t('socket.ui.notifications.actions.open') ?? '')}
                       </button>
                     </div>
                   )}
@@ -274,15 +281,10 @@ export default function NotificationCenter({ userRole = 'user' }) {
       {/* ⬇️ bottom controls (when drawer closed) */}
       {!drawerOpen && (
         <div className="flex flex-row w-full max-w-xl justify-between items-center my-4 gap-2">
+          {/* 👇 Pagination see more */}
           {canSeeMore && (
-            <button
-              className="btn btn-secondary"
-              onClick={() => {
-                setDrawerOpen(true);
-                setDrawerPage(1);
-              }}
-            >
-              👇 {t('socket.ui.notifications.see_more')}
+            <button type="button" onClick={() => setDrawerPage((prev) => prev + 1)}>
+              👇 {String(t('socket.ui.notifications.see_more') ?? '')}
             </button>
           )}
           {!drawerOpen && totalNotifications > 0 && (
@@ -290,12 +292,13 @@ export default function NotificationCenter({ userRole = 'user' }) {
               {t('socket.ui.notifications.total', { count: totalNotifications })}
             </div>
           )}
+          {/* 🗂️ See all */}
           {notifications.length > 0 && (
             <button
-              className="btn-outline-primary btn-sm"
-              onClick={() => router.push(`/${userRole}/notifications`)}
+              type="button"
+              onClick={() => router.push(`/${String(userRole ?? 'user')}/notifications`)}
             >
-              🗂️ {t('socket.ui.notifications.see_all')}
+              🗂️ {String(t('socket.ui.notifications.see_all') ?? '')}
             </button>
           )}
         </div>
@@ -312,13 +315,17 @@ export default function NotificationCenter({ userRole = 'user' }) {
             ) : (
               drawerSlice.slice(0, visibleDrawerCount).map((notif) => (
                 <div key={notif.notification_id} className={notificationCardClasses(notif)}>
+                  {/* ➕/➖ expand row */}
                   <button
+                    type="button"
                     onClick={() => toggleExpanded(notif.notification_id, notif)}
                     className="w-full text-left flex justify-between items-center px-5 py-3"
                   >
                     <div className={`flex items-center gap-2 ${!notif.is_read ? 'font-bold' : ''}`}>
-                      {!notif.is_read && <span className="w-2 h-2 bg-blue-500 rounded-full"></span>}
-                      <span className="text-md">{notif.title}</span>
+                      {!notif.is_read && <span className="w-2 h-2 bg-blue-500 rounded-full" />}
+                      <span className="text-md">
+                        {String(safeText(notif.title, 'NotificationCenter.title') ?? '')}
+                      </span>
                     </div>
                     <span className="ml-2 text-lg">
                       {expandedIds[notif.notification_id] ? '−' : '+'}
@@ -337,20 +344,28 @@ export default function NotificationCenter({ userRole = 'user' }) {
                       }
                     >
                       <div className="text-gray-300 mb-3 mt-2">
-                        <p className="whitespace-pre-wrap">{notif.body}</p>
+                        {/* <p className="whitespace-pre-wrap">{notif.body}</p> */}
+                        <p className="whitespace-pre-wrap">
+                          {safeText(notif.body, 'NotificationCenter.body')}
+                        </p>
                       </div>
                       {shouldShowButton(notif) && (
                         <div className="flex justify-between items-center mt-3">
+                          {/* 🗑️ Delete notif */}
                           <button
-                            className="px-2 py-1 rounded bg-red-700 hover:bg-red-900 text-white text-xs border border-red-500 transition"
+                            type="button"
                             onClick={() => handleDeleteNotificationModal(notif.notification_id)}
-                            title={t('socket.ui.notifications.actions.delete')}
+                            title={String(t('socket.ui.notifications.actions.delete') ?? '')}
                           >
-                            🗑️ {t('socket.ui.notifications.actions.delete')}
+                            🗑️ {String(t('socket.ui.notifications.actions.delete') ?? '')}
                           </button>
-                          <Link href={notif.link} className="btn-primary btn-sm text-center block">
-                            {t('socket.ui.notifications.actions.open')}
-                          </Link>
+                          {/* 🔗 Open link */}
+                          <button
+                            type="button"
+                            onClick={() => router.push(String(notif.link ?? '/'))}
+                          >
+                            {String(t('socket.ui.notifications.actions.open') ?? '')}
+                          </button>
                         </div>
                       )}
                       <div className="mt-2 pt-3 border-t border-gray-800 text-xs text-gray-500">
@@ -377,14 +392,15 @@ export default function NotificationCenter({ userRole = 'user' }) {
               ) : null}
             </div>
             <div className="flex-1 flex justify-center">
+              {/* ⬆️ See less */}
               <button
-                className="btn btn-secondary"
+                type="button"
                 onClick={() => {
                   setDrawerOpen(false);
                   setDrawerPage(1);
                 }}
               >
-                ⬆️ {t('socket.ui.notifications.see_less')}
+                ⬆️ {String(t('socket.ui.notifications.see_less') ?? '')}
               </button>
             </div>
             {notifications.length > 0 && (
@@ -420,11 +436,15 @@ export default function NotificationCenter({ userRole = 'user' }) {
             <span className="mr-2">⚠️</span>
             {t('socket.ui.notifications.danger_zone')}
           </h3>
+
+          {/* 🧨 Clear all */}
           <button
-            className="px-5 py-2 rounded-lg bg-red-700 hover:bg-red-900 border border-red-500 text-white font-bold shadow transition"
+            type="button"
             onClick={handleClearAllNotificationsModal}
+            className="px-5 py-2 rounded-lg bg-red-700 hover:bg-red-900 border border-red-500 text-white font-bold shadow transition"
+            title={String(t('socket.ui.notifications.actions.clear_all') ?? '')}
           >
-            🧨 {t('socket.ui.notifications.actions.clear_all')}
+            🧨 {String(t('socket.ui.notifications.actions.clear_all') ?? '')}
           </button>
         </div>
       )}

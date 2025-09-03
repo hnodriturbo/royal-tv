@@ -223,21 +223,33 @@ export default function LiveChatRoom({
                   {/* ✏️ edit/delete for own messages */}
                   {isOwnMessage(message) && (
                     <div className="flex gap-2">
+                      {/* ✏️ Edit message */}
                       <button
+                        type="button"
                         onClick={() =>
-                          onEditMessageModal?.(message.message_id, message.message, editMessage)
+                          onEditMessageModal?.(
+                            message.message_id,
+                            String(message.message ?? ''),
+                            editMessage
+                          )
                         }
-                        title={t('socket.ui.common.edit')}
+                        title={String(t('socket.ui.common.edit') ?? '')}
                         style={{ cursor: 'pointer' }}
                       >
-                        ✏️
+                        <span aria-hidden="true">✏️</span>
+                        <span className="sr-only">{String(t('socket.ui.common.edit') ?? '')}</span>
                       </button>
+                      {/* 🗑️ Delete message */}
                       <button
+                        type="button"
                         onClick={() => onDeleteMessageModal?.(message.message_id, deleteMessage)}
-                        title={t('socket.ui.common.delete')}
+                        title={String(t('socket.ui.common.delete') ?? '')}
                         style={{ cursor: 'pointer' }}
                       >
-                        🗑️
+                        <span aria-hidden="true">🗑️</span>
+                        <span className="sr-only">
+                          {String(t('socket.ui.common.delete') ?? '')}
+                        </span>
                       </button>
                     </div>
                   )}

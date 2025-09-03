@@ -8,6 +8,7 @@
  * - Templates now only use "created" for subscription/trial as those are instantly active!
  * ================================================================
  */
+'use client';
 
 import { useCallback } from 'react';
 import useSocketHub from '@/hooks/socket/useSocketHub';

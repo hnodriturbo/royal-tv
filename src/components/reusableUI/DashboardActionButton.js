@@ -11,7 +11,7 @@
 'use client';
 
 import { Link } from '@/i18n';
-import { useTranslations, useLocale } from 'next-intl'; // 🌐 i18n
+import { useTranslations } from 'next-intl'; // 🌐 i18n
 
 export default function DashboardActionButton({ href, label }) {
   const t = useTranslations(); // 🔤

@@ -30,11 +30,25 @@ function mapUserData(user = {}) {
     updatedAt: user.updatedAt
   };
 }
-
+/* 
 // 🧩 Merge user and payload into a single object
 function mergeUserAndPayload(user = {}, payload = {}) {
   // 🟢 User fields merged first, payload fields can overwrite or add
   return { ...mapUserData(user), ...payload };
+} */
+
+// 🧩 Merge user and payload into a single object
+function mergeUserAndPayload(user = {}, payload = {}) {
+  // 🟢 User fields merged first, payload fields can overwrite or add
+  const flat = { ...mapUserData(user), ...payload };
+  // ⚡ Iterate over every key in the payload and make sure it's not null and if
+  // ⚡ it's an object we stringify it so it becomse a string, not an object.
+  for (const key in flat) {
+    if (typeof flat[key] === 'object' && flat[key] !== null) {
+      flat[key] = JSON.stringify(flat[key]);
+    }
+  }
+  return flat;
 }
 
 // 🟢 SAFETY WRAPPER: Ensure every notification template is a function

@@ -11,11 +11,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import useAppRedirectHandlers from '@/hooks/useAppRedirectHandlers';
-import { useTranslations, useLocale } from 'next-intl';
-
+import { useTranslations } from 'next-intl';
+import { useSearchParams } from '@/i18n';
 // 🚫 Never auto-redirect to these (prevents ping-pong)
 const forbiddenRedirects = ['/auth/login', '/auth/middlePage'];
 

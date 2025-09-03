@@ -10,7 +10,7 @@
 'use client';
 
 import clsx from 'clsx';
-import { useTranslations, useLocale } from 'next-intl'; // 🌐 i18n
+import { useTranslations } from 'next-intl'; // 🌐 i18n
 
 export default function SortDropdown({ options, value, onChange, className, selectClassName }) {
   const t = useTranslations(); // 🔤
@@ -26,14 +26,14 @@ export default function SortDropdown({ options, value, onChange, className, sele
         className={clsx('border rounded p-1 text-sm bg-gray-100 w-full md:w-auto', selectClassName)}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        aria-label={t('components.sortDropdown.sort_aria')}
-      >
-        {options.map((optionItem) => (
-          <option key={optionItem.value} value={optionItem.value}>
+        aria-label={t('components.sortDropdown.sort_aria')}>
+        
+        {options.map((optionItem) =>
+        <option key={optionItem.value} value={optionItem.value}>
             {optionItem.label}
           </option>
-        ))}
+        )}
       </select>
-    </div>
-  );
+    </div>);
+
 }

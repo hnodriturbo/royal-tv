@@ -14,7 +14,7 @@ import { useSession } from 'next-auth/react';
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useSocketHub from '@/hooks/socket/useSocketHub';
-import { useTranslations, useLocale } from 'next-intl'; // 🌐 i18n
+import { useTranslations } from 'next-intl'; // 🌐 i18n
 
 const defaultUser = {
   user_id: null,
@@ -87,9 +87,9 @@ const useConversationsList = ({
       logger.log('[useConversationsList] Fetching:', endPointURL);
 
       if (!isSilent) {
-        const loaderText = firstFetchRef.current
-          ? t('components.useConversationsList.loader_fetching')
-          : t('components.useConversationsList.loader_refreshing');
+        const loaderText = firstFetchRef.current ?
+        t('components.useConversationsList.loader_fetching') :
+        t('components.useConversationsList.loader_refreshing');
         showLoader({ text: loaderText });
       }
 
@@ -112,17 +112,17 @@ const useConversationsList = ({
           };
 
           const lastMessageDate =
-            item.lastMessage?.createdAt || // object coming from admin‑user route
-            item.lastMessage || // plain Date coming from summary route
-            null;
+          item.lastMessage?.createdAt || // object coming from admin‑user route
+          item.lastMessage || // plain Date coming from summary route
+          null;
 
           const messageData =
-            item.messageData || item.defaultMessage
-              ? {
-                  ...defaultMessageData,
-                  ...(item.messageData || item.defaultMessage)
-                }
-              : defaultMessageData;
+          item.messageData || item.defaultMessage ?
+          {
+            ...defaultMessageData,
+            ...(item.messageData || item.defaultMessage)
+          } :
+          defaultMessageData;
 
           return {
             id: item.conversation_id ?? item.user_id ?? `summary-${user.user_id}`,
@@ -136,9 +136,9 @@ const useConversationsList = ({
             updatedAt: item.updatedAt ?? lastMessageDate ?? null,
             createdAt: item.createdAt ?? null,
             totalMessagesInConversation:
-              item.totalMessagesInConversation ?? item.totalMessages ?? 0,
+            item.totalMessagesInConversation ?? item.totalMessages ?? 0,
             unreadMessagesInConversation:
-              item.unreadMessagesInConversation ?? item.messagesCount ?? 0,
+            item.unreadMessagesInConversation ?? item.messagesCount ?? 0,
             totalConversationsForUser: item.totalConversationsForUser ?? 0,
             unreadConversationsForUser: item.unreadConversationsForUser ?? 0,
             totalMessagesForUser: item.totalMessagesForUser ?? 0,

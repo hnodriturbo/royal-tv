@@ -16,7 +16,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useTranslations, useLocale } from 'next-intl'; // 🌐 i18n
+import { useTranslations } from 'next-intl'; // 🌐 i18n
 
 export default function RefreshCountdownTimer({
   onRefresh,
@@ -31,7 +31,7 @@ export default function RefreshCountdownTimer({
   // ⏱️ interval tick — every 1000 ms
   useEffect(() => {
     const countdownTimer = setInterval(() => {
-      setSecondsLeft((current) => (current > 0 ? current - 1 : 0));
+      setSecondsLeft((current) => current > 0 ? current - 1 : 0);
     }, 1_000);
     return () => clearInterval(countdownTimer);
   }, []);
@@ -54,8 +54,8 @@ export default function RefreshCountdownTimer({
     <p className={`text-center text-sm mb-4 text-gray-300 ${className}`}>
       {t('components.refreshCountdownTimer.auto_refresh_in')}&nbsp;
       <span className="font-semibold text-white">{secondsLeft}</span>
-    </p>
-  );
+    </p>);
+
 }
 /* ----------- HOW TO USE IN A PAGE AS A COMPONENT ----------- */
 /* 

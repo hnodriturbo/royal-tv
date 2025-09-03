@@ -5,6 +5,7 @@
  * Uses one nav links file (sidebarLinks.js).
  * Sidebar is always the same visually, only links change per role.
  * i18n: useTranslations() at root + full keys like app.navigation.<key>.
+ * 🧼 Buttons: explicit type, wrapped children, emoji aria-hidden.
  */
 
 'use client';
@@ -15,7 +16,7 @@ import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import sidebarLinks from '@/lib/utils/sidebarLinks';
 import useLogout from '@/hooks/useLogout';
-import { useTranslations, useLocale } from 'next-intl'; // 🌍 i18n hook
+import { useTranslations } from 'next-intl'; // 🌍 i18n hook
 
 export default function Sidebar() {
   const { data: session, status } = useSession();
@@ -62,12 +63,16 @@ export default function Sidebar() {
               navigationItem.href === '/logout' ? (
                 <li key={navigationItem.href}>
                   <button
+                    type="button"
                     onClick={logout}
                     className="w-10/12 flex items-center px-6 py-3 rounded-full text-lg font-normal cursor-pointer text-red-500 transition-all duration-300 hover:bg-red-600 hover:ml-4 hover:text-white hover:font-bold focus:outline-none focus:ring-2 focus:ring-red-400"
                   >
-                    <span className="mr-3">{navigationItem.emoji}</span>
-                    {/* 🔑 app.navigation.<key> */}
-                    <span>{t(`app.navigation.${navigationItem.key}`)}</span>
+                    <span className="inline-flex items-center gap-2">
+                      <span aria-hidden="true" className="mr-1">
+                        {navigationItem.emoji}
+                      </span>
+                      <span>{String(t(`app.navigation.${navigationItem.key}`))}</span>
+                    </span>
                   </button>
                 </li>
               ) : (
@@ -76,9 +81,12 @@ export default function Sidebar() {
                     href={navigationItem.href}
                     className="flex w-10/12 mt-3 ms-2 items-center px-6 py-3 rounded-full text-lg font-normal transition-all duration-300 hover:bg-gradient-to-r hover:ml-4 hover:from-cyan-500 hover:to-blue-700 hover:text-white hover:font-bold focus:outline-none focus:ring-2 focus:ring-cyan-400"
                   >
-                    <span className="mr-3">{navigationItem.emoji}</span>
-                    {/* 🔑 app.navigation.<key> */}
-                    <span>{t(`app.navigation.${navigationItem.key}`)}</span>
+                    <span className="inline-flex items-center gap-2">
+                      <span aria-hidden="true" className="mr-1">
+                        {navigationItem.emoji}
+                      </span>
+                      <span>{String(t(`app.navigation.${navigationItem.key}`))}</span>
+                    </span>
                   </Link>
                 </li>
               )
@@ -94,11 +102,14 @@ export default function Sidebar() {
       {/* 📱 Mobile header + drawer */}
       <div className="w-full lg:hidden fixed top-0 left-0 z-50 h-14 flex items-center bg-smooth-gradient shadow-box-2">
         <button
+          type="button"
           className="ml-4 text-3xl font-bold text-white"
           onClick={() => setIsOpen(true)}
           aria-label="Open menu"
         >
-          ☰
+          <span className="inline-flex items-center" aria-hidden="true">
+            ☰
+          </span>
         </button>
 
         {/* 👑 Mobile brand */}
@@ -137,16 +148,20 @@ export default function Sidebar() {
 
       {/* 🧰 Slide-out drawer */}
       <aside
-        className={`fixed top-0 left-0 h-screen w-64 bg-smooth-gradient-dark-2 my-border-all-4 shadow-box-3 z-50 flex flex-col transform transition-transform duration-300 lg:hidden
-          ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed top-0 left-0 h-screen w-64 bg-smooth-gradient-dark-2 my-border-all-4 shadow-box-3 z-50 flex flex-col transform transition-transform duration-300 lg:hidden ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
       >
         {/* ❌ Close */}
         <button
+          type="button"
           className="absolute top-3 right-3 text-3xl text-white"
           aria-label="Close menu"
           onClick={handleClose}
         >
-          ✖️
+          <span className="inline-flex items-center" aria-hidden="true">
+            ✖️
+          </span>
         </button>
 
         {/* 👑 Logo */}
@@ -170,15 +185,19 @@ export default function Sidebar() {
               navigationItem.href === '/logout' ? (
                 <li key={navigationItem.href}>
                   <button
+                    type="button"
                     onClick={() => {
                       handleClose();
                       logout();
                     }}
                     className="w-10/12 flex items-center px-6 py-3 rounded-full text-lg font-normal cursor-pointer text-red-500 transition-all duration-300 hover:bg-red-600 hover:ml-4 hover:text-white hover:font-bold focus:outline-none focus:ring-2 focus:ring-red-400"
                   >
-                    <span className="mr-3">{navigationItem.emoji}</span>
-                    {/* 🔑 app.navigation.<key> */}
-                    <span>{t(`app.navigation.${navigationItem.key}`)}</span>
+                    <span className="inline-flex items-center gap-2">
+                      <span aria-hidden="true" className="mr-1">
+                        {navigationItem.emoji}
+                      </span>
+                      <span>{String(t(`app.navigation.${navigationItem.key}`))}</span>
+                    </span>
                   </button>
                 </li>
               ) : (
@@ -188,9 +207,12 @@ export default function Sidebar() {
                     className="flex w-10/12 items-center px-6 py-3 rounded-full text-lg font-normal transition-all duration-300 hover:bg-gradient-to-r hover:ml-4 hover:from-cyan-500 hover:to-blue-700 hover:text-white hover:font-bold focus:outline-none focus:ring-2 focus:ring-cyan-400"
                     onClick={handleClose}
                   >
-                    <span className="mr-3">{navigationItem.emoji}</span>
-                    {/* 🔑 app.navigation.<key> */}
-                    <span>{t(`app.navigation.${navigationItem.key}`)}</span>
+                    <span className="inline-flex items-center gap-2">
+                      <span aria-hidden="true" className="mr-1">
+                        {navigationItem.emoji}
+                      </span>
+                      <span>{String(t(`app.navigation.${navigationItem.key}`))}</span>
+                    </span>
                   </Link>
                 </li>
               )

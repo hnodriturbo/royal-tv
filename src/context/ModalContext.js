@@ -2,7 +2,7 @@
 
 import React, { createContext, useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 // Create the ModalContext to provide modal functionality globally.
 const ModalContext = createContext();
@@ -103,13 +103,14 @@ export const ModalProvider = ({ children }) => {
               <div className="flex justify-end space-x-2 mt-4">
                 {modalProps.cancelButtonText && (
                   <button
-                    className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                    type="button"
                     onClick={() => {
-                      if (modalProps.onCancel) modalProps.onCancel();
+                      modalProps.onCancel?.();
                       hideModal();
                     }}
+                    className="btn-secondary"
                   >
-                    {modalProps.cancelButtonText || t('common.buttons.cancel')}
+                    <span>{modalProps.cancelButtonText || String(t('common.buttons.cancel'))}</span>
                   </button>
                 )}
 

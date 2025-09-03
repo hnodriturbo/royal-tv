@@ -1,17 +1,20 @@
 /**
- * ========================= AdminUsersMainPage.js =========================
- * 👤
- * HEADLINE: Admin Users – Main List (Cards Only)
- * - Cards for each user, show all key relations.
- * - Sorting at top, pagination at bottom.
- * - Buttons to see user’s Free Trials, Live & Bubble Chats, Subs, Profile.
- * ========================================================================
+ * ========== /app/[locale]/admin/users/main/page.js ==========
+ * 👤 ADMIN USERS MAIN
+ * - Cards for each user with key relations.
+ * - Sorting dropdown + pagination.
+ * - Actions: Free Trials, Live Chat, Subscriptions, Profile.
+ * - All text translated via next-intl useTranslations().
+ * - 🔒 Guards admin access; redirects if forbidden.
+ * - 🧼 Button hygiene: no fragments in <button>, navigation uses <Link>, children wrapped.
+ * ===========================================================
  */
 
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Link, useRouter } from '@/i18n';
+import { Link, useRouter } from '@/i18n'; // 🌍 locale-aware nav
+import { useTranslations } from 'next-intl'; // 🌐 i18n
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import { useSession } from 'next-auth/react';
@@ -23,271 +26,281 @@ import Pagination from '@/components/reusableUI/Pagination';
 import ConversationActionButton from '@/components/reusableUI/ConversationActionButton';
 
 export default function AdminUsersMainPage() {
-  // 🦸 Admin session/auth
+  // 🌐 translator
+  const t = useTranslations();
+
+  // 🔐 admin session/auth
   const { data: session, status } = useSession();
   const router = useRouter();
   const { isAllowed, redirect } = useAuthGuard('admin');
   const { displayMessage, showLoader, hideLoader } = useAppHandlers();
 
-  // 📦 Users state
+  // 📦 state
   const [users, setUsers] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1); // 🔢 Current page
-  const [sortOrder, setSortOrder] = useState('livechat_unread_first'); // 🔀 Default sort order
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortOrder, setSortOrder] = useState('livechat_unread_first');
 
-  // 📥 Fetch all Users (admin)
+  // 📥 fetch users
   const fetchUsers = async () => {
     try {
-      showLoader({ text: 'Loading users...' }); // ⏳
-      const res = await axiosInstance.get('/api/admin/users/main');
-      setUsers(res.data.users || []);
-      displayMessage('Users loaded!', 'success');
-    } catch (err) {
+      showLoader({ text: t('app.admin.users.main.loading') }); // ⏳ show loader
+      const response = await axiosInstance.get('/api/admin/users/main'); // 🌐 request
+      setUsers(response.data.users || []); // 📦 store list
+      displayMessage(t('app.admin.users.main.loadSuccess'), 'success'); // ✅ toast
+    } catch (error) {
+      // ❌ toast with optional server error detail
       displayMessage(
-        `Failed to load users${err?.response?.data?.error ? `: ${err.response.data.error}` : ''}`,
+        t('app.admin.users.main.loadFailed', {
+          error: error?.response?.data?.error ? `: ${error.response.data.error}` : ''
+        }),
         'error'
       );
     } finally {
-      hideLoader();
+      hideLoader(); // 🧽 hide loader
     }
   };
 
-  // 🚦 Only fetch ONCE when allowed
+  // 🚦 fetch once when allowed
   useEffect(() => {
     if (status === 'authenticated' && isAllowed) {
       fetchUsers();
     }
   }, [status, isAllowed]);
 
-  // 🚦 Redirect if not allowed
+  // 🚦 redirect if forbidden
   useEffect(() => {
     if (status !== 'loading' && !isAllowed && redirect) {
       router.replace(redirect);
     }
   }, [status, isAllowed, redirect, router]);
 
-  // 🧠 Add the sort fields for compatibility with your sort function
-  const usersWithSortFields = users.map((user) => ({
-    ...user,
-    freeTrials: user.freeTrials || [],
-    subscriptions: user.subscriptions || [],
-    unreadLiveChats: user.unreadLiveChats || 0,
-    unreadBubbleChats: user.unreadBubbleChats || 0,
-    name: user.name || ''
+  // ➕ enrich for sorting
+  const usersWithSortFields = users.map((singleUser) => ({
+    ...singleUser,
+    freeTrials: singleUser.freeTrials || [],
+    subscriptions: singleUser.subscriptions || [],
+    unreadLiveChats: singleUser.unreadLiveChats || 0,
+    unreadBubbleChats: singleUser.unreadBubbleChats || 0,
+    name: singleUser.name || ''
   }));
 
-  // 🧠 Sorted users (use custom hook)
+  // 🔀 sort
   const sortedUsers = useLocalSorter(usersWithSortFields, sortOrder, getAdminUserSortFunction);
 
-  // 📏 Results per page
+  // 📏 page size
   const pageSize = 5;
-
-  // 🔢 Total pages
   const totalPages = Math.ceil(sortedUsers.length / pageSize);
-
-  // 🎯 Users for current page
   const pagedUsers = sortedUsers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  // 🔄 Reset to first page if sortOrder changes
+  // 🔄 reset page on sort change
   useEffect(() => {
-    setCurrentPage(1);
+    setCurrentPage(1); // 🔁 reset to first page on sort change
   }, [sortOrder]);
 
-  // ---------- If not allowed, render nothing ----------
+  // 🛡️ block render if not allowed
   if (!isAllowed) return null;
 
   return (
     <div className="flex flex-col items-center justify-center w-full">
       <div className="container-style max-w-3xl w-full">
-        {/* 🏷️ Title & Divider */}
+        {/* 🏷️ title */}
         <div className="flex flex-col items-center text-center justify-center w-full">
-          <h1 className="text-wonderful-5 text-2xl mb-0">All Users (Cards View)</h1>
+          <h1 className="text-wonderful-5 text-2xl mb-0">
+            {String(t('app.admin.users.main.title'))}
+          </h1>
           <hr className="border border-gray-400 w-8/12 my-4" />
         </div>
 
-        {/* 🔀 Sorting Dropdown */}
+        {/* 🔀 sort */}
         <div className="flex justify-end w-full mb-4">
           <SortDropdown options={adminUserSortOptions} value={sortOrder} onChange={setSortOrder} />
         </div>
 
-        {/* 🃏 User Cards */}
+        {/* 🃏 user cards */}
         <div className="flex flex-col gap-6 w-full mt-6">
           {pagedUsers.length === 0 && (
-            <div className="text-center text-gray-400 my-8">No users found.</div>
+            <div className="text-center text-gray-400 my-8">
+              {String(t('app.admin.users.main.noUsers')) /* 🫥 empty state */}
+            </div>
           )}
-          {pagedUsers.map((user) => (
+
+          {pagedUsers.map((singleUser) => (
             <div
-              key={user.user_id}
+              key={singleUser.user_id}
               className="border border-gray-300 rounded-2xl p-5 shadow-md bg-gray-600 text-base-100 relative"
             >
-              {/* 🆔 Top: Name, Username, Email */}
+              {/* 🆔 top info */}
               <div className="flex flex-col md:flex-row justify-between mb-2 items-center">
                 <div className="w-full text-center flex flex-col items-center">
                   <h3 className="font-semibold text-lg">
-                    {/* 👤 Name & Username */}
-                    {user.name}
-                    <span className="ml-2 text-xs text-muted">({user.username})</span>
+                    {singleUser.name}
+                    <span className="ml-2 text-xs text-muted">({singleUser.username})</span>
                   </h3>
                   <div className="text-sm mt-1">
-                    <span>Email: {user.email}</span>
+                    <span>
+                      {String(t('app.admin.users.main.email'))}: {singleUser.email}
+                    </span>
                   </div>
                   <div className="text-xs text-muted">
                     <span>
-                      {/* 🕰️ Joined: */}
-                      Joined {new Date(user.createdAt).toLocaleDateString()}
+                      {String(
+                        t('app.admin.users.main.joined', {
+                          date: new Date(singleUser.createdAt).toLocaleDateString()
+                        })
+                      )}
                     </span>
                   </div>
                 </div>
                 <div className="flex flex-col gap-1 items-end mt-2 md:mt-0">
-                  {/* 🔑 User Role */}
+                  {/* 🏷️ role badge */}
                   <span className="absolute right-2 top-2 px-3 py-1 rounded-lg bg-purple-800 text-sm font-bold uppercase tracking-wider">
-                    {user.role}
+                    {singleUser.role}
                   </span>
                 </div>
               </div>
-              {/* 📱 Contact info row */}
+
+              {/* 📱 contact info */}
               <div className="flex flex-row gap-4 text-sm mb-2 justify-center">
-                {user.whatsapp && (
+                {singleUser.whatsapp && (
                   <span>
-                    <span className="font-bold">WhatsApp:</span> {user.whatsapp}
+                    <span className="font-bold">{String(t('app.admin.users.main.whatsapp'))}:</span>{' '}
+                    {singleUser.whatsapp}
                   </span>
                 )}
-                {user.telegram && (
+                {singleUser.telegram && (
                   <span>
-                    <span className="font-bold">Telegram:</span> {user.telegram}
+                    <span className="font-bold">{String(t('app.admin.users.main.telegram'))}:</span>{' '}
+                    {singleUser.telegram}
                   </span>
                 )}
                 <span>
-                  <span className="font-bold">Preferred Contact:</span> {user.preferredContactWay}
+                  <span className="font-bold">
+                    {String(t('app.admin.users.main.preferredContact'))}:
+                  </span>{' '}
+                  {singleUser.preferredContactWay}
                 </span>
               </div>
-              {/* 🔗 Action Buttons for Relations */}
+
+              {/* 🔗 actions */}
               <div className="flex flex-col gap-3 mt-4 w-full">
-                {/* 🎁 Free Trials */}
-                {user.freeTrials && user.freeTrials.length > 0 ? (
+                {/* 🎁 free trials */}
+                {singleUser.freeTrials && singleUser.freeTrials.length > 0 ? (
                   <Link
-                    href={`/admin/freeTrials/${user.freeTrials[0].trial_id}`}
-                    className="w-full"
+                    href={`/admin/freeTrials/${singleUser.freeTrials[0].trial_id}`}
+                    className="btn-secondary w-full inline-flex items-center justify-center gap-2"
                   >
-                    <button className="btn-secondary w-full flex items-center justify-center">
-                      <span>
-                        🎁 Free Trials{' '}
-                        <span className="ml-1 font-normal">({user.totalFreeTrials})</span>
+                    {/* 🧱 wrap contents to avoid fragment children */}
+                    <span className="inline-flex items-center gap-2">
+                      <span aria-hidden="true">🎁</span>
+                      <span className="inline-flex items-center gap-2">
+                        <span>{String(t('app.admin.users.main.freeTrials'))}</span>
+                        <span className="ml-1 font-normal">({singleUser.totalFreeTrials})</span>
                       </span>
-                      {user.freeTrials[0].status && (
+                      {singleUser.freeTrials[0].status && (
                         <span
                           className={`ml-2 text-xs font-bold ${
-                            user.freeTrials[0].status === 'disabled'
+                            singleUser.freeTrials[0].status === 'disabled'
                               ? 'text-red-400'
-                              : user.freeTrials[0].status === 'pending'
+                              : singleUser.freeTrials[0].status === 'pending'
                                 ? 'text-yellow-400'
                                 : 'text-green-400'
                           }`}
                         >
-                          (
-                          {user.freeTrials[0].status.charAt(0).toUpperCase() +
-                            user.freeTrials[0].status.slice(1)}
-                          )
+                          ({singleUser.freeTrials[0].status})
                         </span>
                       )}
-                    </button>
+                    </span>
                   </Link>
                 ) : (
                   <button
-                    className="btn:disabled w-full opacity-50 cursor-not-allowed flex flex-col items-center py-2 border border-white rounded-md"
+                    type="button" // ✅ explicit button type
+                    className="w-full opacity-50 cursor-not-allowed flex flex-col items-center py-2 border border-white rounded-md"
                     disabled
+                    aria-disabled="true" // ♿ reflect disabled state
                   >
-                    🎁 Free Trials (0)
+                    <span className="inline-flex items-center gap-2">
+                      <span aria-hidden="true">🎁</span>
+                      <span>{String(t('app.admin.users.main.freeTrials'))} (0)</span>
+                    </span>
                   </button>
                 )}
 
-                {/* 💬 Live Chat Conversations */}
-                {user.totalLiveChats > 0 && user.role !== 'admin' ? (
-                  <Link href={`/admin/liveChat/user/${user.user_id}`} className="w-full">
-                    <button className="btn-primary w-full flex flex-col items-center py-2">
-                      <span>💬 Live Chats </span>
-                      <span className="font-normal mt-1">
-                        Total: {user.totalLiveChats} -{' '}
-                        <span className={user.unreadLiveChats > 0 ? 'font-bold' : 'text-muted'}>
-                          Unread: {user.unreadLiveChats}
-                        </span>
+                {/* 💬 live chats */}
+                {singleUser.totalLiveChats > 0 && singleUser.role !== 'admin' ? (
+                  <Link
+                    href={`/admin/liveChat/user/${singleUser.user_id}`}
+                    className="btn-primary w-full inline-flex items-center justify-center gap-2 py-2"
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <span aria-hidden="true">💬</span>
+                      <span>{String(t('app.admin.users.main.liveChats'))}</span>
+                    </span>
+                    <span className="font-normal mt-1">
+                      {String(t('app.admin.users.main.total'))}: {singleUser.totalLiveChats} -{' '}
+                      <span className={singleUser.unreadLiveChats > 0 ? 'font-bold' : 'text-muted'}>
+                        {String(t('app.admin.users.main.unread'))}: {singleUser.unreadLiveChats}
                       </span>
-                    </button>
+                    </span>
                   </Link>
                 ) : (
-                  user.role !== 'admin' && (
+                  singleUser.role !== 'admin' && (
                     <ConversationActionButton
+                      // 🧩 external component handles its own button UI
                       action="create"
                       buttonClass="w-full flex flex-col items-center py-4 border border-white rounded-md btn-primary"
-                      user_id={user.user_id}
-                      user={user}
+                      user_id={singleUser.user_id}
+                      user={singleUser}
                       isAdmin={true}
                       size="lg"
-                      buttonText="💬 Start Conversation"
+                      buttonText={`💬 ${t('app.admin.users.main.startConversation')}`}
                     />
                   )
                 )}
 
-                {/* 🫧 Bubble Chat Conversations */}
-                {/* {user.totalBubbleChats > 0 ? (
-                  <Link href={`/admin/bubbleChat/user/${user.user_id}`} className="w-full">
-                    <button className="btn-primary w-full flex flex-col items-center py-2">
-                      <span>
-                        🫧 Bubble Chats{' '}
-                        <span className="font-normal">({user.totalBubbleChats})</span>
-                      </span>
-                      <span className="text-sm mt-1">
-                        Unread:
-                        <span
-                          className={
-                            user.unreadBubbleChats > 0 ? 'text-accent-2 font-bold' : 'text-muted'
-                          }
-                        >
-                          {user.unreadBubbleChats}
-                        </span>
-                      </span>
-                    </button>
-                  </Link>
-                ) : (
-                  <button
-                    className="btn:disabled w-full opacity-50 cursor-not-allowed flex flex-col items-center py-2 border border-white rounded-md"
-                    disabled
-                    type="button"
-                  >
-                    <span>🫧 Bubble Chats (0)</span>
-                    <span className="text-sm mt-1 text-muted">Unread: 0</span>
-                  </button>
-                )} */}
-
-                {/* 📦 Subscriptions */}
-                {user.subscriptions && user.subscriptions.length > 0 ? (
+                {/* 📦 subscriptions */}
+                {singleUser.subscriptions && singleUser.subscriptions.length > 0 ? (
                   <Link
-                    href={`/admin/subscriptions/${user.subscriptions[0].subscription_id}`}
-                    className="w-full"
+                    href={`/admin/subscriptions/${singleUser.subscriptions[0].subscription_id}`}
+                    className="btn-secondary w-full inline-flex items-center justify-center gap-2"
                   >
-                    <button className="btn-secondary w-full">
-                      📦 Subscriptions{' '}
-                      <span className="ml-1 font-normal">({user.totalSubscriptions})</span>
-                    </button>
+                    <span className="inline-flex items-center gap-2">
+                      <span aria-hidden="true">📦</span>
+                      <span className="inline-flex items-center gap-2">
+                        <span>{String(t('app.admin.users.main.subscriptions'))}</span>
+                        <span className="ml-1 font-normal">({singleUser.totalSubscriptions})</span>
+                      </span>
+                    </span>
                   </Link>
                 ) : (
                   <button
-                    className="btn:disabled w-full opacity-50 cursor-not-allowed flex flex-col items-center py-2 border border-white rounded-md"
+                    type="button" // ✅ explicit button type
+                    className="w-full opacity-50 cursor-not-allowed flex flex-col items-center py-2 border border-white rounded-md"
                     disabled
+                    aria-disabled="true"
                   >
-                    📦 Subscriptions (0)
+                    <span className="inline-flex items-center gap-2">
+                      <span aria-hidden="true">📦</span>
+                      <span>{String(t('app.admin.users.main.subscriptions'))} (0)</span>
+                    </span>
                   </button>
                 )}
 
-                {/* 🪪 Profile */}
-                <Link href={`/admin/users/${user.user_id}`} className="w-full">
-                  <button className="btn-success w-full">🪪 Profile</button>
+                {/* 🪪 profile (always navigation) */}
+                <Link
+                  href={`/admin/users/${singleUser.user_id}`}
+                  className="btn-secondary inline-flex items-center justify-center gap-2"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <span aria-hidden="true">🪪</span>
+                    <span>{String(t('app.admin.users.main.profile'))}</span>
+                  </span>
                 </Link>
               </div>
             </div>
           ))}
         </div>
 
-        {/* 🔢 Pagination below cards */}
+        {/* 🔢 pagination */}
         <div className="flex justify-center mt-6">
           <Pagination
             currentPage={currentPage}

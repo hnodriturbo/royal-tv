@@ -1,47 +1,35 @@
 /**
- * Admin Profile Page Component
- * ----------------------------
- *
- * Routes & Endpoints:
- *   • GET  /api/admin/profile                – fetch current admin’s profile data
- *   • PATCH /api/admin/profile                – update name, email, username, contact info, and email-notification setting
- *   • PUT   /api/admin/profile/password       – change password by providing oldPassword and newPassword
- *
- * Features:
- *   • Displays all editable fields: name, email, username, WhatsApp, Telegram
- *   • Lets admin choose preferred contact method (email / WhatsApp / Telegram)
- *   • Toggle for opting in or out of important account emails
- *   • Inline form-state management (no page reloads)
- *   • Toggle between profile form and “Change Password” form
- *   • Client-side auth guard via NextAuth + custom hook (only ‘admin’ can view)
- *   • Loader indicators and toast messages during fetch/save operations
- *   • Redirects to a unified middle-page on success, preserving “admin” role in query
+ * ================== AdminProfilePage.js ==================
+ * 👤 Admin Profile
+ * - View & edit admin profile fields
+ * - Change password form toggle
+ * - Translations under app.admin.profile.*
+ * =========================================================
  */
 
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { useTranslations } from 'next-intl';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAuthGuard from '@/hooks/useAuthGuard';
-import { useRouter } from '@/i18n';
+import { Link, useRouter } from '@/i18n';
 
-// 📬 contact options
 const preferredContactOptions = [
   { value: 'email', label: 'Email' },
   { value: 'whatsapp', label: 'WhatsApp' },
   { value: 'telegram', label: 'Telegram' }
 ];
 
-export default function AdminProfile() {
-  // 🦁 session + guard
+export default function AdminProfilePage() {
+  const t = useTranslations();
   const { data: session, status } = useSession();
   const router = useRouter();
   const { isAllowed, redirect } = useAuthGuard('admin');
   const { displayMessage, showLoader, hideLoader } = useAppHandlers();
 
-  // 👤 profile state
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -52,17 +40,14 @@ export default function AdminProfile() {
     sendEmails: true
   });
 
-  // 🔑 password state
   const [passwordFields, setPasswordFields] = useState({
     oldPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
 
-  // 🔀 toggle view
   const [isPasswordChangeVisible, setIsPasswordChangeVisible] = useState(false);
 
-  // 🏁 redirect helpers
   const redirectAfterProfileSave = () => {
     router.replace(`/auth/middlePage?update=profile&success=true&role=admin`);
   };
@@ -70,9 +55,8 @@ export default function AdminProfile() {
     router.replace(`/auth/middlePage?passwordUpdate=profile&success=true&role=admin`);
   };
 
-  // 📦 fetch profile
   const fetchAdminProfile = async () => {
-    showLoader({ text: 'Fetching your admin profile...' });
+    showLoader({ text: t('app.admin.profile.loading') });
     try {
       const { data } = await axiosInstance.get('/api/admin/profile');
       setFormData({
@@ -84,53 +68,50 @@ export default function AdminProfile() {
         preferredContactWay: data.preferredContactWay || 'email',
         sendEmails: typeof data.sendEmails === 'boolean' ? data.sendEmails : true
       });
-    } catch (error) {
-      displayMessage(error.response?.data?.error || 'Error fetching profile', 'error');
+    } catch {
+      displayMessage(t('app.admin.profile.fetch_error'), 'error');
     } finally {
       hideLoader();
     }
   };
 
-  // 💾 profile submit
   const handleProfileUpdate = async (request) => {
-    request.preventDefault(); // 🛑 prevent browser submit
-    showLoader({ text: 'Updating profile...' });
+    request.preventDefault();
+    showLoader({ text: t('app.admin.profile.updating') });
     try {
       await axiosInstance.patch('/api/admin/profile', { ...formData });
-      displayMessage('Profile updated successfully', 'success');
+      displayMessage(t('app.admin.profile.updated'), 'success');
       redirectAfterProfileSave();
-    } catch (error) {
-      displayMessage(error.response?.data?.error || 'Error updating profile', 'error');
+    } catch {
+      displayMessage(t('app.admin.profile.update_error'), 'error');
     } finally {
       hideLoader();
     }
   };
 
-  // 🔑 password submit
   const handlePasswordChangeSubmit = async (request) => {
-    request.preventDefault(); // 🛑 prevent browser submit
+    request.preventDefault();
     if (passwordFields.newPassword !== passwordFields.confirmPassword) {
-      displayMessage('New password and confirmation do not match', 'error');
+      displayMessage(t('app.admin.profile.password_mismatch'), 'error');
       return;
     }
-    showLoader({ text: 'Updating password...' });
+    showLoader({ text: t('app.admin.profile.updating_password') });
     try {
       await axiosInstance.put('/api/admin/profile/password', {
         oldPassword: passwordFields.oldPassword,
         newPassword: passwordFields.newPassword
       });
-      displayMessage('Password updated successfully', 'success');
+      displayMessage(t('app.admin.profile.password_updated'), 'success');
       setPasswordFields({ oldPassword: '', newPassword: '', confirmPassword: '' });
       setIsPasswordChangeVisible(false);
       redirectAfterPasswordSave();
-    } catch (error) {
-      displayMessage(error.response?.data?.error || 'Error updating password', 'error');
+    } catch {
+      displayMessage(t('app.admin.profile.password_update_error'), 'error');
     } finally {
       hideLoader();
     }
   };
 
-  // ✍️ field change handlers
   const handleFormFieldChange = (event) => {
     const { name, value, type, checked } = event.target;
     setFormData((previous) => ({
@@ -140,18 +121,13 @@ export default function AdminProfile() {
   };
   const handlePasswordFieldChange = (event) => {
     const { name, value } = event.target;
-    setPasswordFields((previous) => ({
-      ...previous,
-      [name]: value
-    }));
+    setPasswordFields((previous) => ({ ...previous, [name]: value }));
   };
 
-  // 🚀 effects for auth + fetch
   useEffect(() => {
     if (status === 'authenticated' && isAllowed && session?.user?.user_id) {
       fetchAdminProfile();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, isAllowed, session?.user?.user_id]);
 
   useEffect(() => {
@@ -160,26 +136,24 @@ export default function AdminProfile() {
     }
   }, [status, isAllowed, redirect, router]);
 
-  if (!isAllowed) return null; // 🛑 block if not allowed
+  if (!isAllowed) return null;
 
   return (
     <div className="container-style max-w-full lg:max-w-lg mx-auto min-h-[60vh] rounded-2xl shadow-lg p-6">
       <h1 className="text-2xl font-bold text-center mb-6">
         {isPasswordChangeVisible
-          ? 'Change Password'
+          ? t('app.admin.profile.change_password')
           : session?.user?.name
-            ? `${session.user.name} Profile`
-            : 'Admin Profile'}
+            ? t('app.admin.profile.profile_of', { name: session.user.name })
+            : t('app.admin.profile.title')}
       </h1>
 
-      {/* 📝 PROFILE FORM */}
       {!isPasswordChangeVisible ? (
         <form onSubmit={handleProfileUpdate} className="space-y-4">
-          {/* 👥 admin detail fields */}
           {['name', 'email', 'username', 'whatsapp', 'telegram'].map((field) => (
             <div key={field}>
               <label htmlFor={field} className="block text-sm font-medium">
-                {field.charAt(0).toUpperCase() + field.slice(1)}:
+                {t(`app.admin.profile.field_${field}`)}:
               </label>
               <input
                 id={field}
@@ -187,23 +161,21 @@ export default function AdminProfile() {
                 name={field}
                 value={formData[field]}
                 onChange={handleFormFieldChange}
-                className="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 focus:outline-none text-black"
-                autoComplete={field === 'email' ? 'email' : field === 'username' ? 'username' : ''}
+                className="w-full px-4 py-2 border rounded-lg text-black"
               />
             </div>
           ))}
 
-          {/* 📬 preferred contact */}
           <div>
             <label htmlFor="preferredContactWay" className="block text-sm font-medium">
-              Preferred Contact Way:
+              {t('app.admin.profile.preferred_contact')}
             </label>
             <select
               id="preferredContactWay"
               name="preferredContactWay"
               value={formData.preferredContactWay}
               onChange={handleFormFieldChange}
-              className="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 focus:outline-none text-black"
+              className="w-full px-4 py-2 border rounded-lg text-black"
             >
               {preferredContactOptions.map(({ value, label }) => (
                 <option key={value} value={value}>
@@ -213,7 +185,6 @@ export default function AdminProfile() {
             </select>
           </div>
 
-          {/* 📧 send emails */}
           <div className="flex items-center gap-2">
             <input
               id="sendEmails"
@@ -224,99 +195,68 @@ export default function AdminProfile() {
               className="h-4 w-4"
             />
             <label htmlFor="sendEmails" className="block text-sm font-medium">
-              I want to receive important emails about my account
+              {t('app.admin.profile.receive_emails')}
             </label>
           </div>
 
-          {/* 🚀 action buttons */}
           <div className="flex flex-col lg:flex-row items-center gap-3 mt-4 w-full">
             <button
               type="button"
               onClick={() => setIsPasswordChangeVisible(true)}
               className="btn-info w-1/2"
             >
-              Change Password
+              <span className="inline-flex items-center gap-2">
+                <span aria-hidden="true">🔐</span>
+                <span>{String(t('app.admin.profile.change_password'))}</span>
+              </span>
             </button>
             <button type="submit" className="btn-primary w-1/2">
-              Update Profile
+              {t('app.admin.profile.update_profile')}
             </button>
           </div>
         </form>
       ) : (
         <form onSubmit={handlePasswordChangeSubmit} className="space-y-4">
-          {/* 🔒 old password */}
-          <div>
-            <label htmlFor="oldPassword" className="block text-sm font-medium">
-              Old Password:
-            </label>
-            <input
-              id="oldPassword"
-              type="password"
-              name="oldPassword"
-              value={passwordFields.oldPassword}
-              onChange={handlePasswordFieldChange}
-              className="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 focus:outline-none text-black"
-              autoComplete="current-password"
-            />
-          </div>
-
-          {/* 🔓 new password */}
-          <div>
-            <label htmlFor="newPassword" className="block text-sm font-medium">
-              New Password:
-            </label>
-            <input
-              id="newPassword"
-              type="password"
-              name="newPassword"
-              value={passwordFields.newPassword}
-              onChange={handlePasswordFieldChange}
-              className="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 focus:outline-none text-black"
-              autoComplete="new-password"
-            />
-          </div>
-
-          {/* 🔁 confirm password */}
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium">
-              Confirm Password:
-            </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              name="confirmPassword"
-              value={passwordFields.confirmPassword}
-              onChange={handlePasswordFieldChange}
-              className="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 focus:outline-none text-black"
-              autoComplete="new-password"
-            />
-          </div>
-
-          {/* 🚀 action buttons */}
+          {['oldPassword', 'newPassword', 'confirmPassword'].map((field) => (
+            <div key={field}>
+              <label htmlFor={field} className="block text-sm font-medium">
+                {t(`app.admin.profile.field_${field}`)}:
+              </label>
+              <input
+                id={field}
+                type="password"
+                name={field}
+                value={passwordFields[field]}
+                onChange={handlePasswordFieldChange}
+                className="w-full px-4 py-2 border rounded-lg text-black"
+              />
+            </div>
+          ))}
           <div className="flex flex-col lg:flex-row items-center gap-3 mt-4 w-full">
             <button
               type="button"
               onClick={() => setIsPasswordChangeVisible(false)}
               className="btn-info w-1/2"
             >
-              Back to Profile
+              {t('app.admin.profile.back_to_profile')}
             </button>
             <button type="submit" className="btn-primary w-1/2">
-              Update Password
+              {t('app.admin.profile.update_password')}
             </button>
           </div>
         </form>
       )}
 
-      {/* ↩️ return */}
       <div className="flex items-center justify-center mt-5 w-full">
-        <button
-          type="button"
-          onClick={() => router.push('/admin/dashboard')}
-          className="btn-secondary w-1/2"
+        <Link
+          href="/admin/dashboard"
+          className="btn-secondary w-1/2 inline-flex items-center gap-2"
         >
-          Return to Dashboard
-        </button>
+          <span className="inline-flex items-center gap-2">
+            <span aria-hidden="true">🏠</span>
+            <span>{String(t('app.admin.profile.return_dashboard'))}</span>
+          </span>
+        </Link>
       </div>
     </div>
   );

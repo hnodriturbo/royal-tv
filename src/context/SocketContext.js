@@ -19,12 +19,12 @@ export const SocketContext = createContext({
   socketConnected: false
 });
 
-export const SocketProvider = ({ children }) => {
+export const SocketProvider = ({ children, locale: injectedLocale }) => {
   const [socket, setSocket] = useState(null);
   const [socketConnected, setSocketConnected] = useState(false);
 
   const { data: session, status } = useSession();
-  const activeUILocale = useNextIntlLocale?.() || 'en';
+  const activeUILocale = injectedLocale || useNextIntlLocale?.() || 'en';
 
   // 🔗 allow override via env if you want to front with Nginx
   const SOCKET_URL =

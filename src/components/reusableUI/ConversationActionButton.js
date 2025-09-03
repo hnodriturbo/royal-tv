@@ -29,7 +29,7 @@ import useAppHandlers from '@/hooks/useAppHandlers';
 import useModal from '@/hooks/useModal';
 import axiosInstance from '@/lib/core/axiosInstance';
 import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
-import { useTranslations, useLocale } from 'next-intl'; // 🌐 i18n: hook
+import { useTranslations } from 'next-intl'; // 🌐 i18n: hook
 
 export default function ConversationActionButton({
   action = 'create',
@@ -203,6 +203,7 @@ export default function ConversationActionButton({
               placeholder={t('components.conversationActionButton.placeholder_subject')}
               autoFocus
             />
+
             {/* 💬 First message */}
             <textarea
               ref={textAreaRef}
@@ -211,6 +212,7 @@ export default function ConversationActionButton({
             />
           </div>
         ),
+
         confirmText: t('components.conversationActionButton.modal_create_confirm'),
         onConfirm: handleCreateConversation
       }
@@ -273,7 +275,7 @@ export default function ConversationActionButton({
   // 🖱️ Render button
   return (
     <button type="button" className={buttonClasses} onClick={handleOpenModal}>
-      {config.label}
+      {String(config.label ?? '')}
     </button>
   );
 }

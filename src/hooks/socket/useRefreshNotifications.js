@@ -11,7 +11,7 @@
 import { useCallback, useState } from 'react';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 import useAppHandlers from '@/hooks/useAppHandlers'; // For displayMessage
-import { useTranslations, useLocale } from 'next-intl'; // 🌐 i18n for user-facing text
+import { useTranslations } from 'next-intl'; // 🌐 i18n for user-facing text
 
 export default function useRefreshNotifications(user_id) {
   const [loading, setLoading] = useState(false);

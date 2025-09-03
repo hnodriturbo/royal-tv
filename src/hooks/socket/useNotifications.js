@@ -21,136 +21,158 @@
 
 import logger from '@/lib/core/logger';
 import { useState, useEffect, useCallback } from 'react';
+import { useLocale } from 'next-intl'; // 🌍 current UI locale
 import useSocketHub from '@/hooks/socket/useSocketHub';
 
 export default function useNotifications(userId) {
   // 🎛️ Get all notification-related socket functions from your unified socket hub
   const {
-    requestNotifications, // 🔹 Ask server for all my notifications
-    onNotificationsList, // 🔹 Listen for full list (fetch/refresh)
-    onNotificationReceived, // 🔹 Listen for single real-time notification pushes
-    markNotificationRead, // 🔹 Ask server to mark a specific notification as read
-    deleteNotification, // 🔹 Ask server to delete single notification for user / admin
-    clearNotifications, // 🔹 Ask server to clear all notifications for user / admin
-    onNotificationsError // 🔹 Used For showing errors to user
+    requestNotifications,
+    onNotificationsList,
+    onNotificationReceived,
+    markNotificationRead,
+    deleteNotification,
+    clearNotifications,
+    onNotificationsError
   } = useSocketHub();
 
   // 📦 Local state: full list, unread badge, loading spinner
-  const [notifications, setNotifications] = useState([]); // All notifications (unread first)
-  const [unreadCount, setUnreadCount] = useState(0); // Unread count for badge
-  const [loading, setLoading] = useState(false); // Is loading (UI spinner)
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  // 🌍 active locale (en | is)
+  const currentLocale = useLocale?.() || 'en';
+
+  // 🧼 Coerce any value into displayable string
+  const coerceText = useCallback(
+    (value) => {
+      if (value == null) return '';
+      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+        return String(value);
+      }
+      if (typeof value === 'object') {
+        // server might send { en: '...', is: '...' }
+        if (value.en || value.is) {
+          const chosen = value[currentLocale] ?? value.en ?? value.is;
+          return typeof chosen === 'string' ? chosen : JSON.stringify(chosen);
+        }
+        if (Array.isArray(value)) return value.map(coerceText).join('\n');
+        try {
+          return JSON.stringify(value);
+        } catch {
+          return String(value);
+        }
+      }
+      return String(value);
+    },
+    [currentLocale]
+  );
+
+  // 🧩 Normalize one notification
+  const normalizeNotification = useCallback(
+    (n) => {
+      if (!n || typeof n !== 'object') return null;
+      return {
+        ...n,
+        title: coerceText(n.title),
+        body: coerceText(n.body)
+      };
+    },
+    [coerceText]
+  );
 
   // ============================================================
-  // 1️⃣ ON MOUNT / USER CHANGE: Fetch & listen for notifications
-  // ------------------------------------------------------------
-  // - When user logs in or changes, auto-fetch notifications from server.
-  // - Listen for server's notifications_list event.
-  // - Handles initial load, manual refresh, and server-initiated refreshes.
+  // 1️⃣ Fetch & listen for notifications when user logs in
   // ============================================================
   useEffect(() => {
-    if (!userId) return; // 🛑 No user, skip everything
+    if (!userId) return;
 
-    setLoading(true); // 🚦 Show loading spinner while waiting for server
-
-    // ⬆️ Ask server for full list (triggers server to emit notifications_list)
+    setLoading(true);
     requestNotifications(userId);
 
-    // 👂 Listen for the "notifications_list" socket event
-    // Server always emits: { notifications: [...], unreadCount, total }
     const stop = onNotificationsList((data) => {
-      // 👀 Defensive parsing: always expect an object, fallback to empty array
       let notificationArray = [];
       let unreadCountFromServer = 0;
 
       if (data && Array.isArray(data.notifications)) {
-        // 🟢 Standard case: data.notifications is an array
         notificationArray = data.notifications;
         unreadCountFromServer = data.unreadCount || 0;
       } else if (data && Array.isArray(data)) {
-        // 🟡 Fallback: server (old) sent a bare array instead of object
         notificationArray = data;
       } else {
-        // 🔴 Totally empty/null/undefined: treat as empty
         notificationArray = [];
       }
 
-      // 🔀 SORT: Show all unread first (newest first), then read (newest first)
+      // 🧼 normalize
+      notificationArray = notificationArray.map(normalizeNotification).filter(Boolean);
+
+      // 🔀 sort unread first, then read
       const unread = notificationArray
-        .filter((n) => n && !n.is_read)
+        .filter((n) => !n.is_read)
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       const read = notificationArray
-        .filter((n) => n && n.is_read)
+        .filter((n) => n.is_read)
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-      // ✅ Save to state: full list and unread badge count
       setNotifications([...unread, ...read]);
       setUnreadCount(unread.length);
-      setLoading(false); // 🎉 Done loading
+      setLoading(false);
     });
 
-    // 🧹 Cleanup: remove listener when component unmounts or userId changes
     return () => stop && stop();
-  }, [userId, requestNotifications, onNotificationsList]);
+  }, [userId, requestNotifications, onNotificationsList, normalizeNotification]);
 
   // ============================================================
-  // 2️⃣ REAL-TIME PUSH HANDLER: New notification arrives!
-  // ------------------------------------------------------------
-  // - Listens for single new notifications (pushed by server in real-time).
-  // - Prepends to array, avoids duplicates, keeps sorting.
+  // 2️⃣ Handle real-time pushes
   // ============================================================
   useEffect(() => {
     if (!userId) return;
     const stopPush = onNotificationReceived((newNotif) => {
       setNotifications((prev) => {
-        // 🔎 If already in array (duplicate), skip!
-        if (prev.some((n) => n.notification_id === newNotif.notification_id)) return prev;
+        const normalized = normalizeNotification(newNotif);
+        if (!normalized) return prev;
+        if (prev.some((n) => n.notification_id === normalized.notification_id)) return prev;
 
-        // ➕ Add to start, re-sort all (unread first, newest first)
-        const merged = [newNotif, ...prev];
+        const merged = [normalized, ...prev];
         const unread = merged
-          .filter((n) => n && !n.is_read)
+          .filter((n) => !n.is_read)
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         const read = merged
-          .filter((n) => n && n.is_read)
+          .filter((n) => n.is_read)
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        setUnreadCount(unread.length); // 🛎️ Update badge
+        setUnreadCount(unread.length);
         return [...unread, ...read];
       });
     });
-    // 🧹 Cleanup listener
     return () => stopPush && stopPush();
-  }, [userId, onNotificationReceived]);
+  }, [userId, onNotificationReceived, normalizeNotification]);
 
   // ============================================================
-  // 3️⃣ MARK-AS-READ: User opens or reads a notification
-  // ------------------------------------------------------------
-  // - Optimistically updates local state instantly.
-  // - Sends mark-as-read event to server (socket).
+  // 3️⃣ Mark as read (optimistic update)
   // ============================================================
   const markAsRead = useCallback(
     (notification_id) => {
       if (!notification_id) return;
-      markNotificationRead(notification_id); // 🚀 Tell server
+      markNotificationRead(notification_id);
       setNotifications((prev) =>
         prev.map((n) => (n.notification_id === notification_id ? { ...n, is_read: true } : n))
       );
-      setUnreadCount((c) => Math.max(0, c - 1)); // 🛎️ Lower badge count
+      setUnreadCount((c) => Math.max(0, c - 1));
     },
     [markNotificationRead]
   );
 
   // ============================================================
-  // 4️⃣ MANUAL REFRESH: User clicks "Refresh Notifications"
-  // ------------------------------------------------------------
-  // - Triggers fetch as if mounting for first time (re-runs server emit).
+  // 4️⃣ Manual refresh
   // ============================================================
   const refreshNotifications = useCallback(() => {
     if (!userId) return;
-    setLoading(true); // 🚦 Show loading
-    requestNotifications(userId); // 🔁 Server will send fresh list
+    setLoading(true);
+    requestNotifications(userId);
   }, [userId, requestNotifications]);
 
-  // 🗑️ Delete single notification (by id)
+  // 🗑️ Delete one
   const removeNotification = useCallback(
     (notification_id) => {
       if (!userId || !notification_id) return;
@@ -159,17 +181,14 @@ export default function useNotifications(userId) {
     [deleteNotification, userId]
   );
 
-  // 🔥 Clear all notifications for user
+  // 🔥 Delete all
   const clearAllNotifications = useCallback(() => {
     if (!userId) return;
     clearNotifications(userId);
   }, [clearNotifications, userId]);
 
   // ============================================================
-  // 5️⃣ HELPERS: Preview/drawer slicing for UI display
-  // ------------------------------------------------------------
-  // - getPreview(count): get top n notifications for "preview"
-  // - getDrawerSlice(start, end): paginated slices for drawer or page
+  // 5️⃣ Helpers: preview/drawer slicing
   // ============================================================
   const getPreview = useCallback(
     (count = 3) => (notifications || []).slice(0, count),
@@ -181,51 +200,43 @@ export default function useNotifications(userId) {
   );
 
   // ============================================================
-  // 6️⃣ RESORT: Re-sort notifications (e.g., after collapsing a read)
-  // ------------------------------------------------------------
-  // - Can be called by UI after marking as read/collapsing to keep order
+  // 6️⃣ Resort notifications
   // ============================================================
   const resortNotifications = useCallback(() => {
     setNotifications((prev) => {
       const unread = (prev || [])
-        .filter((n) => n && !n.is_read)
+        .filter((n) => !n.is_read)
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       const read = (prev || [])
-        .filter((n) => n && n.is_read)
+        .filter((n) => n.is_read)
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       return [...unread, ...read];
     });
   }, []);
 
+  // ============================================================
+  // 7️⃣ Handle errors
+  // ============================================================
   useEffect(() => {
     const stop = onNotificationsError((error) => {
-      // 🛑 Handle error: show toast, modal, or console
       logger.error('Notification error:', error?.message || error);
-      // Or update state for UI!
     });
     return () => stop && stop();
   }, [onNotificationsError]);
+
   // ============================================================
-  // ✅ EXPORT: Return all helpers for NotificationCenter, badges, etc.
-  // ------------------------------------------------------------
-  // - notifications: full sorted array
-  // - unreadCount: for badges
-  // - loading: for spinners
-  // - markAsRead: call when user opens a notification
-  // - refreshNotifications: manual refresh
-  // - getPreview/getDrawerSlice: UI slicing
-  // - resortNotifications: re-sort on demand
+  // ✅ Export everything for NotificationCenter and others
   // ============================================================
   return {
-    notifications, // 📦 All notifications, sorted (unread first)
-    unreadCount, // 🛎️ Badge: how many unread
-    loading, // ⏳ Loading spinner state
-    markAsRead, // ✅ Mark as read function (optimistic)
-    refreshNotifications, // 🔁 Manual refresh
-    removeNotification, // 🗑️ For single
-    clearAllNotifications, // 🔥 For all
-    getPreview, // 🔍 Preview top n notifications
-    getDrawerSlice, // 📄 Drawer/page slicing
-    resortNotifications // 🔀 Re-sort helper
+    notifications,
+    unreadCount,
+    loading,
+    markAsRead,
+    refreshNotifications,
+    removeNotification,
+    clearAllNotifications,
+    getPreview,
+    getDrawerSlice,
+    resortNotifications
   };
 }

@@ -11,7 +11,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useTranslations, useLocale } from 'next-intl'; // 🌍 i18n — requested import path & style
+import { useTranslations } from 'next-intl'; // 🌍 i18n — requested import path & style
 import { Link } from '@/i18n';
 
 import Guide from '@/components/packages/data/guide'; // 🛠️ setup guide

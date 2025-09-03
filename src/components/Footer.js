@@ -1,7 +1,7 @@
 'use client';
 
 import { Link } from '@/i18n';
-import { useTranslations, useLocale } from 'next-intl'; // 🌍 i18n hook
+import { useTranslations } from 'next-intl'; // 🌍 i18n hook
 
 const footerButtonClasses =
   'flex items-center justify-center px-3 py-2 rounded-full text-md font-normal transition-all duration-200 ' +
@@ -20,7 +20,7 @@ const Footer = () => {
               <span className="mr-1">💳</span>
               <span>{t('app.footer.more_info_buy_now')}</span> {/* 🛒 */}
             </Link>
-            <Link href="/FAQ" className={footerButtonClasses}>
+            <Link href="/faq" className={footerButtonClasses}>
               <span className="mr-1">❓</span>
               <span>{t('app.navigation.faq')}</span> {/* ❓ */}
             </Link>

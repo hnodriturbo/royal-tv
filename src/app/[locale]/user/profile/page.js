@@ -4,6 +4,9 @@
  * - Uses full-path translations: t('app.user.profile.page.*')
  * - Inline loaders/toasts via useAppHandlers
  * - Client guard + redirects via useAuthGuard + useRouter
+ * - 🧼 Button hygiene: navigation uses <Link>, action buttons have type="button",
+ *   children wrapped in <span className="inline-flex items-center gap-2">,
+ *   emoji in <span aria-hidden="true">, and String(t(...)) guards.
  * =======================================================================
  */
 
@@ -14,7 +17,7 @@ import { useSession } from 'next-auth/react';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAuthGuard from '@/hooks/useAuthGuard';
-import { useRouter } from '@/i18n';
+import { Link, useRouter } from '@/i18n';
 import { useTranslations } from 'next-intl'; // 🌍 root translator (no namespace)
 
 // 📬 Preferred contact options (labels can stay brand names or be translated if you add keys)
@@ -79,12 +82,34 @@ export default function UserProfile() {
       });
     } catch (error) {
       displayMessage(
-        error.response?.data?.error || t('app.user.profile.page.error_fetching'),
+        error?.response?.data?.error || t('app.user.profile.page.error_fetching'),
         'error'
       ); // ❌
     } finally {
       hideLoader(); // 🧽
     }
+  };
+
+  // 🚀 Fetch on auth ready (moved out of render into effect)
+  useEffect(() => {
+    if (status === 'authenticated' && isAllowed && session?.user?.user_id) {
+      fetchUserProfile();
+    }
+  }, [status, isAllowed, session?.user?.user_id]); // 🔁 safe deps
+
+  // 🧭 Redirect if blocked
+  useEffect(() => {
+    if (status !== 'loading' && !isAllowed && redirect) router.replace(redirect);
+  }, [status, isAllowed, redirect, router]); // 🚫 do not include t
+
+  // ✍️ Form handlers
+  const handleFormFieldChange = (event) => {
+    const { name, value, type, checked } = event.target; // 🧷
+    setFormData((previous) => ({ ...previous, [name]: type === 'checkbox' ? checked : value })); // 🧩
+  };
+  const handlePasswordFieldChange = (event) => {
+    const { name, value } = event.target; // 🔤
+    setPasswordFields((previous) => ({ ...previous, [name]: value })); // 🧩
   };
 
   // 💾 Submit: update profile
@@ -97,7 +122,7 @@ export default function UserProfile() {
       redirectAfterProfileSave(); // 🔁
     } catch (error) {
       displayMessage(
-        error.response?.data?.error || t('app.user.profile.page.error_updating'),
+        error?.response?.data?.error || t('app.user.profile.page.error_updating'),
         'error'
       ); // ❌
     } finally {
@@ -124,34 +149,13 @@ export default function UserProfile() {
       redirectAfterPasswordSave(); // 🔁
     } catch (error) {
       displayMessage(
-        error.response?.data?.error || t('app.user.profile.page.error_password_update'),
+        error?.response?.data?.error || t('app.user.profile.page.error_password_update'),
         'error'
       ); // ❌
     } finally {
       hideLoader(); // 🧽
     }
   };
-
-  // ✍️ Form handlers
-  const handleFormFieldChange = (event) => {
-    const { name, value, type, checked } = event.target; // 🧷
-    setFormData((previous) => ({ ...previous, [name]: type === 'checkbox' ? checked : value })); // 🧩
-  };
-  const handlePasswordFieldChange = (event) => {
-    const { name, value } = event.target; // 🔤
-    setPasswordFields((previous) => ({ ...previous, [name]: value })); // 🧩
-  };
-
-  // 🚀 Fetch on auth ready
-  // 🚦 Only run if session is ready, user is allowed, and we have a user_id
-  if (status === 'authenticated' && isAllowed && session?.user?.user_id) {
-    fetchUserProfile();
-  }
-
-  // 🧭 Redirect if blocked
-  useEffect(() => {
-    if (status !== 'loading' && !isAllowed && redirect) router.replace(redirect);
-  }, [status, isAllowed, redirect, router]); // 🚫 do not include t
 
   // 🛡️ Guard rendering
   if (!isAllowed) return null;
@@ -161,10 +165,10 @@ export default function UserProfile() {
     <div className="container-style max-w-full lg:max-w-lg mx-auto min-h-[60vh] rounded-2xl shadow-lg p-6">
       <h1 className="text-2xl font-bold text-center mb-6">
         {isPasswordChangeVisible
-          ? t('app.user.profile.page.change_password')
+          ? String(t('app.user.profile.page.change_password'))
           : session?.user?.name
-            ? `${session.user.name} ${t('app.user.profile.page.profile')}`
-            : t('app.user.profile.page.user_profile')}
+            ? `${session.user.name} ${String(t('app.user.profile.page.profile'))}`
+            : String(t('app.user.profile.page.user_profile'))}
       </h1>
 
       {/* 📝 PROFILE FORM */}
@@ -173,7 +177,7 @@ export default function UserProfile() {
           {['name', 'email', 'username', 'whatsapp', 'telegram'].map((fieldKey) => (
             <div key={fieldKey}>
               <label htmlFor={fieldKey} className="block text-sm font-medium">
-                {t(`app.user.profile.page.field.${fieldKey}`)}
+                {String(t(`app.user.profile.page.field.${fieldKey}`))}
               </label>
               <input
                 id={fieldKey}
@@ -192,7 +196,7 @@ export default function UserProfile() {
           {/* 📬 Preferred contact */}
           <div>
             <label htmlFor="preferredContactWay" className="block text-sm font-medium">
-              {t('app.user.profile.page.preferred_contact')}
+              {String(t('app.user.profile.page.preferred_contact'))}
             </label>
             <select
               id="preferredContactWay"
@@ -220,21 +224,30 @@ export default function UserProfile() {
               className="h-4 w-4"
             />
             <label htmlFor="sendEmails" className="block text-sm font-medium">
-              {t('app.user.profile.page.send_emails')}
+              {String(t('app.user.profile.page.send_emails'))}
             </label>
           </div>
 
           {/* 💾 Actions */}
           <div className="flex flex-col lg:flex-row items-center gap-3 mt-4 w-full">
+            {/* 🔐 Show password change */}
             <button
               type="button"
               onClick={() => setIsPasswordChangeVisible(true)}
               className="btn-info w-1/2"
             >
-              {t('app.user.profile.page.change_password')}
+              <span className="inline-flex items-center gap-2">
+                <span aria-hidden="true">🔐</span>
+                <span>{String(t('app.user.profile.page.change_password'))}</span>
+              </span>
             </button>
+
+            {/* 💾 Save profile */}
             <button type="submit" className="btn-primary w-1/2">
-              {t('app.user.profile.page.update_profile')}
+              <span className="inline-flex items-center gap-2">
+                <span aria-hidden="true">💾</span>
+                <span>{String(t('app.user.profile.page.update_profile'))}</span>
+              </span>
             </button>
           </div>
         </form>
@@ -243,7 +256,7 @@ export default function UserProfile() {
         <form onSubmit={handlePasswordChangeSubmit} className="space-y-4">
           <div>
             <label htmlFor="oldPassword" className="block text-sm font-medium">
-              {t('app.user.profile.page.old_password')}
+              {String(t('app.user.profile.page.old_password'))}
             </label>
             <input
               id="oldPassword"
@@ -258,7 +271,7 @@ export default function UserProfile() {
 
           <div>
             <label htmlFor="newPassword" className="block text-sm font-medium">
-              {t('app.user.profile.page.new_password')}
+              {String(t('app.user.profile.page.new_password'))}
             </label>
             <input
               id="newPassword"
@@ -273,7 +286,7 @@ export default function UserProfile() {
 
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium">
-              {t('app.user.profile.page.confirm_password')}
+              {String(t('app.user.profile.page.confirm_password'))}
             </label>
             <input
               id="confirmPassword"
@@ -288,29 +301,37 @@ export default function UserProfile() {
 
           {/* 💾 Actions */}
           <div className="flex flex-col lg:flex-row items-center gap-3 mt-4 w-full">
+            {/* ↩️ Back to profile (hide password form) */}
             <button
               type="button"
               onClick={() => setIsPasswordChangeVisible(false)}
               className="btn-info w-1/2"
             >
-              {t('app.user.profile.page.back_to_profile')}
+              <span className="inline-flex items-center gap-2">
+                <span aria-hidden="true">↩️</span>
+                <span>{String(t('app.user.profile.page.back_to_profile'))}</span>
+              </span>
             </button>
+
+            {/* 🔐 Save password */}
             <button type="submit" className="btn-primary w-1/2">
-              {t('app.user.profile.page.update_password')}
+              <span className="inline-flex items-center gap-2">
+                <span aria-hidden="true">💾</span>
+                <span>{String(t('app.user.profile.page.update_password'))}</span>
+              </span>
             </button>
           </div>
         </form>
       )}
 
-      {/* ↩️ Return */}
+      {/* ↩️ Return (navigation uses Link) */}
       <div className="flex items-center justify-center mt-5 w-full">
-        <button
-          type="button"
-          onClick={() => router.push('/user/dashboard')}
-          className="btn-secondary w-1/2"
-        >
-          {t('app.user.profile.page.return_dashboard')}
-        </button>
+        <Link href="/user/dashboard" className="btn-secondary w-1/2 inline-flex items-center gap-2">
+          <span className="inline-flex items-center gap-2">
+            <span aria-hidden="true">🏠</span>
+            <span>{String(t('app.user.profile.page.return_dashboard'))}</span>
+          </span>
+        </Link>
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+'use client';
 /**
  * ===============================
  * 💸 Buy Now Page (Dynamic Invoice Pattern)
@@ -9,12 +10,9 @@
  * ===============================
  */
 
-'use client';
-
 import logger from '@/lib/core/logger';
 import { useEffect, useMemo, useCallback, useState } from 'react';
-import { useParams, notFound, useSearchParams } from 'next/navigation';
-import { useRouter } from '@/i18n';
+import { useRouter, useSearchParams } from '@/i18n';
 import { useSession } from 'next-auth/react';
 
 import axiosInstance from '@/lib/core/axiosInstance';
@@ -27,7 +25,7 @@ import StatusBadge from '@/components/packages/data/statusBadge'; // 🏷️ Sta
 import PaymentInstructions from '@/components/packages/data/PaymentInstructions'; // 📝 Extra info
 
 // 🌍 i18n
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 export default function PackageBuyNowPage() {
   // 🧾 Grab slug from params (/packages/[slug]/buyNow)

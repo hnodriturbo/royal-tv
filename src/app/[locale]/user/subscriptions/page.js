@@ -16,11 +16,11 @@ import axiosInstance from '@/lib/core/axiosInstance'; // 🌐 HTTP client
 import useAppHandlers from '@/hooks/useAppHandlers'; // 🧯 loaders + toasts
 import { useSession } from 'next-auth/react'; // 🔐 auth
 import useAuthGuard from '@/hooks/useAuthGuard'; // 🛡️ guard
-import { useRouter } from '@/i18n'; // 🧭 locale-aware router (project path)
+import { useRouter, useSearchParams } from '@/i18n'; // 🧭 locale-aware router (project path)
 import Pagination from '@/components/reusableUI/Pagination'; // 🔢 pagination
 import { userSubscriptionSortOptions, getUserSubscriptionSortFunction } from '@/lib/utils/sorting'; // 🔀 sort utils
 import SortDropdown from '@/components/reusableUI/SortDropdown'; // ⬇️ sort dropdown
-import { useSearchParams } from 'next/navigation'; // 🔎 query params
+// 🔎 query params
 import Countdown from '@/components/ui/countdown/Countdown'; // ⏳ small timer
 import RefreshCountdownTimer from '@/components/reusableUI/RefreshCountdownTimer'; // 🔄 page refresh (kept)
 import calculateMonthsDaysLeft from '@/lib/utils/calculateMonthsDaysLeft'; // 🗓️ human time helper

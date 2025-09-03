@@ -1,203 +1,191 @@
 /**
- *   ================== /admin/logs/main/page.js ==================
- * 📜
- * Admin Logs Main Page
- * - Lists all logs in a table (desktop) or cards (mobile).
- * - Sorting and pagination are client-side only.
- * - Clicking an IP opens the detail page for that IP.
- * ================================================================
+ *   ================== /app/[locale]/admin/logs/main/page.js ==================
+ * 📜 Admin Logs Main
+ * - Lists grouped logs by IP (table on desktop, cards on mobile).
+ * - Client-side sort & pagination; auto-refresh every 10 minutes.
+ * - All text via next-intl: t('app.admin.logs.main.*' & shared status).
+ * ============================================================================
  */
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter, Link } from '@/i18n';
+import { useRouter, Link } from '@/i18n'; // 🌍 locale-aware nav
+import { useTranslations } from 'next-intl'; // 🌐 i18n (full keys)
 
 import useAuthGuard from '@/hooks/useAuthGuard';
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useModal from '@/hooks/useModal';
 
-// Local sorting and pagination
 import Pagination from '@/components/reusableUI/Pagination';
 import SortDropdown from '@/components/reusableUI/SortDropdown';
 import useLocalSorter from '@/hooks/useLocalSorter';
-
-// 📚 Get the sorting options from the sorting file
 import { logSortOptions, getLogSortFunction } from '@/lib/utils/sorting';
-
-// ♻️ Auto Refresh Import
 import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 
 export default function AdminLogsMainPage() {
-  // 🛡️ Auth/session hooks
-  const { data: session, status } = useSession();
+  // 🌐 translator
+  const t = useTranslations();
+
+  // 🔐 session & guard
+  const { status } = useSession();
   const router = useRouter();
   const { isAllowed, redirect } = useAuthGuard('admin');
   const { displayMessage, showLoader, hideLoader } = useAppHandlers();
+  const { openModal, hideModal } = useModal();
 
-  // 🪵 State for logs, sorting, and pagination
+  // 🪵 state
   const [logs, setLogs] = useState([]);
   const [sortOrder, setSortOrder] = useState('createdAt_desc');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // ⚡ Modal States
-  const { openModal, hideModal } = useModal();
-
-  // 📥 Fetch logs from the API
+  // 📥 fetch logs
   const fetchLogs = async () => {
     try {
-      showLoader({ text: 'Loading Activity Logs...' }); // ⏳ Loader up
-      const response = await axiosInstance.get('/api/admin/logs/main'); // 🚚 Get logs
-      setLogs(response.data.logs || []); // 📦 Save logs to state
-      displayMessage('Activity Logs Loaded!', 'success'); // ✅ Toast
+      showLoader({ text: t('app.admin.logs.main.loading') }); // ⏳ loader text
+      const response = await axiosInstance.get('/api/admin/logs/main');
+      setLogs(response.data.logs || []);
+      displayMessage(t('app.admin.logs.main.loadSuccess'), 'success');
     } catch (err) {
       displayMessage(
-        `Failed to load activity logs${err?.response?.data?.error ? `: ${err.response.data.error}` : ''}`,
+        t('app.admin.logs.main.loadFailed', {
+          error: err?.response?.data?.error ? `: ${err.response.data.error}` : ''
+        }),
         'error'
       );
     } finally {
-      hideLoader(); // 🧹 Clean up
+      hideLoader();
     }
   };
 
-  // ✅ Countdown timer for refresh every 10 minutes
+  // ⏱️ auto-refresh (10 minutes)
   const { AutoRefresh } = useAutoRefresh(fetchLogs, {
     intervalSeconds: 600,
-    uiOptions: {
-      showManualButton: true,
-      showPauseToggle: true
-    }
+    uiOptions: { showManualButton: true, showPauseToggle: true }
   });
 
-  // 🗂️ Group logs by IP address (beginner friendly)
+  // 🗂️ group logs by IP
   const logsByIp = {};
-  // ✨ loop through the ip's
-  logs.forEach((log) => {
-    // 🌍 Get the IP address (or use '—' if missing)
-    const ip = log.ip_address || '—';
-    // 📦 Create a new array for this IP if not exists
-    if (!logsByIp[ip]) {
-      logsByIp[ip] = [];
-    }
-    // ➕ Add the log to the array for this IP
-    logsByIp[ip].push(log);
+  logs.forEach((singleLog) => {
+    const ip = singleLog.ip_address || '—';
+    if (!logsByIp[ip]) logsByIp[ip] = [];
+    logsByIp[ip].push(singleLog);
   });
 
-  // 🛠️ Turn logsByIp object into an array for rendering, sorting, and pagination
+  // 🧱 build grouped array
   const groupedLogs = Object.keys(logsByIp).map((ip) => {
-    // 🔎 Sort logs by createdAt descending (latest first)
-    const sortedLogs = logsByIp[ip]
+    const sortedForThisIp = logsByIp[ip]
       .slice()
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    // ✅ Return the first sorted logs
     return {
       ip_address: ip,
-      logs: sortedLogs,
-      count: sortedLogs.length,
-      latestLog: sortedLogs[0] // 🕗 The latest log for this ip
+      logs: sortedForThisIp,
+      count: sortedForThisIp.length,
+      latestLog: sortedForThisIp[0]
     };
   });
 
-  // 🧠 Sorted logs using useLocalSorter
+  // 🧮 sort groups by latest log fields
   const sortedGroupLogs = useLocalSorter(groupedLogs, sortOrder, (order) => {
-    const sortFunction = getLogSortFunction(order);
-    return (a, b) => sortFunction(a.latestLog, b.latestLog); // sort by latest log fields
+    const sortFn = getLogSortFunction(order);
+    return (a, b) => sortFn(a.latestLog, b.latestLog);
   });
 
-  // ⚙️ Pagination, pageSize, totalPages and pagedLogs using slice (frontend pagination)
+  // 📑 pagination
   const pageSize = 10;
   const totalPages = Math.ceil(sortedGroupLogs.length / pageSize);
   const pagedLogs = sortedGroupLogs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  // 🗑️ Delete all logs for a specific IP (with modal confirmation)
+  // 🗑️ delete all logs for an IP
   const handleDelete = (ip_address) => {
     openModal('deleteLogsByIp', {
-      title: 'Delete All Logs for This IP',
-      description: `Are you sure you want to delete ALL logs for IP: ${ip_address}? This cannot be undone.`,
-      confirmButtonText: 'Delete',
+      title: t('app.admin.logs.main.deleteModal.title'),
+      description: t('app.admin.logs.main.deleteModal.description', { ip: ip_address }),
+      confirmButtonText: t('app.admin.logs.main.deleteModal.confirm'),
       confirmButtonType: 'Danger',
-      cancelButtonText: 'Cancel',
+      cancelButtonText: t('app.admin.logs.main.deleteModal.cancel'),
       onConfirm: async () => {
         try {
-          showLoader({ text: 'Deleting logs...' });
+          showLoader({ text: t('app.admin.logs.main.deleting') });
           await axiosInstance.delete(`/api/admin/logs/${encodeURIComponent(ip_address)}`);
-          displayMessage('Logs deleted!', 'success');
-          fetchLogs(); // 🔄 Refresh list
+          displayMessage(t('app.admin.logs.main.deletedSuccess'), 'success');
+          fetchLogs();
         } catch (err) {
-          displayMessage(`❌ Delete failed: ${err.message}`, 'error');
+          displayMessage(t('app.admin.logs.main.deleteFailed'), 'error');
         } finally {
           hideLoader();
         }
       },
       onCancel: () => {
-        displayMessage('🛑 Deletion cancelled.', 'info');
+        displayMessage(t('app.admin.logs.main.deletionCancelled'), 'info');
         hideModal();
         hideLoader();
       }
     });
   };
 
-  // 👀 Fetch logs only when user is authenticated and allowed
+  // 🚀 initial load when allowed
   useEffect(() => {
     if (status === 'authenticated' && isAllowed) {
       fetchLogs();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, isAllowed]); // ✅ Don't include fetchLogs!
+  }, [status, isAllowed]);
 
-  // 🚫 Redirect if not allowed
+  // 🚫 redirect if forbidden
   useEffect(() => {
     if (status !== 'loading' && !isAllowed && redirect) {
       router.replace(redirect);
     }
   }, [status, isAllowed, redirect, router]);
 
-  // 👻 Return nothing while loading or unauthorized
+  // 🛡️ guard
   if (!isAllowed) return null;
 
   return (
     <div className="flex flex-col items-center w-full">
       <div className="container-style">
-        {/* 🏷️ Title & Divider */}
+        {/* 🏷️ title */}
         <div className="flex flex-col items-center text-center w-full">
-          <h1 className="text-wonderful-5 text-2xl mb-0">All User Activity Logs (by IP)</h1>
+          <h1 className="text-wonderful-5 text-2xl mb-0">{t('app.admin.logs.main.title')}</h1>
           <hr className="border border-gray-400 w-8/12 my-4" />
         </div>
 
-        {/* 🔄 Sorting & AutoRefresh Controls (row on desktop, stacked on mobile) */}
+        {/* 🔧 controls row */}
         <div className="flex justify-center items-center w-full">
           <div className="flex flex-col w-10/12 mb-3 items-center md:flex-row md:space-x-3 md:space-y-0 space-y-10">
-            {/* 🟦 SortDropdown centered in its column */}
+            {/* 🔽 sort */}
             <div className="flex-1 flex justify-center items-center m-0">
               <SortDropdown options={logSortOptions} value={sortOrder} onChange={setSortOrder} />
             </div>
-
-            {/* 📏 Divider for mobile/tablet */}
+            {/* 📏 mobile divider */}
             <hr className="md:hidden border border-gray-400 w-8/12 my-4" />
-
-            {/* ⏳ AutoRefresh centered in its column */}
-            <div className="flex-1 flex justify-center items-center">{AutoRefresh}</div>
+            {/* ⏱️ auto refresh */}
+            <div className="flex-1 flex justify-center items-center">
+              <AutoRefresh />
+            </div>
           </div>
         </div>
-        {/* 💻 Desktop Table View */}
+
+        {/* 💻 desktop table */}
         <div className="hidden xl:flex justify-center w-full">
           <div className="w-full max-w-full overflow-x-auto">
             <table className="min-w-[950px] w-full border-separate border-spacing-0 text-shadow-dark-1">
               <thead>
                 <tr className="bg-gray-600 text-base-100 font-bold">
-                  <th className="border px-2 py-1">IP Address</th>
-                  <th className="border px-2 py-1">Logs</th>
-                  <th className="border px-2 py-1">Latest Page</th>
-                  <th className="border px-2 py-1">Latest User</th>
-                  <th className="border px-2 py-1">Latest Time</th>
-                  <th className="border px-2 py-1">Actions</th>
+                  <th className="border px-2 py-1">{t('app.admin.logs.main.table.ip')}</th>
+                  <th className="border px-2 py-1">{t('app.admin.logs.main.table.logs')}</th>
+                  <th className="border px-2 py-1">{t('app.admin.logs.main.table.latestPage')}</th>
+                  <th className="border px-2 py-1">{t('app.admin.logs.main.table.latestUser')}</th>
+                  <th className="border px-2 py-1">{t('app.admin.logs.main.table.latestTime')}</th>
+                  <th className="border px-2 py-1">{t('app.admin.logs.main.table.actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {pagedLogs.map((group) => (
-                  <tr key={group.ip_address} className="hover:bg-gray-400">
+                  <tr key={group.ip_address} className="hover:bg-gray-400 text-center">
                     <td className="border px-2 py-1">{group.ip_address}</td>
                     <td className="border px-2 py-1">{group.count}</td>
                     <td className="border px-2 py-1">{group.latestLog.page}</td>
@@ -205,18 +193,26 @@ export default function AdminLogsMainPage() {
                     <td className="border px-2 py-1">
                       {new Date(group.latestLog.createdAt).toLocaleString()}
                     </td>
-                    <td className="border px-2 py-1 flex gap-2 justify-center">
-                      {group.count > 1 && (
-                        <Link href={`/admin/logs/${encodeURIComponent(group.ip_address)}`}>
-                          <button className="btn-primary btn-sm">View</button>
-                        </Link>
-                      )}
-                      <button
-                        className="btn-danger btn-sm"
-                        onClick={() => handleDelete(group.ip_address)}
-                      >
-                        Delete
-                      </button>
+                    <td className="border px-2 py-1">
+                      <div className="flex gap-2 justify-center">
+                        {group.count > 1 && (
+                          <Link href={`/admin/logs/${encodeURIComponent(group.ip_address)}`}>
+                            <button className="btn-primary btn-sm">
+                              {t('app.admin.logs.main.action.view')}
+                            </button>
+                          </Link>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(group.ip_address)}
+                          className="btn-danger"
+                        >
+                          <span className="inline-flex items-center gap-2">
+                            <span aria-hidden="true">🗑️</span>
+                            <span>{String(t('app.admin.logs.main.action.delete'))}</span>
+                          </span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -225,7 +221,7 @@ export default function AdminLogsMainPage() {
           </div>
         </div>
 
-        {/* 📱 Card View for Mobile/Tablet */}
+        {/* 📱 mobile cards */}
         <div className="xl:hidden flex flex-col gap-4 w-full mt-6">
           {pagedLogs.map((group) => (
             <div
@@ -233,38 +229,45 @@ export default function AdminLogsMainPage() {
               className="border border-gray-300 rounded-2xl p-4 shadow-sm bg-gray-600 text-base-100"
             >
               <div>
-                <strong>IP Address:</strong> {group.ip_address}
+                <strong>{t('app.admin.logs.main.card.ip')}:</strong> {group.ip_address}
               </div>
               <div>
-                <strong>Logs:</strong> {group.count}
+                <strong>{t('app.admin.logs.main.card.logs')}:</strong> {group.count}
               </div>
               <div>
-                <strong>Latest Event:</strong> {group.latestLog.event}
+                <strong>{t('app.admin.logs.main.card.latestEvent')}:</strong>{' '}
+                {group.latestLog.event}
               </div>
               <div>
-                <strong>Latest User:</strong> {group.latestLog.user?.name || '-'}
+                <strong>{t('app.admin.logs.main.card.latestUser')}:</strong>{' '}
+                {group.latestLog.user?.name || '-'}
               </div>
               <div>
-                <strong>Latest Time:</strong> {new Date(group.latestLog.createdAt).toLocaleString()}
+                <strong>{t('app.admin.logs.main.card.latestTime')}:</strong>{' '}
+                {new Date(group.latestLog.createdAt).toLocaleString()}
               </div>
+
               <div className="flex flex-row justify-between gap-2 mt-3">
                 {group.count > 1 && (
                   <Link href={`/admin/logs/${encodeURIComponent(group.ip_address)}`}>
-                    <button className="btn-primary w-full btn-glow">View</button>
+                    {/* eslint-disable-next-line react/jsx-no-comment-textnodes */}
+                    <button className="btn-primary w-full btn-glow">
+                      {t('app.admin.logs.main.action.view')}
+                    </button>
                   </Link>
                 )}
                 <button
                   className="btn-danger w-full btn-glow"
                   onClick={() => handleDelete(group.ip_address)}
                 >
-                  Delete
+                  {t('app.admin.logs.main.action.delete')}
                 </button>
               </div>
             </div>
           ))}
         </div>
 
-        {/* 🔢 Pagination */}
+        {/* 🔢 pagination */}
         <div className="flex justify-center mt-4">
           <Pagination
             currentPage={currentPage}

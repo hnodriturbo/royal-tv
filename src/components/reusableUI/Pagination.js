@@ -10,7 +10,7 @@
 
 'use client';
 import { Link } from '@/i18n';
-import { useTranslations, useLocale } from 'next-intl'; // 🌐 i18n
+import { useTranslations } from 'next-intl'; // 🌐 i18n
 
 const Pagination = ({ currentPage, totalPages, basePath, onPageChange }) => {
   const t = useTranslations(); // 🔤
@@ -107,17 +107,13 @@ const Pagination = ({ currentPage, totalPages, basePath, onPageChange }) => {
             <li key={page}>
               {onPageChange ? (
                 <button
+                  type="button"
                   onClick={() => goTo(page)}
-                  className={`px-4 py-2 ${
-                    page === currentPage
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-400 hover:bg-gray-600'
-                  } rounded`}
-                  disabled={page === currentPage}
                   aria-current={page === currentPage ? 'page' : undefined}
                   aria-label={t('components.pagination.aria_go_to_page', { page })}
+                  disabled={page === currentPage}
                 >
-                  {page}
+                  <span>{String(page ?? '')}</span>
                 </button>
               ) : (
                 <Link
@@ -146,7 +142,7 @@ const Pagination = ({ currentPage, totalPages, basePath, onPageChange }) => {
                   className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded"
                   aria-label={t('components.pagination.aria_go_to_page', { page: totalPages })}
                 >
-                  {totalPages}
+                  <span>{`${totalPages}`}</span>
                 </button>
               ) : (
                 <Link

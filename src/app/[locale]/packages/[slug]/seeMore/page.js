@@ -13,7 +13,7 @@
 
 import { useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useParams } from 'next/navigation';
+
 import { Link } from '@/i18n';
 import { useTranslations } from 'next-intl'; // 🌍 root i18n
 import { paymentPackages, featuresKeys } from '@/components/packages/data/packages';

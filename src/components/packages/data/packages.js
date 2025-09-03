@@ -12,7 +12,7 @@
 
 import { Link } from '@/i18n';
 import { useState } from 'react';
-import { useTranslations, useLocale } from 'next-intl'; // 🌍 i18n
+import { useTranslations } from 'next-intl'; // 🌍 i18n
 
 // 💰 raw package data (slugs used for i18n keys)
 export const paymentPackages = [

@@ -11,7 +11,7 @@
 import React, { createContext, useState, useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import RingLoader from '@/components/ui/Loader/RingLoader';
-import { useTranslations, useLocale } from 'next-intl'; // 🌍 translator hook
+import { useTranslations } from 'next-intl'; // 🌍 translator hook
 
 const LoaderContext = createContext();
 
@@ -28,7 +28,7 @@ export const LoaderProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [loaderConfig, setLoaderConfig] = useState({
     text: t('common.loader.loading'), // keep // ⏳ localized default
-    textClassName: 'text2xl text-wonderful-5 text-center m-2 z-[9999]',
+    textClassName: 'text-2xl text-wonderful-5 text-center m-2 z-[9999]',
     size: 'medium',
     color: 'blue',
     background: true
@@ -134,6 +134,7 @@ export const LoaderProvider = ({ children }) => {
                 text={loaderConfig.text || t('common.loader.loading')}
                 textClassName={loaderConfig.textClassName}
               />
+
               {/* Text, if not inside RingLoader */}
             </div>
           </div>,

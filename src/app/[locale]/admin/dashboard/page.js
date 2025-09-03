@@ -1,61 +1,62 @@
 /**
- *   =========================== page.js ===========================
- * 👑 ADMIN DASHBOARD
- * - NotificationCenter and Admin Menu stacked, same width.
- * - Both always top-aligned, centered horizontally, not vertically.
- * =================================================================
+ * =========================== /app/[locale]/admin/page.js ===========================
+ * 👑 ADMIN DASHBOARD (Client Component)
+ * - Guards admin access, shows Admin Online + Online Users + Notification Center.
+ * - Text translations use next-intl → useTranslations() with full keys.
+ * - Navigation (router) from @/i18n.
+ * ===============================================================================
  */
 
 'use client';
 
-import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+
 import useLogout from '@/hooks/useLogout';
 import useAuthGuard from '@/hooks/useAuthGuard';
-import { useRouter } from '@/i18n';
-import DashboardActionButton from '@/components/reusableUI/DashboardActionButton';
+import { useRouter } from '@/i18n'; // 🌍 locale-aware router
+import { useTranslations } from 'next-intl'; // 🌐 i18n (full keys)
+
 import NotificationCenter from '@/components/reusableUI/socket/NotificationCenter';
 import OnlineUsers from '@/components/reusableUI/socket/OnlineUsers';
 import IsAdminOnline from '@/components/reusableUI/socket/IsAdminOnline';
 
 export default function AdminDashboard() {
-  // 👤 Auth/session setup
+  // 🌐 translator
+  const t = useTranslations();
+
+  // 👤 auth/session
   const { data: session, status } = useSession();
   const { isAllowed, redirect } = useAuthGuard('admin');
   const logout = useLogout();
   const router = useRouter();
 
-  // 🔒 Redirect protection
+  // 🔒 redirect protection
   useEffect(() => {
     if (status !== 'loading' && !isAllowed && redirect) router.replace(redirect);
   }, [status, isAllowed, redirect, router]);
 
+  // 🛡️ non-admin block
   if (!isAllowed) return null;
 
   return (
-    // 🟪 STACKED layout, always top-aligned, centered horizontally
     <div className="flex flex-col items-center justify-start w-full min-h-screen gap-8">
+      {/* 🏷️ page heading */}
+      <div className="w-full flex justify-center mt-4">
+        <h1 className="text-2xl font-bold">{t('app.admin.dashboard.title')}</h1>
+      </div>
+
+      {/* 🟢 admin presence */}
       <div className="container-style w-6/12">
         <IsAdminOnline />
       </div>
+
+      {/* 👥 online users */}
       <div className="flex w-8/12 items-center justify-center">
         <OnlineUsers />
       </div>
 
-      {/* 🗂️ Admin menu card (matches NotificationCenter width) */}
-      {/*  <div className="container-style w-11/12 max-w-[600px] mx-auto">
-        <h2 className="text-2xl font-bold mb-4 text-center">
-          Welcome, {session?.user?.username || 'Admin'}
-        </h2>
-        <p className="text-center">
-          Role: <span className="font-medium">{session?.user?.role}</span>
-        </p>
-        <p className="text-center mb-6">
-          User ID: <span className="font-medium">{session?.user?.user_id}</span>
-        </p>
-
-      </div> */}
-      {/* 🔔 Notification Center panel */}
+      {/* 🔔 notification center */}
       <div className="w-11/12 max-w-[600px] mx-auto">
         <NotificationCenter userRole="admin" />
       </div>

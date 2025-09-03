@@ -3,8 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
-import { Link } from '@/i18n'; // or '@/lib/i18n' if renamed
+import { Link, useSearchParams } from '@/i18n'; // or '@/lib/i18n' if renamed
 import UserSubscriptionPanel from '@/components/reusableUI/socket/UserSubscriptionPanel';
 import FreeTrialPanel from '@/components/reusableUI/socket/FreeTrialPanel';
 import useFreeTrialStatus from '@/hooks/socket/useFreeTrialStatus';

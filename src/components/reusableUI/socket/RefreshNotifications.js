@@ -19,17 +19,16 @@ export default function RefreshNotifications({ user_id: userIdProp }) {
   const t = useTranslations(); // 🌍
 
   return (
-    <button
-      onClick={refreshNotifications}
-      disabled={loading}
-      className="btn-outline-secondary btn-sm flex items-center gap-1"
-    >
+    <button type="button" onClick={RefreshNotifications}>
       {loading ? (
         <>
-          <span className="animate-spin">⟳</span> {t('socket.ui.common.refreshing')}
+          <span className="animate-spin" aria-hidden="true">
+            ⟳
+          </span>{' '}
+          {String(t('socket.ui.common.refreshing') ?? '')}
         </>
       ) : (
-        <>⟳ {t('socket.ui.common.refresh')}</>
+        <>⟳ {String(t('socket.ui.common.refresh') ?? '')}</>
       )}
     </button>
   );

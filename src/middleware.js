@@ -13,7 +13,7 @@ import { NextResponse } from 'next/server'; // 📨 Low-level response tools
 import { getToken } from 'next-auth/jwt'; // 🔐 Read session token from cookies
 import createMiddleware from 'next-intl/middleware'; // 🌍 Locale detection/redirect
 import logger from './lib/core/logger.js'; // 🪵 Central logger (English only)
-import { routing } from '@/i18n/routing.js'; // 🧭 Source of truth for locales/default
+import { routing } from 'i18n/routing.js'; // 🧭 Source of truth for locales/default
 
 // 🧭 Build the next-intl locale middleware from our routing definition
 const localeMiddleware = createMiddleware(routing);
@@ -64,8 +64,20 @@ export async function middleware(request) {
       cookieName
     });
 
-    const userRole = token?.role || 'guest';
-    const userId = token?.user_id || null;
+    // Default role
+    let userRole = 'guest';
+    let userId = null;
+
+    if (token?.user_id) {
+      userId = token.user_id;
+
+      // Only allow "admin" if ID matches ADMIN_USER_ID
+      if (token.role === 'admin' && userId === process.env.ADMIN_USER_ID) {
+        userRole = 'admin';
+      } else {
+        userRole = 'user'; // everyone else is a user
+      }
+    }
 
     // 📨 Forward all incoming headers + inject ours
     const forwardedHeaders = new Headers(request.headers);
