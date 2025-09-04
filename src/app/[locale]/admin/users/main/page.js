@@ -24,6 +24,7 @@ import SortDropdown from '@/components/reusableUI/SortDropdown';
 import useLocalSorter from '@/hooks/useLocalSorter';
 import Pagination from '@/components/reusableUI/Pagination';
 import ConversationActionButton from '@/components/reusableUI/ConversationActionButton';
+import { SafeString } from '@/lib/ui/SafeString';
 
 export default function AdminUsersMainPage() {
   // 🌐 translator
@@ -133,17 +134,18 @@ export default function AdminUsersMainPage() {
               <div className="flex flex-col md:flex-row justify-between mb-2 items-center">
                 <div className="w-full text-center flex flex-col items-center">
                   <h3 className="font-semibold text-lg">
-                    {singleUser.name}
+                    {SafeString(singleUser.name, '')}
                     <span className="ml-2 text-xs text-muted">({singleUser.username})</span>
                   </h3>
                   <div className="text-sm mt-1">
                     <span>
-                      {String(t('app.admin.users.main.email'))}: {singleUser.email}
+                      {SafeString(t('app.admin.users.main.email'))}: (
+                      {SafeString(singleUser.email, '')})
                     </span>
                   </div>
                   <div className="text-xs text-muted">
                     <span>
-                      {String(
+                      {SafeString(
                         t('app.admin.users.main.joined', {
                           date: new Date(singleUser.createdAt).toLocaleDateString()
                         })
@@ -154,7 +156,7 @@ export default function AdminUsersMainPage() {
                 <div className="flex flex-col gap-1 items-end mt-2 md:mt-0">
                   {/* 🏷️ role badge */}
                   <span className="absolute right-2 top-2 px-3 py-1 rounded-lg bg-purple-800 text-sm font-bold uppercase tracking-wider">
-                    {singleUser.role}
+                    {SafeString(singleUser.role)}
                   </span>
                 </div>
               </div>
@@ -163,21 +165,25 @@ export default function AdminUsersMainPage() {
               <div className="flex flex-row gap-4 text-sm mb-2 justify-center">
                 {singleUser.whatsapp && (
                   <span>
-                    <span className="font-bold">{String(t('app.admin.users.main.whatsapp'))}:</span>{' '}
-                    {singleUser.whatsapp}
+                    <span className="font-bold">
+                      {SafeString(t('app.admin.users.main.whatsapp'))}:
+                    </span>{' '}
+                    {SafeString(singleUser.whatsapp, '')}
                   </span>
                 )}
                 {singleUser.telegram && (
                   <span>
-                    <span className="font-bold">{String(t('app.admin.users.main.telegram'))}:</span>{' '}
-                    {singleUser.telegram}
+                    <span className="font-bold">
+                      {SafeString(t('app.admin.users.main.telegram'))}:
+                    </span>{' '}
+                    {SafeString(singleUser.telegram, '')}
                   </span>
                 )}
                 <span>
                   <span className="font-bold">
-                    {String(t('app.admin.users.main.preferredContact'))}:
+                    {SafeString(t('app.admin.users.main.preferredContact'))}:
                   </span>{' '}
-                  {singleUser.preferredContactWay}
+                  {SafeString(singleUser.preferredContactWay, '')}
                 </span>
               </div>
 
@@ -206,7 +212,7 @@ export default function AdminUsersMainPage() {
                                 : 'text-green-400'
                           }`}
                         >
-                          ({singleUser.freeTrials[0].status})
+                          ({SafeString(singleUser.freeTrials[0].status, '')})
                         </span>
                       )}
                     </span>
@@ -220,7 +226,7 @@ export default function AdminUsersMainPage() {
                   >
                     <span className="inline-flex items-center gap-2">
                       <span aria-hidden="true">🎁</span>
-                      <span>{String(t('app.admin.users.main.freeTrials'))} (0)</span>
+                      <span>{SafeString(t('app.admin.users.main.freeTrials'))} (0)</span>
                     </span>
                   </button>
                 )}
@@ -233,12 +239,12 @@ export default function AdminUsersMainPage() {
                   >
                     <span className="inline-flex items-center gap-2">
                       <span aria-hidden="true">💬</span>
-                      <span>{String(t('app.admin.users.main.liveChats'))}</span>
+                      <span>{SafeString(t('app.admin.users.main.liveChats'))}</span>
                     </span>
                     <span className="font-normal mt-1">
-                      {String(t('app.admin.users.main.total'))}: {singleUser.totalLiveChats} -{' '}
+                      {SafeString(t('app.admin.users.main.total'))}: {singleUser.totalLiveChats} -{' '}
                       <span className={singleUser.unreadLiveChats > 0 ? 'font-bold' : 'text-muted'}>
-                        {String(t('app.admin.users.main.unread'))}: {singleUser.unreadLiveChats}
+                        {SafeString(t('app.admin.users.main.unread'))}: {singleUser.unreadLiveChats}
                       </span>
                     </span>
                   </Link>

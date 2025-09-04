@@ -11,6 +11,7 @@
 'use client';
 import { Link } from '@/i18n';
 import { useTranslations } from 'next-intl'; // 🌐 i18n
+import { SafeString } from '@/lib/ui/SafeString';
 
 const Pagination = ({ currentPage, totalPages, basePath, onPageChange }) => {
   const t = useTranslations(); // 🔤
@@ -113,7 +114,7 @@ const Pagination = ({ currentPage, totalPages, basePath, onPageChange }) => {
                   aria-label={t('components.pagination.aria_go_to_page', { page })}
                   disabled={page === currentPage}
                 >
-                  <span>{String(page ?? '')}</span>
+                  <span>{SafeString(page ?? '')}</span>
                 </button>
               ) : (
                 <Link

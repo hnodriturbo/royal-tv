@@ -15,6 +15,7 @@ import { usePathname, useRouter, useSearchParams } from '@/i18n'; // 🧭 locale
 import { useLocale, useTranslations } from 'next-intl'; // 🗣️ active locale + translator
 import useSocketHub from '@/hooks/socket/useSocketHub'; // 📡 socket bridge
 import Flag from 'react-world-flags'; // 🚩 flags
+import { SafeString } from '@/lib/ui/SafeString';
 
 // ✅ Supported locales
 const SUPPORTED_LOCALES = ['en', 'is'];
@@ -98,15 +99,15 @@ export default function LanguageSwitcher() {
       {/* 🇬🇧 English */}
       <button
         type="button"
-        aria-label={String(t('app.languageSwitcher.english_label'))}
+        aria-label={SafeString(t('app.languageSwitcher.english_label'))}
         aria-current={activeLocale === 'en' ? 'true' : undefined}
         onClick={() => performLocaleSwitch('en')}
         disabled={activeLocale === 'en' || isLanguageSwitchingDisabled}
         className={getButtonClasses(activeLocale === 'en' || isLanguageSwitchingDisabled)}
         title={
           isLanguageSwitchingDisabled
-            ? String(t('app.languageSwitcher.disabled_tooltip'))
-            : String(t('app.languageSwitcher.english_tooltip'))
+            ? SafeString(t('app.languageSwitcher.disabled_tooltip'))
+            : SafeString(t('app.languageSwitcher.english_tooltip'))
         }
       >
         <span className="inline-flex items-center" aria-hidden="true">
@@ -117,15 +118,15 @@ export default function LanguageSwitcher() {
       {/* 🇮🇸 Icelandic */}
       <button
         type="button"
-        aria-label={String(t('app.languageSwitcher.icelandic_label'))}
+        aria-label={SafeString(t('app.languageSwitcher.icelandic_label'))}
         aria-current={activeLocale === 'is' ? 'true' : undefined}
         onClick={() => performLocaleSwitch('is')}
         disabled={activeLocale === 'is' || isLanguageSwitchingDisabled}
         className={getButtonClasses(activeLocale === 'is' || isLanguageSwitchingDisabled)}
         title={
           isLanguageSwitchingDisabled
-            ? String(t('app.languageSwitcher.disabled_tooltip'))
-            : String(t('app.languageSwitcher.icelandic_tooltip'))
+            ? SafeString(t('app.languageSwitcher.disabled_tooltip'))
+            : SafeString(t('app.languageSwitcher.icelandic_tooltip'))
         }
       >
         <span className="inline-flex items-center" aria-hidden="true">

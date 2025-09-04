@@ -23,6 +23,7 @@ import TypingIndicator from '@/components/reusableUI/socket/TypingIndicator';
 import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 import { useTranslations } from 'next-intl'; // 🌍 translator
+import { SafeString } from '@/lib/ui/SafeString';
 
 export default function LiveChatRoom({
   conversation_id,
@@ -229,26 +230,30 @@ export default function LiveChatRoom({
                         onClick={() =>
                           onEditMessageModal?.(
                             message.message_id,
-                            String(message.message ?? ''),
+                            SafeString(message.message, ''),
                             editMessage
                           )
                         }
-                        title={String(t('socket.ui.common.edit') ?? '')}
+                        title={SafeString(t('socket.ui.common.edit'), '')}
                         style={{ cursor: 'pointer' }}
                       >
                         <span aria-hidden="true">✏️</span>
-                        <span className="sr-only">{String(t('socket.ui.common.edit') ?? '')}</span>
+                        <span className="sr-only">
+                          {SafeString(t('socket.ui.common.edit'), '')}
+                        </span>
                       </button>
                       {/* 🗑️ Delete message */}
                       <button
                         type="button"
-                        onClick={() => onDeleteMessageModal?.(message.message_id, deleteMessage)}
-                        title={String(t('socket.ui.common.delete') ?? '')}
+                        onClick={() =>
+                          onDeleteMessageModal?.(SafeString(message.message_id, ''), deleteMessage)
+                        }
+                        title={SafeString(t('socket.ui.common.delete'), '')}
                         style={{ cursor: 'pointer' }}
                       >
                         <span aria-hidden="true">🗑️</span>
                         <span className="sr-only">
-                          {String(t('socket.ui.common.delete') ?? '')}
+                          {SafeString(t('socket.ui.common.delete'), '')}
                         </span>
                       </button>
                     </div>

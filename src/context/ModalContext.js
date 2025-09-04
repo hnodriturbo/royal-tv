@@ -3,6 +3,7 @@
 import React, { createContext, useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { useTranslations } from 'next-intl';
+import { SafeString } from '@/lib/ui/SafeString';
 
 // Create the ModalContext to provide modal functionality globally.
 const ModalContext = createContext();
@@ -110,7 +111,9 @@ export const ModalProvider = ({ children }) => {
                     }}
                     className="btn-secondary"
                   >
-                    <span>{modalProps.cancelButtonText || String(t('common.buttons.cancel'))}</span>
+                    <span>
+                      {SafeString(modalProps.cancelButtonText ?? t('common.buttons.cancel'), '')}
+                    </span>
                   </button>
                 )}
 
@@ -128,7 +131,9 @@ export const ModalProvider = ({ children }) => {
                       hideModal(); // ✅ Close the modal
                     }}
                   >
-                    {modalProps.confirmButtonText || t('common.buttons.confirm')}
+                    <span>
+                      {SafeString(modalProps.confirmButtonText ?? t('common.buttons.confirm'), '')}
+                    </span>
                   </button>
                 )}
               </div>

@@ -15,6 +15,7 @@ import useNotifications from '@/hooks/socket/useNotifications'; // 🪝 Socket n
 import { useRouter, Link } from '@/i18n'; // 🧭 Navigation
 import useModal from '@/hooks/useModal';
 import { useTranslations } from 'next-intl'; // 🌍 i18n root translator
+import { SafeString } from '@/lib/ui/SafeString';
 
 // 🎨 Consistent notification card styling (stable)
 const notificationCardClasses = (singleNotification) =>
@@ -153,7 +154,7 @@ export default function SeeAllNotifications({ userRole = 'user' }) {
                   {!singleNotification.is_read && (
                     <span className="w-2 h-2 bg-blue-500 rounded-full" />
                   )}
-                  <span className="text-md">{String(singleNotification.title ?? '')}</span>
+                  <span className="text-md">{SafeString(singleNotification.title ?? '')}</span>
                 </div>
                 <span className="ml-2 text-lg">
                   {expandedIds[singleNotification.notification_id] ? '−' : '+'}
@@ -190,11 +191,11 @@ export default function SeeAllNotifications({ userRole = 'user' }) {
                         onClick={() =>
                           handleDeleteNotificationModal(singleNotification.notification_id)
                         }
-                        title={String(
+                        title={SafeString(
                           t('socket.ui.see_all_notifications.delete_notification') ?? ''
                         )}
                       >
-                        🗑️ {String(t('socket.ui.see_all_notifications.delete_button') ?? '')}
+                        🗑️ {SafeString(t('socket.ui.see_all_notifications.delete_button') ?? '')}
                       </button>
                       {/* 🔓 Open content link */}
                       <Link
@@ -236,9 +237,9 @@ export default function SeeAllNotifications({ userRole = 'user' }) {
             type="button"
             className="px-5 py-2 rounded-lg bg-red-700 hover:bg-red-900 border border-red-500 text-white font-bold shadow transition"
             onClick={handleClearAllNotificationsModal}
-            title={String(t('socket.ui.see_all_notifications.clear_all_notifications') ?? '')}
+            title={SafeString(t('socket.ui.see_all_notifications.clear_all_notifications') ?? '')}
           >
-            🧨 {String(t('socket.ui.see_all_notifications.clear_all_notifications') ?? '')}
+            🧨 {SafeString(t('socket.ui.see_all_notifications.clear_all_notifications') ?? '')}
           </button>
         </div>
       )}

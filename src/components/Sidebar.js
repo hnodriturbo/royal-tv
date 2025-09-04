@@ -17,6 +17,7 @@ import { useState } from 'react';
 import sidebarLinks from '@/lib/utils/sidebarLinks';
 import useLogout from '@/hooks/useLogout';
 import { useTranslations } from 'next-intl'; // 🌍 i18n hook
+import { SafeString } from '@/lib/ui/SafeString';
 
 export default function Sidebar() {
   const { data: session, status } = useSession();
@@ -71,7 +72,7 @@ export default function Sidebar() {
                       <span aria-hidden="true" className="mr-1">
                         {navigationItem.emoji}
                       </span>
-                      <span>{String(t(`app.navigation.${navigationItem.key}`))}</span>
+                      <span>{SafeString(t(`app.navigation.${navigationItem.key}`))}</span>
                     </span>
                   </button>
                 </li>
@@ -85,7 +86,7 @@ export default function Sidebar() {
                       <span aria-hidden="true" className="mr-1">
                         {navigationItem.emoji}
                       </span>
-                      <span>{String(t(`app.navigation.${navigationItem.key}`))}</span>
+                      <span>{SafeString(t(`app.navigation.${navigationItem.key}`))}</span>
                     </span>
                   </Link>
                 </li>
@@ -196,7 +197,7 @@ export default function Sidebar() {
                       <span aria-hidden="true" className="mr-1">
                         {navigationItem.emoji}
                       </span>
-                      <span>{String(t(`app.navigation.${navigationItem.key}`))}</span>
+                      <span>{SafeString(t(`app.navigation.${navigationItem.key}`))}</span>
                     </span>
                   </button>
                 </li>
@@ -211,7 +212,7 @@ export default function Sidebar() {
                       <span aria-hidden="true" className="mr-1">
                         {navigationItem.emoji}
                       </span>
-                      <span>{String(t(`app.navigation.${navigationItem.key}`))}</span>
+                      <span>{SafeString(t(`app.navigation.${navigationItem.key}`))}</span>
                     </span>
                   </Link>
                 </li>
