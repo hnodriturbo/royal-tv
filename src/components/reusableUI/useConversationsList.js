@@ -1,188 +1,62 @@
+// File: hooks/socket/useConversationsList.js
 'use client';
 
-/**
- * useConversationsList
- * --------------------
- * Hook that fetches conversations or user summaries.
- * - Translated with i18n client via useTranslations() for all UI-facing messages
- * - Logger stays in plain English (per your rule)
- */
-
-import logger from '@/lib/core/logger';
-import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useSocketHub from '@/hooks/socket/useSocketHub';
-import { useTranslations } from 'next-intl'; // 🌐 i18n
 
-const defaultUser = {
-  user_id: null,
-  name: 'Unknown',
-  email: null,
-  username: null,
-  role: null
-};
-
-const defaultLastMessage = {
-  message_id: null,
-  message: null,
-  sender_is_admin: null,
-  createdAt: null,
-  updatedAt: null,
-  status: null
-};
-
-const defaultMessageData = {
-  user_id: null,
-  message_id: null,
-  sender_is_admin: null,
-  status: null,
-  readAt: null
-};
-
-const useConversationsList = ({
-  role,
-  selectedUserId = null,
+export default function useConversationsList({
+  role = 'user',
   chatType = 'liveChat',
-  initialPage = 1,
-  pageSize = 5,
-  routes = {}
-}) => {
-  const t = useTranslations(); // 🔤
-
-  // 1️⃣ State
-  const [items, setItems] = useState([]);
-  const [currentPage, setCurrentPage] = useState(initialPage);
-  const [totalPages, setTotalPages] = useState(1);
-  const firstFetchRef = useRef(true);
-
-  // 2️⃣ App helpers
-  const { displayMessage, showLoader, hideLoader, isLoading } = useAppHandlers();
+  selectedUserId = null,
+  routes = {},
+  page = 1,
+  pageSize = 20
+} = {}) {
+  const { data: session } = useSession();
+  const { displayMessage } = useAppHandlers();
   const { onRefreshConversations } = useSocketHub();
-  const { data: session, status } = useSession();
 
-  // 3️⃣ Compute final endpoint URL
+  const [items, setItems] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+
   const endPointURL = useMemo(() => {
-    const defaultRoutes = {
-      adminMain: `/api/admin/${chatType}/main`,
-      adminUser: selectedUserId ? `/api/admin/${chatType}/user/${selectedUserId}` : null,
-      userMain: `/api/user/${chatType}/main`
-    };
+    const base = role === 'admin' ? '/api/admin' : '/api/user';
+    if (role === 'admin' && selectedUserId) return `${base}/${chatType}/user/${selectedUserId}`;
+    return `${base}/${chatType}/main`;
+  }, [role, chatType, selectedUserId]);
 
-    const paths = { ...defaultRoutes, ...routes };
-
-    if (role === 'admin') {
-      return selectedUserId ? paths.adminUser : paths.adminMain;
-    } else {
-      return paths.userMain;
+  const fetchItems = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await axiosInstance.get(endPointURL, { params: { page, pageSize } });
+      setItems(res.data?.items || res.data?.conversations || []);
+      setTotal(res.data?.total || 0);
+    } catch (e) {
+      displayMessage('Failed to load conversations', 'error');
+    } finally {
+      setLoading(false);
     }
-  }, [role, selectedUserId, chatType, routes]);
+  }, [endPointURL, page, pageSize, displayMessage]);
 
-  // 4️⃣ Main fetch logic
-  const fetchItems = useCallback(
-    async (isSilent = false) => {
-      if (!endPointURL || status !== 'authenticated' || !session) return;
-
-      logger.log('[useConversationsList] Fetching:', endPointURL);
-
-      if (!isSilent) {
-        const loaderText = firstFetchRef.current ?
-        t('components.useConversationsList.loader_fetching') :
-        t('components.useConversationsList.loader_refreshing');
-        showLoader({ text: loaderText });
-      }
-
-      try {
-        const { data } = await axiosInstance.get(endPointURL, {
-          params: { page: currentPage, limit: pageSize }
-        });
-
-        const normalizedItems = (data.conversations || data.items || []).map((item) => {
-          const isUserSummary = !item.conversation_id;
-          const sourceUser = isUserSummary ? item : item.user;
-
-          const user = {
-            ...defaultUser,
-            user_id: sourceUser?.user_id ?? null,
-            name: sourceUser?.name ?? defaultUser.name,
-            email: sourceUser?.email ?? null,
-            username: sourceUser?.username ?? null,
-            role: sourceUser?.role ?? null
-          };
-
-          const lastMessageDate =
-          item.lastMessage?.createdAt || // object coming from admin‑user route
-          item.lastMessage || // plain Date coming from summary route
-          null;
-
-          const messageData =
-          item.messageData || item.defaultMessage ?
-          {
-            ...defaultMessageData,
-            ...(item.messageData || item.defaultMessage)
-          } :
-          defaultMessageData;
-
-          return {
-            id: item.conversation_id ?? item.user_id ?? `summary-${user.user_id}`,
-            type: isUserSummary ? 'userSummary' : 'conversation',
-            conversation_id: item.conversation_id ?? null,
-            subject: item.subject ?? null,
-            status: item.status ?? null,
-            user,
-            lastMessage: lastMessageDate,
-            messageData,
-            updatedAt: item.updatedAt ?? lastMessageDate ?? null,
-            createdAt: item.createdAt ?? null,
-            totalMessagesInConversation:
-            item.totalMessagesInConversation ?? item.totalMessages ?? 0,
-            unreadMessagesInConversation:
-            item.unreadMessagesInConversation ?? item.messagesCount ?? 0,
-            totalConversationsForUser: item.totalConversationsForUser ?? 0,
-            unreadConversationsForUser: item.unreadConversationsForUser ?? 0,
-            totalMessagesForUser: item.totalMessagesForUser ?? 0,
-            unreadMessagesForUser: item.unreadMessagesForUser ?? 0
-          };
-        });
-
-        setItems(normalizedItems);
-        setTotalPages(data.totalPages ?? 1);
-
-        if (!isSilent && firstFetchRef.current) {
-          displayMessage(t('components.useConversationsList.success_loaded'), 'success', 3);
-        }
-      } catch (error) {
-        logger.error('[useConversationsList] ❌ Fetch Error:', error);
-        displayMessage(t('components.useConversationsList.error_failed_load'), 'error');
-        setItems([]);
-        setTotalPages(1);
-      } finally {
-        hideLoader();
-        firstFetchRef.current = false;
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [endPointURL, currentPage, pageSize, status]
-  );
-  const refetch = useCallback((isSilent = true) => fetchItems(isSilent), [fetchItems]);
-
-  // 5️⃣ Trigger fetch when ready (first load)
   useEffect(() => {
-    if (status === 'authenticated') {
-      fetchItems();
-    }
-  }, [status, fetchItems]);
+    fetchItems();
+  }, [fetchItems]);
+
+  useEffect(() => {
+    const stop = onRefreshConversations?.(fetchItems);
+    return () => {
+      if (typeof stop === 'function') stop();
+    };
+  }, [onRefreshConversations, fetchItems]);
 
   return {
     items,
-    currentPage,
-    totalPages,
-    setCurrentPage,
-    isLoading,
-    endPointURL,
+    total,
+    loading,
     refetch: fetchItems
   };
-};
-
-export default useConversationsList;
+}

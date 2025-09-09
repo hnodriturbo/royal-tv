@@ -1,33 +1,22 @@
-/**
- * GET /api/admin/liveChat/user/[user_id]
- * --------------------------------------
- * Returns all liveChat conversations for a given user, sorted unread first then by newest.
- * No pagination: client does all pagination and sorting!
- * --------------------------------------
- */
 import logger from '@/lib/core/logger';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/core/prisma';
+import { withRole } from '@/lib/api/guards';
 
-export async function GET(request, context) {
-  // 1️⃣ Extract path param
-  const { user_id } = await context.params;
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-  if (!user_id) {
-    return NextResponse.json({ error: 'User ID is required in the URL path' }, { status: 400 });
-  }
+export const GET = withRole('admin', async (_req, ctx) => {
+  const { user_id } = ctx.params;
+  if (!user_id) return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
 
   try {
-    // 2️⃣ Fetch user details
     const userDetails = await prisma.user.findUnique({
       where: { user_id },
       select: { user_id: true, name: true, username: true, email: true }
     });
-    if (!userDetails) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
+    if (!userDetails) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-    // 3️⃣ Fetch all conversations for this user
     const allConvos = await prisma.liveChatConversation.findMany({
       where: { owner_id: user_id },
       orderBy: { updatedAt: 'desc' },
@@ -35,23 +24,16 @@ export async function GET(request, context) {
         conversation_id: true,
         subject: true,
         updatedAt: true,
-        _count: {
-          select: {
-            messages: {
-              where: { readAt: null, sender_is_admin: false }
-            }
-          }
-        }
+        _count: { select: { messages: { where: { readAt: null, sender_is_admin: false } } } }
       }
     });
 
-    // 4️⃣ Shape & unread-first, newest fallback sort
     const conversations = allConvos
-      .map((convo) => ({
-        conversation_id: convo.conversation_id,
-        subject: convo.subject,
-        updatedAt: convo.updatedAt,
-        unreadCount: convo._count.messages
+      .map((c) => ({
+        conversation_id: c.conversation_id,
+        subject: c.subject,
+        updatedAt: c.updatedAt,
+        unreadCount: c._count.messages
       }))
       .sort((a, b) => {
         if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
@@ -59,7 +41,6 @@ export async function GET(request, context) {
         return new Date(b.updatedAt) - new Date(a.updatedAt);
       });
 
-    // 5️⃣ Return all conversations (no pagination)
     return NextResponse.json({
       conversations,
       userDetails,
@@ -69,4 +50,4 @@ export async function GET(request, context) {
     logger.error('GET [user_id] error:', err);
     return NextResponse.json({ error: err.message, full: err }, { status: 500 });
   }
-}
+});

@@ -8,7 +8,7 @@
  * - Keeps REST fetch effect safe from loops
  * ============================================
  */
-'use client';
+'use client';import { useRouter, useSearchParams } from "next/navigation";
 
 import { useEffect, useState, useMemo } from 'react'; // 🧰 React hooks
 import { useTranslations } from 'next-intl'; // 🌍 root translator (no namespace)
@@ -16,7 +16,7 @@ import axiosInstance from '@/lib/core/axiosInstance'; // 🌐 HTTP client
 import useAppHandlers from '@/hooks/useAppHandlers'; // 🧯 loaders + toasts
 import { useSession } from 'next-auth/react'; // 🔐 auth
 import useAuthGuard from '@/hooks/useAuthGuard'; // 🛡️ guard
-import { useRouter, useSearchParams } from '@/i18n'; // 🧭 locale-aware router (project path)
+// 🧭 locale-aware router (project path)
 import Pagination from '@/components/reusableUI/Pagination'; // 🔢 pagination
 import { userSubscriptionSortOptions, getUserSubscriptionSortFunction } from '@/lib/utils/sorting'; // 🔀 sort utils
 import SortDropdown from '@/components/reusableUI/SortDropdown'; // ⬇️ sort dropdown
@@ -121,8 +121,8 @@ export default function UserSubscriptionsMainPage() {
   return (
     <div className="flex flex-col items-center justify-center w-full lg:mt-0 mt-12">
       {/* 🎉 Payment Success Banner */}
-      {showSuccess && (
-        <div className="max-w-3xl w-full">
+      {showSuccess &&
+      <div className="max-w-3xl w-full">
           <div className="rounded-xl shadow-lg bg-green-600 bg-opacity-80 text-white p-6 mb-6 flex flex-col items-center">
             <span className="text-4xl mb-2">🎉</span>
             <h2 className="text-2xl font-bold mb-2 text-center">
@@ -137,7 +137,7 @@ export default function UserSubscriptionsMainPage() {
             </p>
           </div>
         </div>
-      )}
+      }
 
       <div className="container-style lg:w-10/12 w-11/12 max-w-3xl">
         {/* 🏷️ Title */}
@@ -151,22 +151,22 @@ export default function UserSubscriptionsMainPage() {
         {/* 🃏 Subscription Cards */}
         <div className="flex flex-col gap-8 w-full mt-6">
           {/* 🚫 No subscriptions message → show socket panel */}
-          {subscriptions.length === 0 && ( // ✅ compare length, not array to number
-            <div className="lg:w-[600px] w-full mx-auto">
+          {subscriptions.length === 0 && // ✅ compare length, not array to number
+          <div className="lg:w-[600px] w-full mx-auto">
               <UserSubscriptionPanel user_id={session?.user?.user_id} />
             </div>
-          )}
+          }
 
           {/* 🔽 Sorter (only if there are multiple on this page) */}
-          {pagedSubscriptions.length > 1 && (
-            <div className="flex justify-end w-full mb-4">
+          {pagedSubscriptions.length > 1 &&
+          <div className="flex justify-end w-full mb-4">
               <SortDropdown
-                options={userSubscriptionSortOptions}
-                value={sortOrder}
-                onChange={setSortOrder}
-              />
+              options={userSubscriptionSortOptions}
+              value={sortOrder}
+              onChange={setSortOrder} />
+            
             </div>
-          )}
+          }
 
           {/* 🗂️ Subscription items */}
           <div className="flex flex-col gap-8 w-full mt-6">
@@ -194,8 +194,8 @@ export default function UserSubscriptionsMainPage() {
               return (
                 <div
                   key={sub.subscription_id}
-                  className={`relative flex flex-col ${borderColor} border-4 rounded-2xl mb-8 p-4 shadow overflow-hidden`}
-                >
+                  className={`relative flex flex-col ${borderColor} border-4 rounded-2xl mb-8 p-4 shadow overflow-hidden`}>
+                  
                   {/* 🟢 Overlay */}
                   <div className="absolute inset-0 bg-black/60 z-0 rounded-2xl pointer-events-none" />
 
@@ -214,25 +214,25 @@ export default function UserSubscriptionsMainPage() {
                         {sub.order_description || sub.package_name}{' '}
                         {t('app.user.subscriptions.page.pageTitle')}
                         {/* ⏳ show left-time only when valid */}
-                        {timeLeft && (
-                          <span className="text-base text-green-200 font-semibold ms-5">
+                        {timeLeft &&
+                        <span className="text-base text-green-200 font-semibold ms-5">
                             ({timeLeft} {t('common.time.left')})
                           </span>
-                        )}
+                        }
                         {/* ❌ show expired when past */}
-                        {!timeLeft && isExpiredDate(sub.expiring_at) && (
-                          <span className="text-base text-red-300 font-semibold ms-5">
+                        {!timeLeft && isExpiredDate(sub.expiring_at) &&
+                        <span className="text-base text-red-300 font-semibold ms-5">
                             ({t('app.user.subscriptions.status.expired')})
                           </span>
-                        )}
+                        }
                       </span>
                     </div>
 
                     {/* === GRID OF FIELDS (localized labels) === */}
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2 w-full max-w-2xl mx-auto lg:text-lg text-base">
                       {/* 🔤 username */}
-                      {sub.username && (
-                        <>
+                      {sub.username &&
+                      <>
                           <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm me-2">
                             <span className="me-2">👤</span>{' '}
                             {t('app.user.subscriptions.fields.username_label')}
@@ -241,11 +241,11 @@ export default function UserSubscriptionsMainPage() {
                             {sub.username}
                           </span>
                         </>
-                      )}
+                      }
 
                       {/* 🔐 password */}
-                      {sub.password && (
-                        <>
+                      {sub.password &&
+                      <>
                           <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm me-2">
                             <span className="me-2">🔑</span>{' '}
                             {t('app.user.subscriptions.fields.password_label')}
@@ -254,11 +254,11 @@ export default function UserSubscriptionsMainPage() {
                             {sub.password}
                           </span>
                         </>
-                      )}
+                      }
 
                       {/* 🌐 portal link */}
-                      {sub.portal_link && (
-                        <>
+                      {sub.portal_link &&
+                      <>
                           <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm me-2 text-left">
                             <span className="me-2">🌐</span>{' '}
                             {t('app.user.subscriptions.fields.portal_link_label')}
@@ -267,11 +267,11 @@ export default function UserSubscriptionsMainPage() {
                             {sub.portal_link}
                           </span>
                         </>
-                      )}
+                      }
 
                       {/* 🔗 DNS link */}
-                      {sub.dns_link && (
-                        <>
+                      {sub.dns_link &&
+                      <>
                           <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm me-2 text-left">
                             <span className="me-2">🔗</span>{' '}
                             {t('app.user.subscriptions.fields.dns_link_label')}
@@ -280,11 +280,11 @@ export default function UserSubscriptionsMainPage() {
                             {sub.dns_link}
                           </span>
                         </>
-                      )}
+                      }
 
                       {/* 📺 Samsung/LG DNS */}
-                      {sub.dns_link_for_samsung_lg && (
-                        <>
+                      {sub.dns_link_for_samsung_lg &&
+                      <>
                           <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm me-2 text-left">
                             <span className="me-2">📺</span>{' '}
                             {t('app.user.subscriptions.fields.samsung_lg_dns_label')}
@@ -293,11 +293,11 @@ export default function UserSubscriptionsMainPage() {
                             {sub.dns_link_for_samsung_lg}
                           </span>
                         </>
-                      )}
+                      }
 
                       {/* 💻 MAC address */}
-                      {sub.mac_address && (
-                        <>
+                      {sub.mac_address &&
+                      <>
                           <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm me-2 text-left">
                             <span className="me-2">💻</span>{' '}
                             {t('app.user.subscriptions.fields.mac_address_label')}
@@ -306,11 +306,11 @@ export default function UserSubscriptionsMainPage() {
                             {sub.mac_address}
                           </span>
                         </>
-                      )}
+                      }
 
                       {/* 🧩 template */}
-                      {sub.template && (
-                        <>
+                      {sub.template &&
+                      <>
                           <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm me-2">
                             <span className="me-2">🧩</span>{' '}
                             {t('app.user.subscriptions.fields.template_label')}
@@ -319,11 +319,11 @@ export default function UserSubscriptionsMainPage() {
                             {sub.template}
                           </span>
                         </>
-                      )}
+                      }
 
                       {/* 🔢 connections */}
-                      {sub.max_connections && (
-                        <>
+                      {sub.max_connections &&
+                      <>
                           <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm me-2">
                             <span className="me-2">🔢</span>{' '}
                             {t('app.user.subscriptions.fields.connections_label')}
@@ -332,7 +332,7 @@ export default function UserSubscriptionsMainPage() {
                             {sub.max_connections}
                           </span>
                         </>
-                      )}
+                      }
 
                       {/* 🔞 adult */}
                       <>
@@ -341,9 +341,9 @@ export default function UserSubscriptionsMainPage() {
                           {t('app.user.subscriptions.fields.adult_label')}
                         </span>
                         <span className="font-bold flex items-center tracking-wide">
-                          {sub.adult
-                            ? t('app.user.subscriptions.fields.yes')
-                            : t('app.user.subscriptions.fields.no')}
+                          {sub.adult ?
+                          t('app.user.subscriptions.fields.yes') :
+                          t('app.user.subscriptions.fields.no')}
                         </span>
                       </>
 
@@ -354,30 +354,30 @@ export default function UserSubscriptionsMainPage() {
                           {t('app.user.subscriptions.fields.vpn_label')}
                         </span>
                         <span className="font-bold flex items-center tracking-wide">
-                          {sub.enable_vpn
-                            ? t('app.user.subscriptions.fields.yes')
-                            : t('app.user.subscriptions.fields.no')}
+                          {sub.enable_vpn ?
+                          t('app.user.subscriptions.fields.yes') :
+                          t('app.user.subscriptions.fields.no')}
                         </span>
                       </>
 
                       {/* 🌍 country */}
-                      {sub.forced_country && (
-                        <>
+                      {sub.forced_country &&
+                      <>
                           <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm me-2">
                             <span className="me-2">🌍</span>{' '}
                             {t('app.user.subscriptions.fields.country_label')}
                           </span>
                           <span className="font-bold flex items-center tracking-wide">
-                            {sub.forced_country === 'ALL'
-                              ? t('app.user.subscriptions.fields.country_all')
-                              : sub.forced_country}
+                            {sub.forced_country === 'ALL' ?
+                          t('app.user.subscriptions.fields.country_all') :
+                          sub.forced_country}
                           </span>
                         </>
-                      )}
+                      }
 
                       {/* 💬 WhatsApp / Telegram */}
-                      {sub.whatsapp_telegram && (
-                        <>
+                      {sub.whatsapp_telegram &&
+                      <>
                           <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm me-2">
                             <span className="me-2">💬</span>{' '}
                             {t('app.user.subscriptions.fields.whatsapp_telegram_label')}
@@ -386,7 +386,7 @@ export default function UserSubscriptionsMainPage() {
                             {sub.whatsapp_telegram}
                           </span>
                         </>
-                      )}
+                      }
 
                       {/* 💸 paid */}
                       <>
@@ -395,15 +395,15 @@ export default function UserSubscriptionsMainPage() {
                           {t('app.user.subscriptions.fields.paid_label')}
                         </span>
                         <span className="font-bold flex items-center tracking-wide">
-                          {sub.paid
-                            ? t('app.user.subscriptions.fields.paid_yes')
-                            : t('app.user.subscriptions.fields.paid_no')}
+                          {sub.paid ?
+                          t('app.user.subscriptions.fields.paid_yes') :
+                          t('app.user.subscriptions.fields.paid_no')}
                         </span>
                       </>
 
                       {/* 📝 note */}
-                      {sub.note && (
-                        <>
+                      {sub.note &&
+                      <>
                           <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm me-2">
                             <span className="me-2">📝</span>{' '}
                             {t('app.user.subscriptions.fields.note_label')}
@@ -412,7 +412,7 @@ export default function UserSubscriptionsMainPage() {
                             {sub.note}
                           </span>
                         </>
-                      )}
+                      }
 
                       {/* ⏰ expires at */}
                       <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm me-2">
@@ -444,12 +444,12 @@ export default function UserSubscriptionsMainPage() {
                         {t('app.user.subscriptions.fields.payment_title')}
                       </strong>
                       <div className="flex flex-col gap-4 justify-center items-center p-1">
-                        {sub.payments && sub.payments.length > 0 ? (
-                          sub.payments.map((pay) => (
-                            <div
-                              key={pay.id}
-                              className="flex items-center justify-between text-center rounded-xl shadow-lg bg-gradient-to-br from-gray-600 to-gray-900 border border-gray-600 p-3 gap-4 w-full"
-                            >
+                        {sub.payments && sub.payments.length > 0 ?
+                        sub.payments.map((pay) =>
+                        <div
+                          key={pay.id}
+                          className="flex items-center justify-between text-center rounded-xl shadow-lg bg-gradient-to-br from-gray-600 to-gray-900 border border-gray-600 p-3 gap-4 w-full">
+                          
                               {/* 📊 Payment info block */}
                               <div className="grid grid-cols-2 gap-4 justify-center text-center flex-1">
                                 {/* ✅ Payment status */}
@@ -474,52 +474,52 @@ export default function UserSubscriptionsMainPage() {
                                 </div>
 
                                 {/* Amount paid */}
-                                {pay.amount_paid && (
-                                  <span className="text-lg">
+                                {pay.amount_paid &&
+                            <span className="text-lg">
                                     <span className="me-1">💰</span>
                                     {t('app.user.subscriptions.fields.payment_amount_label')}
                                     <br />
                                     {pay.amount_paid} {pay.pay_currency}
                                   </span>
-                                )}
+                            }
 
                                 {/* Paid At */}
-                                {pay.updatedAt && (
-                                  <span className="text-lg">
+                                {pay.updatedAt &&
+                            <span className="text-lg">
                                     <span className="me-1">⏰</span>
                                     {t('app.user.subscriptions.fields.payment_created_label')}
                                     <br />
                                     {new Date(pay.updatedAt).toLocaleString()}
                                   </span>
-                                )}
+                            }
                               </div>
 
                               {/* 🟢 Status emoji (always right) */}
                               <div className="shrink-0">
                                 {pay.status === 'confirmed' ||
-                                pay.status === 'finished' ||
-                                pay.status === 'completed' ? (
-                                  <span className="text-2xl">✅</span>
-                                ) : pay.status === 'pending' ? (
-                                  <span className="text-2xl">⏳</span>
-                                ) : pay.status === 'failed' ? (
-                                  <span className="text-2xl">❌</span>
-                                ) : (
-                                  <span className="text-2xl">❔</span>
-                                )}
+                            pay.status === 'finished' ||
+                            pay.status === 'completed' ?
+                            <span className="text-2xl">✅</span> :
+                            pay.status === 'pending' ?
+                            <span className="text-2xl">⏳</span> :
+                            pay.status === 'failed' ?
+                            <span className="text-2xl">❌</span> :
+
+                            <span className="text-2xl">❔</span>
+                            }
                               </div>
                             </div>
-                          ))
-                        ) : (
-                          <span className="text-gray-400 pl-2">
+                        ) :
+
+                        <span className="text-gray-400 pl-2">
                             {t('app.user.subscriptions.fields.payment_none')}
                           </span>
-                        )}
+                        }
                       </div>
                     </div>
                   </div>
-                </div>
-              );
+                </div>);
+
             })}
           </div>
 
@@ -528,11 +528,11 @@ export default function UserSubscriptionsMainPage() {
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
+              onPageChange={setCurrentPage} />
+            
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

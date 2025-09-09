@@ -8,13 +8,13 @@
  * =======================================================================
  */
 
-'use client';
+'use client';import Link from "next/link";
 
 import { useEffect, useState, useRef } from 'react';
-import { Link, useRouter } from '@/i18n';
+
 import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl'; // 🌐 i18n (full-path keys only)
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
 import useAuthGuard from '@/hooks/useAuthGuard';
 import axiosInstance from '@/lib/core/axiosInstance';
@@ -105,13 +105,13 @@ export default function AdminLiveChatConversationPage() {
       title: t('app.admin.liveChat.page.edit_title'),
       confirmButtonText: t('app.admin.liveChat.page.edit_confirm'),
       cancelButtonText: t('app.admin.liveChat.page.cancel'),
-      customContent: () => (
-        <textarea
-          defaultValue={oldMessage}
-          ref={editTextAreaRef}
-          className="border p-2 w-full h-24 text-black rounded-lg"
-        />
-      ),
+      customContent: () =>
+      <textarea
+        defaultValue={oldMessage}
+        ref={editTextAreaRef}
+        className="border p-2 w-full h-24 text-black rounded-lg" />,
+
+
       onConfirm: () => {
         try {
           const updated = editTextAreaRef.current?.value?.trim();
@@ -155,8 +155,8 @@ export default function AdminLiveChatConversationPage() {
   return (
     <div className="flex flex-col items-center w-full mt-4">
       <div className="container-style lg:w-10/12 w-full mt-4 p-2">
-        {conversationDetails && (
-          <div className="flex items-center justify-center w-full">
+        {conversationDetails &&
+        <div className="flex items-center justify-center w-full">
             <div className="flex flex-col lg:flex-row gap-2 items-center lg:items-stretch w-10/12 mb-2">
               <div className="container-style lg:min-w-[220px] lg:max-w-lg w-full p-2 text-center border mx-auto">
                 <h2 className="text-base font-bold mb-1">
@@ -180,10 +180,10 @@ export default function AdminLiveChatConversationPage() {
               </div>
             </div>
           </div>
-        )}
+        }
 
-        {userConversations.length > 1 && (
-          <div className="flex items-center justify-center mt-2 mb-4">
+        {userConversations.length > 1 &&
+        <div className="flex items-center justify-center mt-2 mb-4">
             <div className="container-style w-11/12 lg:w-10/12 p-2">
               <h3 className="text-lg font-bold mb-1 text-center">
                 {t('app.admin.liveChat.page.other_conversations')}
@@ -192,61 +192,61 @@ export default function AdminLiveChatConversationPage() {
                 <hr className="border border-white w-8/12 my-2" />
               </div>
               <div
-                className="flex flex-col gap-1 p-1 w-full max-h-48 overflow-y-auto transition-all"
-                style={{ minWidth: 0, width: '100%' }}
-              >
-                {userConversations
-                  .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
-                  .map((c) => {
-                    const isCurrent = c.conversation_id === conversation_id;
-                    const isUnread = c.unreadCount > 0;
+              className="flex flex-col gap-1 p-1 w-full max-h-48 overflow-y-auto transition-all"
+              style={{ minWidth: 0, width: '100%' }}>
+              
+                {userConversations.
+              sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)).
+              map((c) => {
+                const isCurrent = c.conversation_id === conversation_id;
+                const isUnread = c.unreadCount > 0;
 
-                    const badge =
-                      c.unreadCount === 1
-                        ? t('app.admin.liveChat.page.unread_badge_one')
-                        : t('app.admin.liveChat.page.unread_badge_other', { count: c.unreadCount });
+                const badge =
+                c.unreadCount === 1 ?
+                t('app.admin.liveChat.page.unread_badge_one') :
+                t('app.admin.liveChat.page.unread_badge_other', { count: c.unreadCount });
 
-                    return (
-                      <Link
-                        key={c.conversation_id}
-                        href={`/admin/liveChat/${c.conversation_id}`}
-                        className={`px-2 py-3 rounded-lg text-xs font-bold w-full transition-colors border
+                return (
+                  <Link
+                    key={c.conversation_id}
+                    href={`/admin/liveChat/${c.conversation_id}`}
+                    className={`px-2 py-3 rounded-lg text-xs font-bold w-full transition-colors border
                           ${isCurrent ? 'border-2 border-green-300' : 'border border-transparent'}
                           ${isUnread ? 'bg-purple-700 text-white hover:bg-purple-500' : 'bg-gray-500 hover:bg-slate-300 text-white'}
                         `}
-                        title={
-                          isUnread
-                            ? t('app.admin.liveChat.page.unread_tooltip')
-                            : t('app.admin.liveChat.page.all_read_tooltip')
-                        }
-                      >
+                    title={
+                    isUnread ?
+                    t('app.admin.liveChat.page.unread_tooltip') :
+                    t('app.admin.liveChat.page.all_read_tooltip')
+                    }>
+                    
                         {c.subject || t('app.admin.liveChat.page.no_subject')}
-                        {isUnread && (
-                          <span className="inline-block ml-2 px-2 py-0.5 rounded-full bg-blue-900 text-white text-[14px] font-bold shadow">
+                        {isUnread &&
+                    <span className="inline-block ml-2 px-2 py-0.5 rounded-full bg-blue-900 text-white text-[14px] font-bold shadow">
                             {badge}
                           </span>
-                        )}
-                      </Link>
-                    );
-                  })}
+                    }
+                      </Link>);
+
+              })}
               </div>
             </div>
           </div>
-        )}
+        }
 
-        {isReady && conversationDetails && (
-          <div className="flex flex-col flex-grow w-full">
+        {isReady && conversationDetails &&
+        <div className="flex flex-col flex-grow w-full">
             <LiveChatRoom
-              session={session}
-              conversation_id={conversation_id}
-              initialMessages={initialMessages}
-              onEditMessageModal={handleEditMessageModal}
-              onDeleteMessageModal={handleDeleteMessageModal}
-              subject={currentSubject}
-              user={conversationDetails.owner}
-            />
+            session={session}
+            conversation_id={conversation_id}
+            initialMessages={initialMessages}
+            onEditMessageModal={handleEditMessageModal}
+            onDeleteMessageModal={handleDeleteMessageModal}
+            subject={currentSubject}
+            user={conversationDetails.owner} />
+          
           </div>
-        )}
+        }
 
         <div className="flex flex-col justify-center items-center w-full">
           <div className="w-8/12 max-w-lg">
@@ -258,24 +258,24 @@ export default function AdminLiveChatConversationPage() {
                 {t('app.admin.liveChat.page.danger_warning')}
               </p>
               <div className="flex items-center justify-center w-full">
-                {userDetails?.user_id && (
-                  <ConversationActionButton
-                    action="delete"
-                    user_id={userDetails.user_id}
-                    conversation_id={conversation_id}
-                    onActionSuccess={() => {
-                      displayMessage(t('app.admin.liveChat.page.delete_success'), 'success');
-                      setTimeout(() => {
-                        router.push(`/admin/liveChat/user/${userDetails.user_id}`);
-                      }, 1200);
-                    }}
-                  />
-                )}
+                {userDetails?.user_id &&
+                <ConversationActionButton
+                  action="delete"
+                  user_id={userDetails.user_id}
+                  conversation_id={conversation_id}
+                  onActionSuccess={() => {
+                    displayMessage(t('app.admin.liveChat.page.delete_success'), 'success');
+                    setTimeout(() => {
+                      router.push(`/admin/liveChat/user/${userDetails.user_id}`);
+                    }, 1200);
+                  }} />
+
+                }
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

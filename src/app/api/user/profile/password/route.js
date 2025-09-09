@@ -1,28 +1,21 @@
-'use server';
-
+import 'server-only';
 import logger from '@/lib/core/logger';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/core/prisma';
 import bcrypt from 'bcryptjs';
+import { withRole, getUserId } from '@/lib/api/guards';
 
-export async function PUT(request) {
+export const PUT = withRole('user', async (request, _ctx, session) => {
   try {
-    const user_id = request.headers.get('x-user-id');
-
-    if (!user_id) {
-      return NextResponse.json({ error: 'User ID not found!' }, { status: 401 });
-    }
+    const user_id = getUserId(session);
     const { oldPassword, newPassword } = await request.json();
 
-    if (!user_id || !oldPassword || !newPassword) {
+    if (!oldPassword || !newPassword) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const user = await prisma.user.findUnique({ where: { user_id } });
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
+    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
     const passwordMatch = await bcrypt.compare(oldPassword, user.password);
     if (!passwordMatch) {
@@ -30,15 +23,11 @@ export async function PUT(request) {
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    await prisma.user.update({
-      where: { user_id },
-      data: { password: hashedPassword }
-    });
+    await prisma.user.update({ where: { user_id }, data: { password: hashedPassword } });
 
     return NextResponse.json({ message: 'Password updated successfully' });
   } catch (error) {
     logger.error('[API PUT] Error updating password:', error);
     return NextResponse.json({ error: `internal server error: ${error.message}` }, { status: 500 });
   }
-}
+});

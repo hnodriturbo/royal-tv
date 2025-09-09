@@ -4,14 +4,15 @@
  * - Lists grouped logs by IP (table on desktop, cards on mobile).
  * - Client-side sort & pagination; auto-refresh every 10 minutes.
  * - All text via next-intl: t('app.admin.logs.main.*' & shared status).
+ * - 🛡️ Hardened: render-only safe text via SafeString() for any unknown values.
  * ============================================================================
  */
 
-'use client';
+'use client';import Link from "next/link";import { useRouter } from "next/navigation";
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter, Link } from '@/i18n'; // 🌍 locale-aware nav
+// 🌍 locale-aware nav
 import { useTranslations } from 'next-intl'; // 🌐 i18n (full keys)
 
 import useAuthGuard from '@/hooks/useAuthGuard';
@@ -24,6 +25,7 @@ import SortDropdown from '@/components/reusableUI/SortDropdown';
 import useLocalSorter from '@/hooks/useLocalSorter';
 import { logSortOptions, getLogSortFunction } from '@/lib/utils/sorting';
 import { useAutoRefresh } from '@/hooks/useAutoRefresh';
+import { SafeString } from '@/lib/ui/SafeString'; // 🧼 coerce unknown to string
 
 export default function AdminLogsMainPage() {
   // 🌐 translator
@@ -46,17 +48,17 @@ export default function AdminLogsMainPage() {
     try {
       showLoader({ text: t('app.admin.logs.main.loading') }); // ⏳ loader text
       const response = await axiosInstance.get('/api/admin/logs/main');
-      setLogs(response.data.logs || []);
-      displayMessage(t('app.admin.logs.main.loadSuccess'), 'success');
+      setLogs(response.data.logs || []); // 📦 store rows
+      displayMessage(t('app.admin.logs.main.loadSuccess'), 'success'); // ✅ ok
     } catch (err) {
       displayMessage(
         t('app.admin.logs.main.loadFailed', {
           error: err?.response?.data?.error ? `: ${err.response.data.error}` : ''
         }),
         'error'
-      );
+      ); // ⚠️ failed
     } finally {
-      hideLoader();
+      hideLoader(); // 🧹 close loader
     }
   };
 
@@ -69,18 +71,18 @@ export default function AdminLogsMainPage() {
   // 🗂️ group logs by IP
   const logsByIp = {};
   logs.forEach((singleLog) => {
-    const ip = singleLog.ip_address || '—';
+    const ip = SafeString(singleLog.ip_address, '—'); // 🧼 always text
     if (!logsByIp[ip]) logsByIp[ip] = [];
     logsByIp[ip].push(singleLog);
   });
 
   // 🧱 build grouped array
   const groupedLogs = Object.keys(logsByIp).map((ip) => {
-    const sortedForThisIp = logsByIp[ip]
-      .slice()
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const sortedForThisIp = logsByIp[ip].
+    slice().
+    sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // ⏳ latest first
     return {
-      ip_address: ip,
+      ip_address: ip, // 🔢 already SafeString above
       logs: sortedForThisIp,
       count: sortedForThisIp.length,
       latestLog: sortedForThisIp[0]
@@ -94,34 +96,36 @@ export default function AdminLogsMainPage() {
   });
 
   // 📑 pagination
-  const pageSize = 10;
-  const totalPages = Math.ceil(sortedGroupLogs.length / pageSize);
-  const pagedLogs = sortedGroupLogs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const pageSize = 10; // 🔟 rows per page
+  const totalPages = Math.ceil(sortedGroupLogs.length / pageSize); // 🧮 total pages
+  const pagedLogs = sortedGroupLogs.slice((currentPage - 1) * pageSize, currentPage * pageSize); // ✂️ page slice
 
   // 🗑️ delete all logs for an IP
   const handleDelete = (ip_address) => {
     openModal('deleteLogsByIp', {
       title: t('app.admin.logs.main.deleteModal.title'),
-      description: t('app.admin.logs.main.deleteModal.description', { ip: ip_address }),
+      description: t('app.admin.logs.main.deleteModal.description', {
+        ip: SafeString(ip_address, '')
+      }),
       confirmButtonText: t('app.admin.logs.main.deleteModal.confirm'),
       confirmButtonType: 'Danger',
       cancelButtonText: t('app.admin.logs.main.deleteModal.cancel'),
       onConfirm: async () => {
         try {
-          showLoader({ text: t('app.admin.logs.main.deleting') });
-          await axiosInstance.delete(`/api/admin/logs/${encodeURIComponent(ip_address)}`);
-          displayMessage(t('app.admin.logs.main.deletedSuccess'), 'success');
-          fetchLogs();
+          showLoader({ text: t('app.admin.logs.main.deleting') }); // ⏳ deleting
+          await axiosInstance.delete(`/api/admin/logs/${encodeURIComponent(ip_address)}`); // 🧨 delete
+          displayMessage(t('app.admin.logs.main.deletedSuccess'), 'success'); // ✅ done
+          fetchLogs(); // 🔄 refresh
         } catch (err) {
-          displayMessage(t('app.admin.logs.main.deleteFailed'), 'error');
+          displayMessage(t('app.admin.logs.main.deleteFailed'), 'error'); // ❌ fail
         } finally {
-          hideLoader();
+          hideLoader(); // 🧹 close loader
         }
       },
       onCancel: () => {
-        displayMessage(t('app.admin.logs.main.deletionCancelled'), 'info');
-        hideModal();
-        hideLoader();
+        displayMessage(t('app.admin.logs.main.deletionCancelled'), 'info'); // 🙅‍♀️ cancelled
+        hideModal(); // 🧹 close modal
+        hideLoader(); // 🧹 ensure loader off
       }
     });
   };
@@ -129,7 +133,7 @@ export default function AdminLogsMainPage() {
   // 🚀 initial load when allowed
   useEffect(() => {
     if (status === 'authenticated' && isAllowed) {
-      fetchLogs();
+      fetchLogs(); // 📥 pull data
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, isAllowed]);
@@ -137,11 +141,11 @@ export default function AdminLogsMainPage() {
   // 🚫 redirect if forbidden
   useEffect(() => {
     if (status !== 'loading' && !isAllowed && redirect) {
-      router.replace(redirect);
+      router.replace(redirect); // 🚪 bounce
     }
   }, [status, isAllowed, redirect, router]);
 
-  // 🛡️ guard
+  // 🛡️ guard (no unauthorized flash)
   if (!isAllowed) return null;
 
   return (
@@ -184,38 +188,43 @@ export default function AdminLogsMainPage() {
                 </tr>
               </thead>
               <tbody>
-                {pagedLogs.map((group) => (
-                  <tr key={group.ip_address} className="hover:bg-gray-400 text-center">
-                    <td className="border px-2 py-1">{group.ip_address}</td>
-                    <td className="border px-2 py-1">{group.count}</td>
-                    <td className="border px-2 py-1">{group.latestLog.page}</td>
-                    <td className="border px-2 py-1">{group.latestLog.user?.name || '-'}</td>
+                {pagedLogs.map((group) =>
+                <tr key={group.ip_address} className="hover:bg-gray-400 text-center">
+                    <td className="border px-2 py-1">{SafeString(group.ip_address, '—')}</td>
+                    {/* 🧼 */}
+                    <td className="border px-2 py-1">{group.count}</td> {/* 🔢 */}
                     <td className="border px-2 py-1">
-                      {new Date(group.latestLog.createdAt).toLocaleString()}
+                      {SafeString(group.latestLog?.page, '—')} {/* 🧼 */}
+                    </td>
+                    <td className="border px-2 py-1">
+                      {SafeString(group.latestLog?.user?.name, '-')} {/* 🧼 */}
+                    </td>
+                    <td className="border px-2 py-1">
+                      {new Date(group.latestLog.createdAt).toLocaleString()} {/* 🕒 */}
                     </td>
                     <td className="border px-2 py-1">
                       <div className="flex gap-2 justify-center">
-                        {group.count > 1 && (
-                          <Link href={`/admin/logs/${encodeURIComponent(group.ip_address)}`}>
+                        {group.count > 1 &&
+                      <Link href={`/admin/logs/${encodeURIComponent(group.ip_address)}`}>
                             <button className="btn-primary btn-sm">
-                              {t('app.admin.logs.main.action.view')}
+                              {t('app.admin.logs.main.action.view')} {/* 👁️ */}
                             </button>
                           </Link>
-                        )}
+                      }
                         <button
-                          type="button"
-                          onClick={() => handleDelete(group.ip_address)}
-                          className="btn-danger"
-                        >
+                        type="button"
+                        onClick={() => handleDelete(group.ip_address)}
+                        className="btn-danger">
+                        
                           <span className="inline-flex items-center gap-2">
                             <span aria-hidden="true">🗑️</span>
-                            <span>{String(t('app.admin.logs.main.action.delete'))}</span>
+                            <span>{SafeString(t('app.admin.logs.main.action.delete'), '')}</span>
                           </span>
                         </button>
                       </div>
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -223,24 +232,25 @@ export default function AdminLogsMainPage() {
 
         {/* 📱 mobile cards */}
         <div className="xl:hidden flex flex-col gap-4 w-full mt-6">
-          {pagedLogs.map((group) => (
-            <div
-              key={group.ip_address}
-              className="border border-gray-300 rounded-2xl p-4 shadow-sm bg-gray-600 text-base-100"
-            >
+          {pagedLogs.map((group) =>
+          <div
+            key={group.ip_address}
+            className="border border-gray-300 rounded-2xl p-4 shadow-sm bg-gray-600 text-base-100">
+            
               <div>
-                <strong>{t('app.admin.logs.main.card.ip')}:</strong> {group.ip_address}
+                <strong>{t('app.admin.logs.main.card.ip')}:</strong>{' '}
+                {SafeString(group.ip_address, '—')}
               </div>
               <div>
                 <strong>{t('app.admin.logs.main.card.logs')}:</strong> {group.count}
               </div>
               <div>
                 <strong>{t('app.admin.logs.main.card.latestEvent')}:</strong>{' '}
-                {group.latestLog.event}
+                {SafeString(group.latestLog?.event, '—')} {/* 🧼 */}
               </div>
               <div>
                 <strong>{t('app.admin.logs.main.card.latestUser')}:</strong>{' '}
-                {group.latestLog.user?.name || '-'}
+                {SafeString(group.latestLog?.user?.name, '-')} {/* 🧼 */}
               </div>
               <div>
                 <strong>{t('app.admin.logs.main.card.latestTime')}:</strong>{' '}
@@ -248,23 +258,23 @@ export default function AdminLogsMainPage() {
               </div>
 
               <div className="flex flex-row justify-between gap-2 mt-3">
-                {group.count > 1 && (
-                  <Link href={`/admin/logs/${encodeURIComponent(group.ip_address)}`}>
+                {group.count > 1 &&
+              <Link href={`/admin/logs/${encodeURIComponent(group.ip_address)}`}>
                     {/* eslint-disable-next-line react/jsx-no-comment-textnodes */}
                     <button className="btn-primary w-full btn-glow">
                       {t('app.admin.logs.main.action.view')}
                     </button>
                   </Link>
-                )}
+              }
                 <button
-                  className="btn-danger w-full btn-glow"
-                  onClick={() => handleDelete(group.ip_address)}
-                >
+                className="btn-danger w-full btn-glow"
+                onClick={() => handleDelete(group.ip_address)}>
+                
                   {t('app.admin.logs.main.action.delete')}
                 </button>
               </div>
             </div>
-          ))}
+          )}
         </div>
 
         {/* 🔢 pagination */}
@@ -272,10 +282,10 @@ export default function AdminLogsMainPage() {
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
+            onPageChange={setCurrentPage} />
+          
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

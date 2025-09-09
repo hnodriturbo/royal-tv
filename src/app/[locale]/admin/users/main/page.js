@@ -10,10 +10,10 @@
  * ===========================================================
  */
 
-'use client';
+'use client';import Link from "next/link";import { useRouter } from "next/navigation";
 
 import { useEffect, useState } from 'react';
-import { Link, useRouter } from '@/i18n'; // 🌍 locale-aware nav
+// 🌍 locale-aware nav
 import { useTranslations } from 'next-intl'; // 🌐 i18n
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
@@ -107,7 +107,7 @@ export default function AdminUsersMainPage() {
         {/* 🏷️ title */}
         <div className="flex flex-col items-center text-center justify-center w-full">
           <h1 className="text-wonderful-5 text-2xl mb-0">
-            {String(t('app.admin.users.main.title'))}
+            {SafeString(t('app.admin.users.main.title'))}
           </h1>
           <hr className="border border-gray-400 w-8/12 my-4" />
         </div>
@@ -119,17 +119,17 @@ export default function AdminUsersMainPage() {
 
         {/* 🃏 user cards */}
         <div className="flex flex-col gap-6 w-full mt-6">
-          {pagedUsers.length === 0 && (
-            <div className="text-center text-gray-400 my-8">
-              {String(t('app.admin.users.main.noUsers')) /* 🫥 empty state */}
+          {pagedUsers.length === 0 &&
+          <div className="text-center text-gray-400 my-8">
+              {SafeString(t('app.admin.users.main.noUsers')) /* 🫥 empty state */}
             </div>
-          )}
+          }
 
-          {pagedUsers.map((singleUser) => (
-            <div
-              key={singleUser.user_id}
-              className="border border-gray-300 rounded-2xl p-5 shadow-md bg-gray-600 text-base-100 relative"
-            >
+          {pagedUsers.map((singleUser) =>
+          <div
+            key={singleUser.user_id}
+            className="border border-gray-300 rounded-2xl p-5 shadow-md bg-gray-600 text-base-100 relative">
+
               {/* 🆔 top info */}
               <div className="flex flex-col md:flex-row justify-between mb-2 items-center">
                 <div className="w-full text-center flex flex-col items-center">
@@ -146,10 +146,10 @@ export default function AdminUsersMainPage() {
                   <div className="text-xs text-muted">
                     <span>
                       {SafeString(
-                        t('app.admin.users.main.joined', {
-                          date: new Date(singleUser.createdAt).toLocaleDateString()
-                        })
-                      )}
+                      t('app.admin.users.main.joined', {
+                        date: new Date(singleUser.createdAt).toLocaleDateString()
+                      })
+                    )}
                     </span>
                   </div>
                 </div>
@@ -163,22 +163,22 @@ export default function AdminUsersMainPage() {
 
               {/* 📱 contact info */}
               <div className="flex flex-row gap-4 text-sm mb-2 justify-center">
-                {singleUser.whatsapp && (
-                  <span>
+                {singleUser.whatsapp &&
+              <span>
                     <span className="font-bold">
                       {SafeString(t('app.admin.users.main.whatsapp'))}:
                     </span>{' '}
                     {SafeString(singleUser.whatsapp, '')}
                   </span>
-                )}
-                {singleUser.telegram && (
-                  <span>
+              }
+                {singleUser.telegram &&
+              <span>
                     <span className="font-bold">
                       {SafeString(t('app.admin.users.main.telegram'))}:
                     </span>{' '}
                     {SafeString(singleUser.telegram, '')}
                   </span>
-                )}
+              }
                 <span>
                   <span className="font-bold">
                     {SafeString(t('app.admin.users.main.preferredContact'))}:
@@ -190,53 +190,53 @@ export default function AdminUsersMainPage() {
               {/* 🔗 actions */}
               <div className="flex flex-col gap-3 mt-4 w-full">
                 {/* 🎁 free trials */}
-                {singleUser.freeTrials && singleUser.freeTrials.length > 0 ? (
-                  <Link
-                    href={`/admin/freeTrials/${singleUser.freeTrials[0].trial_id}`}
-                    className="btn-secondary w-full inline-flex items-center justify-center gap-2"
-                  >
+                {singleUser.freeTrials && singleUser.freeTrials.length > 0 ?
+              <Link
+                href={`/admin/freeTrials/${singleUser.freeTrials[0].trial_id}`}
+                className="btn-secondary w-full inline-flex items-center justify-center gap-2">
+
                     {/* 🧱 wrap contents to avoid fragment children */}
                     <span className="inline-flex items-center gap-2">
                       <span aria-hidden="true">🎁</span>
                       <span className="inline-flex items-center gap-2">
-                        <span>{String(t('app.admin.users.main.freeTrials'))}</span>
+                        <span>{SafeString(t('app.admin.users.main.freeTrials'))}</span>
                         <span className="ml-1 font-normal">({singleUser.totalFreeTrials})</span>
                       </span>
-                      {singleUser.freeTrials[0].status && (
-                        <span
-                          className={`ml-2 text-xs font-bold ${
-                            singleUser.freeTrials[0].status === 'disabled'
-                              ? 'text-red-400'
-                              : singleUser.freeTrials[0].status === 'pending'
-                                ? 'text-yellow-400'
-                                : 'text-green-400'
-                          }`}
-                        >
+                      {singleUser.freeTrials[0].status &&
+                  <span
+                    className={`ml-2 text-xs font-bold ${
+                    singleUser.freeTrials[0].status === 'disabled' ?
+                    'text-red-400' :
+                    singleUser.freeTrials[0].status === 'pending' ?
+                    'text-yellow-400' :
+                    'text-green-400'}`
+                    }>
+
                           ({SafeString(singleUser.freeTrials[0].status, '')})
                         </span>
-                      )}
+                  }
                     </span>
-                  </Link>
-                ) : (
-                  <button
-                    type="button" // ✅ explicit button type
-                    className="w-full opacity-50 cursor-not-allowed flex flex-col items-center py-2 border border-white rounded-md"
-                    disabled
-                    aria-disabled="true" // ♿ reflect disabled state
-                  >
+                  </Link> :
+
+              <button
+                type="button" // ✅ explicit button type
+                className="w-full opacity-50 cursor-not-allowed flex flex-col items-center py-2 border border-white rounded-md"
+                disabled
+                aria-disabled="true" // ♿ reflect disabled state
+              >
                     <span className="inline-flex items-center gap-2">
                       <span aria-hidden="true">🎁</span>
                       <span>{SafeString(t('app.admin.users.main.freeTrials'))} (0)</span>
                     </span>
                   </button>
-                )}
+              }
 
                 {/* 💬 live chats */}
-                {singleUser.totalLiveChats > 0 && singleUser.role !== 'admin' ? (
-                  <Link
-                    href={`/admin/liveChat/user/${singleUser.user_id}`}
-                    className="btn-primary w-full inline-flex items-center justify-center gap-2 py-2"
-                  >
+                {singleUser.totalLiveChats > 0 && singleUser.role !== 'admin' ?
+              <Link
+                href={`/admin/liveChat/user/${singleUser.user_id}`}
+                className="btn-primary w-full inline-flex items-center justify-center gap-2 py-2">
+
                     <span className="inline-flex items-center gap-2">
                       <span aria-hidden="true">💬</span>
                       <span>{SafeString(t('app.admin.users.main.liveChats'))}</span>
@@ -247,63 +247,63 @@ export default function AdminUsersMainPage() {
                         {SafeString(t('app.admin.users.main.unread'))}: {singleUser.unreadLiveChats}
                       </span>
                     </span>
-                  </Link>
-                ) : (
-                  singleUser.role !== 'admin' && (
-                    <ConversationActionButton
-                      // 🧩 external component handles its own button UI
-                      action="create"
-                      buttonClass="w-full flex flex-col items-center py-4 border border-white rounded-md btn-primary"
-                      user_id={singleUser.user_id}
-                      user={singleUser}
-                      isAdmin={true}
-                      size="lg"
-                      buttonText={`💬 ${t('app.admin.users.main.startConversation')}`}
-                    />
-                  )
-                )}
+                  </Link> :
+
+              singleUser.role !== 'admin' &&
+              <ConversationActionButton
+              // 🧩 external component handles its own button UI
+              action="create"
+              buttonClass="w-full flex flex-col items-center py-4 border border-white rounded-md btn-primary"
+              user_id={singleUser.user_id}
+              user={singleUser}
+              isAdmin={true}
+              size="lg"
+              buttonText={`💬 ${t('app.admin.users.main.startConversation')}`} />
+
+
+              }
 
                 {/* 📦 subscriptions */}
-                {singleUser.subscriptions && singleUser.subscriptions.length > 0 ? (
-                  <Link
-                    href={`/admin/subscriptions/${singleUser.subscriptions[0].subscription_id}`}
-                    className="btn-secondary w-full inline-flex items-center justify-center gap-2"
-                  >
+                {singleUser.subscriptions && singleUser.subscriptions.length > 0 ?
+              <Link
+                href={`/admin/subscriptions/${singleUser.subscriptions[0].subscription_id}`}
+                className="btn-secondary w-full inline-flex items-center justify-center gap-2">
+
                     <span className="inline-flex items-center gap-2">
                       <span aria-hidden="true">📦</span>
                       <span className="inline-flex items-center gap-2">
-                        <span>{String(t('app.admin.users.main.subscriptions'))}</span>
+                        <span>{SafeString(t('app.admin.users.main.subscriptions'))}</span>
                         <span className="ml-1 font-normal">({singleUser.totalSubscriptions})</span>
                       </span>
                     </span>
-                  </Link>
-                ) : (
-                  <button
-                    type="button" // ✅ explicit button type
-                    className="w-full opacity-50 cursor-not-allowed flex flex-col items-center py-2 border border-white rounded-md"
-                    disabled
-                    aria-disabled="true"
-                  >
+                  </Link> :
+
+              <button
+                type="button" // ✅ explicit button type
+                className="w-full opacity-50 cursor-not-allowed flex flex-col items-center py-2 border border-white rounded-md"
+                disabled
+                aria-disabled="true">
+
                     <span className="inline-flex items-center gap-2">
                       <span aria-hidden="true">📦</span>
-                      <span>{String(t('app.admin.users.main.subscriptions'))} (0)</span>
+                      <span>{SafeString(t('app.admin.users.main.subscriptions'))} (0)</span>
                     </span>
                   </button>
-                )}
+              }
 
                 {/* 🪪 profile (always navigation) */}
                 <Link
-                  href={`/admin/users/${singleUser.user_id}`}
-                  className="btn-secondary inline-flex items-center justify-center gap-2"
-                >
+                href={`/admin/users/${singleUser.user_id}`}
+                className="btn-secondary inline-flex items-center justify-center gap-2">
+
                   <span className="inline-flex items-center gap-2">
                     <span aria-hidden="true">🪪</span>
-                    <span>{String(t('app.admin.users.main.profile'))}</span>
+                    <span>{SafeString(t('app.admin.users.main.profile'))}</span>
                   </span>
                 </Link>
               </div>
             </div>
-          ))}
+          )}
         </div>
 
         {/* 🔢 pagination */}
@@ -311,10 +311,10 @@ export default function AdminUsersMainPage() {
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
+            onPageChange={setCurrentPage} />
+
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

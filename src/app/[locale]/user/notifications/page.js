@@ -10,11 +10,11 @@
  * =================================================================
  */
 
-'use client';
+'use client';import { useRouter } from "next/navigation";
 
 import { useSession } from 'next-auth/react'; // 🔐 Session
 import { useEffect } from 'react'; // ⏱️ Side-effects
-import { useRouter } from '@/i18n'; // 🧭 Navigation
+// 🧭 Navigation
 import useAuthGuard from '@/hooks/useAuthGuard'; // 🚧 Protect route by role
 import SeeAllNotifications from '@/components/reusableUI/socket/SeeAllNotifications'; // 🛎️ See all notifications
 
@@ -36,6 +36,6 @@ export default function UserNotificationsPage() {
     <div className="flex flex-col items-center w-full py-6">
       {/* 👤 SeeAllNotifications for user */}
       <SeeAllNotifications userRole="user" />
-    </div>
-  );
+    </div>);
+
 }

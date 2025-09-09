@@ -2,19 +2,19 @@
  * =========================== /app/[locale]/admin/page.js ===========================
  * 👑 ADMIN DASHBOARD (Client Component)
  * - Guards admin access, shows Admin Online + Online Users + Notification Center.
- * - Text translations use next-intl → useTranslations() with full keys.
- * - Navigation (router) from @/i18n.
+ * - Wrapped children that may use useSearchParams/usePathname in <Suspense>.
  * ===============================================================================
  */
 
-'use client';
+'use client';import { useRouter } from "next/navigation";
 
 import { useEffect } from 'react';
+import { Suspense } from 'react'; // ⏳ suspense for hook-using children
 import { useSession } from 'next-auth/react';
 
 import useLogout from '@/hooks/useLogout';
 import useAuthGuard from '@/hooks/useAuthGuard';
-import { useRouter } from '@/i18n'; // 🌍 locale-aware router
+// 🌍 locale-aware router
 import { useTranslations } from 'next-intl'; // 🌐 i18n (full keys)
 
 import NotificationCenter from '@/components/reusableUI/socket/NotificationCenter';
@@ -48,18 +48,27 @@ export default function AdminDashboard() {
 
       {/* 🟢 admin presence */}
       <div className="container-style w-6/12">
-        <IsAdminOnline />
+        {/* ⏳ wrap potential useSearchParams/usePathname user */}
+        <Suspense fallback={<div className="p-2 text-sm opacity-80">Loading presence…</div>}>
+          <IsAdminOnline />
+        </Suspense>
       </div>
 
       {/* 👥 online users */}
       <div className="flex w-8/12 items-center justify-center">
-        <OnlineUsers />
+        {/* ⏳ wrap potential useSearchParams/usePathname user */}
+        <Suspense fallback={<div className="p-2 text-sm opacity-80">Loading users…</div>}>
+          <OnlineUsers />
+        </Suspense>
       </div>
 
       {/* 🔔 notification center */}
       <div className="w-11/12 max-w-[600px] mx-auto">
-        <NotificationCenter userRole="admin" />
+        {/* ⏳ wrap potential useSearchParams/usePathname user */}
+        <Suspense fallback={<div className="p-2 text-sm opacity-80">Loading notifications…</div>}>
+          <NotificationCenter userRole="admin" />
+        </Suspense>
       </div>
-    </div>
-  );
+    </div>);
+
 }

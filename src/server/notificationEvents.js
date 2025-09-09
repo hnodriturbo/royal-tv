@@ -57,7 +57,7 @@ async function safeFindUserForNotification(user_id) {
 // ================================================================
 // ✨ Create + Emit + Email
 // ================================================================
-async function createAndDispatchNotification({
+export async function createAndDispatchNotification({
   io,
   socket,
   isAdmin,

@@ -8,16 +8,11 @@
  * 🧪 Env loading:
  *   • Dotenv preloaded for BOTH apps via interpreter_args.
  *   • DOTENV_CONFIG_PATH points to /root/royal-tv/.env (single source of truth).
+ *   • MESSAGES_DIR explicitly set here for consistency.
  *
  * 📦 Files:
- *   • /root/royal-tv/.env            → holds MESSAGES_DIR and all secrets
+ *   • /root/royal-tv/.env
  *   • /root/royal-tv/messages/{en,is}.json
- *
- * 📝 Notes:
- *   • Changing any NEXT_PUBLIC_* requires:
- *       rm -rf .next && npm run build && pm2 restart royal-tv-frontend
- *   • Server-only env changes:
- *       pm2 restart royal-tv-backend
  */
 
 const path = require('path');
@@ -37,7 +32,8 @@ module.exports = {
       interpreter_args: '-r dotenv/config', // 🧪 preload dotenv
       env: {
         NODE_ENV: 'production', // 🏭 prod mode
-        DOTENV_CONFIG_PATH: DOTENV_PROD // 📌 tell dotenv which .env file to load
+        DOTENV_CONFIG_PATH: DOTENV_PROD, // 📌 tell dotenv which .env file to load
+        MESSAGES_DIR: '/root/royal-tv/messages' // 🌍 force messages dir for i18n
       },
       time: true, // ⏱️ timestamps in PM2 logs
       max_restarts: 10, // 🔁 restart budget
@@ -52,7 +48,8 @@ module.exports = {
       interpreter_args: '-r dotenv/config', // 🧪 preload dotenv
       env: {
         NODE_ENV: 'production', // 🏭 prod mode
-        DOTENV_CONFIG_PATH: DOTENV_PROD // 📌 same .env file
+        DOTENV_CONFIG_PATH: DOTENV_PROD, // 📌 same .env file
+        MESSAGES_DIR: '/root/royal-tv/messages' // 🌍 same messages dir
       },
       time: true,
       max_restarts: 10,

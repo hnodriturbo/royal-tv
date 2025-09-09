@@ -1,9 +1,9 @@
 // hooks/useAppRedirectHandler.js
-'use client';
+'use client';import { useRouter } from "next/navigation";
 
 import { useCallback } from 'react';
 import useAppHandlers from '@/hooks/useAppHandlers';
-import { useRouter } from '@/i18n';
+
 import { useTranslations } from 'next-intl';
 
 const useAppRedirectHandlers = () => {
@@ -26,9 +26,9 @@ const useAppRedirectHandlers = () => {
       if (!loaderOnly) {
         displayMessage(message, color, messageDelay === pageDelay);
       }
-
-      // Show loader with optional text
+        // Show loader with optional text
       showLoader({ text: loaderText || message }); */
+
       // 🧩 resolve: accept plain string or i18n key object
       const resolveText = (maybe) => {
         if (!maybe) return '';

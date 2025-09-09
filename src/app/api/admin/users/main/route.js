@@ -1,24 +1,13 @@
-/**
- * GET /api/admin/users/main
- * =========================================
- * Returns all users with live/bubble chat counts (and unread counts), and subscription count
- * - Requires: x-user-role: 'admin' header
- * =========================================
- */
+import { NextResponse } from 'next/server';
+import prisma from '@/lib/core/prisma';
+import { withRole } from '@/lib/api/guards';
 
-import { NextResponse } from 'next/server'; // 📤
-import prisma from '@/lib/core/prisma'; // 🗄️
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-export async function GET(request) {
-  // 🔒 Admin check
-  const userRole = request.headers.get('x-user-role')?.toLowerCase();
-  if (userRole !== 'admin') {
-    // 🚫 Not allowed – Only admins!
-    return NextResponse.json({ error: 'Unauthorized. Admins only.' }, { status: 403 });
-  }
-
+export const GET = withRole('admin', async () => {
   try {
-    // 🗃️ Fetch all users, include all freeTrials/subscriptions arrays for latest status
+    // Base user data + latest freeTrial/subscription + counts
     const users = await prisma.user.findMany({
       orderBy: { createdAt: 'desc' },
       select: {
@@ -31,51 +20,32 @@ export async function GET(request) {
         telegram: true,
         preferredContactWay: true,
         createdAt: true,
-        // All free trials for status display
-        freeTrials: {
-          orderBy: { createdAt: 'desc' },
-          take: 1 // Only the most recent
-        },
-        // All subscriptions for direct-link
-        subscriptions: {
-          orderBy: { createdAt: 'desc' },
-          take: 1 // Only the most recent
-        },
-        // 🧮 Counts for relations
-        _count: {
-          select: {
-            subscriptions: true,
-            freeTrials: true
-          }
-        }
+        freeTrials: { orderBy: { createdAt: 'desc' }, take: 1 },
+        subscriptions: { orderBy: { createdAt: 'desc' }, take: 1 },
+        _count: { select: { subscriptions: true, freeTrials: true } }
       }
     });
 
-    // 🧮 For each user, fetch chat counts in parallel
+    // Per-user LC counts
     const usersWithCounts = await Promise.all(
-      users.map(async (user) => {
-        // 🟣 LiveChatConversation counts
-        const totalLiveChats = await prisma.liveChatConversation.count({
-          where: { owner_id: user.user_id }
-        });
-        const unreadLiveChats = await prisma.liveChatConversation.count({
-          where: { owner_id: user.user_id, read: false }
-        });
+      users.map(async (u) => {
+        const [totalLiveChats, unreadLiveChats] = await Promise.all([
+          prisma.liveChatConversation.count({ where: { owner_id: u.user_id } }),
+          prisma.liveChatConversation.count({ where: { owner_id: u.user_id, read: false } })
+        ]);
 
         return {
-          ...user,
-          totalLiveChats, // 💬
-          unreadLiveChats, // 🔴
-          totalSubscriptions: user._count.subscriptions, // 📦
-          totalFreeTrials: user._count.freeTrials // 🎁
+          ...u,
+          totalLiveChats,
+          unreadLiveChats,
+          totalSubscriptions: u._count.subscriptions,
+          totalFreeTrials: u._count.freeTrials
         };
       })
     );
 
-    // ✅ Done!
     return NextResponse.json({ users: usersWithCounts }, { status: 200 });
   } catch (error) {
-    // 💥
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-}
+});

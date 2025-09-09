@@ -1,7 +1,7 @@
 'use client';
 
-import { Link } from '@/i18n';
-import { useTranslations } from 'next-intl'; // 🌍 i18n hook
+import Link from 'next/link';
+import { useLocale, useTranslations } from 'next-intl'; // 🌍 i18n hooks
 
 const footerButtonClasses =
   'flex items-center justify-center px-3 py-2 rounded-full text-md font-normal transition-all duration-200 ' +
@@ -9,6 +9,7 @@ const footerButtonClasses =
 
 const Footer = () => {
   const t = useTranslations(); // 🏷️ reuse existing nav keys (faq)
+  const locale = useLocale();
 
   return (
     <footer className="w-full bg-gradient-to-r from-[#6f738f] via-[#55688a] to-[#202534] py-2 px-2 mt-4 z-[400] border-t border-neutral-800">
@@ -16,13 +17,13 @@ const Footer = () => {
         {/* ⬅️ Left buttons */}
         <div className="w-full md:w-1/2">
           <div className="flex flex-row gap-2 md:items-start items-center md:justify-start justify-center ms-5 whitespace-nowrap">
-            <Link href="/more-info" className={footerButtonClasses}>
+            <Link href={`/${locale}/more-info`} className={footerButtonClasses}>
               <span className="mr-1">💳</span>
-              <span>{t('app.footer.more_info_buy_now')}</span> {/* 🛒 */}
+              <span>{t('app.footer.more_info_buy_now')}</span>
             </Link>
-            <Link href="/faq" className={footerButtonClasses}>
+            <Link href={`/${locale}/faq`} className={footerButtonClasses}>
               <span className="mr-1">❓</span>
-              <span>{t('app.navigation.faq')}</span> {/* ❓ */}
+              <span>{t('app.navigation.faq')}</span>
             </Link>
           </div>
         </div>
@@ -37,7 +38,7 @@ const Footer = () => {
               className="flex items-center justify-center text-blue-500 hover:text-blue-900 transition-all duration-200"
             >
               <i className="bi bi-telegram text-2xl"></i>
-              <span className="ml-1 font-bold inline">{t('app.footer.telegram')}</span> {/* 📣 */}
+              <span className="ml-1 font-bold inline">{t('app.footer.telegram')}</span>
             </a>
           </div>
         </div>

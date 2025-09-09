@@ -8,11 +8,11 @@
  * ===========================================================
  */
 
-'use client';
+'use client';import Link from "next/link";
 
 import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl'; // 🌍 i18n — requested import path & style
-import { Link } from '@/i18n';
+
 
 import Guide from '@/components/packages/data/guide'; // 🛠️ setup guide
 import PackagesGrid from '@/components/packages/data/packages'; // 📦 packages grid
@@ -24,7 +24,7 @@ export default function MoreInfoPage() {
   // 👤 auth status (optional for grid behaviors)
   const { data: session, status } = useSession();
   const isAuthenticatedUser =
-    status === 'authenticated' && session?.user?.role && session.user.role !== 'guest';
+  status === 'authenticated' && session?.user?.role && session.user.role !== 'guest';
 
   return (
     <div className="flex flex-col items-center w-full lg:mt-0 mt-12">
@@ -42,6 +42,6 @@ export default function MoreInfoPage() {
 
         <PackagesGrid authenticated={isAuthenticatedUser} />
       </div>
-    </div>
-  );
+    </div>);
+
 }

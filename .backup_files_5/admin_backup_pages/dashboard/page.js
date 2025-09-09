@@ -16,7 +16,7 @@ import { useRouter } from '@/i18n';
 import DashboardActionButton from '@/components/reusableUI/DashboardActionButton';
 import NotificationCenter from '@/components/reusableUI/socket/NotificationCenter';
 import OnlineUsers from '@/components/reusableUI/socket/OnlineUsers';
-import IsAdminOnline from '@/components/reusableUI/socket/IsAdminOnline';
+import { IsAdminOnline } from '@/components/reusableUI/socket/IsAdminOnline';
 
 export default function AdminDashboard() {
   // 👤 Auth/session setup

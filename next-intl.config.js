@@ -1,19 +1,9 @@
-/**
- * ======================= next-intl.config.js =======================
- * 🌍 Root config for next-intl
- * ===================================================================
- */
-import { routing } from './i18n/request.js';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// next-intl.config.js
+// Build-time safe: only plain data.
+// Kept for tooling and future use; runtime is handled by our middleware + provider.
 
 export default {
-  locales: routing.locales,
-  defaultLocale: routing.defaultLocale,
-  messages: {
-    en: path.join(__dirname, 'messages/en.json'),
-    is: path.join(__dirname, 'messages/is.json')
-  }
+  locales: ['en', 'is'],
+  defaultLocale: 'en'
+  // No "messages" here; messages are loaded in app/[locale]/layout.js
 };

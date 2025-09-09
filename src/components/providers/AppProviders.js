@@ -1,18 +1,16 @@
+'use client';
 /**
  * ======================= /src/components/providers/AppProviders.js =======================
- * 🧱 Merged providers shell (single file)
- * - Renders under NextIntlClientProvider (from [locale]/layout.js)
- * - Preserves order: LogPageView → ErrorAndMessage → Loader → Modal
- * - Keeps SocketProvider outer so LogPageView can read `socketConnected`
- * ========================================================================================
+ * 🧱 App-wide client providers
+ * - Order: Socket → (LogPageView) → ErrorAndMessage → Loader → Modal → App chrome
+ * - Requires NextIntlClientProvider above (in /app/[locale]/layout.js)
+ * =========================================================================================
  */
-
-'use client';
 
 import { useContext } from 'react';
 import { useLocale } from 'next-intl';
 
-// 🔌 sockets (needs locale)
+// 🔌 sockets
 import { SocketProvider, SocketContext } from '@/context/SocketContext';
 
 // ⚠️ messages & loaders & modals
@@ -30,31 +28,28 @@ import LogPageView from '@/components/reusableUI/socket/LogPageView';
 import ErrorBoundary from '@/lib/debug/ErrorBoundary';
 
 function AppContent({ children }) {
-  // 🧲 live socket state for LogPageView
-  const ctx = useContext(SocketContext) ?? {};
-  const { socketConnected } = ctx;
+  // live socket state for LogPageView
+  const { socketConnected } = useContext(SocketContext) ?? {};
 
   return (
     <>
-      {/* 🪵 track page views once socket is ready */}
       {socketConnected && <LogPageView />}
 
-      {/* ⚠️ → ⏳ → 🪟 */}
       <ErrorAndMessageProvider>
         <LoaderProvider>
-          {/* 🪟 modal needs locale (prop is injected by parent) */}
           <ModalProvider>
             <div className="min-h-screen flex flex-col">
               <div className="min-h-screen w-full">
                 <LanguageSwitcher />
                 <Sidebar />
+
                 <div className="lg:ml-64 flex flex-col min-h-screen">
                   <main className="flex-1 p-2">{children}</main>
                   <Footer />
                 </div>
               </div>
 
-              {/* 💬 global helpers */}
+              {/* global helpers */}
               <WhatsAppLogo />
               <ShowMessages />
             </div>
@@ -66,15 +61,12 @@ function AppContent({ children }) {
 }
 
 export default function AppProviders({ children }) {
-  // 🧭 current locale from next-intl (used by socket & modal providers)
+  // current locale from next-intl → passed to SocketProvider so server localizes notifications
   const activeLocale = (useLocale() || 'en').toLowerCase();
 
-  // 🔌 socket context wraps AppContent so children can consume it anywhere
-  //    pass locale down so providers that need it can read from context/hook
   return (
     <ErrorBoundary>
       <SocketProvider locale={activeLocale}>
-        {/* 🔁 ModalProvider inside will read locale via its own hook or from props if your impl expects it */}
         <AppContent>{children}</AppContent>
       </SocketProvider>
     </ErrorBoundary>

@@ -1,24 +1,21 @@
 /**
- *   ===================== NotificationCenter.js =====================
- * 🔔
- * SOCKET-DRIVEN NOTIFICATION CENTER – Smooth preview/drawer, paginated expand!
- * - 100% in-memory (from socket), never fetches via REST/Axios.
- * - Preview top 3, first "See More" reveals next 7, then 10 at a time.
- * - No Pagination component: all "See More"/"See Less"/"See All Notifications" buttons are styled and worded the same everywhere.
- * - Page never scrolls/jumps when showing more.
- * ===================================================================
+ * NotificationCenter.js
+ * SOCKET-DRIVEN NOTIFICATION CENTER – preview/drawer, paginated expand.
+ * - Locale-aware navigation for "See All" and per-notification links
+ * - Smooth progressive reveal
  */
-
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { useLocale, useTranslations } from 'next-intl';
+
 import RefreshNotifications from '@/components/reusableUI/socket/RefreshNotifications';
-import useNotifications from '@/hooks/socket/useNotifications';
 import useModal from '@/hooks/useModal';
-import { useTranslations } from 'next-intl'; // 🌍 translator
-import { SafeString } from '@/lib/ui/SafeString'; // Safe Text
-import { Link, useRouter } from '@/i18n'; // 🌍 add Link here
+import useNotifications from '@/hooks/socket/useNotifications';
+import { SafeString } from '@/lib/ui/SafeString';
 
 const PREVIEW_COUNT = 3;
 const FIRST_DRAWER_COUNT = 7;
@@ -30,13 +27,13 @@ const notificationCardClasses = (notif) =>
    ${!notif.is_read ? 'border-l-4 border-blue-500 bg-gradient-to-r from-blue-950/50 via-gray-900 to-gray-900' : 'bg-gray-900/70'}`;
 
 export default function NotificationCenter({ userRole = 'user' }) {
-  const t = useTranslations(); // 🌍
+  const t = useTranslations();
+  const locale = useLocale();
   const { data: session } = useSession();
   const user_id = session?.user?.user_id;
   const router = useRouter();
   const { openModal, hideModal } = useModal();
 
-  // 🧠 mirror the state in a ref to avoid effect re-creation on each tick
   const visibleCountRef = useRef(0);
 
   const {
@@ -51,7 +48,6 @@ export default function NotificationCenter({ userRole = 'user' }) {
     clearAllNotifications
   } = useNotifications(user_id);
 
-  // 🗑️ delete single modal (strings localized at open time)
   const handleDeleteNotificationModal = (notification_id) => {
     openModal('deleteNotification', {
       title: t('socket.ui.notifications.modals.delete.title'),
@@ -67,7 +63,6 @@ export default function NotificationCenter({ userRole = 'user' }) {
     });
   };
 
-  // 🧨 clear all modal
   const handleClearAllNotificationsModal = () => {
     openModal('clearAllNotifications', {
       title: t('socket.ui.notifications.modals.clear_all.title'),
@@ -90,7 +85,6 @@ export default function NotificationCenter({ userRole = 'user' }) {
   const [visibleDrawerCount, setVisibleDrawerCount] = useState(0);
   const prevDrawerPageRef = useRef(1);
 
-  // 🔪 client slicing
   const topPreview = getPreview(PREVIEW_COUNT);
 
   let drawerSlice = [];
@@ -105,16 +99,13 @@ export default function NotificationCenter({ userRole = 'user' }) {
     drawerSlice = getDrawerSlice(startIdx, endIdx);
   }
 
-  // 🔄 keep the ref in sync with the state
   useEffect(() => {
     visibleCountRef.current = visibleDrawerCount;
   }, [visibleDrawerCount]);
 
-  // 🎞️ gradual reveal animation
   useEffect(() => {
     if (drawerOpen && drawerPage !== prevDrawerPageRef.current) {
-      // 🔎 start from the *current* visible count without adding it to deps
-      let start = visibleCountRef.current; // ✅ was: visibleDrawerCount
+      let start = visibleCountRef.current;
       let end = drawerSlice.length;
       let diff = end - start;
       if (diff <= 0) return;
@@ -125,7 +116,6 @@ export default function NotificationCenter({ userRole = 'user' }) {
       let i = start;
       const interval = setInterval(() => {
         setVisibleDrawerCount((count) => {
-          // ✅ functional update = no stale captures
           if (count < end) return count + 1;
           clearInterval(interval);
           return count;
@@ -142,7 +132,6 @@ export default function NotificationCenter({ userRole = 'user' }) {
     }
   }, [drawerOpen, drawerPage, drawerSlice.length]);
 
-  // 📥 when first open, show all in batch
   useEffect(() => {
     if (drawerOpen && drawerPage === 1) {
       setVisibleDrawerCount(drawerSlice.length);
@@ -150,7 +139,6 @@ export default function NotificationCenter({ userRole = 'user' }) {
     }
   }, [drawerOpen, drawerPage, drawerSlice.length]);
 
-  // 🔢 counts for footer
   const totalNotifications = notifications.length;
   const shownCount = drawerOpen
     ? Math.min(
@@ -167,13 +155,11 @@ export default function NotificationCenter({ userRole = 'user' }) {
     : totalNotifications > PREVIEW_COUNT;
   const canSeeMore = !drawerOpen && totalNotifications > PREVIEW_COUNT;
 
-  // 🧠 show open-content button?
   const shouldShowButton = (notif) => {
     if (userRole === 'admin') return Boolean(notif.link);
     return Boolean(notif.link) && notif.type !== 'newUserRegistration';
   };
 
-  // ⤵️ expand/collapse + mark read
   const toggleExpanded = (id, notif) => {
     if (!notif.is_read && !expandedIds[id]) {
       markAsRead(id);
@@ -213,11 +199,11 @@ export default function NotificationCenter({ userRole = 'user' }) {
         ) : (
           topPreview.map((notif) => (
             <div key={notif.notification_id} className={notificationCardClasses(notif)}>
-              {/* ➕/➖ expand row */}
               <button
                 type="button"
                 onClick={() => toggleExpanded(notif.notification_id, notif)}
                 className="w-full text-left flex justify-between items-center px-5 py-3"
+                aria-expanded={!!expandedIds[notif.notification_id]}
               >
                 <div className={`flex items-center gap-2 ${!notif.is_read ? 'font-bold' : ''}`}>
                   {!notif.is_read && <span className="w-2 h-2 bg-blue-500 rounded-full" />}
@@ -230,9 +216,7 @@ export default function NotificationCenter({ userRole = 'user' }) {
                 </span>
               </button>
               <div
-                className={`overflow-hidden transition-all duration-700 ${
-                  expandedIds[notif.notification_id] ? 'max-h-96' : 'max-h-0'
-                }`}
+                className={`overflow-hidden transition-all duration-700 ${expandedIds[notif.notification_id] ? 'max-h-96' : 'max-h-0'}`}
               >
                 <div
                   className={
@@ -242,14 +226,13 @@ export default function NotificationCenter({ userRole = 'user' }) {
                   }
                 >
                   <div className="text-gray-300 mb-3 mt-2">
-                    {/* <p className="whitespace-pre-wrap">{notif.body}</p> */}
                     <p className="whitespace-pre-wrap">
                       {SafeString(notif.body, 'NotificationCenter.body')}
                     </p>
                   </div>
                   {shouldShowButton(notif) && typeof notif.link === 'string' && (
                     <div className="flex justify-between items-center mt-3">
-                      {/* 🗑️ Delete notif */}
+                      {/* 🗑️ Delete */}
                       <button
                         type="button"
                         onClick={() => handleDeleteNotificationModal(notif.notification_id)}
@@ -257,10 +240,10 @@ export default function NotificationCenter({ userRole = 'user' }) {
                       >
                         🗑️ {SafeString(t('socket.ui.notifications.actions.delete') ?? '')}
                       </button>
-                      {/* 🔗 Open link */}
+                      {/* 🔗 Open link (locale-aware) */}
                       <button
                         type="button"
-                        onClick={() => router.push(SafeString(notif.link, '/'))}
+                        onClick={() => router.push(`/${locale}${SafeString(notif.link, '/')}`)}
                       >
                         {SafeString(t('socket.ui.notifications.actions.open') ?? '')}
                       </button>
@@ -271,7 +254,6 @@ export default function NotificationCenter({ userRole = 'user' }) {
                     {notif.type && (
                       <div>
                         <span>
-                          {/* 🔖 label: value */}
                           {SafeString(t('socket.ui.notifications.type_label'))}
                           {': '}
                           {SafeString(notif.type)}
@@ -289,7 +271,6 @@ export default function NotificationCenter({ userRole = 'user' }) {
       {/* ⬇️ bottom controls (when drawer closed) */}
       {!drawerOpen && (
         <div className="flex flex-row w-full max-w-xl justify-between items-center my-4 gap-2">
-          {/* 👇 Pagination see more */}
           {canSeeMore && (
             <button type="button" onClick={() => setDrawerPage((prev) => prev + 1)}>
               👇 {SafeString(t('socket.ui.notifications.see_more') ?? '')}
@@ -300,11 +281,10 @@ export default function NotificationCenter({ userRole = 'user' }) {
               {t('socket.ui.notifications.total', { count: totalNotifications })}
             </div>
           )}
-          {/* 🗂️ See all */}
           {notifications.length > 0 && (
             <button
               type="button"
-              onClick={() => router.push(`/${String(userRole ?? 'user')}/notifications`)}
+              onClick={() => router.push(`/${locale}/${String(userRole ?? 'user')}/notifications`)}
             >
               🗂️ {String(t('socket.ui.notifications.see_all') ?? '')}
             </button>
@@ -323,11 +303,11 @@ export default function NotificationCenter({ userRole = 'user' }) {
             ) : (
               drawerSlice.slice(0, visibleDrawerCount).map((notif) => (
                 <div key={notif.notification_id} className={notificationCardClasses(notif)}>
-                  {/* ➕/➖ expand row */}
                   <button
                     type="button"
                     onClick={() => toggleExpanded(notif.notification_id, notif)}
                     className="w-full text-left flex justify-between items-center px-5 py-3"
+                    aria-expanded={!!expandedIds[notif.notification_id]}
                   >
                     <div className={`flex items-center gap-2 ${!notif.is_read ? 'font-bold' : ''}`}>
                       {!notif.is_read && <span className="w-2 h-2 bg-blue-500 rounded-full" />}
@@ -340,9 +320,7 @@ export default function NotificationCenter({ userRole = 'user' }) {
                     </span>
                   </button>
                   <div
-                    className={`overflow-hidden transition-all duration-700 ${
-                      expandedIds[notif.notification_id] ? 'max-h-96' : 'max-h-0'
-                    }`}
+                    className={`overflow-hidden transition-all duration-700 ${expandedIds[notif.notification_id] ? 'max-h-96' : 'max-h-0'}`}
                   >
                     <div
                       className={
@@ -352,14 +330,12 @@ export default function NotificationCenter({ userRole = 'user' }) {
                       }
                     >
                       <div className="text-gray-300 mb-3 mt-2">
-                        {/* <p className="whitespace-pre-wrap">{notif.body}</p> */}
                         <p className="whitespace-pre-wrap">
                           {SafeString(notif.body, 'NotificationCenter.body')}
                         </p>
                       </div>
                       {shouldShowButton(notif) && (
                         <div className="flex justify-between items-center mt-3">
-                          {/* 🗑️ Delete notif */}
                           <button
                             type="button"
                             onClick={() => handleDeleteNotificationModal(notif.notification_id)}
@@ -367,10 +343,9 @@ export default function NotificationCenter({ userRole = 'user' }) {
                           >
                             🗑️ {String(t('socket.ui.notifications.actions.delete') ?? '')}
                           </button>
-                          {/* 🔗 Open link */}
                           <button
                             type="button"
-                            onClick={() => router.push(String(notif.link ?? '/'))}
+                            onClick={() => router.push(`/${locale}${String(notif.link ?? '/')}`)}
                           >
                             {String(t('socket.ui.notifications.actions.open') ?? '')}
                           </button>
@@ -401,7 +376,6 @@ export default function NotificationCenter({ userRole = 'user' }) {
               ) : null}
             </div>
             <div className="flex-1 flex justify-center">
-              {/* ⬆️ See less */}
               <button
                 type="button"
                 onClick={() => {
@@ -415,7 +389,7 @@ export default function NotificationCenter({ userRole = 'user' }) {
             {notifications.length > 0 && (
               <div className="flex-1 flex justify-end">
                 <Link
-                  href={`/${userRole}/notifications`}
+                  href={`/${locale}/${userRole}/notifications`}
                   className="btn-outline-primary text-center block"
                 >
                   🗂️ {t('socket.ui.notifications.see_all')}
@@ -446,7 +420,6 @@ export default function NotificationCenter({ userRole = 'user' }) {
             {t('socket.ui.notifications.danger_zone')}
           </h3>
 
-          {/* 🧨 Clear all */}
           <button
             type="button"
             onClick={handleClearAllNotificationsModal}

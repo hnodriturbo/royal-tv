@@ -1,7 +1,7 @@
-'use client';
+'use client';import { useRouter } from "next/navigation";
 
 import { useState, useEffect } from 'react';
-import { useRouter } from '@/i18n'; // 🧭 App Router
+// 🧭 App Router
 import { useTranslations } from 'next-intl'; // 🌐 components.countdownRedirect.*
 
 /**
@@ -41,9 +41,9 @@ const CountdownRedirect = ({
 
   // 🗣️ pick singular/plural label for the counter line
   const counterKey =
-    counter === 1
-      ? 'components.countdownRedirect.redirecting_in_singular'
-      : 'components.countdownRedirect.redirecting_in_plural';
+  counter === 1 ?
+  'components.countdownRedirect.redirecting_in_singular' :
+  'components.countdownRedirect.redirecting_in_plural';
 
   return (
     <div className="flex items-center justify-center flex-col min-h-screen">
@@ -61,8 +61,8 @@ const CountdownRedirect = ({
           {children}
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default CountdownRedirect; // 🚪 default export

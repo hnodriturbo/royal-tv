@@ -9,15 +9,19 @@
  */
 
 'use client';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { SafeString } from '@/lib/ui/SafeString';
 
 import { useState } from 'react';
-import { useRouter, Link } from '@/i18n'; // 🧭 merged: router + locale-aware Link ✅
+// 🧭 merged: router + locale-aware Link ✅
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 export default function SignupPage() {
+  const __locale = useLocale();
   // 🌐 i18n (full-path keys only)
   const t = useTranslations();
 
@@ -287,7 +291,7 @@ export default function SignupPage() {
                 type="submit"
                 className="bg-blue-500 hover:bg-blue-800 transition text-white font-bold p-2 rounded-lg w-6/12"
               >
-                {t('app.signup.submitButton', {}, 'Sign Up')}
+                {SafeString(t('app.signup.submitButton', {}, 'Sign Up'), '')}
               </button>
             </div>
           </form>
@@ -296,7 +300,7 @@ export default function SignupPage() {
         {/* 🔗 Have account prompt */}
         <p className="text-center mt-4">
           {t('app.signup.haveAccountPrompt', {}, 'Already have an account?')}{' '}
-          <Link href="/auth/signin" className="underline">
+          <Link href={`/${__locale}/auth/signin`} className="underline">
             {t('app.signup.signInLink', {}, 'Sign in')}
           </Link>
         </p>

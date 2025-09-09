@@ -9,12 +9,12 @@
  */
 
 'use client';
+import Link from 'next/link';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { useRouter } from '@/i18n'; // 🌍 router
-import { useTranslations } from 'next-intl'; // 🌐 i18n
-import { Link } from '@/i18n';
+import { useParams, useRouter } from 'next/navigation';
+// 🌍 router
+import { useTranslations, useLocale } from 'next-intl'; // 🌐 i18n
 
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
@@ -23,11 +23,12 @@ import { useSession } from 'next-auth/react';
 import useModal from '@/hooks/useModal';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
+import { SafeString } from '@/lib/ui/SafeString';
 
 export default function AdminEditFreeTrialPage() {
   // 🌐 translator
   const t = useTranslations();
-
+  const locale = useLocale();
   // 🦸 admin session/auth setup
   const { data: session, status } = useSession();
   const { displayMessage, showLoader, hideLoader } = useAppHandlers();
@@ -98,7 +99,7 @@ export default function AdminEditFreeTrialPage() {
       }
 
       setTimeout(() => {
-        router.push('/admin/freeTrials/main');
+        router.push(`/${locale}/admin/freeTrials/main`);
       }, 1200);
     } catch {
       displayMessage(t('app.admin.freeTrials.edit.updateFailed'), 'error');
@@ -122,7 +123,7 @@ export default function AdminEditFreeTrialPage() {
           await axiosInstance.delete(`/api/admin/freeTrials/${trial_id}`);
           displayMessage(t('app.admin.freeTrials.edit.deletedSuccess'), 'success');
           hideModal();
-          router.replace('/admin/freeTrials/main');
+          router.replace(`/${locale}/admin/freeTrials/main`);
         } catch {
           displayMessage(t('app.admin.freeTrials.edit.deleteFailed'), 'error');
         } finally {
@@ -360,7 +361,7 @@ export default function AdminEditFreeTrialPage() {
               >
                 <span className="inline-flex items-center gap-2">
                   <span aria-hidden="true">🗑️</span>
-                  <span>{String(t('app.admin.freeTrials.edit.deleteTrial'))}</span>
+                  <span>{SafeString(t('app.admin.freeTrials.edit.deleteTrial'))}</span>
                 </span>
               </button>
               <button
@@ -374,7 +375,7 @@ export default function AdminEditFreeTrialPage() {
                 <span className="inline-flex items-center gap-2">
                   {isSaving && <span className="loader mr-2" aria-hidden="true"></span>}
                   <span>
-                    {String(
+                    {SafeString(
                       isSaving
                         ? t('app.admin.freeTrials.edit.saving')
                         : t('app.admin.freeTrials.edit.saveChanges')
@@ -388,12 +389,12 @@ export default function AdminEditFreeTrialPage() {
           {/* 🔙 back to list */}
           <div className="w-full flex justify-center">
             <Link
-              href="/admin/freeTrials/main"
+              href={`/${locale}/admin/freeTrials/main`}
               className="btn-secondary inline-flex items-center gap-2"
             >
               <span className="inline-flex items-center gap-2">
                 <span aria-hidden="true">←</span>
-                <span>{String(t('app.admin.freeTrials.edit.returnToList'))}</span>
+                <span>{SafeString(t('app.admin.freeTrials.edit.returnToList'))}</span>
               </span>
             </Link>
           </div>

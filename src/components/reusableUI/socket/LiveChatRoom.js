@@ -1,28 +1,27 @@
 /**
- * ================================
- * 💬 LiveChatRoom.js – Royal TV
- * ================================
+ * LiveChatRoom.js – Royal TV
  * Live, real-time chat room for 1:1 support!
- * - Localized UI strings via useTranslations()
- * - No `t` inside effect deps to avoid loops
+ * - Localized UI strings
+ * - Cleaned imports, no unused hooks
  */
 'use client';
 
-import logger from '@/lib/core/logger';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
-import useRoomUsers from '@/hooks/socket/useRoomUsers';
-import useMessageEvents from '@/hooks/socket/useMessageEvents';
-import useUnreadMessages from '@/hooks/socket/useUnreadMessages';
-import useRefreshMessages from '@/hooks/socket/useRefreshMessages';
-import useTypingIndicator from '@/hooks/socket/useTypingIndicator';
+
+import logger from '@/lib/core/logger';
 import useAppHandlers from '@/hooks/useAppHandlers';
+import useMessageEvents from '@/hooks/socket/useMessageEvents';
+import useRoomUsers from '@/hooks/socket/useRoomUsers';
+import useSocketHub from '@/hooks/socket/useSocketHub';
+import useTypingIndicator from '@/hooks/socket/useTypingIndicator';
+import useUnreadMessages from '@/hooks/socket/useUnreadMessages';
+import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
+
 import RefreshMessages from '@/components/reusableUI/socket/RefreshMessages';
 import TypingIndicator from '@/components/reusableUI/socket/TypingIndicator';
-import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
-import useSocketHub from '@/hooks/socket/useSocketHub';
-import { useTranslations } from 'next-intl'; // 🌍 translator
+import { useTranslations } from 'next-intl';
 import { SafeString } from '@/lib/ui/SafeString';
 
 export default function LiveChatRoom({
@@ -35,14 +34,12 @@ export default function LiveChatRoom({
   subject = '',
   user
 }) {
-  const t = useTranslations(); // 🌱 root-level translator
-
-  // 🧭 who am I (for bubble styles)
+  const t = useTranslations();
   const currentUserRole = session?.user?.role;
   const { displayMessage } = useAppHandlers();
 
   // 💬 room state
-  const [messages, setMessages] = useState(initialMessages);
+  const [messages, setMessages] = useState(initialMessages || []);
   const [draftMessage, setDraftMessage] = useState('');
 
   // 👥 presence & unread
@@ -82,7 +79,7 @@ export default function LiveChatRoom({
   const chatBoxRef = useRef(null);
   const inputRef = useRef(null);
 
-  // 🏠 join/leave
+  // 🏠 join/leave lifecycle
   useEffect(() => {
     joinRoom(conversation_id);
     return () => leaveRoom(conversation_id);
@@ -158,12 +155,10 @@ export default function LiveChatRoom({
     }
   }, [messages]);
 
-  // 🧭 my/other message
   const isOwnMessage = (msg) =>
     (currentUserRole === 'admin' && msg.sender_is_admin) ||
     (currentUserRole !== 'admin' && !msg.sender_is_admin);
 
-  // 🖊️ input handlers
   const handleInput = (e) => {
     setDraftMessage(handleInputChange(e));
   };
@@ -182,7 +177,6 @@ export default function LiveChatRoom({
     }
   };
 
-  // 🧑‍💻 UI
   return (
     <div className="text-pretty text-sm">
       <div className={clsx('container-style mx-auto flex flex-col gap-2 min-h-[400px]', className)}>
@@ -205,6 +199,7 @@ export default function LiveChatRoom({
         <div
           className="flex-1 overflow-y-auto flex flex-col-reverse space-y-2 gap-2 max-h-[500px]"
           ref={chatBoxRef}
+          aria-live="polite"
         >
           {messages
             .slice()
@@ -219,12 +214,13 @@ export default function LiveChatRoom({
                     : 'items-start justify-start self-start bg-gray-600 text-start'
                 )}
               >
-                <p className="break-words whitespace-pre-wrap">{message.message}</p>
+                <p className="break-words whitespace-pre-wrap">
+                  {SafeString(message.message, 'LiveChatRoom.message')}
+                </p>
                 <div className="flex justify-between items-center mt-2">
-                  {/* ✏️ edit/delete for own messages */}
                   {isOwnMessage(message) && (
                     <div className="flex gap-2">
-                      {/* ✏️ Edit message */}
+                      {/* ✏️ Edit */}
                       <button
                         type="button"
                         onClick={() =>
@@ -235,26 +231,20 @@ export default function LiveChatRoom({
                           )
                         }
                         title={SafeString(t('socket.ui.common.edit'), '')}
-                        style={{ cursor: 'pointer' }}
+                        aria-label={SafeString(t('socket.ui.common.edit'), '')}
                       >
-                        <span aria-hidden="true">✏️</span>
-                        <span className="sr-only">
-                          {SafeString(t('socket.ui.common.edit'), '')}
-                        </span>
+                        <span aria-hidden>✏️</span>
                       </button>
-                      {/* 🗑️ Delete message */}
+                      {/* 🗑️ Delete */}
                       <button
                         type="button"
                         onClick={() =>
                           onDeleteMessageModal?.(SafeString(message.message_id, ''), deleteMessage)
                         }
                         title={SafeString(t('socket.ui.common.delete'), '')}
-                        style={{ cursor: 'pointer' }}
+                        aria-label={SafeString(t('socket.ui.common.delete'), '')}
                       >
-                        <span aria-hidden="true">🗑️</span>
-                        <span className="sr-only">
-                          {SafeString(t('socket.ui.common.delete'), '')}
-                        </span>
+                        <span aria-hidden>🗑️</span>
                       </button>
                     </div>
                   )}
@@ -275,7 +265,7 @@ export default function LiveChatRoom({
             isTyping={isTyping}
             isTypingLocal={isTypingLocal}
             typingUser={typingUser}
-            showLocalForDebug={true}
+            showLocalForDebug={false}
           />
         </div>
 

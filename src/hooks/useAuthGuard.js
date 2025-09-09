@@ -1,59 +1,51 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { useRouter } from '@/i18n';
+import { useTranslations, useLocale } from 'next-intl';
 import useAppHandlers from '@/hooks/useAppHandlers';
-import { useTranslations } from 'next-intl';
 
 const useAuthGuard = (requiredRole) => {
   const { data: session, status } = useSession();
   const { displayMessage, showLoader, hideLoader } = useAppHandlers();
   const router = useRouter();
   const t = useTranslations();
+  const locale = useLocale(); // ✅ top-level (not inside effects)
 
   const [isChecking, setIsChecking] = useState(status === 'loading');
-  /* const [redirecting, setRedirecting] = useState(false); */
-  const redirectingRef = useRef(false);
 
+  // show/hide loader while session is loading
   useEffect(() => {
     if (status === 'loading') {
       showLoader({ text: t('common.auth.checking') });
       setIsChecking(true);
     } else {
-      if (!redirectingRef.current) hideLoader();
+      hideLoader();
       setIsChecking(false);
     }
-  }, [status, showLoader, hideLoader]);
+  }, [status, showLoader, hideLoader, t]);
 
-  useEffect(() => {
-    if (isChecking || redirectingRef.current) return;
+  const userRole = session?.user?.role || 'guest';
+  const isAllowed = requiredRole ? userRole === requiredRole : Boolean(session);
 
-    // No session means the user is considered a "guest"
-    const userRole = session?.user?.role || 'guest';
+  // compute redirect URL for the caller to use
+  const redirect = useMemo(() => {
+    if (isChecking) return null;
 
     if (userRole === 'guest') {
-      redirectingRef.current = true;
-      router.replace('/auth/middlePage?notLoggedIn=true');
-      return;
+      return `/${locale}/auth/middlePage?notLoggedIn=true`;
     }
-    // 🛑 Role mismatch → send to middlePage with role error
-    // If the user has a different role than required, redirect them
+
     if (requiredRole && userRole !== requiredRole) {
-      redirectingRef.current = true;
-
-      // Decide whether to route the user or admin to respective dashboards
       const query = requiredRole === 'admin' ? 'admin=false' : 'user=false';
-      router.replace(`/auth/middlePage?${query}`);
+      return `/${locale}/auth/middlePage?${query}`;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isChecking, session, requiredRole, router]);
 
-  const isAllowed = session?.user?.role === requiredRole;
+    return null;
+  }, [isChecking, userRole, requiredRole, locale]);
 
-  return {
-    isAllowed
-  };
+  return { isAllowed, redirect };
 };
 
 export default useAuthGuard;

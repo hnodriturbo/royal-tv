@@ -1,39 +1,35 @@
-/**
- *   ===================== SeeAllNotifications.js =====================
- * 🗂️ All notifications (socket-driven) — unread first, then read
- * - Translated via useTranslations() 🌍
- * - Matches NotificationCenter styling
- * - Admin/user logic unchanged
- * ===================================================================
- */
 'use client';
 
-import { useState } from 'react'; // 🔄 Local expand/collapse state
-import { useSession } from 'next-auth/react'; // 👤 Session
+/**
+ * SeeAllNotifications.js
+ * Full-page list of all notifications (socket-driven) with expand/delete/clear-all.
+ * - Locale-aware routing for per-notification links
+ * - Plays nicely with NotificationCenter styles
+ */
+
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { useLocale, useTranslations } from 'next-intl';
+
 import RefreshNotifications from '@/components/reusableUI/socket/RefreshNotifications';
-import useNotifications from '@/hooks/socket/useNotifications'; // 🪝 Socket notifications
-import { useRouter, Link } from '@/i18n'; // 🧭 Navigation
 import useModal from '@/hooks/useModal';
-import { useTranslations } from 'next-intl'; // 🌍 i18n root translator
+import useNotifications from '@/hooks/socket/useNotifications';
 import { SafeString } from '@/lib/ui/SafeString';
 
-// 🎨 Consistent notification card styling (stable)
-const notificationCardClasses = (singleNotification) =>
-  `w-4/5 mx-auto mb-2 rounded-xl shadow transition-all
-     flex flex-col justify-center
-     ${
-       !singleNotification.is_read
-         ? 'border-l-4 border-blue-500 bg-gradient-to-r from-blue-950/50 via-gray-900 to-gray-900'
-         : 'bg-gray-900/70'
-     }`;
+const cardClass = (notif) =>
+  `w-full max-w-2xl mx-auto rounded-xl shadow transition-all mb-2
+   ${!notif.is_read ? 'border-l-4 border-blue-500 bg-gradient-to-r from-blue-950/50 via-gray-900 to-gray-900' : 'bg-gray-900/70'}`;
 
-export default function SeeAllNotifications({ userRole = 'user' }) {
-  const t = useTranslations(); // 🌍 translation hook
-  const { data: session } = useSession(); // 🧾 current user session
-  const userId = session?.user?.user_id; // 🪪 user id
-  const router = useRouter(); // 🧭 router for links
+export default function SeeAllNotifications() {
+  const t = useTranslations();
+  const locale = useLocale();
+  const { data: session } = useSession();
+  const userRole = session?.user?.role || 'user';
+  const userId = session?.user?.user_id;
+  const router = useRouter();
 
-  // 🔔 Socket notifications API
   const {
     notifications,
     unreadCount,
@@ -41,205 +37,155 @@ export default function SeeAllNotifications({ userRole = 'user' }) {
     resortNotifications,
     removeNotification,
     clearAllNotifications,
-    loading: notificationsLoading // 💤 kept for potential spinners
+    refreshNotifications
   } = useNotifications(userId);
 
-  const { openModal, hideModal } = useModal(); // 🪟 modal helpers
+  const { openModal, hideModal } = useModal();
 
-  // 🗑️ Delete single notification (confirm modal)
-  const handleDeleteNotificationModal = (notification_id) => {
+  const [expanded, setExpanded] = useState({});
+
+  const total = notifications.length;
+  const sorted = useMemo(() => notifications.slice(), [notifications]);
+
+  const toggle = (id, notif) => {
+    setExpanded((p) => ({ ...p, [id]: !p[id] }));
+    if (!notif.is_read && !expanded[id]) markAsRead(id);
+    if (notif.is_read && expanded[id]) setTimeout(resortNotifications, 600);
+  };
+
+  const handleDelete = (id) => {
     openModal('deleteNotification', {
-      title: t('socket.ui.see_all_notifications.delete_title'), // 🏷️ title
-      description: t('socket.ui.see_all_notifications.delete_description'), // 📝 body
+      title: t('socket.ui.notifications.modals.delete.title'),
+      description: t('socket.ui.notifications.modals.delete.description'),
       confirmButtonType: 'Danger',
-      confirmButtonText: t('socket.ui.see_all_notifications.delete_button'),
-      cancelButtonText: t('socket.ui.see_all_notifications.cancel_button'),
+      confirmButtonText: t('socket.ui.notifications.modals.delete.confirm'),
+      cancelButtonText: t('socket.ui.notifications.modals.common.cancel'),
       onConfirm: () => {
-        removeNotification(notification_id); // 🧹 delete and close
+        removeNotification(id);
         hideModal();
       },
       onCancel: hideModal
     });
   };
 
-  // 🧨 Clear all notifications (confirm modal)
-  const handleClearAllNotificationsModal = () => {
+  const handleClearAll = () => {
     openModal('clearAllNotifications', {
-      title: t('socket.ui.see_all_notifications.delete_all_title'),
-      description: t('socket.ui.see_all_notifications.delete_all_description'),
+      title: t('socket.ui.notifications.modals.clear_all.title'),
+      description: t('socket.ui.notifications.modals.clear_all.description'),
       confirmButtonType: 'Danger',
-      confirmButtonText: t('socket.ui.see_all_notifications.delete_all_button'),
-      cancelButtonText: t('socket.ui.see_all_notifications.cancel_button'),
+      confirmButtonText: t('socket.ui.notifications.modals.clear_all.confirm'),
+      cancelButtonText: t('socket.ui.notifications.modals.common.cancel'),
       onConfirm: () => {
-        clearAllNotifications(); // 🧨 remove all
+        clearAllNotifications();
         hideModal();
       },
       onCancel: hideModal
     });
   };
 
-  // ⬇️ Keep local expand/collapse state by id
-  const [expandedIds, setExpandedIds] = useState({});
+  useEffect(() => {
+    /* ensure sorted on mount */ resortNotifications();
+  }, [resortNotifications]);
 
-  // 🎛️ Toggle expand and manage read state / reordering
-  const handleToggleExpanded = (notification_id, singleNotification) => {
-    // 🟢 Opening unread → mark as read
-    if (!singleNotification.is_read && !expandedIds[notification_id]) {
-      markAsRead(notification_id);
-      setExpandedIds((previous) => ({ ...previous, [notification_id]: true }));
-      return;
-    }
-    // 🔵 Closing read → collapse then resort (after animation)
-    if (singleNotification.is_read && expandedIds[notification_id]) {
-      setExpandedIds((previous) => ({ ...previous, [notification_id]: false }));
-      setTimeout(() => {
-        resortNotifications();
-      }, 700);
-      return;
-    }
-    // 🟣 Default toggle
-    setExpandedIds((previous) => ({ ...previous, [notification_id]: !previous[notification_id] }));
-  };
-
-  // 🔗 Should we show the "Open Content" button?
-  const shouldShowButton = (singleNotification) => {
-    if (userRole === 'admin') return Boolean(singleNotification.link);
-    return Boolean(singleNotification.link) && singleNotification.type !== 'newUserRegistration';
+  const shouldShowButton = (notif) => {
+    if (userRole === 'admin') return Boolean(notif.link);
+    return Boolean(notif.link) && notif.type !== 'newUserRegistration';
   };
 
   return (
-    <div className="container-style flex flex-col items-center justify-center w-full max-w-2xl mx-auto p-4 lg:p-8 mt-10">
-      {/* 📰 Header: title + unread badge + refresh button */}
-      <div className="flex justify-between items-center w-full mb-6 max-w-xl">
-        <h2 className="text-2xl sm:text-3xl font-bold flex items-center">
-          {t('socket.ui.see_all_notifications.title')}
-          {/* 🏷️ page title */}
+    <div className="container-style flex flex-col items-center w-full">
+      <div className="w-full flex items-center justify-between max-w-2xl">
+        <h1 className="text-2xl font-bold flex items-center">
+          🔔 {t('socket.ui.notifications.title')}
           {unreadCount > 0 && (
             <span className="bg-red-500 text-white px-2 py-0.5 rounded-full text-sm ml-2">
               {unreadCount}
-              {/* 🔴 unread count */}
             </span>
           )}
-        </h2>
-        {/* 🔄 Refresh via socket */}
+        </h1>
         <RefreshNotifications user_id={userId} />
       </div>
 
-      <hr className="border border-gray-600 w-11/12 max-w-xl mb-6" />
+      <hr className="border border-gray-700 w-full max-w-2xl my-4" />
 
-      {/* 📬 All notifications list */}
-      <div className="flex flex-col items-center gap-3 mb-4 w-full">
-        {notifications.length === 0 ? (
-          <div className="text-center text-gray-400 py-8">
-            {t('socket.ui.see_all_notifications.no_notifications')}
-            {/* 📨 empty state */}
-          </div>
-        ) : (
-          notifications.map((singleNotification) => (
-            <div
-              key={singleNotification.notification_id || singleNotification.id}
-              className={notificationCardClasses(singleNotification)}
-            >
-              {/* ➕/➖ expand row */}
+      {total === 0 ? (
+        <div className="text-gray-400 py-10">{t('socket.ui.notifications.empty')}</div>
+      ) : (
+        <div className="w-full">
+          {sorted.map((notif) => (
+            <div key={notif.notification_id} className={cardClass(notif)}>
               <button
                 type="button"
-                onClick={() =>
-                  handleToggleExpanded(singleNotification.notification_id, singleNotification)
-                }
                 className="w-full text-left flex justify-between items-center px-5 py-3"
+                onClick={() => toggle(notif.notification_id, notif)}
+                aria-expanded={!!expanded[notif.notification_id]}
               >
-                <div
-                  className={`flex items-center gap-2 ${!singleNotification.is_read ? 'font-bold' : ''}`}
-                >
-                  {!singleNotification.is_read && (
-                    <span className="w-2 h-2 bg-blue-500 rounded-full" />
-                  )}
-                  <span className="text-md">{SafeString(singleNotification.title ?? '')}</span>
+                <div className={`flex items-center gap-2 ${!notif.is_read ? 'font-bold' : ''}`}>
+                  {!notif.is_read && <span className="w-2 h-2 bg-blue-500 rounded-full" />}
+                  <span className="text-md">
+                    {SafeString(notif.title, 'SeeAllNotifications.title') ?? ''}
+                  </span>
                 </div>
-                <span className="ml-2 text-lg">
-                  {expandedIds[singleNotification.notification_id] ? '−' : '+'}
-                </span>
+                <span className="ml-2 text-lg">{expanded[notif.notification_id] ? '−' : '+'}</span>
               </button>
 
-              {/* 📥 Collapsible body */}
               <div
-                className={`overflow-hidden transition-all duration-700 ${
-                  expandedIds[singleNotification.notification_id] ? 'max-h-96' : 'max-h-0'
-                }`}
+                className={`overflow-hidden transition-all duration-700 ${expanded[notif.notification_id] ? 'max-h-96' : 'max-h-0'}`}
               >
                 <div
                   className={
-                    expandedIds[singleNotification.notification_id]
-                      ? 'px-5 pb-2 pt-1 border-t border-gray-700 max-h-56 overflow-y-auto custom-scrollbar'
-                      : 'px-5 pb-2 pt-1 border-t border-gray-700'
+                    expanded[notif.notification_id]
+                      ? 'px-5 pb-3 pt-1 border-t border-gray-700 max-h-56 overflow-y-auto custom-scrollbar'
+                      : 'px-5 pb-3 pt-1 border-t border-gray-700'
                   }
                 >
-                  {/* 📝 Body text (already localized) */}
                   <div className="text-gray-300 mb-3 mt-2">
-                    <p className="whitespace-pre-wrap">{singleNotification.body}</p>
+                    <p className="whitespace-pre-wrap">
+                      {SafeString(notif.body, 'SeeAllNotifications.body')}
+                    </p>
                   </div>
 
-                  {/* 🔗 Action buttons */}
-                  {shouldShowButton(singleNotification) && (
-                    <div className="flex justify-between items-center mt-3">
-                      {/* 🗑️ Delete notification */}
-
-                      {/* 🗑️ Delete single */}
+                  <div className="flex justify-between items-center mt-2">
+                    <button type="button" onClick={() => handleDelete(notif.notification_id)}>
+                      🗑️ {t('socket.ui.notifications.actions.delete')}
+                    </button>
+                    {shouldShowButton(notif) && (
                       <button
                         type="button"
-                        className="px-2 py-1 rounded bg-red-700 hover:bg-red-900 text-white text-xs border border-red-500 transition"
-                        onClick={() =>
-                          handleDeleteNotificationModal(singleNotification.notification_id)
-                        }
-                        title={SafeString(
-                          t('socket.ui.see_all_notifications.delete_notification') ?? ''
-                        )}
+                        onClick={() => router.push(`/${locale}${String(notif.link ?? '/')}`)}
                       >
-                        🗑️ {SafeString(t('socket.ui.see_all_notifications.delete_button') ?? '')}
+                        {t('socket.ui.notifications.actions.open')}
                       </button>
-                      {/* 🔓 Open content link */}
-                      <Link
-                        href={singleNotification.link}
-                        className="btn-primary btn-sm text-center block"
-                      >
-                        {t('socket.ui.see_all_notifications.open_content')}
-                      </Link>
-                    </div>
-                  )}
+                    )}
+                  </div>
 
-                  {/* 🗓️ Meta info */}
-                  <div className="mt-2 pt-3 border-t border-gray-800 text-xs text-gray-500">
-                    <div>
-                      {singleNotification.createdAt
-                        ? new Date(singleNotification.createdAt).toLocaleString()
-                        : ''}
-                    </div>
-                    {singleNotification.type && <div>Type: {singleNotification.type}</div>}
+                  <div className="mt-3 pt-2 border-t border-gray-800 text-xs text-gray-500">
+                    <div>{new Date(notif.createdAt).toLocaleString()}</div>
+                    {notif.type && (
+                      <div>
+                        {t('socket.ui.notifications.type_label')}: {SafeString(notif.type)}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {/* 🚨 Danger Zone: Clear all */}
-      {notifications.length > 0 && (
-        <div className="w-full max-w-sm mx-auto border border-red-700 rounded-2xl bg-red-950/60 flex flex-col items-center p-6 shadow-lg">
+      {total > 0 && (
+        <div className="w-full max-w-sm mx-auto border border-red-700 rounded-2xl bg-red-950/60 flex flex-col items-center p-6 shadow-lg mt-6">
           <h3 className="text-lg font-bold text-red-400 mb-2 flex items-center">
             <span className="mr-2">⚠️</span>
-            {t('socket.ui.see_all_notifications.danger_zone')}
-            {/* ⚠️ title */}
+            {t('socket.ui.notifications.danger_zone')}
           </h3>
-
-          {/* 🧨 Clear all */}
           <button
             type="button"
+            onClick={handleClearAll}
             className="px-5 py-2 rounded-lg bg-red-700 hover:bg-red-900 border border-red-500 text-white font-bold shadow transition"
-            onClick={handleClearAllNotificationsModal}
-            title={SafeString(t('socket.ui.see_all_notifications.clear_all_notifications') ?? '')}
           >
-            🧨 {SafeString(t('socket.ui.see_all_notifications.clear_all_notifications') ?? '')}
+            🧨 {t('socket.ui.notifications.actions.clear_all')}
           </button>
         </div>
       )}

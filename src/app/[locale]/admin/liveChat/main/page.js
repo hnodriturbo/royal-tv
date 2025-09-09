@@ -7,10 +7,10 @@
  * ================================================================
  */
 
-'use client';
+'use client';import Link from "next/link";import { useRouter } from "next/navigation";
 
 import { useEffect, useState } from 'react';
-import { Link, useRouter } from '@/i18n';
+
 import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl'; // 🌐 i18n (full-path keys only)
 
@@ -23,8 +23,8 @@ import SortDropdown from '@/components/reusableUI/SortDropdown';
 import useLocalSorter from '@/hooks/useLocalSorter';
 import {
   userWithConversationsSortOptions,
-  getUserWithConversationsSortFunction
-} from '@/lib/utils/sorting';
+  getUserWithConversationsSortFunction } from
+'@/lib/utils/sorting';
 import Pagination from '@/components/reusableUI/Pagination';
 import ConversationActionButton from '@/components/reusableUI/ConversationActionButton';
 
@@ -91,8 +91,8 @@ export default function AdminLiveChatUsersPage() {
               <SortDropdown
                 options={userWithConversationsSortOptions}
                 value={sortOrder}
-                onChange={setSortOrder}
-              />
+                onChange={setSortOrder} />
+              
             </div>
             <hr className="md:hidden border border-gray-400 w-8/12 my-4" />
             <div className="flex-1 flex justify-center items-center">
@@ -116,22 +116,22 @@ export default function AdminLiveChatUsersPage() {
                 </tr>
               </thead>
               <tbody className="text-center">
-                {pagedUsers.map((u) => (
-                  <tr key={u.user_id} className="hover:bg-gray-400">
+                {pagedUsers.map((u) =>
+                <tr key={u.user_id} className="hover:bg-gray-400">
                     <td>{u.name || 'N/A'}</td>
                     <td>{u.email || 'N/A'}</td>
                     <td>{u.conversationCount}</td>
                     <td>
-                      {u.unreadConvoCount > 0 ? (
-                        <span className="text-green-500 font-bold">● {u.unreadConvoCount}</span>
-                      ) : (
-                        <span className="text-gray-400">0</span>
-                      )}
+                      {u.unreadConvoCount > 0 ?
+                    <span className="text-green-500 font-bold">● {u.unreadConvoCount}</span> :
+
+                    <span className="text-gray-400">0</span>
+                    }
                     </td>
                     <td>
-                      {u.lastMessage
-                        ? new Date(u.lastMessage).toLocaleString()
-                        : t('app.admin.liveChat.users.no_messages')}
+                      {u.lastMessage ?
+                    new Date(u.lastMessage).toLocaleString() :
+                    t('app.admin.liveChat.users.no_messages')}
                     </td>
                     <td>
                       <div className="flex flex-row gap-2 justify-center">
@@ -139,25 +139,25 @@ export default function AdminLiveChatUsersPage() {
                           {t('app.admin.liveChat.users.view')}
                         </Link>
                         <ConversationActionButton
-                          action="create"
-                          user_id={u.user_id}
-                          user={u}
-                          chatType="live"
-                          onActionSuccess={fetchUsersWithConversations}
-                          buttonText={t('app.admin.liveChat.users.start_new')}
-                          isAdmin={true}
-                        />
+                        action="create"
+                        user_id={u.user_id}
+                        user={u}
+                        chatType="live"
+                        onActionSuccess={fetchUsersWithConversations}
+                        buttonText={t('app.admin.liveChat.users.start_new')}
+                        isAdmin={true} />
+                      
                         <ConversationActionButton
-                          action="deleteAll"
-                          user_id={u.user_id}
-                          chatType="live"
-                          onActionSuccess={fetchUsersWithConversations}
-                          isAdmin={true}
-                        />
+                        action="deleteAll"
+                        user_id={u.user_id}
+                        chatType="live"
+                        onActionSuccess={fetchUsersWithConversations}
+                        isAdmin={true} />
+                      
                       </div>
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -165,8 +165,8 @@ export default function AdminLiveChatUsersPage() {
 
         {/* 📱 Mobile Cards */}
         <div className="xl:hidden flex flex-col gap-4 w-full mt-6">
-          {pagedUsers.map((u) => (
-            <div key={u.user_id} className="border rounded-2xl p-4 bg-gray-500">
+          {pagedUsers.map((u) =>
+          <div key={u.user_id} className="border rounded-2xl p-4 bg-gray-500">
               <div className="flex justify-between mb-2">
                 <h3>{u.name || 'N/A'}</h3>
                 <span>
@@ -178,49 +178,49 @@ export default function AdminLiveChatUsersPage() {
               </p>
               <p>
                 <strong>{t('app.admin.liveChat.users.table_last')}:</strong>{' '}
-                {u.lastMessage
-                  ? new Date(u.lastMessage).toLocaleString()
-                  : t('app.admin.liveChat.users.no_messages')}
+                {u.lastMessage ?
+              new Date(u.lastMessage).toLocaleString() :
+              t('app.admin.liveChat.users.no_messages')}
               </p>
               <p>
                 <strong>{t('app.admin.liveChat.users.table_unread')}:</strong>{' '}
-                {u.unreadConvoCount > 0 ? (
-                  <span className="text-green-500 font-bold">● {u.unreadConvoCount}</span>
-                ) : (
-                  <span className="text-gray-400">0</span>
-                )}
+                {u.unreadConvoCount > 0 ?
+              <span className="text-green-500 font-bold">● {u.unreadConvoCount}</span> :
+
+              <span className="text-gray-400">0</span>
+              }
               </p>
               <div className="flex flex-col sm:flex-row gap-2 mt-3">
                 <Link href={`/admin/liveChat/user/${u.user_id}`} className="btn-primary">
                   {t('app.admin.liveChat.users.view')}
                 </Link>
                 <ConversationActionButton
-                  action="create"
-                  user_id={u.user_id}
-                  user={u}
-                  chatType="live"
-                  onActionSuccess={fetchUsersWithConversations}
-                  buttonText={t('app.admin.liveChat.users.start_new')}
-                  isAdmin={true}
-                />
+                action="create"
+                user_id={u.user_id}
+                user={u}
+                chatType="live"
+                onActionSuccess={fetchUsersWithConversations}
+                buttonText={t('app.admin.liveChat.users.start_new')}
+                isAdmin={true} />
+              
                 <ConversationActionButton
-                  action="deleteAll"
-                  user_id={u.user_id}
-                  chatType="live"
-                  onActionSuccess={fetchUsersWithConversations}
-                  isAdmin={true}
-                />
+                action="deleteAll"
+                user_id={u.user_id}
+                chatType="live"
+                onActionSuccess={fetchUsersWithConversations}
+                isAdmin={true} />
+              
               </div>
             </div>
-          ))}
+          )}
         </div>
 
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
+          onPageChange={setCurrentPage} />
+        
       </div>
-    </div>
-  );
+    </div>);
+
 }

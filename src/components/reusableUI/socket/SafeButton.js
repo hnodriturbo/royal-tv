@@ -1,20 +1,11 @@
 /**
- * SafeButton.js
- * ================================
- * 🛡️ Zero-tolerance <button> wrapper for React #130
- * - Forces type="button" to avoid accidental form submits
- * - Ensures onClick is a function (wraps non-functions defensively)
- * - Coerces title/aria-label to strings
- * - Sanitizes children so no object/promise/undefined lands in JSX
- * - Keeps all incoming className/styling intact
+ * SafeButton.js — defensive <button> wrapper
  */
-
 'use client';
 
 import React from 'react';
 
 export default function SafeButton({
-  // 🎛️ public props (keep names long and descriptive)
   onClick: rawOnClick,
   title: rawTitle,
   ariaLabel: rawAriaLabel,
@@ -24,15 +15,7 @@ export default function SafeButton({
   children,
   ...otherProps
 }) {
-  // 🧠 ensure onClick is always a function (arrow wraps accidental values)
-  const safeOnClick =
-    typeof rawOnClick === 'function'
-      ? rawOnClick
-      : () => {
-          // 🤐 no-op; prevents React from trying to render function return
-        };
-
-  // 🧼 coerce attributes that must be strings
+  const safeOnClick = typeof rawOnClick === 'function' ? rawOnClick : () => {};
   const safeTitle = rawTitle == null ? undefined : String(rawTitle);
   const safeAriaLabel = rawAriaLabel == null ? (safeTitle ?? undefined) : String(rawAriaLabel);
 
@@ -48,7 +31,7 @@ export default function SafeButton({
 
   return (
     <button
-      type="button" // ✅ never submit
+      type="button"
       onClick={safeOnClick}
       className={className}
       style={style}
@@ -57,7 +40,6 @@ export default function SafeButton({
       disabled={disabled}
       {...otherProps}
     >
-      {/* 🧷 children are always safe now */}
       {renderSafeChildren(children)}
     </button>
   );

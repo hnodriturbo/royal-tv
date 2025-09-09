@@ -1,34 +1,30 @@
-// components/reusableUI/socket/RefreshFreeTrialsButton.js
-// 🔁 RefreshFreeTrialsButton.js — translate button text
-
+// RefreshFreeTrialsButton.js — translate button text
 'use client';
 
-import { useSession } from 'next-auth/react';
-/* import useFreeTrials from '@/hooks/socket/useFreeTrialStatus'; */
-import useFreeTrialStatus from '@/hooks/socket/useFreeTrialStatus';
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
+
+import useFreeTrialStatus from '@/hooks/socket/useFreeTrialStatus';
 
 const RefreshFreeTrialStatusButton = () => {
   const { data: session } = useSession();
   const userId = session?.user?.user_id;
-  /* const { refreshFreeTrialStatus } = useFreeTrialStatus(userId); */
   const { refreshStatus } = useFreeTrialStatus(userId);
   const [loading, setLoading] = useState(false);
-  const t = useTranslations(); // 🌍
+  const t = useTranslations();
 
   const handleRefreshClick = () => {
     setLoading(true);
-    /* refreshFreeTrialStatus(); */
     refreshStatus();
     setTimeout(() => setLoading(false), 1000);
   };
 
   return (
-    <button type="button" onClick={handleRefreshClick}>
+    <button type="button" onClick={handleRefreshClick} aria-busy={loading}>
       {loading ? (
         <>
-          <span className="animate-spin" aria-hidden="true">
+          <span className="animate-spin" aria-hidden>
             ⟳
           </span>{' '}
           {String(t('socket.ui.common.refreshing') ?? '')}

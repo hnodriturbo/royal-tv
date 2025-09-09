@@ -1,10 +1,10 @@
 'use client'; // 💡 Client page
-
+import { useRouter } from "next/navigation";
 import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import useLogout from '@/hooks/useLogout';
 import useAuthGuard from '@/hooks/useAuthGuard';
-import { useRouter } from '@/i18n';
+
 
 import UserSubscriptionPanel from '@/components/reusableUI/socket/UserSubscriptionPanel';
 import NotificationCenter from '@/components/reusableUI/socket/NotificationCenter';
@@ -51,7 +51,7 @@ export default function UserDashboard() {
 
       {/* 🔵 User Subscription Panel */}
       <div className="w-full mx-auto">
-        <UserSubscriptionPanel user_id={session?.user?.user_id} />
+        {<UserSubscriptionPanel user_id={session?.user?.user_id} />}
       </div>
 
       {/* 🟢 Notification Center */}
@@ -63,6 +63,6 @@ export default function UserDashboard() {
       <div className="container-style w-11/12 lg:w-[600px] mx-auto">
         <IsAdminOnline user_id={session?.user?.user_id} />
       </div>
-    </div>
-  );
+    </div>);
+
 }

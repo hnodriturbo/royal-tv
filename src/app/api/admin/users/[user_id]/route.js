@@ -1,100 +1,112 @@
-'use server';
-
+/**
+ * ========== /app/api/admin/users/[user_id]/route.js ==========
+ * 🔒 ADMIN USER ITEM API (Server)
+ */
 import logger from '@/lib/core/logger';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/core/prisma';
+import { withRole } from '@/lib/api/guards';
 
-/*
- * GET /api/admin/users/[user_id]
- * - Retrieves details for a specific user by user_id (excluding sensitive fields like password).
- */
-export async function GET(request, { params }) {
-  // Extract user_id from the dynamic route params
-  const { user_id } = await params;
-  logger.log('[API GET] Fetching user with user_id:', user_id);
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+const safeUserSelect = {
+  user_id: true,
+  username: true,
+  name: true,
+  email: true,
+  role: true,
+  whatsapp: true,
+  telegram: true,
+  createdAt: true
+};
+
+const allowedUpdateKeys = new Set(['username', 'name', 'email', 'role', 'whatsapp', 'telegram']);
+
+function getUserIdFromCtx(ctx) {
+  const raw = ctx?.params?.user_id;
+  return typeof raw === 'string' ? decodeURIComponent(raw) : null;
+}
+
+export const GET = withRole('admin', async (request, ctx) => {
+  const user_id = getUserIdFromCtx(ctx);
+  logger.log('[API][Admin][User][GET] Fetching user', { user_id });
+
+  if (!user_id) {
+    return NextResponse.json({ error: 'Invalid user_id' }, { status: 400 });
+  }
 
   try {
-    // Find the user by user_id and select only non-sensitive fields
-    const user = await prisma.user.findUnique({
-      where: { user_id }, // user_id is a UUID string
-      select: {
-        user_id: true,
-        username: true,
-        name: true,
-        email: true,
-        role: true,
-        whatsapp: true,
-        telegram: true,
-        createdAt: true
-      }
-    });
-
+    const user = await prisma.user.findUnique({ where: { user_id }, select: safeUserSelect });
     if (!user) {
-      logger.log('[API GET] User not found');
+      logger.log('[API][Admin][User][GET] Not found', { user_id });
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
-
-    logger.log('[API GET] Found user:', user);
-    return NextResponse.json(user);
+    return NextResponse.json(user, { status: 200 });
   } catch (error) {
-    logger.error('[API GET] Error fetching user:', error);
+    logger.error('[API][Admin][User][GET] Failed', { error: error?.message || error });
     return NextResponse.json({ error: 'Error fetching user' }, { status: 500 });
   }
-}
+});
 
-/*
- * PATCH /api/admin/users/[user_id]
- * - Updates details for a specific user.
- * - Expects a JSON body with fields to update (e.g., name, username, email, role, whatsapp, telegram).
- */
-export async function PATCH(request, { params }) {
-  const { user_id } = params;
-  logger.log('[API PATCH] Updating user with user_id:', user_id);
+export const PATCH = withRole('admin', async (request, ctx) => {
+  const user_id = getUserIdFromCtx(ctx);
+  logger.log('[API][Admin][User][PATCH] Incoming', { user_id });
+
+  if (!user_id) {
+    return NextResponse.json({ error: 'Invalid user_id' }, { status: 400 });
+  }
+
+  let parsedBody = null;
+  try {
+    parsedBody = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const safeData = Object.fromEntries(
+    Object.entries(parsedBody || {}).filter(([k]) => allowedUpdateKeys.has(k))
+  );
+
+  if (!Object.keys(safeData).length) {
+    return NextResponse.json({ error: 'No updatable fields provided' }, { status: 400 });
+  }
 
   try {
-    const body = await request.json();
-    logger.log('[API PATCH] Received update data:', body);
-
-    // Update the user with provided fields and return the updated record
     const updatedUser = await prisma.user.update({
       where: { user_id },
-      data: body,
-      select: {
-        user_id: true,
-        username: true,
-        name: true,
-        email: true,
-        role: true,
-        whatsapp: true,
-        telegram: true,
-        createdAt: true
-      }
+      data: safeData,
+      select: safeUserSelect
     });
-
-    logger.log('[API PATCH] Updated user:', updatedUser);
-    return NextResponse.json(updatedUser);
+    logger.log('[API][Admin][User][PATCH] Updated', { user_id });
+    return NextResponse.json(updatedUser, { status: 200 });
   } catch (error) {
-    logger.error('[API PATCH] Error updating user:', error);
+    logger.error('[API][Admin][User][PATCH] Failed', { error: error?.message || error });
     return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
   }
-}
+});
 
-/*
- * DELETE /api/admin/users/[user_id]
- * - Deletes a specific user by user_id.
- */
-export async function DELETE(request, { params }) {
-  const { user_id } = params;
-  logger.log('[API DELETE] Deleting user with user_id:', user_id);
+export const DELETE = withRole('admin', async (_request, ctx) => {
+  const user_id = getUserIdFromCtx(ctx);
+  logger.log('[API][Admin][User][DELETE] Incoming', { user_id });
+
+  if (!user_id) {
+    return NextResponse.json({ error: 'Invalid user_id' }, { status: 400 });
+  }
 
   try {
-    await prisma.user.delete({
-      where: { user_id }
-    });
-    logger.log('[API DELETE] User deleted successfully');
-    return NextResponse.json({ message: 'User deleted successfully' });
+    await prisma.user.delete({ where: { user_id } });
+    logger.log('[API][Admin][User][DELETE] Deleted', { user_id });
+    return NextResponse.json({ message: 'User deleted successfully' }, { status: 200 });
   } catch (error) {
-    logger.error('[API DELETE] Error deleting user:', error);
+    logger.error('[API][Admin][User][DELETE] Failed', { error: error?.message || error });
+    // FK violation friendly message
+    if (error?.code === 'P2003') {
+      return NextResponse.json(
+        { error: 'Cannot delete user with related records (subscriptions/logs/etc.)' },
+        { status: 400 }
+      );
+    }
     return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
   }
-}
+});

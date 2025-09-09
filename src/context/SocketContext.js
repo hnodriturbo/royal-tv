@@ -1,13 +1,13 @@
 /**
  * ========== src/context/SocketContext.js ==========
  * 📡 Global Socket provider (single connection)
- * 🌍 Handshake includes current UI locale (from next-intl)
- * 🚫 No DB locale reads/writes; runtime only
+ * 🌍 Handshake includes initial UI locale; later changes emit "set_locale"
+ * 🛡️ Small guarded emit queue (flushes on connect)
  */
 
 'use client';
 
-import { createContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useEffect, useRef, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { useSession } from 'next-auth/react';
 import { useLocale as useNextIntlLocale } from 'next-intl';
@@ -24,54 +24,59 @@ export const SocketProvider = ({ children, locale: injectedLocale }) => {
   const [socketConnected, setSocketConnected] = useState(false);
 
   const { data: session, status } = useSession();
-  const activeUILocale = injectedLocale || useNextIntlLocale?.() || 'en';
+  const routeLocale = useNextIntlLocale?.() || 'en';
+  const activeUILocale = injectedLocale || routeLocale;
 
-  // 🔗 allow override via env if you want to front with Nginx
+  // simple queue for emits while disconnected
+  const emitQueueRef = useRef([]);
+  const currentLocaleRef = useRef(activeUILocale);
+
   const SOCKET_URL =
     process.env.NEXT_PUBLIC_SOCKET_URL ||
     (process.env.NODE_ENV === 'production' ? 'https://royal-tv.tv' : 'http://localhost:3001');
 
+  // connect once (do not depend on locale)
   useEffect(() => {
     if (status === 'loading') return;
 
     const user_id = session?.user?.user_id || null;
     const role = session?.user?.role || 'guest';
     const name = session?.user?.name || 'Guest';
-    const locale = activeUILocale;
 
-    console.log('📡 Connecting socket with:', { user_id, role, name, locale });
+    currentLocaleRef.current = activeUILocale;
 
     const socketConnection = io(SOCKET_URL, {
       transports: ['websocket'],
       path: '/socket.io',
-      query: { user_id, role, name, locale },
-      auth: { locale }
+      query: { user_id, role, name, locale: currentLocaleRef.current },
+      auth: { locale: currentLocaleRef.current },
+      withCredentials: true
     });
 
     setSocket(socketConnection);
+
     return () => {
       socketConnection.disconnect();
-      console.log('🔌 Socket disconnected');
     };
-  }, [
-    SOCKET_URL,
-    status,
-    session?.user?.user_id,
-    session?.user?.role,
-    session?.user?.name,
-    activeUILocale
-  ]);
+    // ⛔️ intentionally exclude activeUILocale so we don't reconnect on language change
+  }, [SOCKET_URL, status, session?.user?.user_id, session?.user?.role, session?.user?.name]);
 
+  // basic lifecycle + queue flush
   useEffect(() => {
     if (!socket) return;
+
     const onConnect = () => {
       setSocketConnected(true);
-      console.log('🟢 [SocketContext] Connected');
+      // flush queued emits
+      for (const [event, data] of emitQueueRef.current) {
+        socket.emit(event, data);
+      }
+      emitQueueRef.current = [];
     };
     const onDisconnect = () => {
       setSocketConnected(false);
-      console.log('🔴 [SocketContext] Disconnected');
     };
+
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     return () => {
@@ -80,12 +85,32 @@ export const SocketProvider = ({ children, locale: injectedLocale }) => {
     };
   }, [socket]);
 
+  // when the UI locale changes, tell the server (no reconnect churn)
+  useEffect(() => {
+    if (!socket) return;
+    const next = injectedLocale || routeLocale;
+    if (next && next !== currentLocaleRef.current) {
+      currentLocaleRef.current = next;
+      // emit immediately; if disconnected, it will queue below
+      if (socketConnected) {
+        socket.emit('set_locale', { locale: next });
+      } else {
+        emitQueueRef.current.push(['set_locale', { locale: next }]);
+      }
+    }
+  }, [socket, socketConnected, injectedLocale, routeLocale]);
+
   const emitEvent = useCallback(
     (event, data) => {
-      if (socket) socket.emit(event, data);
+      if (socket && socketConnected) {
+        socket.emit(event, data);
+      } else {
+        emitQueueRef.current.push([event, data]);
+      }
     },
-    [socket]
+    [socket, socketConnected]
   );
+
   const onEvent = useCallback(
     (event, cb) => {
       if (!socket) return () => {};

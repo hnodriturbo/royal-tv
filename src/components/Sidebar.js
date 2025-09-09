@@ -10,18 +10,20 @@
 
 'use client';
 
-import { Link } from '@/i18n';
+import Link from 'next/link';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import sidebarLinks from '@/lib/utils/sidebarLinks';
 import useLogout from '@/hooks/useLogout';
-import { useTranslations } from 'next-intl'; // 🌍 i18n hook
-import { SafeString } from '@/lib/ui/SafeString';
+import { useLocale, useTranslations } from 'next-intl';
+
+import { getSidebarLinks } from '@/lib/utils/sidebarLinks';
 
 export default function Sidebar() {
   const { data: session, status } = useSession();
-  const t = useTranslations(); // 🗣️ root translator; always call with full keys
+  const t = useTranslations();
+  const locale = useLocale();
 
   // 🔐 Resolve role (guest by default)
   let role = 'guest';
@@ -30,10 +32,8 @@ export default function Sidebar() {
     else if (session?.user?.role === 'user') role = 'user';
   }
 
-  // 🎯 Pick correct list
-  let links = sidebarLinks.guest;
-  if (role === 'user') links = sidebarLinks.user;
-  if (role === 'admin') links = sidebarLinks.admin;
+  // 🎯 locale-prefixed links ready to use (helper skips '/logout')
+  const links = useMemo(() => getSidebarLinks(locale, role), [locale, role]);
 
   const logout = useLogout();
   const [isOpen, setIsOpen] = useState(false);
@@ -45,7 +45,7 @@ export default function Sidebar() {
       <aside className="hidden lg:flex fixed top-0 left-0 h-screen w-64 bg-smooth-gradient-dark-2 my-border-all-4 shadow-box-3 z-[1000] flex-col">
         {/* 👑 Logo */}
         <div className="flex flex-col items-center py-2">
-          <Link href="/" className="flex flex-col items-center" tabIndex={0}>
+          <Link href={`/${locale}/`} className="flex flex-col items-center">
             <Image
               src="/images/logo/logo.png"
               alt="Royal TV Logo"
@@ -60,9 +60,9 @@ export default function Sidebar() {
         {/* 🧭 Navigation */}
         <nav className="flex-1 mt-4 overflow-y-auto">
           <ul className="space-y-2">
-            {links.map((navigationItem) =>
-              navigationItem.href === '/logout' ? (
-                <li key={navigationItem.href}>
+            {links.map((item) =>
+              item.href === '/logout' ? (
+                <li key={item.key}>
                   <button
                     type="button"
                     onClick={logout}
@@ -70,23 +70,23 @@ export default function Sidebar() {
                   >
                     <span className="inline-flex items-center gap-2">
                       <span aria-hidden="true" className="mr-1">
-                        {navigationItem.emoji}
+                        {item.emoji}
                       </span>
-                      <span>{SafeString(t(`app.navigation.${navigationItem.key}`))}</span>
+                      <span>{t(`app.navigation.${item.key}`)}</span>
                     </span>
                   </button>
                 </li>
               ) : (
-                <li key={navigationItem.href}>
+                <li key={item.key}>
                   <Link
-                    href={navigationItem.href}
+                    href={item.href} // already locale-prefixed by helper
                     className="flex w-10/12 mt-3 ms-2 items-center px-6 py-3 rounded-full text-lg font-normal transition-all duration-300 hover:bg-gradient-to-r hover:ml-4 hover:from-cyan-500 hover:to-blue-700 hover:text-white hover:font-bold focus:outline-none focus:ring-2 focus:ring-cyan-400"
                   >
                     <span className="inline-flex items-center gap-2">
                       <span aria-hidden="true" className="mr-1">
-                        {navigationItem.emoji}
+                        {item.emoji}
                       </span>
-                      <span>{SafeString(t(`app.navigation.${navigationItem.key}`))}</span>
+                      <span>{t(`app.navigation.${item.key}`)}</span>
                     </span>
                   </Link>
                 </li>
@@ -108,14 +108,14 @@ export default function Sidebar() {
           onClick={() => setIsOpen(true)}
           aria-label="Open menu"
         >
-          <span className="inline-flex items-center" aria-hidden="true">
+          <span className="inline-flex items-center" aria-hidden="false">
             ☰
           </span>
         </button>
 
         {/* 👑 Mobile brand */}
         <div className="flex-1 flex items-center justify-center">
-          <Link href="/" className="flex items-center space-x-2" tabIndex={0}>
+          <Link href={`/${locale}/`} className="flex items-center space-x-2">
             <Image
               src="/images/logo/logo.png"
               alt="Royal TV Logo Left"
@@ -167,7 +167,7 @@ export default function Sidebar() {
 
         {/* 👑 Logo */}
         <div className="flex flex-col items-center py-3">
-          <Link href="/" className="flex flex-col items-center" tabIndex={0}>
+          <Link href={`/${locale}/`} className="flex flex-col items-center">
             <Image
               src="/images/logo/logo.png"
               alt="Royal TV Logo"
@@ -182,9 +182,9 @@ export default function Sidebar() {
         {/* 🧭 Navigation (mobile) */}
         <nav className="flex-1 mt-4 overflow-y-auto">
           <ul className="space-y-2">
-            {links.map((navigationItem) =>
-              navigationItem.href === '/logout' ? (
-                <li key={navigationItem.href}>
+            {links.map((item) =>
+              item.href === '/logout' ? (
+                <li key={item.key}>
                   <button
                     type="button"
                     onClick={() => {
@@ -195,24 +195,24 @@ export default function Sidebar() {
                   >
                     <span className="inline-flex items-center gap-2">
                       <span aria-hidden="true" className="mr-1">
-                        {navigationItem.emoji}
+                        {item.emoji}
                       </span>
-                      <span>{SafeString(t(`app.navigation.${navigationItem.key}`))}</span>
+                      <span>{t(`app.navigation.${item.key}`)}</span>
                     </span>
                   </button>
                 </li>
               ) : (
-                <li key={navigationItem.href}>
+                <li key={item.key}>
                   <Link
-                    href={navigationItem.href}
+                    href={item.href} // already locale-prefixed by helper
                     className="flex w-10/12 items-center px-6 py-3 rounded-full text-lg font-normal transition-all duration-300 hover:bg-gradient-to-r hover:ml-4 hover:from-cyan-500 hover:to-blue-700 hover:text-white hover:font-bold focus:outline-none focus:ring-2 focus:ring-cyan-400"
                     onClick={handleClose}
                   >
                     <span className="inline-flex items-center gap-2">
                       <span aria-hidden="true" className="mr-1">
-                        {navigationItem.emoji}
+                        {item.emoji}
                       </span>
-                      <span>{SafeString(t(`app.navigation.${navigationItem.key}`))}</span>
+                      <span>{t(`app.navigation.${item.key}`)}</span>
                     </span>
                   </Link>
                 </li>

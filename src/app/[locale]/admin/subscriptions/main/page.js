@@ -8,10 +8,10 @@
  * ===============================================================
  */
 
-'use client';
+'use client';import Link from "next/link";import { useRouter } from "next/navigation";
 
 import { useEffect, useState } from 'react';
-import { Link, useRouter } from '@/i18n';
+
 import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 
@@ -92,8 +92,8 @@ export default function AdminSubscriptionsPage() {
           <SortDropdown
             options={userSubscriptionSortOptions}
             value={sortOrder}
-            onChange={setSortOrder}
-          />
+            onChange={setSortOrder} />
+          
         </div>
 
         {/* 💻 Table */}
@@ -112,8 +112,8 @@ export default function AdminSubscriptionsPage() {
                 </tr>
               </thead>
               <tbody className="text-center">
-                {pagedSubscriptions.map((sub) => (
-                  <tr key={sub.subscription_id} className="hover:bg-gray-400">
+                {pagedSubscriptions.map((sub) =>
+                <tr key={sub.subscription_id} className="hover:bg-gray-400">
                     <td>{sub.user?.name || '-'}</td>
                     <td>{sub.package_name || '-'}</td>
                     <td>{sub.username || '-'}</td>
@@ -122,14 +122,14 @@ export default function AdminSubscriptionsPage() {
                     <td>{sub.expiring_at ? new Date(sub.expiring_at).toLocaleString() : '—'}</td>
                     <td>
                       <Link
-                        href={`/admin/subscriptions/${sub.subscription_id}`}
-                        className="btn-primary"
-                      >
+                      href={`/admin/subscriptions/${sub.subscription_id}`}
+                      className="btn-primary">
+                      
                         {t('app.admin.subscriptions.view')}
                       </Link>
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -137,11 +137,11 @@ export default function AdminSubscriptionsPage() {
 
         {/* 📱 Cards */}
         <div className="xl:hidden flex flex-col gap-4 w-full mt-6">
-          {pagedSubscriptions.map((sub) => (
-            <div
-              key={sub.subscription_id}
-              className="border rounded-2xl p-4 bg-gray-600 text-base-100"
-            >
+          {pagedSubscriptions.map((sub) =>
+          <div
+            key={sub.subscription_id}
+            className="border rounded-2xl p-4 bg-gray-600 text-base-100">
+            
               <div className="flex justify-between mb-2">
                 <h3>{sub.user?.name || '-'}</h3>
                 <span className={`px-4 py-2 rounded ${STATUS_COLOR_MAP[sub.status]}`}>
@@ -165,21 +165,21 @@ export default function AdminSubscriptionsPage() {
                 {sub.expiring_at ? new Date(sub.expiring_at).toLocaleString() : '—'}
               </p>
               <Link
-                href={`/admin/subscriptions/${sub.subscription_id}`}
-                className="btn-primary mt-3"
-              >
+              href={`/admin/subscriptions/${sub.subscription_id}`}
+              className="btn-primary mt-3">
+              
                 {t('app.admin.subscriptions.view')}
               </Link>
             </div>
-          ))}
+          )}
         </div>
 
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
+          onPageChange={setCurrentPage} />
+        
       </div>
-    </div>
-  );
+    </div>);
+
 }

@@ -1,35 +1,33 @@
+// File: app/[locale]/admin/logs/[ip_address]/page.js
+'use client';
+
 /**
- * ========== /app/[locale]/admin/logs/[ip_address]/page.js ==========
  * 📜 Admin Logs by IP
  * - Lists logs for one IP (table desktop, cards mobile), client-side sort/pagination.
  * - Danger zone: delete ALL logs for this IP.
- * - All text via next-intl: t('app.admin.logs.byIp.*').
- * ================================================================
+ * - Safe: no hooks inside callbacks; locale is captured at top level.
  */
 
-'use client';
-
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useParams } from 'next/navigation';
-import { useRouter, Link } from '@/i18n';
-import { useTranslations } from 'next-intl';
+import { useParams, useRouter } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 
-import useAuthGuard from '@/hooks/useAuthGuard';
 import axiosInstance from '@/lib/core/axiosInstance';
+import useAuthGuard from '@/hooks/useAuthGuard';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useModal from '@/hooks/useModal';
+import useLocalSorter from '@/hooks/useLocalSorter';
 
 import Pagination from '@/components/reusableUI/Pagination';
 import SortDropdown from '@/components/reusableUI/SortDropdown';
-import useLocalSorter from '@/hooks/useLocalSorter';
+import { SafeString } from '@/lib/ui/SafeString';
 import { logSortOptions, getLogSortFunction } from '@/lib/utils/sorting';
 
 export default function AdminLogsByIpPage() {
-  // 🌐 translator
   const t = useTranslations();
-
-  // 🔐 session & nav & guard
+  const locale = useLocale(); // ✅ top-level
   const { status } = useSession();
   const router = useRouter();
   const params = useParams();
@@ -37,20 +35,20 @@ export default function AdminLogsByIpPage() {
   const { displayMessage, showLoader, hideLoader } = useAppHandlers();
   const { openModal, hideModal } = useModal();
 
-  // 🪵 state
+  // state
   const [logs, setLogs] = useState([]);
   const [sortOrder, setSortOrder] = useState('createdAt_desc');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // 🏷️ IP from params
-  const ip_address = decodeURIComponent(params.ip_address || '');
+  // ip from params
+  const ip_address = SafeString(decodeURIComponent(params.ip_address || ''), '');
 
-  // 📥 fetch logs for this IP
+  // fetch logs
   const fetchLogs = async () => {
     try {
       showLoader({ text: t('app.admin.logs.byIp.loading') });
-      const response = await axiosInstance.get(`/api/admin/logs/${encodeURIComponent(ip_address)}`);
-      setLogs(response.data.logs || []);
+      const res = await axiosInstance.get(`/api/admin/logs/${encodeURIComponent(ip_address)}`);
+      setLogs(res.data.logs || []);
       displayMessage(t('app.admin.logs.byIp.loadSuccess'), 'success');
     } catch (err) {
       displayMessage(
@@ -64,18 +62,17 @@ export default function AdminLogsByIpPage() {
     }
   };
 
-  // 🧮 sorted logs
+  // sort & paginate
   const sortedLogs = useLocalSorter(logs, sortOrder, (order) => {
     const sortFn = getLogSortFunction(order);
     return (a, b) => sortFn(a, b);
   });
 
-  // 📑 pagination
   const pageSize = 10;
   const totalPages = Math.ceil(sortedLogs.length / pageSize);
   const pagedLogs = sortedLogs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  // 🚀 initial load
+  // initial load
   useEffect(() => {
     if (status === 'authenticated' && isAllowed && ip_address) {
       fetchLogs();
@@ -83,7 +80,7 @@ export default function AdminLogsByIpPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, isAllowed, ip_address]);
 
-  // 🚫 redirect if forbidden
+  // redirect if forbidden
   useEffect(() => {
     if (status !== 'loading' && !isAllowed && redirect) {
       router.replace(redirect);
@@ -92,7 +89,7 @@ export default function AdminLogsByIpPage() {
 
   if (!isAllowed) return null;
 
-  // 🗑️ delete all for this IP
+  // delete all for IP
   const handleDeleteAllForIp = () => {
     openModal('deleteLogsByIp', {
       title: t('app.admin.logs.byIp.deleteModal.title'),
@@ -106,11 +103,12 @@ export default function AdminLogsByIpPage() {
           await axiosInstance.delete(`/api/admin/logs/${encodeURIComponent(ip_address)}`);
           displayMessage(t('app.admin.logs.byIp.deletedSuccess'), 'success');
           setTimeout(() => {
-            router.push('/admin/logs/main');
+            router.push(`/${locale}/admin/logs/main`); // ✅ locale captured
           }, 1200);
-        } catch (err) {
+        } catch {
           displayMessage(t('app.admin.logs.byIp.deleteFailed'), 'error');
         } finally {
+          hideModal();
           hideLoader();
         }
       },
@@ -125,7 +123,7 @@ export default function AdminLogsByIpPage() {
   return (
     <div className="flex flex-col items-center w-full">
       <div className="container-style">
-        {/* 🏷️ title */}
+        {/* Title */}
         <div className="flex flex-col items-center text-center w-full">
           <h1 className="text-wonderful-5 text-2xl mb-0">
             {t('app.admin.logs.byIp.title', { ip: ip_address })}
@@ -133,7 +131,7 @@ export default function AdminLogsByIpPage() {
           <hr className="border border-gray-400 w-8/12 my-4" />
         </div>
 
-        {/* 🔧 sort (row on desktop, stacked on mobile) */}
+        {/* Controls */}
         <div className="flex flex-col gap-3 w-full mb-4 justify-center">
           <div className="flex lg:w-full gap-3 justify-center lg:justify-start w-full">
             <div className="flex justify-center items-center w-1/2">
@@ -145,32 +143,52 @@ export default function AdminLogsByIpPage() {
           </div>
         </div>
 
-        {/* 💻 table (desktop) */}
+        {/* Desktop table (with explicit borders) */}
         <div className="hidden xl:flex justify-center w-full">
           <div className="w-full max-w-full overflow-x-auto">
-            <table className="min-w-[950px] w-full border-separate border-spacing-0 text-shadow-dark-1">
+            <table className="min-w-[950px] w-full border border-gray-300 border-separate border-spacing-0 text-shadow-dark-1">
               <thead>
                 <tr className="bg-gray-600 text-base-100 font-bold">
-                  <th className="border px-2 py-1">{t('app.admin.logs.byIp.table.time')}</th>
-                  <th className="border px-2 py-1">{t('app.admin.logs.byIp.table.user')}</th>
-                  <th className="border px-2 py-1">{t('app.admin.logs.byIp.table.event')}</th>
-                  <th className="border px-2 py-1">{t('app.admin.logs.byIp.table.page')}</th>
-                  <th className="border px-2 py-1">{t('app.admin.logs.byIp.table.description')}</th>
-                  <th className="border px-2 py-1">{t('app.admin.logs.byIp.table.userAgent')}</th>
+                  <th className="border border-gray-300 px-2 py-1">
+                    {t('app.admin.logs.byIp.table.time')}
+                  </th>
+                  <th className="border border-gray-300 px-2 py-1">
+                    {t('app.admin.logs.byIp.table.user')}
+                  </th>
+                  <th className="border border-gray-300 px-2 py-1">
+                    {t('app.admin.logs.byIp.table.event')}
+                  </th>
+                  <th className="border border-gray-300 px-2 py-1">
+                    {t('app.admin.logs.byIp.table.page')}
+                  </th>
+                  <th className="border border-gray-300 px-2 py-1">
+                    {t('app.admin.logs.byIp.table.description')}
+                  </th>
+                  <th className="border border-gray-300 px-2 py-1">
+                    {t('app.admin.logs.byIp.table.userAgent')}
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {pagedLogs.map((log) => (
                   <tr key={log.log_id} className="hover:bg-gray-400 text-center">
-                    <td className="border px-2 py-1">{new Date(log.createdAt).toLocaleString()}</td>
-                    <td className="border px-2 py-1 whitespace-nowrap">
-                      👤 {log.user?.name ? log.user.name : t('app.admin.logs.byIp.guest')}
+                    <td className="border border-gray-300 px-2 py-1">
+                      {new Date(log.createdAt).toLocaleString()}
                     </td>
-                    <td className="border px-2 py-1">{log.event}</td>
-                    <td className="border px-2 py-1">{log.page || '—'}</td>
-                    <td className="border px-2 py-1">{log.description || '—'}</td>
-                    <td className="border px-2 py-1 truncate max-w-[220px]">
-                      {log.userAgent || '—'}
+                    <td className="border border-gray-300 px-2 py-1 whitespace-nowrap">
+                      👤 {SafeString(log.user?.name, t('app.admin.logs.byIp.guest'))}
+                    </td>
+                    <td className="border border-gray-300 px-2 py-1">
+                      {SafeString(log.event, '—')}
+                    </td>
+                    <td className="border border-gray-300 px-2 py-1">
+                      {SafeString(log.page, '—')}
+                    </td>
+                    <td className="border border-gray-300 px-2 py-1">
+                      {SafeString(log.description, '—')}
+                    </td>
+                    <td className="border border-gray-300 px-2 py-1 truncate max-w-[220px]">
+                      {SafeString(log.userAgent, '—')}
                     </td>
                   </tr>
                 ))}
@@ -179,7 +197,7 @@ export default function AdminLogsByIpPage() {
           </div>
         </div>
 
-        {/* 📱 cards (mobile/tablet) */}
+        {/* Mobile cards */}
         <div className="xl:hidden flex flex-col gap-4 w-full mt-6">
           {pagedLogs.map((log) => (
             <div
@@ -194,30 +212,29 @@ export default function AdminLogsByIpPage() {
                   })}
                 </span>
                 <span className="text-xs font-semibold text-gray-200">
-                  👤 {log.user?.name ? log.user.name : t('app.admin.logs.byIp.guest')}
+                  👤 {SafeString(log.user?.name, t('app.admin.logs.byIp.guest'))}
                 </span>
               </div>
-
               <div className="flex justify-between items-center mb-4">
                 <span className="font-bold">
-                  {t('app.admin.logs.byIp.card.event')}: {log.event}
+                  {t('app.admin.logs.byIp.card.event')}: {SafeString(log.event, '—')}
                 </span>
                 <span className="text-gray-200 font-bold truncate max-w-[60%] text-right">
-                  {t('app.admin.logs.byIp.card.pageVisited')}: {log.page || '—'}
+                  {t('app.admin.logs.byIp.card.pageVisited')}: {SafeString(log.page, '—')}
                 </span>
               </div>
-
-              {log.description && (
-                <div className="mt-1 mb-1 text-wonderful-3 italic text-lg">{log.description}</div>
+              {log.description != null && (
+                <div className="mt-1 mb-1 text-wonderful-3 italic text-lg">
+                  {SafeString(log.description, '')}
+                </div>
               )}
-
               <div className="my-2 border-t border-gray-500" />
-              <div className="text-xs text-gray-400">ID: {log.log_id}</div>
+              <div className="text-xs text-gray-400">ID: {SafeString(log.log_id, '')}</div>
             </div>
           ))}
         </div>
 
-        {/* 🔢 pagination */}
+        {/* Pagination */}
         <div className="flex justify-center mt-4">
           <Pagination
             currentPage={currentPage}
@@ -226,7 +243,7 @@ export default function AdminLogsByIpPage() {
           />
         </div>
 
-        {/* 🚩 danger zone */}
+        {/* Danger zone */}
         <div className="flex justify-center mt-8 w-full">
           <div className="border border-red-600 bg-red-50 dark:bg-red-900/20 rounded-2xl px-6 py-6 flex flex-col items-center shadow-md lg:w-1/2 w-full">
             <div className="flex items-center gap-2 mb-2">
@@ -239,25 +256,13 @@ export default function AdminLogsByIpPage() {
               {t('app.admin.logs.byIp.dangerZone.description')}
             </p>
             <button
+              type="button"
               className="btn-danger font-bold py-3 px-7 text-xl rounded-xl w-full max-w-md btn-glow transition-all duration-150"
               onClick={handleDeleteAllForIp}
-              style={{ letterSpacing: '1px' }}
             >
-              {t('app.admin.logs.byIp.dangerZone.button')}
+              {t('app.admin.logs.byIp.dangerZone.confirm')}
             </button>
           </div>
-        </div>
-
-        {/* ← back to all logs */}
-        <div className="w-full flex justify-center">
-          <Link href="/admin/logs/main" className="w-full mt-5">
-            <button
-              className="btn-secondary font-bold py-2 px-4 btn-glow w-1/2"
-              style={{ fontSize: '18px' }}
-            >
-              {t('app.admin.logs.byIp.backToAll')}
-            </button>
-          </Link>
         </div>
       </div>
     </div>

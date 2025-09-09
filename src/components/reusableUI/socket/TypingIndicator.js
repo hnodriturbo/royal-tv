@@ -1,40 +1,26 @@
-// 🗨️ TypingIndicator.js — localized labels, safe deps
 'use client';
 
-import { useSession } from 'next-auth/react';
-import { useTranslations } from 'next-intl';
+/**
+ * TypingIndicator.js
+ * Minimal, a11y-friendly typing indicator for chat.
+ */
 
 export default function TypingIndicator({
-  isTyping,
-  isTypingLocal,
-  typingUser,
-  showLocalForDebug = false
+  isTyping = false,
+  typingUser = null,
+  isTypingLocal = false,
+  showLocalForDebug = false,
+  className = ''
 }) {
-  const { data: session } = useSession();
-  const t = useTranslations(); // 🌍 translator
-  const myId = session?.user?.user_id;
-
-  // 🧪 decide which indicator to show
-  const showSelf = showLocalForDebug && isTypingLocal; // 👤 local debug typing
-  const showOther = isTyping && typingUser && typingUser.user_id !== myId; // 👥 remote typing
-
-  if (!showSelf && !showOther) {
-    return <div style={{ minHeight: 24 }} />; // 🧱 reserve space to avoid layout jump
+  if (!isTyping && !(showLocalForDebug && isTypingLocal)) {
+    return <div className="min-h-[24px]" />; // keep layout
   }
 
-  // 🏷️ build label using i18n
-  let label = '';
-  if (showSelf) {
-    label = t('socket.ui.typing.you'); // 💬 "You are typing…"
-  } else if (showOther) {
-    label = t('socket.ui.typing.other', {
-      name: typingUser.name || t('socket.ui.common.someone')
-    }); // 💬 "{name} is writing…"
-  }
+  const name = typingUser?.name || typingUser?.username || 'Someone';
 
   return (
-    <div className="flex items-center mb-1 min-h-[24px] px-1">
-      <span className="text-sm italic w-full text-center blink">{label}</span>
+    <div className={`text-sm italic opacity-80 ${className}`} role="status" aria-live="polite">
+      {isTyping ? `${name} is typing…` : showLocalForDebug ? 'You are typing…' : ''}
     </div>
   );
 }

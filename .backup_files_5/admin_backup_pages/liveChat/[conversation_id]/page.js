@@ -20,7 +20,7 @@ import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import ConversationActionButton from '@/components/reusableUI/ConversationActionButton';
 import LiveChatRoom from '@/components/reusableUI/socket/LiveChatRoom';
-import IsAdminOnline from '@/components/reusableUI/socket/IsAdminOnline';
+import { IsAdminOnline } from '@/components/reusableUI/socket/IsAdminOnline';
 import useModal from '@/hooks/useModal';
 import useRefreshMessages from '@/hooks/socket/useRefreshMessages';
 

@@ -1,23 +1,20 @@
 /**
  * OnlineUsers Component 📡
- * ----------------------
- * Shows a small badge with currently online users (roles + names).
- * Hides itself on the dedicated live‑chat room page to maximise space.
- *
- * Socket events
- *   • request_online_users      – one‑shot: ask server for full list
- *   • online_users_update       – push:   receive updated array
+ * - Badge with currently online users (roles + names)
+ * - Hides itself on the dedicated live‑chat room page
+ * - Locale-aware chat route detection
  */
 'use client';
 
 import { useEffect, useState } from 'react';
-import { usePathname } from '@/i18n';
-import useSocketHub from '@/hooks/socket/useSocketHub';
+import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
+import useSocketHub from '@/hooks/socket/useSocketHub';
+
 const OnlineUsers = () => {
-  const t = useTranslations(); // 🌍 translator
-  const currentPathname = usePathname();
+  const t = useTranslations();
+  const pathname = usePathname();
   const [onlineUsers, setOnlineUsers] = useState([]);
   const { requestOnlineUsers, onOnlineUsersUpdate } = useSocketHub();
 
@@ -25,9 +22,12 @@ const OnlineUsers = () => {
     const stopListening = onOnlineUsersUpdate(setOnlineUsers);
     requestOnlineUsers();
     return () => stopListening();
-  }, [requestOnlineUsers, onOnlineUsersUpdate]); // ⚠️ no `t` here
+  }, [requestOnlineUsers, onOnlineUsersUpdate]);
 
-  const isChatRoomPage = /^\/admin\/liveChat\/([a-f\d]{24}|[a-f\d-]{36})$/i.test(currentPathname);
+  // Locale-aware: /{locale}/admin/liveChat/{id}
+  const parts = (pathname || '/').replace(/\/$/, '').split('/'); // ['', 'en', 'admin', 'liveChat', '{id}']
+  const isChatRoomPage = parts.length >= 5 && parts[2] === 'admin' && parts[3] === 'liveChat';
+
   if (isChatRoomPage) return null;
   if (!onlineUsers.length) return null;
 

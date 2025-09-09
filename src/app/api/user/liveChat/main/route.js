@@ -1,54 +1,25 @@
-/**
- * GET /api/users/liveChat/main
- * ----------------------------
- * Query-params
- *   • page   : number default 1
- *   • limit  : number default 5
- * Headers
- *   • x-user-id: user UUID (required)
- *
- * Returns
- *   {
- *     conversations : [{
- *       conversation_id : string
- *       subject         : string | null
- *       updatedAt       : string (ISO)
- *       unreadCount     : number // unread user messages for this convo
- *       totalMessages   : number
- *     }],
- *     totalPages  : number
- *   }
- */
-
 import logger from '@/lib/core/logger';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/core/prisma';
+import { withRole, getUserId } from '@/lib/api/guards';
 
-export async function GET(request) {
+export const GET = withRole('user', async (req, _ctx, session) => {
   try {
-    // 🔑 Extract user ID from header
-    const user_id = request.headers.get('x-user-id');
-    if (!user_id) return NextResponse.json({ error: 'User ID required' }, { status: 401 });
+    const user_id = getUserId(session);
 
-    // Fetch all conversations for the user
     const rawConvos = await prisma.liveChatConversation.findMany({
       where: { owner_id: user_id },
-      orderBy: { updatedAt: 'desc' }, // default sort
+      orderBy: { updatedAt: 'desc' },
       select: {
         conversation_id: true,
         subject: true,
         updatedAt: true,
         messages: {
-          select: {
-            message_id: true,
-            readAt: true,
-            sender_is_admin: true
-          }
+          select: { message_id: true, readAt: true, sender_is_admin: true }
         }
       }
     });
 
-    // Transform to flat structure for frontend
     const conversations = rawConvos.map((c) => ({
       conversation_id: c.conversation_id,
       subject: c.subject,
@@ -65,4 +36,4 @@ export async function GET(request) {
       { status: 500 }
     );
   }
-}
+});

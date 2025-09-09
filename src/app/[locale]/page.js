@@ -1,15 +1,18 @@
 // app/[locale]/page.js
 'use client';
 
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { Link, useSearchParams } from '@/i18n'; // or '@/lib/i18n' if renamed
+// or '@/lib/i18n' if renamed
 import UserSubscriptionPanel from '@/components/reusableUI/socket/UserSubscriptionPanel';
 import FreeTrialPanel from '@/components/reusableUI/socket/FreeTrialPanel';
 import useFreeTrialStatus from '@/hooks/socket/useFreeTrialStatus';
 import PackagesGrid from '@/components/packages/data/packages';
 import Guide from '@/components/packages/data/guide';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 export default function HomePage() {
   const { data: session, status } = useSession();
@@ -18,7 +21,7 @@ export default function HomePage() {
   const user = authenticated ? session.user : null;
 
   const t = useTranslations();
-
+  const locale = useLocale();
   const freeTrialStatus = useFreeTrialStatus(user?.user_id);
 
   const searchParams = useSearchParams();
@@ -60,7 +63,7 @@ export default function HomePage() {
           ) : null
         ) : (
           <Link
-            href="/auth/signup"
+            href={`/${locale}/auth/signup`}
             className="my-btn-dark-box-shadow btn-secondary btn-lg text-xl font-bold tracking-wider shadow-lg transition duration-1000 hover:scale-110 uppercase"
           >
             {t('app.home.page.cta_button')}

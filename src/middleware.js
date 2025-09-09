@@ -1,24 +1,12 @@
-/**
- * ========================= middleware.js =========================
- * 🛡️ Global auth, context & locale middleware (loop‑safe)
- * -----------------------------------------------------------------
- * - Locale: auto-detect + enforce /{locale} using next-intl middleware.
- * - Auth: allow all /[locale]/auth/* pages (and /auth/*) without redirect.
- * - Inject headers: x-user-id, x-owner-id, x-sender-id, x-user-role, x-locale.
- * - Keep NEXT_LOCALE cookie mirrored to the URL locale (and set on redirect).
- * - Keep payment webhooks bypass intact.
- */
+// middleware.js
+import { NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
+import logger from './lib/core/logger.js';
 
-import { NextResponse } from 'next/server'; // 📨 Low-level response tools
-import { getToken } from 'next-auth/jwt'; // 🔐 Read session token from cookies
-import createMiddleware from 'next-intl/middleware'; // 🌍 Locale detection/redirect
-import logger from './lib/core/logger.js'; // 🪵 Central logger (English only)
-import { routing } from 'i18n/routing.js'; // 🧭 Source of truth for locales/default
+// 👉 Our new locale config (JS/ESM)
+import { LOCALES, DEFAULT_LOCALE, isLocale } from '@/i18n/config.js';
 
-// 🧭 Build the next-intl locale middleware from our routing definition
-const localeMiddleware = createMiddleware(routing);
-
-// 🌳 Static assets and Next internals — never touch
+/** Public asset detection (skip as early as possible) */
 function isPublicAsset(pathname) {
   if (
     pathname.startsWith('/_next/') ||
@@ -30,196 +18,143 @@ function isPublicAsset(pathname) {
     pathname === '/favicon.ico'
   )
     return true;
-
-  if (/\.(png|jpg|jpeg|webp|gif|svg|ico|txt|xml|json|mp4|webm|css|js)$/i.test(pathname)) {
-    return true;
-  }
-
-  return false;
+  return /\.(png|jpg|jpeg|webp|gif|svg|ico|txt|xml|json|mp4|webm|css|js)$/i.test(pathname);
 }
 
-// 🧪 Helpers: matchers that ignore optional leading locale (/en|/is/...)
+const LOCALE_SEGMENT = new RegExp(`^/(${LOCALES.join('|')})(?=/|$)`, 'i');
 const withOptionalLocale = (segment) =>
-  new RegExp(`^/(?:${routing.locales.join('|')})?/${segment}(?:/|$)`, 'i');
+  new RegExp(`^/(?:${LOCALES.join('|')})?/${segment}(?:/|$)`, 'i');
 
-const isAuthLikePath = (pathname) => withOptionalLocale('auth').test(pathname);
+function isAuthLikePath(pathname) {
+  return withOptionalLocale('auth').test(pathname);
+}
+function isAdminPath(pathname) {
+  return withOptionalLocale('admin').test(pathname);
+}
+function isUserPath(pathname) {
+  return withOptionalLocale('user').test(pathname);
+}
+
+/** Infer locale: path > cookie > Accept-Language > default */
+function inferLocale(request, pathname) {
+  const m = pathname.match(LOCALE_SEGMENT);
+  if (m?.[1] && isLocale(m[1])) return m[1].toLowerCase();
+  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value || '';
+  if (isLocale(cookieLocale)) return cookieLocale;
+  const accept = (request.headers.get('accept-language') || '').toLowerCase();
+  if (accept.startsWith('is')) return 'is';
+  return DEFAULT_LOCALE;
+}
+
+export const config = {
+  // run on all pages and APIs except static files and NextAuth's own /api/auth
+  matcher: ['/((?!_next|.*\\..*|api/auth).*)', '/api/:path*']
+};
 
 export async function middleware(request) {
-  const url = request.nextUrl;
-  const { pathname } = url;
+  const { pathname, search } = request.nextUrl;
+  const isProd = process.env.NODE_ENV === 'production';
+  const cookieName = isProd ? '__Secure-authjs.session-token' : 'authjs.session-token';
+  const secret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
 
-  // 🚧 Skip assets and Next internals
+  // 0) Fast skip for static/public assets
   if (isPublicAsset(pathname)) return NextResponse.next();
 
-  // ========== 1) API: inject headers only, never enforce locale ==========
+  // 1) Dev tools pass-through
+  if (pathname.startsWith('/dev') || withOptionalLocale('dev').test(pathname)) {
+    return NextResponse.next();
+  }
+
+  // 2) API branch — inject headers, never redirect
   if (pathname.startsWith('/api/')) {
-    // 🍪 Pick the correct Auth.js cookie name for prod/dev
-    const isProduction = process.env.NODE_ENV === 'production';
-    const cookieName = isProduction ? '__Secure-authjs.session-token' : 'authjs.session-token';
+    const token = await getToken({ req: request, secret, cookieName }).catch(() => null);
 
-    // 🔑 Token → role & id (defaults)
-    const token = await getToken({
-      req: request,
-      secret: process.env.AUTH_SECRET,
-      cookieName
-    });
+    const userId = token?.user_id || null;
+    const userRole = token?.role === 'admin' ? 'admin' : token?.user_id ? 'user' : 'guest';
+    const apiLocale = inferLocale(request, pathname);
 
-    // Default role
-    let userRole = 'guest';
-    let userId = null;
-
-    if (token?.user_id) {
-      userId = token.user_id;
-
-      // Only allow "admin" if ID matches ADMIN_USER_ID
-      if (token.role === 'admin' && userId === process.env.ADMIN_USER_ID) {
-        userRole = 'admin';
-      } else {
-        userRole = 'user'; // everyone else is a user
-      }
-    }
-
-    // 📨 Forward all incoming headers + inject ours
-    const forwardedHeaders = new Headers(request.headers);
-
+    const headers = new Headers(request.headers);
     if (userId) {
-      forwardedHeaders.set('x-user-id', userId);
-      forwardedHeaders.set('x-owner-id', userId);
-      forwardedHeaders.set('x-sender-id', userId);
+      headers.set('x-user-id', userId);
+      headers.set('x-owner-id', userId);
+      headers.set('x-sender-id', userId);
     }
-    forwardedHeaders.set('x-user-role', userRole);
+    headers.set('x-user-role', userRole);
+    headers.set('x-locale', apiLocale);
 
-    // 🌍 API locale: best effort from NEXT_LOCALE cookie (no URL prefix on /api)
-    const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value || '';
-    const apiLocale = cookieLocale.toLowerCase().startsWith('is') ? 'is' : routing.defaultLocale;
-    forwardedHeaders.set('x-locale', apiLocale);
+    // Bypass for specific external webhook/integration endpoints
+    if (pathname.startsWith('/api/nowpayments/') || pathname.startsWith('/api/megaott/')) {
+      return NextResponse.next({ request: { headers } });
+    }
 
-    // 🪵 Log injected headers
-    logger.log('[Middleware][API] injected x-user-id:', userId || '(none)');
-    logger.log('[Middleware][API] injected x-user-role:', userRole);
-    logger.log('[Middleware][API] injected x-locale:', apiLocale);
+    logger.log('[MW][API] x-user-id:', userId || '(none)');
+    logger.log('[MW][API] x-user-role:', userRole);
+    logger.log('[MW][API] x-locale:', apiLocale);
 
-    return NextResponse.next({ request: { headers: forwardedHeaders } });
+    return NextResponse.next({ request: { headers } });
   }
 
-  // ========== 2) PAGES: locale handling, auth redirects, header injection ==========
+  // 3) PAGE branch — enforce /{locale} prefix
+  const hasLocaleInPath = LOCALE_SEGMENT.test(pathname);
+  const activeLocale = inferLocale(request, pathname);
 
-  // 🧭 Let next-intl decide locale redirects for prefix-less URLs (e.g. "/" → "/en")
-  //     This returns a NextResponse on redirect/rewrite, or undefined to continue.
-  const intlResponse = localeMiddleware(request);
+  if (!hasLocaleInPath) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${activeLocale}${pathname}`;
+    return NextResponse.redirect(url);
+  }
 
-  // 🧩 Figure out the path locale considering our routing.locales
-  const pathLocaleMatch = pathname.match(
-    new RegExp(`^/(${routing.locales.join('|')})(?=/|$)`, 'i')
-  );
-  const pathLocale = pathLocaleMatch ? pathLocaleMatch[1].toLowerCase() : null;
-
-  // 🔒 Auth headers for page requests (regardless of intl redirect)
-  const isProduction = process.env.NODE_ENV === 'production';
-  const cookieName = isProduction ? '__Secure-authjs.session-token' : 'authjs.session-token';
-  const token = await getToken({
-    req: request,
-    secret: process.env.AUTH_SECRET,
-    cookieName
-  });
-
-  const userRole = token?.role || 'guest';
+  // Auth token for page gating
+  const token = await getToken({ req: request, secret, cookieName }).catch(() => null);
   const userId = token?.user_id || null;
+  const userRole = token?.role === 'admin' ? 'admin' : token?.user_id ? 'user' : 'guest';
 
-  // 📨 Prepare forwarded headers and inject ours
-  const forwardedHeaders = new Headers(request.headers);
+  // Prepare headers we want to inject into the downstream request
+  const headers = new Headers(request.headers);
   if (userId) {
-    forwardedHeaders.set('x-user-id', userId);
-    forwardedHeaders.set('x-owner-id', userId);
-    forwardedHeaders.set('x-sender-id', userId);
+    headers.set('x-user-id', userId);
+    headers.set('x-owner-id', userId);
+    headers.set('x-sender-id', userId);
   }
-  forwardedHeaders.set('x-user-role', userRole);
+  headers.set('x-user-role', userRole);
+  headers.set('x-locale', activeLocale);
 
-  // 🌍 Choose the effective locale for headers/cookie:
-  //     - If next-intl is redirecting (no prefix), use its detected target locale.
-  //     - Else use the path locale we already have.
-  let effectiveLocale = pathLocale;
-  if (intlResponse?.headers?.get('location')) {
-    // 📍 Parse locale from the redirect location (e.g. "/en/..." or "/is")
-    const location = intlResponse.headers.get('location');
-    const match = location.match(new RegExp(`^/(${routing.locales.join('|')})(?=/|$)`, 'i'));
-    effectiveLocale = (match ? match[1] : routing.defaultLocale).toLowerCase();
-  }
-  if (!effectiveLocale) effectiveLocale = routing.defaultLocale;
-
-  forwardedHeaders.set('x-locale', effectiveLocale);
-
-  // 🪵 Log injected headers (pages)
-  logger.log('[Middleware][PAGE] injected x-user-id:', userId || '(none)');
-  logger.log('[Middleware][PAGE] injected x-user-role:', userRole);
-  logger.log('[Middleware][PAGE] injected x-locale:', effectiveLocale);
-
-  // 🔁 If next-intl produced a redirect/rewrite, attach our headers/cookie and return it
-  if (intlResponse) {
-    // 🔗 Copy our injected headers onto the intl response
-    for (const [key, value] of forwardedHeaders.entries()) {
-      intlResponse.headers.set(key, value);
-    }
-    // 🧁 Mirror cookie to chosen locale
-    intlResponse.cookies.set('NEXT_LOCALE', effectiveLocale, {
-      path: '/',
-      maxAge: 60 * 60 * 24 * 365
-    });
-    return intlResponse;
-  }
-
-  // 🧁 If there was no redirect, continue normally with our headers and cookie
-  const response = NextResponse.next({ request: { headers: forwardedHeaders } });
-  response.cookies.set('NEXT_LOCALE', effectiveLocale, {
-    path: '/',
-    maxAge: 60 * 60 * 24 * 365
-  });
-
-  // 💳 Webhook bypass (unchanged)
-  const isPaymentRoute =
-    pathname.startsWith('/api/nowpayments/') || pathname.startsWith('/api/megaott/');
-  if (isPaymentRoute) return response;
-
-  // 🚦 Route protection (locale‑aware, loop‑safe)
+  // 4) Route protection (loop-safe)
   const onAuthPage = isAuthLikePath(pathname);
 
-  // ❗️Allow /[locale]/auth/* pages when unauthenticated; otherwise redirect to signin
+  // Not authenticated → send to locale'd signin with redirectTo
   if (!token && !onAuthPage) {
-    const loginUrl = url.clone();
-    loginUrl.pathname = `/${effectiveLocale}/auth/signin`;
-    loginUrl.searchParams.set('redirectTo', pathname + url.search);
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = `/${activeLocale}/auth/signin`;
+    loginUrl.searchParams.set('redirectTo', pathname + search);
     return NextResponse.redirect(loginUrl);
   }
 
-  // 🛡️ Admin/user protected spaces (locale‑aware)
-  const isAdmin = new RegExp(`^/(?:${routing.locales.join('|')})?/admin(?:/|$)`, 'i').test(
-    pathname
-  );
-  const isUser = new RegExp(`^/(?:${routing.locales.join('|')})?/user(?:/|$)`, 'i').test(pathname);
-
-  if (isAdmin && userRole !== 'admin') {
-    const redirectUrl = url.clone();
-    redirectUrl.pathname = `/${effectiveLocale}/auth/middlePage`;
-    redirectUrl.searchParams.set('admin', 'false');
-    redirectUrl.searchParams.set('redirectTo', pathname + url.search);
-    return NextResponse.redirect(redirectUrl);
+  // Admin gate
+  if (isAdminPath(pathname) && userRole !== 'admin') {
+    const u = request.nextUrl.clone();
+    u.pathname = `/${activeLocale}/auth/middlePage`;
+    u.searchParams.set('admin', 'false');
+    u.searchParams.set('redirectTo', pathname + search);
+    return NextResponse.redirect(u);
   }
 
-  if (isUser && userRole !== 'user') {
-    const redirectUrl = url.clone();
-    redirectUrl.pathname = `/${effectiveLocale}/auth/middlePage`;
-    redirectUrl.searchParams.set('user', 'false');
-    redirectUrl.searchParams.set('redirectTo', pathname + url.search);
-    return NextResponse.redirect(redirectUrl);
+  // User gate (admins pass)
+  if (isUserPath(pathname) && !(userRole === 'user' || userRole === 'admin')) {
+    const u = request.nextUrl.clone();
+    u.pathname = `/${activeLocale}/auth/middlePage`;
+    u.searchParams.set('user', 'false');
+    u.searchParams.set('redirectTo', pathname + search);
+    return NextResponse.redirect(u);
   }
 
-  return response;
+  // 5) Pass-through with injected headers + keep cookie in sync
+  const res = NextResponse.next({ request: { headers } });
+  res.cookies.set('NEXT_LOCALE', activeLocale, {
+    path: '/',
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: 'lax',
+    secure: isProd
+  });
+  return res;
 }
-
-// 🧩 Match all “page-like” requests; assets are filtered above
-export const config = {
-  matcher: [
-    '/api/:path*', // headers only
-    '/:path*' // pages (we guard assets in-code)
-  ]
-};

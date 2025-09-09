@@ -19,13 +19,16 @@
  * =====================================================================
  */
 
+/**
+ *   ======================= useNotifications.js =======================
+ * 🔔 Real-time notifications with locale re-sync on change.
+ */
 import logger from '@/lib/core/logger';
 import { useState, useEffect, useCallback } from 'react';
-import { useLocale } from 'next-intl'; // 🌍 current UI locale
+import { useLocale } from 'next-intl';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 
 export default function useNotifications(userId) {
-  // 🎛️ Get all notification-related socket functions from your unified socket hub
   const {
     requestNotifications,
     onNotificationsList,
@@ -33,31 +36,30 @@ export default function useNotifications(userId) {
     markNotificationRead,
     deleteNotification,
     clearNotifications,
-    onNotificationsError
+    onNotificationsError,
+    // locale
+    setLocale
   } = useSocketHub();
 
-  // 📦 Local state: full list, unread badge, loading spinner
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  // 🌍 active locale (en | is)
+  // 🌍 current UI locale
   const currentLocale = useLocale?.() || 'en';
 
-  // 🧼 Coerce any value into displayable string
+  // 🧼 Coerce any value into displayable string (avoids React #130)
   const coerceText = useCallback(
     (value) => {
       if (value == null) return '';
-      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-        return String(value);
-      }
-      if (typeof value === 'object') {
-        // server might send { en: '...', is: '...' }
+      const t = typeof value;
+      if (t === 'string' || t === 'number' || t === 'boolean') return String(value);
+      if (t === 'object') {
+        // server might send an object — choose by locale or stringify
         if (value.en || value.is) {
           const chosen = value[currentLocale] ?? value.en ?? value.is;
           return typeof chosen === 'string' ? chosen : JSON.stringify(chosen);
         }
-        if (Array.isArray(value)) return value.map(coerceText).join('\n');
         try {
           return JSON.stringify(value);
         } catch {
@@ -69,72 +71,48 @@ export default function useNotifications(userId) {
     [currentLocale]
   );
 
-  // 🧩 Normalize one notification
   const normalizeNotification = useCallback(
     (n) => {
       if (!n || typeof n !== 'object') return null;
-      return {
-        ...n,
-        title: coerceText(n.title),
-        body: coerceText(n.body)
-      };
+      return { ...n, title: coerceText(n.title), body: coerceText(n.body) };
     },
     [coerceText]
   );
 
-  // ============================================================
-  // 1️⃣ Fetch & listen for notifications when user logs in
-  // ============================================================
+  // 1) initial fetch + list subscription
   useEffect(() => {
     if (!userId) return;
-
     setLoading(true);
     requestNotifications(userId);
-
     const stop = onNotificationsList((data) => {
-      let notificationArray = [];
-      let unreadCountFromServer = 0;
-
-      if (data && Array.isArray(data.notifications)) {
-        notificationArray = data.notifications;
-        unreadCountFromServer = data.unreadCount || 0;
-      } else if (data && Array.isArray(data)) {
-        notificationArray = data;
-      } else {
-        notificationArray = [];
-      }
-
-      // 🧼 normalize
-      notificationArray = notificationArray.map(normalizeNotification).filter(Boolean);
-
-      // 🔀 sort unread first, then read
-      const unread = notificationArray
+      let arr = Array.isArray(data?.notifications)
+        ? data.notifications
+        : Array.isArray(data)
+          ? data
+          : [];
+      arr = arr.map(normalizeNotification).filter(Boolean);
+      const unread = arr
         .filter((n) => !n.is_read)
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      const read = notificationArray
+      const read = arr
         .filter((n) => n.is_read)
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
       setNotifications([...unread, ...read]);
       setUnreadCount(unread.length);
       setLoading(false);
     });
-
     return () => stop && stop();
   }, [userId, requestNotifications, onNotificationsList, normalizeNotification]);
 
-  // ============================================================
-  // 2️⃣ Handle real-time pushes
-  // ============================================================
+  // 2) push updates
   useEffect(() => {
     if (!userId) return;
-    const stopPush = onNotificationReceived((newNotif) => {
+    const stop = onNotificationReceived((n) => {
       setNotifications((prev) => {
-        const normalized = normalizeNotification(newNotif);
-        if (!normalized) return prev;
-        if (prev.some((n) => n.notification_id === normalized.notification_id)) return prev;
-
-        const merged = [normalized, ...prev];
+        const x = normalizeNotification(n);
+        if (!x) return prev;
+        if (prev.some((p) => p.notification_id === x.notification_id)) return prev;
+        const merged = [x, ...prev];
         const unread = merged
           .filter((n) => !n.is_read)
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -145,12 +123,16 @@ export default function useNotifications(userId) {
         return [...unread, ...read];
       });
     });
-    return () => stopPush && stopPush();
+    return () => stop && stop();
   }, [userId, onNotificationReceived, normalizeNotification]);
 
-  // ============================================================
-  // 3️⃣ Mark as read (optimistic update)
-  // ============================================================
+  // 3) on locale change → tell socket + refetch authoritative list
+  useEffect(() => {
+    if (!userId) return;
+    setLocale(currentLocale); // 📣 update server-side locale for this socket
+    requestNotifications(userId); // 🔄 refresh with localized titles/bodies
+  }, [currentLocale, userId, setLocale, requestNotifications]);
+
   const markAsRead = useCallback(
     (notification_id) => {
       if (!notification_id) return;
@@ -163,16 +145,12 @@ export default function useNotifications(userId) {
     [markNotificationRead]
   );
 
-  // ============================================================
-  // 4️⃣ Manual refresh
-  // ============================================================
   const refreshNotifications = useCallback(() => {
     if (!userId) return;
     setLoading(true);
     requestNotifications(userId);
   }, [userId, requestNotifications]);
 
-  // 🗑️ Delete one
   const removeNotification = useCallback(
     (notification_id) => {
       if (!userId || !notification_id) return;
@@ -181,27 +159,17 @@ export default function useNotifications(userId) {
     [deleteNotification, userId]
   );
 
-  // 🔥 Delete all
   const clearAllNotifications = useCallback(() => {
     if (!userId) return;
     clearNotifications(userId);
   }, [clearNotifications, userId]);
 
-  // ============================================================
-  // 5️⃣ Helpers: preview/drawer slicing
-  // ============================================================
   const getPreview = useCallback(
     (count = 3) => (notifications || []).slice(0, count),
     [notifications]
   );
-  const getDrawerSlice = useCallback(
-    (startIdx, endIdx) => (notifications || []).slice(startIdx, endIdx),
-    [notifications]
-  );
+  const getDrawerSlice = useCallback((s, e) => (notifications || []).slice(s, e), [notifications]);
 
-  // ============================================================
-  // 6️⃣ Resort notifications
-  // ============================================================
   const resortNotifications = useCallback(() => {
     setNotifications((prev) => {
       const unread = (prev || [])
@@ -214,9 +182,6 @@ export default function useNotifications(userId) {
     });
   }, []);
 
-  // ============================================================
-  // 7️⃣ Handle errors
-  // ============================================================
   useEffect(() => {
     const stop = onNotificationsError((error) => {
       logger.error('Notification error:', error?.message || error);
@@ -224,9 +189,6 @@ export default function useNotifications(userId) {
     return () => stop && stop();
   }, [onNotificationsError]);
 
-  // ============================================================
-  // ✅ Export everything for NotificationCenter and others
-  // ============================================================
   return {
     notifications,
     unreadCount,

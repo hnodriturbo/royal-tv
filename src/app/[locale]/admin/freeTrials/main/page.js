@@ -9,9 +9,11 @@
  */
 
 'use client';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { useEffect, useState } from 'react';
-import { Link, useRouter } from '@/i18n'; // 🌍 nav
+// 🌍 nav
 import { useTranslations } from 'next-intl'; // 🌐 i18n
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
@@ -23,6 +25,7 @@ import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import SortDropdown from '@/components/reusableUI/SortDropdown';
 import { freeTrialSortOptions, getFreeTrialSortFunction } from '@/lib/utils/sorting';
 import useLocalSorter from '@/hooks/useLocalSorter';
+import { SafeString } from '@/lib/ui/SafeString';
 
 export default function AdminFreeTrialsPage() {
   // 🌐 translator
@@ -217,7 +220,7 @@ export default function AdminFreeTrialsPage() {
                         >
                           <span className="inline-flex items-center gap-2">
                             <span aria-hidden="true">🗑️</span>
-                            <span>{String(t('app.admin.freeTrials.main.action.delete'))}</span>
+                            <span>{SafeString(t('app.admin.freeTrials.main.action.delete'))}</span>
                           </span>
                         </button>
                       </div>

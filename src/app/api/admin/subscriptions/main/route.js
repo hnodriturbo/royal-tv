@@ -1,27 +1,14 @@
-/**
- *   ========== /api/admin/subscriptions/main ==========
- * 📦
- * GET: List all subscriptions (admin only, with user info)
- * Requires: Header x-user-role: admin
- * =====================================================
- */
 import prisma from '@/lib/core/prisma';
 import { NextResponse } from 'next/server';
+import { withRole } from '@/lib/api/guards';
 
-export async function GET(request) {
-  // 1️⃣ Read user role from header
-  const userRole = request.headers.get('x-user-role');
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-  // 2️⃣ Reject if not admin
-  if (userRole !== 'admin') {
-    return NextResponse.json({ error: 'Unauthorized. Admins only.' }, { status: 403 });
-  }
-
-  // 3️⃣ Fetch ALL subscriptions, include user info, order by newest
+export const GET = withRole('admin', async () => {
   const subscriptions = await prisma.subscription.findMany({
     include: { user: true },
     orderBy: { createdAt: 'desc' }
   });
-
   return NextResponse.json({ subscriptions });
-}
+});

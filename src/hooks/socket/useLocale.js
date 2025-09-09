@@ -1,54 +1,59 @@
 /**
- * ========== src/hooks/socket/useLocale.js ==========
- * 🌍 Client ↔ Server Locale Sync (via Socket Hub)
- * - Reads active UI locale from next-intl
- * - On mount/changes: sends locale to server with set_locale (guarded)
- * - Listens for server 'locale_changed' ack
- * - Exposes: currentLocale (client), serverLocale (last ack), isInSync, forceServerLocale
+ * ======================== useLocale (client) ========================
+ * 🔁 Manage current UI locale on the client + inform Socket.IO server
+ * - Uses /api/locale to persist NEXT_LOCALE
+ * - Uses socket hub to emit "set_locale" and listen "locale_changed"
+ * ===================================================================
  */
-
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocale as useNextIntlLocale } from 'next-intl';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 
-export default function useLocale() {
-  // 🌍 authoritative client-side locale (from next-intl)
-  const currentLocale = useNextIntlLocale?.() || 'en';
+export function useLocaleController() {
+  const intlLocale = useNextIntlLocale(); // 🌍 'en' | 'is'
+  const [currentLocale, setCurrentLocale] = useState(intlLocale);
+  const { setLocale, onLocaleChanged } = useSocketHub(); // 📡 hub API
 
-  // 🔌 socket hub helpers
-  const { setLocale, onLocaleChanged, socketConnected } = useSocketHub();
+  // 🔁 Change locale: cookie + socket
+  const changeLocale = useCallback(
+    async (nextLocale) => {
+      const normalized = String(nextLocale || '')
+        .toLowerCase()
+        .startsWith('is')
+        ? 'is'
+        : 'en';
 
-  // 📦 last server-acknowledged locale
-  const [serverLocale, setServerLocale] = useState(null);
+      // Persist cookie (middleware uses this too)
+      await fetch('/api/locale', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locale: normalized })
+      }).catch(() => {});
 
-  // 🔁 whenever client locale changes or socket connects, push to server
+      setCurrentLocale(normalized);
+      // Tell socket server (hub will queue if disconnected)
+      setLocale(normalized);
+    },
+    [setLocale]
+  );
+
+  // Keep local state aligned with route-level locale
   useEffect(() => {
-    if (!currentLocale) return; // 🛡️ guard
-    setLocale(currentLocale); // 📤 tell server our current UI locale
-  }, [currentLocale, setLocale, socketConnected]);
+    if (intlLocale !== currentLocale) {
+      setCurrentLocale(intlLocale);
+      setLocale(intlLocale); // sync socket on route-based changes
+    }
+  }, [intlLocale, currentLocale, setLocale]);
 
-  // 📥 listen for server ack and store it locally
+  // Optional: react to server acks (no-op by default)
   useEffect(() => {
-    const stopListeningToLocaleChanged = onLocaleChanged(({ locale }) => {
-      setServerLocale(locale || null); // 🧭 remember last ack'd locale
+    const off = onLocaleChanged?.(() => {
+      /* could toast "language updated" */
     });
-    return stopListeningToLocaleChanged;
+    return () => off && off();
   }, [onLocaleChanged]);
 
-  // ✅ convenience flag: true if server and client are in sync
-  const isInSync = useMemo(() => {
-    return !!serverLocale && serverLocale === currentLocale;
-  }, [serverLocale, currentLocale]);
-
-  // 🔧 expose an imperative setter (renamed to avoid collision)
-  const forceServerLocale = (locale) => setLocale(locale);
-
-  return {
-    currentLocale, // 🌍 from next-intl (client source of truth)
-    serverLocale, // 📥 last ack from server
-    isInSync, // ✅ true once server acks the same locale
-    forceServerLocale // 🔧 request server-only switch
-  };
+  return { currentLocale, changeLocale };
 }

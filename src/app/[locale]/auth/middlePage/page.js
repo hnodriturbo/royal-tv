@@ -1,41 +1,29 @@
-/**
- * ========================= /src/app/[locale]/auth/middlePage/page.js =========================
- * 🚦 MiddlePage – central redirect & messaging hub (loop‑safe)
- * --------------------------------------------------------------------------------------------
- * - Wait for session to settle; handle ?login=true without ping‑pong
- * - Choose destination by role (admin/user) or fallback to '/'
- * - Always route through redirectWithMessage (toasts + loader + delay)
- * - Uses i18n with full keys via a single `const t = useTranslations()`
- */
-
 'use client';
 
 import { useEffect, useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
+import { useTranslations, useLocale } from 'next-intl';
+import { useSearchParams, useRouter } from 'next/navigation';
+// Your existing redirect helper (toasts + loader + delay)
 import useAppRedirectHandlers from '@/hooks/useAppRedirectHandlers';
-import { useTranslations } from 'next-intl';
-import { useSearchParams } from '@/i18n';
-// 🚫 Never auto-redirect to these (prevents ping-pong)
+
 const forbiddenRedirects = ['/auth/login', '/auth/middlePage'];
 
 export default function MiddlePage() {
-  // 🌐 i18n (full-path keys only)
   const t = useTranslations();
-
-  // 🔗 Query + session + redirect helper
+  const locale = useLocale();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { data: session, status } = useSession();
   const { redirectWithMessage } = useAppRedirectHandlers();
 
-  // 🧯 Guard against double redirects
   const [alreadyRedirected, setAlreadyRedirected] = useState(false);
+  const L = (path) => `/${locale}${path.startsWith('/') ? path : `/${path}`}`;
 
   useEffect(() => {
-    // 🛑 Avoid double-run and avoid running while session is loading
     if (alreadyRedirected) return;
     if (status === 'loading') return;
 
-    // 📦 Read all query flags
     const loginFlag = searchParams.get('login') === 'true';
     const logoutFlag = searchParams.get('logout') === 'true';
     const guestFlag = searchParams.get('guest') === 'true';
@@ -50,140 +38,101 @@ export default function MiddlePage() {
     const updateSuccess = searchParams.get('success') === 'true';
     const paymentSuccess = searchParams.get('paymentSuccess') === 'true';
 
-    // 🔒 When logging in, wait until NextAuth truly becomes "authenticated"
-    if (loginFlag && status !== 'authenticated') {
-      return; // 💤 Waiting for session flip
-    }
+    if (loginFlag && status !== 'authenticated') return;
 
-    // 🎯 Compute default target from role
-    let defaultTarget = '/';
-    if (session?.user?.role === 'admin') defaultTarget = '/admin/dashboard';
-    if (session?.user?.role === 'user') defaultTarget = '/user/dashboard';
+    let defaultTarget = L('/');
+    if (session?.user?.role === 'admin') defaultTarget = L('/admin/dashboard');
+    if (session?.user?.role === 'user') defaultTarget = L('/user/dashboard');
 
-    // 🧭 Respect redirectTo when it is safe
     let chosenTarget = defaultTarget;
-    if (
-      redirectToParam &&
-      !forbiddenRedirects.some((forbiddenPath) => redirectToParam.startsWith(forbiddenPath))
-    ) {
-      chosenTarget = redirectToParam;
+    if (redirectToParam && !forbiddenRedirects.some((p) => redirectToParam.startsWith(p))) {
+      chosenTarget = redirectToParam.startsWith('/')
+        ? L(redirectToParam)
+        : L(`/${redirectToParam}`);
     }
 
-    // 💬 Decide message + color + delay
     let feedbackMessage = '';
     let uiColor = 'info';
-    let delayMs = 2000; // ⏳ Default short delay
+    let delayMs = 2000;
     const displayName = session?.user?.name || 'User';
 
     if (status === 'authenticated') {
-      // 🎉 Login success → go to role dashboard (or safe redirectTo)
       if (loginFlag) {
-        feedbackMessage = t(
-          'app.middlePage.messages.welcome',
-          { name: displayName },
-          `Welcome ${displayName}! Redirecting…`
-        );
+        feedbackMessage = t('app.middlePage.messages.welcome', {
+          name: displayName,
+          default: `Welcome ${displayName}! Redirecting…`
+        });
         uiColor = 'success';
-      }
-      // 👋 Logout requested explicitly
-      else if (logoutFlag) {
+      } else if (logoutFlag) {
         signOut({ redirect: false });
-        feedbackMessage = t(
-          'app.middlePage.messages.logoutSuccess',
-          {},
-          'Logout successful. Redirecting to Home…'
-        );
+        feedbackMessage = t('app.middlePage.messages.logoutSuccess', {
+          default: 'Logout successful. Redirecting to Home…'
+        });
         uiColor = 'success';
-        chosenTarget = '/';
-      }
-      // ✅ Profile updated
-      else if (profileUpdated && updateSuccess) {
-        feedbackMessage = t(
-          'app.middlePage.messages.profileUpdated',
-          {},
-          'Profile updated successfully! Redirecting…'
-        );
+        chosenTarget = L('/');
+      } else if (profileUpdated && updateSuccess) {
+        feedbackMessage = t('app.middlePage.messages.profileUpdated', {
+          default: 'Profile updated successfully! Redirecting…'
+        });
         uiColor = 'success';
-      }
-      // ✅ Password updated
-      else if (profilePasswordUpdated && updateSuccess) {
-        feedbackMessage = t(
-          'app.middlePage.messages.passwordUpdated',
-          {},
-          'Profile Password updated successfully! Redirecting…'
-        );
+      } else if (profilePasswordUpdated && updateSuccess) {
+        feedbackMessage = t('app.middlePage.messages.passwordUpdated', {
+          default: 'Profile Password updated successfully! Redirecting…'
+        });
         uiColor = 'success';
-      }
-      // 💳 Payment success
-      else if (paymentSuccess) {
-        feedbackMessage = t(
-          'app.middlePage.messages.paymentComplete',
-          {},
-          '✅ Payment complete! Your subscription is being created and pending admin approval.'
-        );
+      } else if (paymentSuccess) {
+        feedbackMessage = t('app.middlePage.messages.paymentComplete', {
+          default:
+            '✅ Payment complete! Your subscription is being created and pending admin approval.'
+        });
         uiColor = 'success';
-        chosenTarget = '/user/subscriptions?paymentSuccess=1';
-        delayMs = 5000; // ⏳ give more time to read
-      }
-      // ⛔️ Role denied on an authenticated user (edge)
-      else if (adminDenied || userDenied) {
-        feedbackMessage = t(
-          'app.middlePage.messages.accessDenied',
-          {},
-          'Access denied for this section.'
-        );
+        chosenTarget = L('/user/subscriptions?paymentSuccess=1');
+        delayMs = 5000;
+      } else if (adminDenied || userDenied) {
+        feedbackMessage = t('app.middlePage.messages.accessDenied', {
+          default: 'Access denied for this section.'
+        });
         uiColor = 'error';
-        chosenTarget = '/';
+        chosenTarget = L('/');
       }
     } else {
-      // 🚷 Not authenticated scenarios
       if (logoutFlag) {
-        feedbackMessage = t(
-          'app.middlePage.messages.logoutSuccess',
-          {},
-          'Logout successful. Redirecting to Home…'
-        );
+        feedbackMessage = t('app.middlePage.messages.logoutSuccess', {
+          default: 'Logout successful. Redirecting to Home…'
+        });
         uiColor = 'success';
-        chosenTarget = '/';
+        chosenTarget = L('/');
       } else if (notLoggedInFlag || guestFlag) {
-        feedbackMessage = t(
-          'app.middlePage.messages.notAuthorized',
-          {},
-          'You are not authorized! Redirecting to login…'
-        );
+        feedbackMessage = t('app.middlePage.messages.notAuthorized', {
+          default: 'You are not authorized! Redirecting to login…'
+        });
         uiColor = 'error';
-        chosenTarget = '/auth/signin';
+        chosenTarget = L('/auth/signin');
       } else if (adminDenied || userDenied) {
-        feedbackMessage = t(
-          'app.middlePage.messages.accessDeniedLogin',
-          {},
-          'Access denied! Redirecting to login…'
-        );
+        feedbackMessage = t('app.middlePage.messages.accessDeniedLogin', {
+          default: 'Access denied! Redirecting to login…'
+        });
         uiColor = 'error';
-        chosenTarget = `/auth/signin?redirectTo=${encodeURIComponent(chosenTarget)}`;
+        chosenTarget = L(`/auth/signin?redirectTo=${encodeURIComponent(chosenTarget)}`);
       } else if (errorCode) {
-        const errorKey =
+        const key =
           errorCode === 'CredentialsSignin' || errorCode === 'Configuration'
             ? 'app.middlePage.messages.badCredentials'
             : 'app.middlePage.messages.unexpectedError';
-        feedbackMessage = t(errorKey, {}, 'Unexpected error. Please try again.');
+        feedbackMessage = t(key, { default: 'Unexpected error. Please try again.' });
         uiColor = 'error';
-        chosenTarget = '/auth/signin';
+        chosenTarget = L('/auth/signin');
       }
     }
 
-    // 🧭 Handle 404 redirect with info message
     if (notFoundFlag) {
-      feedbackMessage = t(
-        'app.middlePage.messages.pageMissing',
-        {},
-        'Page does not exist. Redirecting to Home…'
-      );
+      feedbackMessage = t('app.middlePage.messages.pageMissing', {
+        default: 'Page does not exist. Redirecting to Home…'
+      });
       uiColor = 'info';
-      chosenTarget = '/';
+      chosenTarget = L('/');
     }
 
-    // 🚦 Perform the redirect if there is work to do
     if (feedbackMessage) {
       setAlreadyRedirected(true);
       redirectWithMessage({
@@ -195,14 +144,7 @@ export default function MiddlePage() {
         pageDelay: delayMs
       });
     }
-  }, [
-    searchParams,
-    status,
-    session,
-    alreadyRedirected,
-    redirectWithMessage /* 🧠 never add t here */
-  ]);
+  }, [searchParams, status, session, alreadyRedirected, redirectWithMessage, t, locale, router]);
 
-  // 👻 No UI, just logic
   return null;
 }

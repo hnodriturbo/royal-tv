@@ -9,11 +9,12 @@
  * ===============================================================================
  */
 
-'use client';
+'use client';import Link from "next/link";import { useRouter } from "next/navigation";
+import { SafeString } from '@/lib/ui/SafeString';
 
 import logger from '@/lib/core/logger'; // 🪵 logging (not translated)
 import { useEffect, useState, useCallback } from 'react';
-import { Link, useRouter } from '@/i18n';
+
 import { useSession } from 'next-auth/react';
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
@@ -129,8 +130,8 @@ const UserConversations = () => {
               user={session?.user}
               isAdmin={false}
               buttonClass="btn-success border-radius-15"
-              buttonText={t('app.user.liveChat.main.start_new')}
-            />
+              buttonText={t('app.user.liveChat.main.start_new')} />
+
           </div>
 
           {/* ↕️ Sort */}
@@ -138,8 +139,8 @@ const UserConversations = () => {
             <SortDropdown
               options={conversationSortOptions}
               value={sortOrder}
-              onChange={setSortOrder}
-            />
+              onChange={setSortOrder} />
+
           </div>
         </div>
 
@@ -149,10 +150,10 @@ const UserConversations = () => {
 
         {/* 🖥️ Desktop table */}
         <div className="overflow-x-auto w-full lg:block hidden">
-          {pagedConversations.length === 0 ? (
-            <p className="text-center">{t('app.user.liveChat.main.no_conversations')}</p>
-          ) : (
-            <table className="w-full border-collapse border border-gray-300 min-w-[600px] text-shadow-dark-1">
+          {pagedConversations.length === 0 ?
+          <p className="text-center">{t('app.user.liveChat.main.no_conversations')}</p> :
+
+          <table className="w-full border-collapse border border-gray-300 min-w-[600px] text-shadow-dark-1">
               <thead>
                 <tr className="bg-gray-700 text-white">
                   <th className="border px-4 py-2">{t('app.user.liveChat.main.id')}</th>
@@ -163,21 +164,21 @@ const UserConversations = () => {
                 </tr>
               </thead>
               <tbody>
-                {pagedConversations.map((conversationItem) => (
-                  <tr
-                    key={conversationItem.conversation_id}
-                    className="hover:bg-gray-400 text-white"
-                  >
+                {pagedConversations.map((conversationItem) =>
+              <tr
+                key={conversationItem.conversation_id}
+                className="hover:bg-gray-400 text-white">
+
                     <td className="border px-4 py-2">{conversationItem.conversation_id}</td>
                     <td className="border px-4 py-2">{conversationItem.subject}</td>
                     <td className="border px-4 py-2 text-center">
-                      {conversationItem.unreadCount > 0 ? (
-                        <span className="bg-green-600 text-white rounded-full px-2 py-0.5">
+                      {conversationItem.unreadCount > 0 ?
+                  <span className="bg-green-600 text-white rounded-full px-2 py-0.5">
                           {conversationItem.unreadCount}
-                        </span>
-                      ) : (
-                        t('app.user.liveChat.main.read')
-                      )}
+                        </span> :
+
+                  t('app.user.liveChat.main.read')
+                  }
                     </td>
                     <td className="border px-4 py-2">
                       {new Date(conversationItem.updatedAt).toLocaleString()}
@@ -185,39 +186,39 @@ const UserConversations = () => {
                     <td className="border px-4 py-2">
                       <div className="flex gap-4 justify-center">
                         <Link
-                          href={`/user/liveChat/${conversationItem.conversation_id}`}
-                          className="bg-blue-500 text-white px-3 py-1 rounded-xl hover:bg-blue-600 transition text-sm inline-flex items-center gap-2"
-                        >
+                      href={`/user/liveChat/${conversationItem.conversation_id}`}
+                      className="bg-blue-500 text-white px-3 py-1 rounded-xl hover:bg-blue-600 transition text-sm inline-flex items-center gap-2">
+
                           <span aria-hidden="true">💬</span>
                           <span>{String(t('app.user.liveChat.main.view'))}</span>
                         </Link>
                         <ConversationActionButton
-                          action="delete"
-                          user_id={userId}
-                          conversation_id={conversationItem.conversation_id}
-                          chatType="live"
-                          isAdmin={false}
-                          buttonClass="bg-red-500 text-white px-3 py-1 rounded-xl hover:bg-red-600 transition text-sm"
-                          buttonText={t('app.user.liveChat.main.delete')}
-                          onActionSuccess={() => fetchUserConversations(currentPage)}
-                        />
+                      action="delete"
+                      user_id={userId}
+                      conversation_id={conversationItem.conversation_id}
+                      chatType="live"
+                      isAdmin={false}
+                      buttonClass="bg-red-500 text-white px-3 py-1 rounded-xl hover:bg-red-600 transition text-sm"
+                      buttonText={t('app.user.liveChat.main.delete')}
+                      onActionSuccess={() => fetchUserConversations(currentPage)} />
+
                       </div>
                     </td>
                   </tr>
-                ))}
+              )}
               </tbody>
             </table>
-          )}
+          }
         </div>
 
         {/* 📱 Mobile cards */}
         <div className="lg:hidden flex flex-col gap-4 w-full mt-6 no-wrap">
-          {pagedConversations.map((conversationItem) => (
-            <div
-              key={conversationItem.conversation_id}
-              onClick={() => router.push(`/user/liveChat/${conversationItem.conversation_id}`)}
-              className="border border-gray-300 rounded-lg p-4 shadow-sm bg-gray-500 text-white hover:cursor-pointer"
-            >
+          {pagedConversations.map((conversationItem) =>
+          <div
+            key={conversationItem.conversation_id}
+            onClick={() => router.push(`/user/liveChat/${conversationItem.conversation_id}`)}
+            className="border border-gray-300 rounded-lg p-4 shadow-sm bg-gray-500 text-white hover:cursor-pointer">
+
               <h3 className="font-semibold text-lg mb-2">{conversationItem.subject}</h3>
 
               <p className="mb-1">
@@ -227,13 +228,13 @@ const UserConversations = () => {
 
               <p className="mb-1">
                 <strong>{t('app.user.liveChat.main.unread')}:</strong>{' '}
-                {conversationItem.unreadCount > 0 ? (
-                  <span className="bg-red-600 text-white rounded-full px-2 py-0.5">
+                {conversationItem.unreadCount > 0 ?
+              <span className="bg-red-600 text-white rounded-full px-2 py-0.5">
                     {conversationItem.unreadCount}
-                  </span>
-                ) : (
-                  t('app.user.liveChat.main.none')
-                )}
+                  </span> :
+
+              t('app.user.liveChat.main.none')
+              }
               </p>
 
               <p className="mb-3">
@@ -243,36 +244,36 @@ const UserConversations = () => {
 
               <div className="flex justify-end gap-2">
                 <button
-                  onClick={() => router.push(`/user/liveChat/${conversationItem.conversation_id}`)}
-                  className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition text-sm"
-                >
-                  {t('app.user.liveChat.main.view')}
+                onClick={() => router.push(`/user/liveChat/${conversationItem.conversation_id}`)}
+                className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition text-sm">
+
+                  {SafeString(t('app.user.liveChat.main.view'), '')}
                 </button>
 
                 <ConversationActionButton
-                  action="delete"
-                  user_id={userId}
-                  conversation_id={conversationItem.conversation_id}
-                  chatType="live"
-                  isAdmin={false}
-                  buttonClass="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition text-sm"
-                  buttonText={t('app.user.liveChat.main.delete')}
-                  onActionSuccess={() => fetchUserConversations(currentPage)}
-                />
+                action="delete"
+                user_id={userId}
+                conversation_id={conversationItem.conversation_id}
+                chatType="live"
+                isAdmin={false}
+                buttonClass="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition text-sm"
+                buttonText={t('app.user.liveChat.main.delete')}
+                onActionSuccess={() => fetchUserConversations(currentPage)} />
+
               </div>
             </div>
-          ))}
+          )}
         </div>
 
         {/* 🔢 Pagination */}
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
+          onPageChange={setCurrentPage} />
+
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default UserConversations;
