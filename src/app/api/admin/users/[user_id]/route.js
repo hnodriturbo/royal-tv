@@ -2,7 +2,6 @@
  * ========== /app/api/admin/users/[user_id]/route.js ==========
  * 🔒 ADMIN USER ITEM API (Server)
  */
-import logger from '@/lib/core/logger';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/core/prisma';
 import { withRole } from '@/lib/api/guards';
@@ -30,7 +29,7 @@ function getUserIdFromCtx(ctx) {
 
 export const GET = withRole('admin', async (request, ctx) => {
   const user_id = getUserIdFromCtx(ctx);
-  logger.log('[API][Admin][User][GET] Fetching user', { user_id });
+  console.log('[API][Admin][User][GET] Fetching user', { user_id });
 
   if (!user_id) {
     return NextResponse.json({ error: 'Invalid user_id' }, { status: 400 });
@@ -39,19 +38,19 @@ export const GET = withRole('admin', async (request, ctx) => {
   try {
     const user = await prisma.user.findUnique({ where: { user_id }, select: safeUserSelect });
     if (!user) {
-      logger.log('[API][Admin][User][GET] Not found', { user_id });
+      console.log('[API][Admin][User][GET] Not found', { user_id });
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
     return NextResponse.json(user, { status: 200 });
   } catch (error) {
-    logger.error('[API][Admin][User][GET] Failed', { error: error?.message || error });
+    console.error('[API][Admin][User][GET] Failed', { error: error?.message || error });
     return NextResponse.json({ error: 'Error fetching user' }, { status: 500 });
   }
 });
 
 export const PATCH = withRole('admin', async (request, ctx) => {
   const user_id = getUserIdFromCtx(ctx);
-  logger.log('[API][Admin][User][PATCH] Incoming', { user_id });
+  console.log('[API][Admin][User][PATCH] Incoming', { user_id });
 
   if (!user_id) {
     return NextResponse.json({ error: 'Invalid user_id' }, { status: 400 });
@@ -78,17 +77,17 @@ export const PATCH = withRole('admin', async (request, ctx) => {
       data: safeData,
       select: safeUserSelect
     });
-    logger.log('[API][Admin][User][PATCH] Updated', { user_id });
+    console.log('[API][Admin][User][PATCH] Updated', { user_id });
     return NextResponse.json(updatedUser, { status: 200 });
   } catch (error) {
-    logger.error('[API][Admin][User][PATCH] Failed', { error: error?.message || error });
+    console.error('[API][Admin][User][PATCH] Failed', { error: error?.message || error });
     return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
   }
 });
 
 export const DELETE = withRole('admin', async (_request, ctx) => {
   const user_id = getUserIdFromCtx(ctx);
-  logger.log('[API][Admin][User][DELETE] Incoming', { user_id });
+  console.log('[API][Admin][User][DELETE] Incoming', { user_id });
 
   if (!user_id) {
     return NextResponse.json({ error: 'Invalid user_id' }, { status: 400 });
@@ -96,10 +95,10 @@ export const DELETE = withRole('admin', async (_request, ctx) => {
 
   try {
     await prisma.user.delete({ where: { user_id } });
-    logger.log('[API][Admin][User][DELETE] Deleted', { user_id });
+    console.log('[API][Admin][User][DELETE] Deleted', { user_id });
     return NextResponse.json({ message: 'User deleted successfully' }, { status: 200 });
   } catch (error) {
-    logger.error('[API][Admin][User][DELETE] Failed', { error: error?.message || error });
+    console.error('[API][Admin][User][DELETE] Failed', { error: error?.message || error });
     // FK violation friendly message
     if (error?.code === 'P2003') {
       return NextResponse.json(

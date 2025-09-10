@@ -1,8 +1,6 @@
 // middleware.js
 import { NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import logger from './lib/core/logger.js';
-
 // 👉 Our new locale config (JS/ESM)
 import { LOCALES, DEFAULT_LOCALE, isLocale } from '@/i18n/config.js';
 
@@ -87,9 +85,9 @@ export async function middleware(request) {
       return NextResponse.next({ request: { headers } });
     }
 
-    logger.log('[MW][API] x-user-id:', userId || '(none)');
-    logger.log('[MW][API] x-user-role:', userRole);
-    logger.log('[MW][API] x-locale:', apiLocale);
+    console.log('[MW][API] x-user-id:', userId || '(none)');
+    console.log('[MW][API] x-user-role:', userRole);
+    console.log('[MW][API] x-locale:', apiLocale);
 
     return NextResponse.next({ request: { headers } });
   }

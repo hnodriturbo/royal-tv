@@ -1,4 +1,4 @@
-import logger from '@/lib/core/logger';
+
 import prisma from '@/lib/core/prisma';
 import { NextResponse } from 'next/server';
 import { withRole } from '@/lib/api/guards';
@@ -52,6 +52,6 @@ export const DELETE = withRole('admin', async (_req, ctx) => {
   }
 
   await prisma.subscription.delete({ where: { subscription_id } });
-  logger.log(`🗑️ Deleted subscription: ${subscription_id}`);
+  console.log(`🗑️ Deleted subscription: ${subscription_id}`);
   return NextResponse.json({ ok: true });
 });

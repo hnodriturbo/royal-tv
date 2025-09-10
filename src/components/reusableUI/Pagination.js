@@ -44,7 +44,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange, base
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   return (
-    <nav aria-label={t('components.pagination.aria_label')}>
+    <nav aria-label={t('components.pagination.aria_pagination')}>
       <ul className="flex items-center gap-2">
         {onPageChange ? (
           <button

@@ -21,7 +21,7 @@ import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
 import { useTranslations, useLocale } from 'next-intl';
 
 export default function SignupPage() {
-  const __locale = useLocale();
+  const locale = useLocale();
   // 🌐 i18n (full-path keys only)
   const t = useTranslations();
 
@@ -101,7 +101,9 @@ export default function SignupPage() {
       );
 
       // 🔁 Send to sign-in with prefilled username
-      router.push(`/auth/signin?signup=true&username=${encodeURIComponent(formState.username)}`);
+      router.push(
+        `/${locale}/auth/signin?signup=true&username=${encodeURIComponent(formState.username)}`
+      );
     } catch (error) {
       const messageFromServer = error?.response?.data?.message;
       const statusCode = error?.response?.status;
@@ -300,7 +302,7 @@ export default function SignupPage() {
         {/* 🔗 Have account prompt */}
         <p className="text-center mt-4">
           {t('app.signup.haveAccountPrompt', {}, 'Already have an account?')}{' '}
-          <Link href={`/${__locale}/auth/signin`} className="underline">
+          <Link href={`/${locale}/auth/signin`} className="underline">
             {t('app.signup.signInLink', {}, 'Sign in')}
           </Link>
         </p>

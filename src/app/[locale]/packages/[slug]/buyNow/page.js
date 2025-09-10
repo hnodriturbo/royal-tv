@@ -8,7 +8,6 @@
  * - Safe hooks: locale captured at top level
  */
 
-import logger from '@/lib/core/logger';
 import { useEffect, useMemo, useCallback, useState } from 'react';
 import { useParams, notFound, useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -82,7 +81,7 @@ export default function PackageBuyNowPage() {
         displayMessage(t('app.buyNow.widgetError'), 'error');
       }
     } catch (error) {
-      logger.error('❌ Invoice creation error:', error);
+      console.error('❌ Invoice creation error:', error);
       displayMessage(t('app.buyNow.initError'), 'error');
     } finally {
       hideLoader();

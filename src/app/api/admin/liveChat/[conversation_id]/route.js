@@ -1,4 +1,4 @@
-import logger from '@/lib/core/logger';
+
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/core/prisma';
 import { withRole } from '@/lib/api/guards';
@@ -41,7 +41,7 @@ export const GET = withRole('admin', async (_req, ctx) => {
 
     return NextResponse.json({ ...convo, unreadCount });
   } catch (err) {
-    logger.error('GET [conversation_id] error:', {
+    console.error('GET [conversation_id] error:', {
       message: err.message,
       stack: err.stack,
       name: err.name,

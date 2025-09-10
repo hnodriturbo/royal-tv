@@ -1,4 +1,4 @@
-import logger from '@/lib/core/logger';
+
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/core/prisma';
 import { withRole, getUserId } from '@/lib/api/guards';
@@ -39,7 +39,7 @@ export const GET = withRole('user', async (_req, ctx, session) => {
 
     return NextResponse.json({ ...convo, unreadCount });
   } catch (err) {
-    logger.error('GET /user/liveChat/[conversation_id] error:', err);
+    console.error('GET /user/liveChat/[conversation_id] error:', err);
     return NextResponse.json({ error: err.message, full: err }, { status: 500 });
   }
 });

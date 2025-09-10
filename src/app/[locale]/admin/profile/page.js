@@ -7,7 +7,9 @@
  * =========================================================
  */
 
-'use client';import Link from "next/link";import { useRouter } from "next/navigation";
+'use client';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
@@ -19,12 +21,13 @@ import useAuthGuard from '@/hooks/useAuthGuard';
 import { SafeString } from '@/lib/ui/SafeString';
 
 const preferredContactOptions = [
-{ value: 'email', label: 'Email' },
-{ value: 'whatsapp', label: 'WhatsApp' },
-{ value: 'telegram', label: 'Telegram' }];
+  { value: 'email', label: 'Email' },
+  { value: 'whatsapp', label: 'WhatsApp' },
+  { value: 'telegram', label: 'Telegram' }
+];
 
-
-export default function AdminProfilePage() {const __locale = useLocale();
+export default function AdminProfilePage() {
+  const locale = useLocale();
   const t = useTranslations();
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -142,59 +145,60 @@ export default function AdminProfilePage() {const __locale = useLocale();
   return (
     <div className="container-style max-w-full lg:max-w-lg mx-auto min-h-[60vh] rounded-2xl shadow-lg p-6">
       <h1 className="text-2xl font-bold text-center mb-6">
-        {isPasswordChangeVisible ?
-        t('app.admin.profile.change_password') :
-        session?.user?.name ?
-        t('app.admin.profile.profile_of', { name: session.user.name }) :
-        t('app.admin.profile.title')}
+        {isPasswordChangeVisible
+          ? t('app.admin.profile.change_password')
+          : session?.user?.name
+            ? t('app.admin.profile.profile_of', { name: session.user.name })
+            : t('app.admin.profile.title')}
       </h1>
 
-      {!isPasswordChangeVisible ?
-      <form onSubmit={handleProfileUpdate} className="space-y-4">
-          {['name', 'email', 'username', 'whatsapp', 'telegram'].map((field) =>
-        <div key={field}>
+      {!isPasswordChangeVisible ? (
+        <form onSubmit={handleProfileUpdate} className="space-y-4">
+          {['name', 'email', 'username', 'whatsapp', 'telegram'].map((field) => (
+            <div key={field}>
               <label htmlFor={field} className="block text-sm font-medium">
                 {t(`app.admin.profile.field_${field}`)}:
               </label>
               <input
-            id={field}
-            type={field === 'email' ? 'email' : 'text'}
-            name={field}
-            value={formData[field]}
-            onChange={handleFormFieldChange}
-            className="w-full px-4 py-2 border rounded-lg text-black" />
-          
+                id={field}
+                type={field === 'email' ? 'email' : 'text'}
+                name={field}
+                value={formData[field]}
+                onChange={handleFormFieldChange}
+                className="w-full px-4 py-2 border rounded-lg text-black"
+              />
             </div>
-        )}
+          ))}
 
           <div>
             <label htmlFor="preferredContactWay" className="block text-sm font-medium">
               {t('app.admin.profile.preferred_contact')}
             </label>
             <select
-            id="preferredContactWay"
-            name="preferredContactWay"
-            value={formData.preferredContactWay}
-            onChange={handleFormFieldChange}
-            className="w-full px-4 py-2 border rounded-lg text-black">
-            
-              {preferredContactOptions.map(({ value, label }) =>
-            <option key={value} value={value}>
+              id="preferredContactWay"
+              name="preferredContactWay"
+              value={formData.preferredContactWay}
+              onChange={handleFormFieldChange}
+              className="w-full px-4 py-2 border rounded-lg text-black"
+            >
+              {preferredContactOptions.map(({ value, label }) => (
+                <option key={value} value={value}>
                   {label}
                 </option>
-            )}
+              ))}
             </select>
           </div>
 
           <div className="flex items-center gap-2">
             <input
-            id="sendEmails"
-            name="sendEmails"
-            type="checkbox"
-            checked={formData.sendEmails}
-            onChange={handleFormFieldChange}
-            className="h-4 w-4" />
-          
+              id="sendEmails"
+              name="sendEmails"
+              type="checkbox"
+              checked={formData.sendEmails}
+              onChange={handleFormFieldChange}
+              className="h-4 w-4"
+            />
+
             <label htmlFor="sendEmails" className="block text-sm font-medium">
               {t('app.admin.profile.receive_emails')}
             </label>
@@ -202,10 +206,10 @@ export default function AdminProfilePage() {const __locale = useLocale();
 
           <div className="flex flex-col lg:flex-row items-center gap-3 mt-4 w-full">
             <button
-            type="button"
-            onClick={() => setIsPasswordChangeVisible(true)}
-            className="btn-info w-1/2">
-            
+              type="button"
+              onClick={() => setIsPasswordChangeVisible(true)}
+              className="btn-info w-1/2"
+            >
               <span className="inline-flex items-center gap-2">
                 <span aria-hidden="true">🔐</span>
                 <span>{SafeString(t('app.admin.profile.change_password'))}</span>
@@ -215,30 +219,30 @@ export default function AdminProfilePage() {const __locale = useLocale();
               {t('app.admin.profile.update_profile')}
             </button>
           </div>
-        </form> :
-
-      <form onSubmit={handlePasswordChangeSubmit} className="space-y-4">
-          {['oldPassword', 'newPassword', 'confirmPassword'].map((field) =>
-        <div key={field}>
+        </form>
+      ) : (
+        <form onSubmit={handlePasswordChangeSubmit} className="space-y-4">
+          {['oldPassword', 'newPassword', 'confirmPassword'].map((field) => (
+            <div key={field}>
               <label htmlFor={field} className="block text-sm font-medium">
                 {t(`app.admin.profile.field_${field}`)}:
               </label>
               <input
-            id={field}
-            type="password"
-            name={field}
-            value={passwordFields[field]}
-            onChange={handlePasswordFieldChange}
-            className="w-full px-4 py-2 border rounded-lg text-black" />
-          
+                id={field}
+                type="password"
+                name={field}
+                value={passwordFields[field]}
+                onChange={handlePasswordFieldChange}
+                className="w-full px-4 py-2 border rounded-lg text-black"
+              />
             </div>
-        )}
+          ))}
           <div className="flex flex-col lg:flex-row items-center gap-3 mt-4 w-full">
             <button
-            type="button"
-            onClick={() => setIsPasswordChangeVisible(false)}
-            className="btn-info w-1/2">
-            
+              type="button"
+              onClick={() => setIsPasswordChangeVisible(false)}
+              className="btn-info w-1/2"
+            >
               {t('app.admin.profile.back_to_profile')}
             </button>
             <button type="submit" className="btn-primary w-1/2">
@@ -246,19 +250,19 @@ export default function AdminProfilePage() {const __locale = useLocale();
             </button>
           </div>
         </form>
-      }
+      )}
 
       <div className="flex items-center justify-center mt-5 w-full">
         <Link
-          href={`/${__locale}/admin/dashboard`}
-          className="btn-secondary w-1/2 inline-flex items-center gap-2">
-          
+          href={`/${locale}/admin/dashboard`}
+          className="btn-secondary w-1/2 inline-flex items-center gap-2"
+        >
           <span className="inline-flex items-center gap-2">
             <span aria-hidden="true">🏠</span>
             <span>{SafeString(t('app.admin.profile.return_dashboard'))}</span>
           </span>
         </Link>
       </div>
-    </div>);
-
+    </div>
+  );
 }

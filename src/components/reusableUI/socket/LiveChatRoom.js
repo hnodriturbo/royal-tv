@@ -9,8 +9,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
-
-import logger from '@/lib/core/logger';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useMessageEvents from '@/hooks/socket/useMessageEvents';
 import useRoomUsers from '@/hooks/socket/useRoomUsers';
@@ -101,7 +99,7 @@ export default function LiveChatRoom({
       // 🔔 notify other party
       if (msg.sender_is_admin) {
         if (!user?.user_id) {
-          logger.warn('[LiveChatRoom] Notification: user not ready, skipping...');
+          console.warn('[LiveChatRoom] Notification: user not ready, skipping...');
           return;
         }
         createLiveChatMessageNotificationForUserOnly(

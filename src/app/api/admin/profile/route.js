@@ -1,4 +1,4 @@
-import logger from '@/lib/core/logger';
+
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/core/prisma';
 import { withRole, getUserId } from '@/lib/api/guards';
@@ -59,7 +59,7 @@ export const PATCH = withRole('admin', async (request, _ctx, session) => {
 
     return NextResponse.json(updatedUser);
   } catch (error) {
-    logger.error('[API PATCH] Error updating profile:', error?.message || error);
+    console.error('[API PATCH] Error updating profile:', error?.message || error);
     return NextResponse.json(
       {
         error:

@@ -18,8 +18,6 @@
  *   } = useNotifications(userId);
  * =====================================================================
  */
-
-import logger from '@/lib/core/logger';
 import { useState, useEffect, useCallback } from 'react';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 
@@ -200,7 +198,7 @@ export default function useNotifications(userId) {
   useEffect(() => {
     const stop = onNotificationsError((error) => {
       // 🛑 Handle error: show toast, modal, or console
-      logger.error('Notification error:', error?.message || error);
+      console.error('Notification error:', error?.message || error);
       // Or update state for UI!
     });
     return () => stop && stop();

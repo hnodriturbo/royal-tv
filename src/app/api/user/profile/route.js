@@ -1,4 +1,4 @@
-import logger from '@/lib/core/logger';
+
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/core/prisma';
 import { withRole, getUserId } from '@/lib/api/guards';
@@ -27,7 +27,7 @@ export const GET = withRole('user', async (_req, _ctx, session) => {
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
     return NextResponse.json(user);
   } catch (error) {
-    logger.error('[API GET] Error fetching user profile:', error);
+    console.error('[API GET] Error fetching user profile:', error);
     return NextResponse.json({ error: 'Failed to fetch user profile' }, { status: 500 });
   }
 });
@@ -59,7 +59,7 @@ export const PATCH = withRole('user', async (request, _ctx, session) => {
 
     return NextResponse.json(updatedUser);
   } catch (error) {
-    logger.error('[API PATCH] Error updating profile:', error.message);
+    console.error('[API PATCH] Error updating profile:', error.message);
     return NextResponse.json(
       {
         error:

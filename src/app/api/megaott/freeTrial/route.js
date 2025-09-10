@@ -11,7 +11,6 @@
  *
  * Creates only one active free trial per user.
  */
-import logger from '@/lib/core/logger';
 import prisma from '@/lib/core/prisma';
 import axios from 'axios';
 import generateRandomUsername from '@/lib/utils/generateUsername';
@@ -105,10 +104,10 @@ export async function POST(request) {
     });
     res = response.data;
     // 🟢 Successfully created trial!
-    logger.log('🚀 MegaOTT trial created:', res);
+    console.log('🚀 MegaOTT trial created:', res);
   } catch (error) {
     // 🔴 MegaOTT API error!
-    logger.log('❌ MegaOTT error:', error.response?.data || error.message);
+    console.log('❌ MegaOTT error:', error.response?.data || error.message);
     return NextResponse.json(
       { error: error.response?.data || error.message },
       { status: error.response?.status || 500 }
@@ -140,9 +139,9 @@ export async function POST(request) {
         portal_link: res.portal_link || null
       }
     });
-    logger.log('Saved Trial To Database: ', JSON.stringify(trial, null, 2));
+    console.log('Saved Trial To Database: ', JSON.stringify(trial, null, 2));
   } catch (error) {
-    logger.log(error.message);
+    console.log(error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
@@ -162,7 +161,7 @@ export async function POST(request) {
       }
     });
   } catch (error) {
-    logger.log(error.message);
+    console.log(error.message);
     fullUser = null;
   }
 

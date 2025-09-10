@@ -18,7 +18,6 @@
  */
 
 import { NextResponse } from 'next/server';
-import logger from '@/lib/core/logger';
 import prisma from '@/lib/core/prisma';
 import axios from 'axios';
 import { CookieJar } from 'tough-cookie';
@@ -32,7 +31,7 @@ export async function POST(request) {
     // 🔐 Optional guard
     const providedSecret = request.headers.get('x-megaott-secret');
     if (providedSecret !== process.env.MEGAOTT_SECRET) {
-      logger.error('🚫 [megaott/subscription] Not authorized (bad x-megaott-secret)');
+      console.error('🚫 [megaott/subscription] Not authorized (bad x-megaott-secret)');
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
@@ -62,7 +61,7 @@ export async function POST(request) {
     // ♻️ Idempotency: return existing if same order_id
     const existing = await prisma.subscription.findFirst({ where: { order_id } });
     if (existing) {
-      logger.log(
+      console.log(
         `♻️ [megaott/subscription] Reusing existing subscription for order_id=${order_id}`
       );
       return NextResponse.json({ ok: true, idempotent: true, subscription: existing });
@@ -85,7 +84,7 @@ export async function POST(request) {
       paid: 1
     };
 
-    logger.log('📡 [megaott/subscription] Sending payload to MegaOTT:', megaottPayload);
+    console.log('📡 [megaott/subscription] Sending payload to MegaOTT:', megaottPayload);
 
     // 🍪 Session + request
     const cookieJar = new CookieJar();
@@ -100,7 +99,7 @@ export async function POST(request) {
         Origin: 'https://megaott.net'
       }
     });
-    logger.log('🍪 [megaott/subscription] Session cookies acquired.');
+    console.log('🍪 [megaott/subscription] Session cookies acquired.');
 
     // 🚀 Attempt create
     let megaottResponseData = null;
@@ -125,7 +124,7 @@ export async function POST(request) {
       };
     }
 
-    logger.log('✅ [megaott/subscription] MegaOTT response:', megaottResponseData);
+    console.log('✅ [megaott/subscription] MegaOTT response:', megaottResponseData);
 
     // ⚠️ If MegaOTT said "error", notify both right away (payment already confirmed at this point)
     if (megaottResponseData?.type === 'error') {
@@ -171,10 +170,10 @@ export async function POST(request) {
       }
     });
 
-    logger.log('🎉 [megaott/subscription] Subscription saved:', saved);
+    console.log('🎉 [megaott/subscription] Subscription saved:', saved);
     return NextResponse.json({ ok: true, idempotent: false, subscription: saved });
   } catch (error) {
-    logger.error('❌ [megaott/subscription] Fatal error:', error?.response?.data || error);
+    console.error('❌ [megaott/subscription] Fatal error:', error?.response?.data || error);
 
     // 🚨 Fatal failure — notify both
     try {

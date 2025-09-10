@@ -10,7 +10,9 @@
  * =======================================================================
  */
 
-'use client';import Link from "next/link";import { useRouter } from "next/navigation";
+'use client';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
@@ -23,13 +25,14 @@ import { SafeString } from '@/lib/ui/SafeString';
 
 // 📬 Preferred contact options (labels can stay brand names or be translated if you add keys)
 const preferredContactOptions = [
-{ value: 'email', label: 'Email' }, // ✉️
-{ value: 'whatsapp', label: 'WhatsApp' }, // 💬
-{ value: 'telegram', label: 'Telegram' } // 📡
+  { value: 'email', label: 'Email' }, // ✉️
+  { value: 'whatsapp', label: 'WhatsApp' }, // 💬
+  { value: 'telegram', label: 'Telegram' } // 📡
 ];
 
-export default function UserProfile() {const __locale = useLocale();
+export default function UserProfile() {
   // 🌍 Translator root — always use full paths
+  const locale = useLocale();
   const t = useTranslations();
 
   // 🔐 Session/guard/router
@@ -165,34 +168,34 @@ export default function UserProfile() {const __locale = useLocale();
   return (
     <div className="container-style max-w-full lg:max-w-lg mx-auto min-h-[60vh] rounded-2xl shadow-lg p-6">
       <h1 className="text-2xl font-bold text-center mb-6">
-        {isPasswordChangeVisible ?
-        SafeString(t('app.user.profile.page.change_password')) :
-        session?.user?.name ?
-        `${session.user.name} ${SafeString(t('app.user.profile.page.profile'))}` :
-        SafeString(t('app.user.profile.page.user_profile'))}
+        {isPasswordChangeVisible
+          ? SafeString(t('app.user.profile.page.change_password'))
+          : session?.user?.name
+            ? `${session.user.name} ${SafeString(t('app.user.profile.page.profile'))}`
+            : SafeString(t('app.user.profile.page.user_profile'))}
       </h1>
 
       {/* 📝 PROFILE FORM */}
-      {!isPasswordChangeVisible ?
-      <form onSubmit={handleProfileUpdate} className="space-y-4">
-          {['name', 'email', 'username', 'whatsapp', 'telegram'].map((fieldKey) =>
-        <div key={fieldKey}>
+      {!isPasswordChangeVisible ? (
+        <form onSubmit={handleProfileUpdate} className="space-y-4">
+          {['name', 'email', 'username', 'whatsapp', 'telegram'].map((fieldKey) => (
+            <div key={fieldKey}>
               <label htmlFor={fieldKey} className="block text-sm font-medium">
                 {SafeString(t(`app.user.profile.page.field.${fieldKey}`))}
               </label>
               <input
-            id={fieldKey}
-            type={fieldKey === 'email' ? 'email' : 'text'}
-            name={fieldKey}
-            value={formData[fieldKey]}
-            onChange={handleFormFieldChange}
-            className="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 focus:outline-none text-black"
-            autoComplete={
-            fieldKey === 'email' ? 'email' : fieldKey === 'username' ? 'username' : ''
-            } />
-          
+                id={fieldKey}
+                type={fieldKey === 'email' ? 'email' : 'text'}
+                name={fieldKey}
+                value={formData[fieldKey]}
+                onChange={handleFormFieldChange}
+                className="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 focus:outline-none text-black"
+                autoComplete={
+                  fieldKey === 'email' ? 'email' : fieldKey === 'username' ? 'username' : ''
+                }
+              />
             </div>
-        )}
+          ))}
 
           {/* 📬 Preferred contact */}
           <div>
@@ -200,30 +203,31 @@ export default function UserProfile() {const __locale = useLocale();
               {SafeString(t('app.user.profile.page.preferred_contact'))}
             </label>
             <select
-            id="preferredContactWay"
-            name="preferredContactWay"
-            value={formData.preferredContactWay}
-            onChange={handleFormFieldChange}
-            className="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 focus:outline-none text-black">
-            
-              {preferredContactOptions.map(({ value, label }) =>
-            <option key={value} value={value}>
+              id="preferredContactWay"
+              name="preferredContactWay"
+              value={formData.preferredContactWay}
+              onChange={handleFormFieldChange}
+              className="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 focus:outline-none text-black"
+            >
+              {preferredContactOptions.map(({ value, label }) => (
+                <option key={value} value={value}>
                   {label /* 🔤 keep brands as-is; can translate if you add keys */}
                 </option>
-            )}
+              ))}
             </select>
           </div>
 
           {/* 📧 Send emails */}
           <div className="flex items-center gap-2">
             <input
-            id="sendEmails"
-            name="sendEmails"
-            type="checkbox"
-            checked={formData.sendEmails}
-            onChange={handleFormFieldChange}
-            className="h-4 w-4" />
-          
+              id="sendEmails"
+              name="sendEmails"
+              type="checkbox"
+              checked={formData.sendEmails}
+              onChange={handleFormFieldChange}
+              className="h-4 w-4"
+            />
+
             <label htmlFor="sendEmails" className="block text-sm font-medium">
               {SafeString(t('app.user.profile.page.send_emails'))}
             </label>
@@ -233,10 +237,10 @@ export default function UserProfile() {const __locale = useLocale();
           <div className="flex flex-col lg:flex-row items-center gap-3 mt-4 w-full">
             {/* 🔐 Show password change */}
             <button
-            type="button"
-            onClick={() => setIsPasswordChangeVisible(true)}
-            className="btn-info w-1/2">
-            
+              type="button"
+              onClick={() => setIsPasswordChangeVisible(true)}
+              className="btn-info w-1/2"
+            >
               <span className="inline-flex items-center gap-2">
                 <span aria-hidden="true">🔐</span>
                 <span>{SafeString(t('app.user.profile.page.change_password'))}</span>
@@ -251,23 +255,23 @@ export default function UserProfile() {const __locale = useLocale();
               </span>
             </button>
           </div>
-        </form> : (
-
-      /* 🔐 CHANGE PASSWORD FORM */
-      <form onSubmit={handlePasswordChangeSubmit} className="space-y-4">
+        </form>
+      ) : (
+        /* 🔐 CHANGE PASSWORD FORM */
+        <form onSubmit={handlePasswordChangeSubmit} className="space-y-4">
           <div>
             <label htmlFor="oldPassword" className="block text-sm font-medium">
               {SafeString(t('app.user.profile.page.old_password'))}
             </label>
             <input
-            id="oldPassword"
-            type="password"
-            name="oldPassword"
-            value={passwordFields.oldPassword}
-            onChange={handlePasswordFieldChange}
-            className="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 focus:outline-none text-black"
-            autoComplete="current-password" />
-          
+              id="oldPassword"
+              type="password"
+              name="oldPassword"
+              value={passwordFields.oldPassword}
+              onChange={handlePasswordFieldChange}
+              className="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 focus:outline-none text-black"
+              autoComplete="current-password"
+            />
           </div>
 
           <div>
@@ -275,14 +279,14 @@ export default function UserProfile() {const __locale = useLocale();
               {SafeString(t('app.user.profile.page.new_password'))}
             </label>
             <input
-            id="newPassword"
-            type="password"
-            name="newPassword"
-            value={passwordFields.newPassword}
-            onChange={handlePasswordFieldChange}
-            className="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 focus:outline-none text-black"
-            autoComplete="new-password" />
-          
+              id="newPassword"
+              type="password"
+              name="newPassword"
+              value={passwordFields.newPassword}
+              onChange={handlePasswordFieldChange}
+              className="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 focus:outline-none text-black"
+              autoComplete="new-password"
+            />
           </div>
 
           <div>
@@ -290,24 +294,24 @@ export default function UserProfile() {const __locale = useLocale();
               {SafeString(t('app.user.profile.page.confirm_password'))}
             </label>
             <input
-            id="confirmPassword"
-            type="password"
-            name="confirmPassword"
-            value={passwordFields.confirmPassword}
-            onChange={handlePasswordFieldChange}
-            className="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 focus:outline-none text-black"
-            autoComplete="new-password" />
-          
+              id="confirmPassword"
+              type="password"
+              name="confirmPassword"
+              value={passwordFields.confirmPassword}
+              onChange={handlePasswordFieldChange}
+              className="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-300 focus:outline-none text-black"
+              autoComplete="new-password"
+            />
           </div>
 
           {/* 💾 Actions */}
           <div className="flex flex-col lg:flex-row items-center gap-3 mt-4 w-full">
             {/* ↩️ Back to profile (hide password form) */}
             <button
-            type="button"
-            onClick={() => setIsPasswordChangeVisible(false)}
-            className="btn-info w-1/2">
-            
+              type="button"
+              onClick={() => setIsPasswordChangeVisible(false)}
+              className="btn-info w-1/2"
+            >
               <span className="inline-flex items-center gap-2">
                 <span aria-hidden="true">↩️</span>
                 <span>{SafeString(t('app.user.profile.page.back_to_profile'))}</span>
@@ -322,18 +326,21 @@ export default function UserProfile() {const __locale = useLocale();
               </span>
             </button>
           </div>
-        </form>)
-      }
+        </form>
+      )}
 
       {/* ↩️ Return (navigation uses Link) */}
       <div className="flex items-center justify-center mt-5 w-full">
-        <Link href={`/${__locale}/user/dashboard`} className="btn-secondary w-1/2 inline-flex items-center gap-2">
+        <Link
+          href={`/${locale}/user/dashboard`}
+          className="btn-secondary w-1/2 inline-flex items-center gap-2"
+        >
           <span className="inline-flex items-center gap-2">
             <span aria-hidden="true">🏠</span>
             <span>{SafeString(t('app.user.profile.page.return_dashboard'))}</span>
           </span>
         </Link>
       </div>
-    </div>);
-
+    </div>
+  );
 }

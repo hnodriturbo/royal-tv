@@ -1,4 +1,4 @@
-import logger from '@/lib/core/logger';
+
 import prisma from '@/lib/core/prisma';
 import { NextResponse } from 'next/server';
 import { withRole } from '@/lib/api/guards';
@@ -53,7 +53,7 @@ export const PATCH = withRole('admin', async (request, ctx) => {
       previousStatus: prev.status
     });
   } catch (error) {
-    logger.error('PATCH /api/admin/freeTrials/[trial_id] failed:', error);
+    console.error('PATCH /api/admin/freeTrials/[trial_id] failed:', error);
     return NextResponse.json({ error: error.message || 'Unknown server error' }, { status: 500 });
   }
 });

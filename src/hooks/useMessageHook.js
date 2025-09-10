@@ -1,6 +1,4 @@
 'use client';
-
-import logger from '@/lib/core/logger';
 import { useContext, useCallback } from 'react';
 import { ErrorAndMessageContext } from '@/context/ErrorAndMessageContext';
 
@@ -18,7 +16,7 @@ const useMessageHandler = () => {
       if (addMessage) {
         addMessage(text, type, duration * 1000); // Convert seconds to milliseconds
       } else {
-        logger.error('addMessage is not defined in ErrorAndMessageContext.');
+        console.error('addMessage is not defined in ErrorAndMessageContext.');
       }
     },
     [addMessage]

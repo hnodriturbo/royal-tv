@@ -11,7 +11,7 @@
  * - Uses axiosInstance + app handlers for loader/toasts.
  * - Navigation relies on locale-aware <Link/> and useRouter() from @/i18n.
  * =================================================================
- */import Link from "next/link";
+ */ import Link from 'next/link';
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
 // 🌍 locale-aware nav
@@ -22,8 +22,9 @@ import useAppHandlers from '@/hooks/useAppHandlers';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import { SafeString } from '@/lib/ui/SafeString';
 
-export default function AdminUserProfilePage() {const __locale = useLocale();
+export default function AdminUserProfilePage() {
   // 🌐 translator (scoped to page namespace)
+  const locale = useLocale();
   const t = useTranslations(); // 🧠 using project’s next-intl pattern
 
   // 🔐 admin guard
@@ -89,7 +90,8 @@ export default function AdminUserProfilePage() {const __locale = useLocale();
   }, [showLoader, hideLoader, displayMessage]);
 
   // 🗑️ delete action
-  const onDelete = async () => {const __locale = useLocale();
+  const onDelete = async () => {
+    const locale = useLocale();
     if (!user_id) return;
     const confirmation = window.confirm(t('app.admin.userId.confirmDelete'));
     if (!confirmation) return;
@@ -98,7 +100,7 @@ export default function AdminUserProfilePage() {const __locale = useLocale();
       showLoader({ text: t('app.admin.userId.deleting') }); // 🗑️
       await axiosInstance.delete(`/api/admin/users/${user_id}`);
       displayMessage(t('app.admin.userId.deleteSuccess'), 'success'); // 🎉
-      router.push(`/${__locale}/admin/users/main`);
+      router.push(`/${locale}/admin/users/main`);
     } catch (error) {
       displayMessage(
         t('app.admin.userId.deleteFailed', {
@@ -176,7 +178,10 @@ export default function AdminUserProfilePage() {const __locale = useLocale();
 
         {/* 🔙 back */}
         <div className="mb-4">
-          <Link href={`/${__locale}/admin/users/main`} className="btn-secondary inline-flex items-center gap-2">
+          <Link
+            href={`/${locale}/admin/users/main`}
+            className="btn-secondary inline-flex items-center gap-2"
+          >
             <span aria-hidden="true">↩️</span>
             <span>{SafeString(t('app.admin.userId.back'))}</span>
           </Link>
@@ -192,8 +197,8 @@ export default function AdminUserProfilePage() {const __locale = useLocale();
               value={formValues.username}
               onChange={onChange}
               className="input-style w-full"
-              placeholder={SafeString(t('app.admin.userId.username_placeholder'))} />
-            
+              placeholder={SafeString(t('app.admin.userId.username_placeholder'))}
+            />
           </div>
 
           {/* 🧍 name */}
@@ -204,8 +209,8 @@ export default function AdminUserProfilePage() {const __locale = useLocale();
               value={formValues.name}
               onChange={onChange}
               className="input-style w-full"
-              placeholder={SafeString(t('app.admin.userId.name_placeholder'))} />
-            
+              placeholder={SafeString(t('app.admin.userId.name_placeholder'))}
+            />
           </div>
 
           {/* ✉️ email */}
@@ -217,8 +222,8 @@ export default function AdminUserProfilePage() {const __locale = useLocale();
               value={formValues.email}
               onChange={onChange}
               className="input-style w-full"
-              placeholder={SafeString(t('app.admin.userId.email_placeholder'))} />
-            
+              placeholder={SafeString(t('app.admin.userId.email_placeholder'))}
+            />
           </div>
 
           {/* 🏷️ role */}
@@ -228,8 +233,8 @@ export default function AdminUserProfilePage() {const __locale = useLocale();
               name="role"
               value={formValues.role}
               onChange={onChange}
-              className="select-style w-full">
-              
+              className="select-style w-full"
+            >
               <option value="user">{SafeString(t('app.admin.userId.role_user'))}</option>
               <option value="admin">{SafeString(t('app.admin.userId.role_admin'))}</option>
             </select>
@@ -244,8 +249,8 @@ export default function AdminUserProfilePage() {const __locale = useLocale();
                 value={formValues.whatsapp}
                 onChange={onChange}
                 className="input-style w-full"
-                placeholder="+354 6xx xxxx" />
-              
+                placeholder="+354 6xx xxxx"
+              />
             </div>
             <div>
               <label className="block mb-1">{SafeString(t('app.admin.userId.telegram'))}</label>
@@ -254,8 +259,8 @@ export default function AdminUserProfilePage() {const __locale = useLocale();
                 value={formValues.telegram}
                 onChange={onChange}
                 className="input-style w-full"
-                placeholder="@username" />
-              
+                placeholder="@username"
+              />
             </div>
           </div>
 
@@ -269,14 +274,14 @@ export default function AdminUserProfilePage() {const __locale = useLocale();
           <div className="mt-6 flex flex-col md:flex-row gap-3">
             <button
               type="submit"
-              className="btn-primary inline-flex items-center justify-center gap-2">
-              
+              className="btn-primary inline-flex items-center justify-center gap-2"
+            >
               <span aria-hidden="true">💾</span>
               <span>
                 {
-                SafeString(
-                  t('app.admin.userId.save') /* label chosen from same namespace? */
-                ) /* 📝 If you prefer distinct label key, add "save": "Save" and use that instead. */
+                  SafeString(
+                    t('app.admin.userId.save') /* label chosen from same namespace? */
+                  ) /* 📝 If you prefer distinct label key, add "save": "Save" and use that instead. */
                 }
               </span>
             </button>
@@ -286,22 +291,22 @@ export default function AdminUserProfilePage() {const __locale = useLocale();
               onClick={onDelete}
               className="btn-danger inline-flex items-center justify-center gap-2"
               disabled={isLoading}
-              aria-disabled={isLoading ? 'true' : 'false'}>
-              
+              aria-disabled={isLoading ? 'true' : 'false'}
+            >
               <span aria-hidden="true">🗑️</span>
               <span>{SafeString(t('app.admin.userId.delete') /* see note above */)}</span>
             </button>
 
             <Link
               href={`/admin/liveChat/user/${user_id}`}
-              className="btn-secondary inline-flex items-center justify-center gap-2">
-              
+              className="btn-secondary inline-flex items-center justify-center gap-2"
+            >
               <span aria-hidden="true">💬</span>
               <span>{SafeString(t('app.admin.userId.openLiveChat'))}</span>
             </Link>
           </div>
         </form>
       </div>
-    </div>);
-
+    </div>
+  );
 }

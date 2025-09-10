@@ -70,7 +70,7 @@ const UserConversations = () => {
           router.replace(`/user/liveChat/${list[0].conversation_id}`);
         }
       } catch (error) {
-        logger.error('❌ Fetch conversations failed:', error?.response || error);
+        console.error('❌ Fetch conversations failed:', error?.response || error);
         displayMessage(t('app.user.liveChat.main.fetch_failed'), 'error'); // ❌ toast
       } finally {
         displayMessage(t('app.user.liveChat.main.fetch_success'), 'success'); // ✅ toast

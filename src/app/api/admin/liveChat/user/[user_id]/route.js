@@ -1,4 +1,4 @@
-import logger from '@/lib/core/logger';
+
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/core/prisma';
 import { withRole } from '@/lib/api/guards';
@@ -7,7 +7,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export const GET = withRole('admin', async (_req, ctx) => {
-  const { user_id } = ctx.params;
+  const { user_id } = await ctx.params;
   if (!user_id) return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
 
   try {
@@ -47,7 +47,7 @@ export const GET = withRole('admin', async (_req, ctx) => {
       unreadConvos: conversations.filter((conv) => conv.unreadCount > 0).length
     });
   } catch (err) {
-    logger.error('GET [user_id] error:', err);
+    console.error('GET [user_id] error:', err);
     return NextResponse.json({ error: err.message, full: err }, { status: 500 });
   }
 });

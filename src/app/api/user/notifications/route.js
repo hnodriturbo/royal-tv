@@ -1,4 +1,4 @@
-import logger from '@/lib/core/logger';
+
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/core/prisma';
 import { withRole, getUserId } from '@/lib/api/guards';
@@ -24,7 +24,7 @@ export const GET = withRole('user', async (request, _ctx, session) => {
 
     return NextResponse.json({ notifications, total, page, pageSize, unreadCount, readCount });
   } catch (error) {
-    logger.error('❌ GET /api/user/notifications failed:', error);
+    console.error('❌ GET /api/user/notifications failed:', error);
     return NextResponse.json(
       { notifications: [], total: 0, page: 0, pageSize: 10, unreadCount: 0, readCount: 0 },
       { status: 500 }

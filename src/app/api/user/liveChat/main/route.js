@@ -1,4 +1,4 @@
-import logger from '@/lib/core/logger';
+
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/core/prisma';
 import { withRole, getUserId } from '@/lib/api/guards';
@@ -30,7 +30,7 @@ export const GET = withRole('user', async (req, _ctx, session) => {
 
     return NextResponse.json({ conversations });
   } catch (err) {
-    logger.error('🔥 [users/liveChat/main] failed:', err);
+    console.error('🔥 [users/liveChat/main] failed:', err);
     return NextResponse.json(
       { error: `Failed to fetch conversations: ${err.message}` },
       { status: 500 }

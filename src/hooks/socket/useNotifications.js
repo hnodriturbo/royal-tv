@@ -23,7 +23,6 @@
  *   ======================= useNotifications.js =======================
  * 🔔 Real-time notifications with locale re-sync on change.
  */
-import logger from '@/lib/core/logger';
 import { useState, useEffect, useCallback } from 'react';
 import { useLocale } from 'next-intl';
 import useSocketHub from '@/hooks/socket/useSocketHub';
@@ -184,7 +183,7 @@ export default function useNotifications(userId) {
 
   useEffect(() => {
     const stop = onNotificationsError((error) => {
-      logger.error('Notification error:', error?.message || error);
+      console.error('Notification error:', error?.message || error);
     });
     return () => stop && stop();
   }, [onNotificationsError]);

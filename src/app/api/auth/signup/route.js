@@ -7,8 +7,6 @@
  * - No hooks or client-side logic used—pure server/utility style.
  * ==================================================================
  */
-
-import logger from '@/lib/core/logger';
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/core/prisma.js';
@@ -49,7 +47,7 @@ export async function POST(request) {
       { status: 201 }
     );
   } catch (error) {
-    logger.error('Signup error:', error);
+    console.error('Signup error:', error);
     // 🛑 Handle duplicate username/email error from Prisma
     if (error.code === 'P2002') {
       const field = error.meta?.target?.[0] || 'field';

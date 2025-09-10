@@ -2,7 +2,6 @@
 import { NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import createMiddleware from 'next-intl/middleware';
-import logger from '../../src/lib/core/logger.js';
 import { routing } from '@/i18n/routing';
 
 const localeMw = createMiddleware(routing);
@@ -81,9 +80,9 @@ export async function middleware(request) {
       return NextResponse.next({ request: { headers } });
     }
 
-    logger.log('[MW][API] x-user-id:', userId || '(none)');
-    logger.log('[MW][API] x-user-role:', userRole);
-    logger.log('[MW][API] x-locale:', apiLocale);
+    console.log('[MW][API] x-user-id:', userId || '(none)');
+    console.log('[MW][API] x-user-role:', userRole);
+    console.log('[MW][API] x-locale:', apiLocale);
 
     return NextResponse.next({ request: { headers } });
   }

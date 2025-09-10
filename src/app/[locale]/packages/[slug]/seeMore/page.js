@@ -9,19 +9,19 @@
  * ===========================================
  */
 
-'use client';import Link from "next/link";
+'use client';
+import Link from 'next/link';
 import { SafeString } from '@/lib/ui/SafeString';
 
 import { useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
-
 
 import { useParams } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl'; // 🌍 root i18n
 import { paymentPackages, featuresKeys } from '@/components/packages/data/packages';
 import Guide from '@/components/packages/data/guide'; // 📘 default export (aliased to avoid import/no-named-as-default)
 
-export default function PackageSeeMorePage() {const __locale = useLocale();
+export default function PackageSeeMorePage() {
   // 🔐 auth state (for CTA)
   const { data: session, status } = useSession(); // 🔐 read auth status
   const isAuthenticatedUser = status === 'authenticated' && Boolean(session?.user); // ✅ authenticated flag
@@ -32,6 +32,7 @@ export default function PackageSeeMorePage() {const __locale = useLocale();
   const [isExtraDeviceSelected, setIsExtraDeviceSelected] = useState(false); // 📱 extra device toggle
 
   // 🏷️ translations (root) — use fully-qualified keys like 'app.packages.grid.only'
+  const locale = useLocale();
   const t = useTranslations(); // 🗣️ translator function
 
   // 🔎 get dynamic slug from the URL
@@ -55,11 +56,11 @@ export default function PackageSeeMorePage() {const __locale = useLocale();
     return (
       paymentPackages.find(
         (candidate) =>
-        candidate.package_id === selectedPackage.package_id &&
-        candidate.devices === 2 &&
-        candidate.slug !== selectedPackage.slug
-      ) || null);
-
+          candidate.package_id === selectedPackage.package_id &&
+          candidate.devices === 2 &&
+          candidate.slug !== selectedPackage.slug
+      ) || null
+    );
   }, [selectedPackage]);
 
   // 🚫 invalid slug guard — render “not found” after hooks are called
@@ -75,33 +76,33 @@ export default function PackageSeeMorePage() {const __locale = useLocale();
         <p className="mt-4 text-lg text-cyan-100">{t('app.packages.grid.not_found_desc')}</p>
 
         {/* 🔙 Back to packages */}
-        <Link href={`/${__locale}/packages`}>
+        <Link href={`/${locale}/packages`}>
           <button className="btn-primary mt-8 px-8 py-3 rounded-full text-xl shadow-xl hover:scale-105 transition">
             ← {SafeString(t('app.packages.grid.back_to_packages'), '')}
           </button>
         </Link>
-      </div>);
-
+      </div>
+    );
   }
 
   // 🔀 select the effective package when "extra device" is chosen
   const effectivePackage =
-  isExtraDeviceSelected && twoDeviceSibling ? twoDeviceSibling : selectedPackage; // 🔗 resolved package
+    isExtraDeviceSelected && twoDeviceSibling ? twoDeviceSibling : selectedPackage; // 🔗 resolved package
 
   // 💵 compute total price (base + adult + vpn)
   const totalPrice =
-  (effectivePackage.price ?? 0) + (isAdultSelected ? 10 : 0) + (isVpnSelected ? 10 : 0); // 💰 dynamic total
+    (effectivePackage.price ?? 0) + (isAdultSelected ? 10 : 0) + (isVpnSelected ? 10 : 0); // 💰 dynamic total
 
   // 🏷️ devices label
   const effectiveDevicesLabel =
-  effectivePackage.devices === 2 ?
-  t('app.packages.grid.two_devices') :
-  t('app.packages.grid.single_device'); // 🏷️ device badge text
+    effectivePackage.devices === 2
+      ? t('app.packages.grid.two_devices')
+      : t('app.packages.grid.single_device'); // 🏷️ device badge text
 
   // 🔗 build buy-now URL with params (adult/vpn/price)
   const buyNowUrlWithParams = `${effectivePackage.buyNowUrl}?adult=${isAdultSelected ? 1 : 0}&vpn=${
-  isVpnSelected ? 1 : 0}&price=${
-  totalPrice}`; // 🔗 purchase link with query params
+    isVpnSelected ? 1 : 0
+  }&price=${totalPrice}`; // 🔗 purchase link with query params
 
   return (
     <div className="flex flex-col items-center w-full min-h-screen lg:mt-0 mt-12">
@@ -132,20 +133,20 @@ export default function PackageSeeMorePage() {const __locale = useLocale();
         {/* 🧰 features list */}
         <div className="mb-4 w-full">
           <ul className="list-disc list-inside text-lg text-cyan-100 space-y-1 mb-6 max-w-xs mx-auto text-left">
-            {featuresKeys.map((translationKey, indexNumber) =>
-            <li key={indexNumber} className="flex gap-2 items-center">
+            {featuresKeys.map((translationKey, indexNumber) => (
+              <li key={indexNumber} className="flex gap-2 items-center">
                 <span className="text-2xl">✔️</span> {t(translationKey)}
                 {/* 📝 expects full keys like "app.packages.grid.feature_full_hd" */}
               </li>
-            )}
+            ))}
           </ul>
         </div>
 
         {/* 🖥️ devices note */}
         <div className="mb-6 text-cyan-200 text-lg text-center">
-          {effectivePackage.devices === 2 ?
-          t('app.packages.grid.watch_two_devices') :
-          t('app.packages.grid.watch_single_device')}
+          {effectivePackage.devices === 2
+            ? t('app.packages.grid.watch_two_devices')
+            : t('app.packages.grid.watch_single_device')}
         </div>
 
         {/* 🗳️ Add-ons */}
@@ -156,16 +157,16 @@ export default function PackageSeeMorePage() {const __locale = useLocale();
               <input
                 type="checkbox"
                 checked={isAdultSelected}
-                onChange={() => setIsAdultSelected(!isAdultSelected)} />
-
+                onChange={() => setIsAdultSelected(!isAdultSelected)}
+              />
 
               {t('app.packages.grid.feature_adult_addon')}
             </span>
-            {isAdultSelected &&
-            <div className="text-sm text-pink-300 mt-1">
+            {isAdultSelected && (
+              <div className="text-sm text-pink-300 mt-1">
                 {t('app.packages.grid.adult_addon_details')}
               </div>
-            }
+            )}
           </label>
 
           {/* 🛡️ VPN add-on */}
@@ -173,8 +174,8 @@ export default function PackageSeeMorePage() {const __locale = useLocale();
             <input
               type="checkbox"
               checked={isVpnSelected}
-              onChange={() => setIsVpnSelected(!isVpnSelected)} />
-
+              onChange={() => setIsVpnSelected(!isVpnSelected)}
+            />
 
             {t('app.packages.grid.vpn_addon_label')}
           </label>
@@ -182,21 +183,21 @@ export default function PackageSeeMorePage() {const __locale = useLocale();
 
         {/* 🚀 CTAs */}
         <div className="flex flex-col gap-3 w-full mt-6 justify-center items-center">
-          {isAuthenticatedUser ?
-          <Link
-            href={buyNowUrlWithParams}
-            className="btn-success btn-lg btn-glow w-2/3 rounded-xl text-xl font-bold shadow-xl transition">
-
+          {isAuthenticatedUser ? (
+            <Link
+              href={buyNowUrlWithParams}
+              className="btn-success btn-lg btn-glow w-2/3 rounded-xl text-xl font-bold shadow-xl transition"
+            >
               {t('app.packages.grid.buy_now')}
-            </Link> :
-
-          <Link
-            href={`/${__locale}/auth/signup`}
-            className="btn-secondary btn-lg btn-glow w-2/3 rounded-xl text-xl font-bold shadow-xl transition">
-
+            </Link>
+          ) : (
+            <Link
+              href={`/${locale}/auth/signup`}
+              className="btn-secondary btn-lg btn-glow w-2/3 rounded-xl text-xl font-bold shadow-xl transition"
+            >
               {t('app.packages.grid.register_to_buy')}
             </Link>
-          }
+          )}
         </div>
       </div>
 
@@ -206,12 +207,12 @@ export default function PackageSeeMorePage() {const __locale = useLocale();
       {/* 🔙 back to packages */}
       <div className="container-style w-fit mb-12">
         <Link
-          href={`/${__locale}/packages`}
-          className="btn-info btn-lg px-8 py-3 rounded-full shadow-xl hover:scale-110 transition">
-
+          href={`/${locale}/packages`}
+          className="btn-info btn-lg px-8 py-3 rounded-full shadow-xl hover:scale-110 transition"
+        >
           ← {t('app.packages.grid.back_to_packages')}
         </Link>
       </div>
-    </div>);
-
+    </div>
+  );
 }

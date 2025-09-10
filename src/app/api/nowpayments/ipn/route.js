@@ -5,8 +5,6 @@
  * - Forwards full payload to subscription route
  * ===============================================
  */
-
-import logger from '@/lib/core/logger';
 import crypto from 'crypto';
 import prisma from '@/lib/core/prisma';
 import axios from 'axios';
@@ -15,7 +13,7 @@ import { NextResponse } from 'next/server';
 import { sendBackendErrorNotification } from '@/lib/notifications/errorNotificationBackend';
 
 export async function POST(request) {
-  logger.log('🚦 [ipn] IPN webhook received:', new Date().toISOString());
+  console.log('🚦 [ipn] IPN webhook received:', new Date().toISOString());
 
   const rawBody = await request.text();
   const signature = request.headers.get('x-nowpayments-sig');
@@ -26,17 +24,17 @@ export async function POST(request) {
     .digest('hex');
 
   if (signature !== expectedSig) {
-    logger.error('❌ [ipn] Invalid IPN signature!');
+    console.error('❌ [ipn] Invalid IPN signature!');
     return NextResponse.json({ error: 'Invalid signature' }, { status: 403 });
   }
-  logger.log('🔏 [ipn] Valid signature for webhook!');
+  console.log('🔏 [ipn] Valid signature for webhook!');
 
   let body;
   try {
     body = JSON.parse(rawBody);
-    logger.log('📦 [ipn] Body: ', body);
+    console.log('📦 [ipn] Body: ', body);
   } catch (error) {
-    logger.error('❌ [ipn] JSON parse failed:', error);
+    console.error('❌ [ipn] JSON parse failed:', error);
     return NextResponse.json({ error: 'Bad Request (body parse failed)' }, { status: 400 });
   }
 
@@ -58,7 +56,7 @@ export async function POST(request) {
     purchase_id
   } = body;
 
-  logger.log('🧾 [ipn] Extracted Fields:', {
+  console.log('🧾 [ipn] Extracted Fields:', {
     payment_id,
     payment_status,
     price_amount,
@@ -78,21 +76,21 @@ export async function POST(request) {
 
   const paymentId = order_id;
   if (!paymentId) {
-    logger.error('❌ [ipn] No paymentId (order_id) in IPN');
+    console.error('❌ [ipn] No paymentId (order_id) in IPN');
     return NextResponse.json({ error: 'No paymentId in IPN' }, { status: 400 });
   }
 
   let paymentRecord;
   try {
     paymentRecord = await prisma.subscriptionPayment.findUnique({ where: { id: paymentId } });
-    logger.log('🔎 [ipn] Searched by id:', paymentId, 'Found:', !!paymentRecord);
+    console.log('🔎 [ipn] Searched by id:', paymentId, 'Found:', !!paymentRecord);
   } catch (error) {
-    logger.error('❌ [ipn] DB error (find by id):', error);
+    console.error('❌ [ipn] DB error (find by id):', error);
     return NextResponse.json({ error: 'DB error (find by id)' }, { status: 500 });
   }
 
   if (!paymentRecord) {
-    logger.error('❌ [ipn] Payment record not found. id:', paymentId);
+    console.error('❌ [ipn] Payment record not found. id:', paymentId);
     return NextResponse.json({ error: 'Payment record not found' }, { status: 404 });
   }
 
@@ -135,14 +133,14 @@ export async function POST(request) {
         orderId: paymentRecord.id,
         newStatus: payment_status
       });
-      logger.log(
+      console.log(
         `💾 [ipn] Sent POST /emit/paymentStatusUpdated | userId=${paymentRecord.user_id} | orderId=${paymentRecord.id} | status=${payment_status}`
       );
     }
 
-    logger.log('💾 [ipn] Payment updated:', paymentId, '| New Status:', payment_status);
+    console.log('💾 [ipn] Payment updated:', paymentId, '| New Status:', payment_status);
   } catch (error) {
-    logger.error('❌ [ipn] DB error (update payment):', error);
+    console.error('❌ [ipn] DB error (update payment):', error);
     return NextResponse.json({ error: 'DB error (update payment)' }, { status: 500 });
   }
 
@@ -154,9 +152,9 @@ export async function POST(request) {
       const { password, ...userWithoutPassword } = user;
       user = userWithoutPassword;
     }
-    logger.log('👤 [ipn] User fetched for payment:', paymentRecord.user_id, '| Found:', !!user);
+    console.log('👤 [ipn] User fetched for payment:', paymentRecord.user_id, '| Found:', !!user);
   } catch (error) {
-    logger.error('❌ [ipn] DB error (find user):', error);
+    console.error('❌ [ipn] DB error (find user):', error);
     return NextResponse.json({ error: 'DB error (find user)' }, { status: 500 });
   }
 
@@ -170,7 +168,7 @@ export async function POST(request) {
     ['confirmed', 'paid', 'completed', 'finished'].includes(payment_status) &&
     !latestPayment.subscription_id
   ) {
-    logger.log('📢 [ipn] Calling MegaOTT subscription route!!!');
+    console.log('📢 [ipn] Calling MegaOTT subscription route!!!');
     try {
       const subscriptionCreation = await axios.post(
         `${process.env.NEXTAUTH_URL}/api/megaott/subscription`,
@@ -189,16 +187,16 @@ export async function POST(request) {
         { headers: { 'x-megaott-secret': process.env.MEGAOTT_SECRET } }
       );
 
-      logger.log('📢 [ipn] MegaOTT subscription route response:', subscriptionCreation.data);
+      console.log('📢 [ipn] MegaOTT subscription route response:', subscriptionCreation.data);
 
       const { subscription } = subscriptionCreation.data;
-      logger.log('🎉 [ipn] MegaOtt Subscription created:', subscription);
+      console.log('🎉 [ipn] MegaOtt Subscription created:', subscription);
 
       await prisma.subscriptionPayment.update({
         where: { id: paymentId },
         data: { subscription_id: subscription.subscription_id }
       });
-      logger.log('🔗 [ipn] Payment linked to subscription:', {
+      console.log('🔗 [ipn] Payment linked to subscription:', {
         paymentId,
         subscription_id: subscription.subscription_id
       });
@@ -214,12 +212,12 @@ export async function POST(request) {
           payment: updatedPayment,
           subscription
         });
-        logger.log('📢 [ipn] transactionFinished emitted for:', paymentId);
+        console.log('📢 [ipn] transactionFinished emitted for:', paymentId);
       } catch (error) {
-        logger.error('❌ [ipn] Error emitting transactionFinished:', error);
+        console.error('❌ [ipn] Error emitting transactionFinished:', error);
       }
     } catch (error) {
-      logger.error(
+      console.error(
         '❌ [ipn] MegaOTT Subscription Creation failed:',
         error?.response?.data || error
       );
@@ -240,11 +238,11 @@ export async function POST(request) {
       return NextResponse.json({ error: 'MegaOTT subscription creation error' }, { status: 500 });
     }
   } else {
-    logger.log(
+    console.log(
       `⏭️ [ipn] Subscription creation skipped | status: ${payment_status} alreadyLinked: ${!!paymentRecord.subscription_id}`
     );
   }
 
-  logger.log('✅ [ipn] IPN processed successfully for id:', paymentId);
+  console.log('✅ [ipn] IPN processed successfully for id:', paymentId);
   return NextResponse.json({ ok: true }, { status: 200 });
 }
