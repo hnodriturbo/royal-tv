@@ -41,6 +41,6 @@ export default function AllPackagesPage() {
 
       {/* 📘 step-by-step guide (reused component) */}
       <Guide />
-    </div>);
-
+    </div>
+  );
 }

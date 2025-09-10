@@ -20,7 +20,7 @@ export default function PackagesPage() {
   // 🌐 Get session for authentication
   const { data: session, status } = useSession();
   const authenticated =
-  status === 'authenticated' && session?.user?.role && session.user.role !== 'guest';
+    status === 'authenticated' && session?.user?.role && session.user.role !== 'guest';
 
   return (
     <div className="w-full flex flex-col items-center py-8">
@@ -30,6 +30,6 @@ export default function PackagesPage() {
       </div>
       {/* 📦 Packages Grid — card-based grid, just like the front page */}
       <PackagesGrid authenticated={authenticated} />
-    </div>);
-
+    </div>
+  );
 }

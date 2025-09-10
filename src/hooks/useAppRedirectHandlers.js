@@ -1,5 +1,6 @@
 // hooks/useAppRedirectHandler.js
-'use client';import { useRouter } from "next/navigation";
+'use client';
+import { useRouter } from 'next/navigation';
 
 import { useCallback } from 'react';
 import useAppHandlers from '@/hooks/useAppHandlers';

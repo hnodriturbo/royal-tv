@@ -91,8 +91,8 @@ export default function Guide() {
                   className="text-blue-400 hover:text-pink-400 underline transition"
                   href="https://maxplayer.tv/"
                   target="_blank"
-                  rel="noopener noreferrer">
-                  
+                  rel="noopener noreferrer"
+                >
                   {t('app.packages.guide.apps.android.maxplayer')}
                 </a>
               </li>
@@ -101,8 +101,8 @@ export default function Guide() {
                   className="text-blue-400 hover:text-pink-400 underline transition"
                   href="https://tivimate.com/"
                   target="_blank"
-                  rel="noopener noreferrer">
-                  
+                  rel="noopener noreferrer"
+                >
                   {t('app.packages.guide.apps.android.tivimate')}
                 </a>
               </li>
@@ -111,8 +111,8 @@ export default function Guide() {
                   className="text-blue-400 hover:text-pink-400 underline transition"
                   href="https://www.smartersiptvplayer.com/"
                   target="_blank"
-                  rel="noopener noreferrer">
-                  
+                  rel="noopener noreferrer"
+                >
                   {t('app.packages.guide.apps.android.smarters')}
                 </a>
               </li>
@@ -131,8 +131,8 @@ export default function Guide() {
                   className="text-blue-400 hover:text-pink-400 underline transition"
                   href="https://maxplayer.tv/"
                   target="_blank"
-                  rel="noopener noreferrer">
-                  
+                  rel="noopener noreferrer"
+                >
                   {t('app.packages.guide.apps.smarttv.maxplayer')}
                 </a>
               </li>
@@ -141,8 +141,8 @@ export default function Guide() {
                   className="text-blue-400 hover:text-pink-400 underline transition"
                   href="https://www.smartersiptvplayer.com/"
                   target="_blank"
-                  rel="noopener noreferrer">
-                  
+                  rel="noopener noreferrer"
+                >
                   {t('app.packages.guide.apps.smarttv.smarters')}
                 </a>
               </li>
@@ -161,8 +161,8 @@ export default function Guide() {
                   className="text-blue-400 hover:text-pink-400 underline transition"
                   href="https://maxplayer.tv/"
                   target="_blank"
-                  rel="noopener noreferrer">
-                  
+                  rel="noopener noreferrer"
+                >
                   {t('app.packages.guide.apps.cross.maxplayer')}
                 </a>
               </li>
@@ -171,8 +171,8 @@ export default function Guide() {
                   className="text-blue-400 hover:text-pink-400 underline transition"
                   href="https://www.smartersiptvplayer.com/"
                   target="_blank"
-                  rel="noopener noreferrer">
-                  
+                  rel="noopener noreferrer"
+                >
                   {t('app.packages.guide.apps.cross.smarters')}
                 </a>
               </li>
@@ -181,6 +181,6 @@ export default function Guide() {
           </div>
         </div>
       </div>
-    </div>);
-
+    </div>
+  );
 }

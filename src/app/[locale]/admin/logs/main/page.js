@@ -8,8 +8,10 @@
  * ============================================================================
  */
 
-'use client';import Link from "next/link";import { useRouter } from "next/navigation";
+'use client';
 
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 // 🌍 locale-aware nav
@@ -78,9 +80,9 @@ export default function AdminLogsMainPage() {
 
   // 🧱 build grouped array
   const groupedLogs = Object.keys(logsByIp).map((ip) => {
-    const sortedForThisIp = logsByIp[ip].
-    slice().
-    sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // ⏳ latest first
+    const sortedForThisIp = logsByIp[ip]
+      .slice()
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // ⏳ latest first
     return {
       ip_address: ip, // 🔢 already SafeString above
       logs: sortedForThisIp,
@@ -188,8 +190,8 @@ export default function AdminLogsMainPage() {
                 </tr>
               </thead>
               <tbody>
-                {pagedLogs.map((group) =>
-                <tr key={group.ip_address} className="hover:bg-gray-400 text-center">
+                {pagedLogs.map((group) => (
+                  <tr key={group.ip_address} className="hover:bg-gray-400 text-center">
                     <td className="border px-2 py-1">{SafeString(group.ip_address, '—')}</td>
                     {/* 🧼 */}
                     <td className="border px-2 py-1">{group.count}</td> {/* 🔢 */}
@@ -204,18 +206,18 @@ export default function AdminLogsMainPage() {
                     </td>
                     <td className="border px-2 py-1">
                       <div className="flex gap-2 justify-center">
-                        {group.count > 1 &&
-                      <Link href={`/admin/logs/${encodeURIComponent(group.ip_address)}`}>
+                        {group.count > 1 && (
+                          <Link href={`/admin/logs/${encodeURIComponent(group.ip_address)}`}>
                             <button className="btn-primary btn-sm">
                               {t('app.admin.logs.main.action.view')} {/* 👁️ */}
                             </button>
                           </Link>
-                      }
+                        )}
                         <button
-                        type="button"
-                        onClick={() => handleDelete(group.ip_address)}
-                        className="btn-danger">
-                        
+                          type="button"
+                          onClick={() => handleDelete(group.ip_address)}
+                          className="btn-danger"
+                        >
                           <span className="inline-flex items-center gap-2">
                             <span aria-hidden="true">🗑️</span>
                             <span>{SafeString(t('app.admin.logs.main.action.delete'), '')}</span>
@@ -224,7 +226,7 @@ export default function AdminLogsMainPage() {
                       </div>
                     </td>
                   </tr>
-                )}
+                ))}
               </tbody>
             </table>
           </div>
@@ -232,11 +234,11 @@ export default function AdminLogsMainPage() {
 
         {/* 📱 mobile cards */}
         <div className="xl:hidden flex flex-col gap-4 w-full mt-6">
-          {pagedLogs.map((group) =>
-          <div
-            key={group.ip_address}
-            className="border border-gray-300 rounded-2xl p-4 shadow-sm bg-gray-600 text-base-100">
-            
+          {pagedLogs.map((group) => (
+            <div
+              key={group.ip_address}
+              className="border border-gray-300 rounded-2xl p-4 shadow-sm bg-gray-600 text-base-100"
+            >
               <div>
                 <strong>{t('app.admin.logs.main.card.ip')}:</strong>{' '}
                 {SafeString(group.ip_address, '—')}
@@ -258,23 +260,23 @@ export default function AdminLogsMainPage() {
               </div>
 
               <div className="flex flex-row justify-between gap-2 mt-3">
-                {group.count > 1 &&
-              <Link href={`/admin/logs/${encodeURIComponent(group.ip_address)}`}>
+                {group.count > 1 && (
+                  <Link href={`/admin/logs/${encodeURIComponent(group.ip_address)}`}>
                     {/* eslint-disable-next-line react/jsx-no-comment-textnodes */}
                     <button className="btn-primary w-full btn-glow">
                       {t('app.admin.logs.main.action.view')}
                     </button>
                   </Link>
-              }
+                )}
                 <button
-                className="btn-danger w-full btn-glow"
-                onClick={() => handleDelete(group.ip_address)}>
-                
+                  className="btn-danger w-full btn-glow"
+                  onClick={() => handleDelete(group.ip_address)}
+                >
                   {t('app.admin.logs.main.action.delete')}
                 </button>
               </div>
             </div>
-          )}
+          ))}
         </div>
 
         {/* 🔢 pagination */}
@@ -282,10 +284,10 @@ export default function AdminLogsMainPage() {
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={setCurrentPage} />
-          
+            onPageChange={setCurrentPage}
+          />
         </div>
       </div>
-    </div>);
-
+    </div>
+  );
 }

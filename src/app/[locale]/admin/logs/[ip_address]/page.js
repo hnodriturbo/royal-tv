@@ -8,7 +8,6 @@
  * - Safe: no hooks inside callbacks; locale is captured at top level.
  */
 
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useParams, useRouter } from 'next/navigation';

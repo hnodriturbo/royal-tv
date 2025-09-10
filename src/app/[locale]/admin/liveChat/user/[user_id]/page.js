@@ -7,10 +7,10 @@
  * ==========================================================================
  */
 
-'use client';import Link from "next/link";
+'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
-
 import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { useParams, useRouter } from 'next/navigation';
@@ -104,8 +104,8 @@ export default function AdminLiveChatUserConversationsPage() {
               <SortDropdown
                 options={conversationSortOptions}
                 value={sortOrder}
-                onChange={setSortOrder} />
-              
+                onChange={setSortOrder}
+              />
             </div>
             <hr className="md:hidden border border-gray-400 w-8/12 my-4" />
             <div className="flex-1 flex justify-center items-center">
@@ -122,8 +122,8 @@ export default function AdminLiveChatUserConversationsPage() {
             user={user}
             chatType="live"
             buttonText={t('app.admin.liveChat.userConversations.create_new')}
-            isAdmin={true} />
-          
+            isAdmin={true}
+          />
         </div>
 
         {/* 💻 Table */}
@@ -140,48 +140,48 @@ export default function AdminLiveChatUserConversationsPage() {
                 </tr>
               </thead>
               <tbody className="text-center">
-                {pagedConversations.length === 0 ?
-                <tr>
+                {pagedConversations.length === 0 ? (
+                  <tr>
                     <td colSpan="5" className="py-4 text-gray-500">
                       {t('app.admin.liveChat.userConversations.empty')}
                     </td>
-                  </tr> :
-
-                pagedConversations.map((c) =>
-                <tr key={c.conversation_id} className="hover:bg-gray-400">
+                  </tr>
+                ) : (
+                  pagedConversations.map((c) => (
+                    <tr key={c.conversation_id} className="hover:bg-gray-400">
                       <td>{c.conversation_id}</td>
                       <td className="max-w-[200px] truncate" title={c.subject}>
                         {c.subject || t('app.admin.liveChat.userConversations.no_subject')}
                       </td>
                       <td>{new Date(c.updatedAt).toLocaleString()}</td>
                       <td>
-                        {c.unreadCount > 0 ?
-                    <span className="text-green-500 font-bold">● {c.unreadCount}</span> :
-
-                    <span className="text-gray-400">0</span>
-                    }
+                        {c.unreadCount > 0 ? (
+                          <span className="text-green-500 font-bold">● {c.unreadCount}</span>
+                        ) : (
+                          <span className="text-gray-400">0</span>
+                        )}
                       </td>
                       <td>
                         <div className="flex flex-row gap-2 justify-center">
                           <Link
-                        href={`/admin/liveChat/${c.conversation_id}`}
-                        className="btn-primary">
-                        
+                            href={`/admin/liveChat/${c.conversation_id}`}
+                            className="btn-primary"
+                          >
                             {t('app.admin.liveChat.userConversations.view_messages')}
                           </Link>
                           <ConversationActionButton
-                        action="delete"
-                        user_id={user?.user_id}
-                        conversation_id={c.conversation_id}
-                        chatType="live"
-                        onActionSuccess={fetchUserConversations}
-                        isAdmin={true} />
-                      
+                            action="delete"
+                            user_id={user?.user_id}
+                            conversation_id={c.conversation_id}
+                            chatType="live"
+                            onActionSuccess={fetchUserConversations}
+                            isAdmin={true}
+                          />
                         </div>
                       </td>
                     </tr>
-                )
-                }
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -189,8 +189,8 @@ export default function AdminLiveChatUserConversationsPage() {
 
         {/* 📱 Cards */}
         <div className="xl:hidden flex flex-col gap-4 w-full mt-6">
-          {pagedConversations.map((c) =>
-          <div key={c.conversation_id} className="border rounded-2xl p-4 bg-gray-500">
+          {pagedConversations.map((c) => (
+            <div key={c.conversation_id} className="border rounded-2xl p-4 bg-gray-500">
               <h3>{user.name || 'N/A'}</h3>
               <p>
                 <strong>{t('app.admin.liveChat.userConversations.subject_label')}:</strong>{' '}
@@ -202,35 +202,35 @@ export default function AdminLiveChatUserConversationsPage() {
               </p>
               <p>
                 <strong>{t('app.admin.liveChat.userConversations.unread')}:</strong>{' '}
-                {c.unreadCount > 0 ?
-              <span className="text-green-500 font-bold">● {c.unreadCount}</span> :
-
-              <span className="text-gray-400">0</span>
-              }
+                {c.unreadCount > 0 ? (
+                  <span className="text-green-500 font-bold">● {c.unreadCount}</span>
+                ) : (
+                  <span className="text-gray-400">0</span>
+                )}
               </p>
               <div className="flex flex-col sm:flex-row gap-2 mt-3">
                 <Link href={`/admin/liveChat/${c.conversation_id}`} className="btn-primary">
                   {t('app.admin.liveChat.userConversations.view_messages')}
                 </Link>
                 <ConversationActionButton
-                action="delete"
-                user_id={user?.user_id}
-                conversation_id={c.conversation_id}
-                chatType="live"
-                onActionSuccess={fetchUserConversations}
-                isAdmin={true} />
-              
+                  action="delete"
+                  user_id={user?.user_id}
+                  conversation_id={c.conversation_id}
+                  chatType="live"
+                  onActionSuccess={fetchUserConversations}
+                  isAdmin={true}
+                />
               </div>
             </div>
-          )}
+          ))}
         </div>
 
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          onPageChange={setCurrentPage} />
-        
+          onPageChange={setCurrentPage}
+        />
       </div>
-    </div>);
-
+    </div>
+  );
 }

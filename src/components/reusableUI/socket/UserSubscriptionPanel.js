@@ -52,7 +52,7 @@ export default function UserSubscriptionPanel() {
       const res = await axiosInstance.post('/api/user/subscriptions/checkout', { plan: slug });
       const url = res.data?.checkoutUrl || `/${locale}/user/billing`;
       router.push(url);
-    } catch (e) {
+    } catch {
       displayMessage(t('socket.ui.subscription.checkout_failed'), 'error');
     } finally {
       hideLoader();

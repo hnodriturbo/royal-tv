@@ -4,20 +4,20 @@
  * - Fetches trials, supports sort + pagination, delete w/ modal.
  * - Table on desktop, cards on mobile.
  * - Text translations → next-intl useTranslations().
- * - Navigation → @/i18n Link + useRouter().
+ * - Locale-aware links via useLocale().
  * ================================================================
  */
 
 'use client';
+
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-
 import { useEffect, useState } from 'react';
-// 🌍 nav
-import { useTranslations } from 'next-intl'; // 🌐 i18n
+import { useSession } from 'next-auth/react';
+import { useLocale, useTranslations } from 'next-intl'; // 🌍 locale + translator
+
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
-import { useSession } from 'next-auth/react';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import Pagination from '@/components/reusableUI/Pagination';
 import useModal from '@/hooks/useModal';
@@ -28,8 +28,9 @@ import useLocalSorter from '@/hooks/useLocalSorter';
 import { SafeString } from '@/lib/ui/SafeString';
 
 export default function AdminFreeTrialsPage() {
-  // 🌐 translator
+  // 🌐 translator + locale
   const t = useTranslations();
+  const locale = useLocale();
 
   // 🦸 admin session/auth
   const { data: session, status } = useSession();
@@ -155,7 +156,7 @@ export default function AdminFreeTrialsPage() {
         {/* 💻 desktop table */}
         <div className="hidden xl:flex justify-center w-full">
           <div className="w-full max-w-full overflow-x-auto">
-            <table className="min-w-[850px] w-full border-separate border-spacing-0 text-shadow-dark-1">
+            <table className="min-w-[850px] w-full border border-gray-300 border-separate border-spacing-0 text-shadow-dark-1">
               <thead>
                 <tr className="bg-gray-600 text-base-100 font-bold">
                   <th className="border border-gray-300 px-4 py-2">
@@ -208,7 +209,7 @@ export default function AdminFreeTrialsPage() {
                     </td>
                     <td className="border border-gray-300 px-4 py-2">
                       <div className="flex flex-row gap-2 w-fit justify-center">
-                        <Link href={`/admin/freeTrials/${trial.trial_id}`}>
+                        <Link href={`/${locale}/admin/freeTrials/${trial.trial_id}`}>
                           <button className="btn-primary btn-sm">
                             {t('app.admin.freeTrials.main.action.viewEdit')}
                           </button>
@@ -272,7 +273,7 @@ export default function AdminFreeTrialsPage() {
               </div>
               <div className="flex flex-row gap-3 mt-4 w-full">
                 <Link
-                  href={`/admin/freeTrials/${trial.trial_id}`}
+                  href={`/${locale}/admin/freeTrials/${trial.trial_id}`}
                   className="flex-1 flex justify-start"
                 >
                   <button className="btn-primary w-full">

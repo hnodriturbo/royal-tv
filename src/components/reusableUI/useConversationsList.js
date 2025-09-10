@@ -35,7 +35,7 @@ export default function useConversationsList({
       const res = await axiosInstance.get(endPointURL, { params: { page, pageSize } });
       setItems(res.data?.items || res.data?.conversations || []);
       setTotal(res.data?.total || 0);
-    } catch (e) {
+    } catch {
       displayMessage('Failed to load conversations', 'error');
     } finally {
       setLoading(false);

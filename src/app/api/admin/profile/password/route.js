@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/core/prisma';
 import bcrypt from 'bcryptjs';

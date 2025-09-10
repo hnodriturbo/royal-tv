@@ -18,7 +18,7 @@ async function seedUsers() {
     whatsapp: '+3547624845',
     telegram: '@Royal_TV',
     password: await bcrypt.hash('Hnodri2529!', 10),
-    role: 'admin',
+    role: 'admin'
   };
 
   // Regular Users (handle async password hashing with Promise.all)
@@ -28,8 +28,8 @@ async function seedUsers() {
       email: `user_${i + 1}@example.com`,
       username: `user_${i + 1}`,
       password: await bcrypt.hash(`password_${i + 1}`, 10),
-      role: 'user',
-    })),
+      role: 'user'
+    }))
   );
 
   // Combine all users
@@ -38,11 +38,11 @@ async function seedUsers() {
   // Insert users into the database
   for (const user of users) {
     await prisma.user.create({
-      data: user,
+      data: user
     });
   }
   await prisma.user.create({
-    data: adminUser, // Use the first (and only) user object from the adminUsers array
+    data: adminUser // Use the first (and only) user object from the adminUsers array
   });
   console.log('Users seeded successfully!');
   await prisma.$disconnect();

@@ -7,7 +7,8 @@
  * ===============================================================================
  */
 
-'use client';import { useRouter } from "next/navigation";
+'use client';
+import { useRouter } from 'next/navigation';
 
 import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -60,6 +61,6 @@ export default function AdminDashboard() {
       <div className="w-11/12 max-w-[600px] mx-auto">
         <NotificationCenter userRole="admin" />
       </div>
-    </div>);
-
+    </div>
+  );
 }

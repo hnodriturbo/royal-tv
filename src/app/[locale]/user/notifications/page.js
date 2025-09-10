@@ -10,7 +10,8 @@
  * =================================================================
  */
 
-'use client';import { useRouter } from "next/navigation";
+'use client';
+import { useRouter } from 'next/navigation';
 
 import { useSession } from 'next-auth/react'; // 🔐 Session
 import { useEffect } from 'react'; // ⏱️ Side-effects
@@ -36,6 +37,6 @@ export default function UserNotificationsPage() {
     <div className="flex flex-col items-center w-full py-6">
       {/* 👤 SeeAllNotifications for user */}
       <SeeAllNotifications userRole="user" />
-    </div>);
-
+    </div>
+  );
 }

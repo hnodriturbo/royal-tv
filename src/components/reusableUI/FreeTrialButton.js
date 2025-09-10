@@ -19,7 +19,7 @@ export default function FreeTrialButton({ user_id, refreshStatus }) {
       await axiosInstance.post('/api/user/freeTrials/request', { user_id });
       displayMessage(t('socket.ui.freeTrial.request_success'), 'success');
       refreshStatus?.();
-    } catch (e) {
+    } catch {
       displayMessage(t('socket.ui.freeTrial.request_failed'), 'error');
     } finally {
       hideLoader();

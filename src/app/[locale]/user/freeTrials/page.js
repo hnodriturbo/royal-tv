@@ -9,7 +9,8 @@
  * ==========================================================
  */
 
-'use client';import { useRouter } from "next/navigation";
+'use client';
+import { useRouter } from 'next/navigation';
 
 import { useSession } from 'next-auth/react';
 import { useState, useCallback, useEffect } from 'react';
@@ -80,10 +81,10 @@ export default function UserFreeTrialDetailsPage() {
 
         {/* ✅ Active Trial */}
         {!loading &&
-        freeTrial &&
-        freeTrial.status !== 'disabled' &&
-        freeTrial.status !== 'expired' &&
-        <div className="relative flex flex-col border-4 border-green-700 rounded-2xl mb-6 p-4 shadow overflow-hidden">
+          freeTrial &&
+          freeTrial.status !== 'disabled' &&
+          freeTrial.status !== 'expired' && (
+            <div className="relative flex flex-col border-4 border-green-700 rounded-2xl mb-6 p-4 shadow overflow-hidden">
               <div className="absolute inset-0 bg-black/60 z-0 rounded-2xl pointer-events-none" />
               <div className="relative z-10 whitespace-nowrap">
                 <div className="flex flex-col gap-1 items-center justify-center mb-4">
@@ -114,8 +115,8 @@ export default function UserFreeTrialDetailsPage() {
                   </span>
 
                   {/* 🌐 Portal Link */}
-                  {freeTrial.portal_link &&
-              <>
+                  {freeTrial.portal_link && (
+                    <>
                       <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
                         🌐 {t('app.user.freeTrials.page.portal_link')}
                       </span>
@@ -123,11 +124,11 @@ export default function UserFreeTrialDetailsPage() {
                         {freeTrial.portal_link}
                       </span>
                     </>
-              }
+                  )}
 
                   {/* 🔗 DNS Link */}
-                  {freeTrial.dns_link &&
-              <>
+                  {freeTrial.dns_link && (
+                    <>
                       <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
                         🔗 {t('app.user.freeTrials.page.dns_link')}
                       </span>
@@ -135,11 +136,11 @@ export default function UserFreeTrialDetailsPage() {
                         {freeTrial.dns_link}
                       </span>
                     </>
-              }
+                  )}
 
                   {/* 📺 Samsung/LG DNS */}
-                  {freeTrial.dns_link_for_samsung_lg &&
-              <>
+                  {freeTrial.dns_link_for_samsung_lg && (
+                    <>
                       <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
                         📺 {t('app.user.freeTrials.page.dns_link_samsung_lg')}
                       </span>
@@ -147,11 +148,11 @@ export default function UserFreeTrialDetailsPage() {
                         {freeTrial.dns_link_for_samsung_lg}
                       </span>
                     </>
-              }
+                  )}
 
                   {/* 📦 Package */}
-                  {freeTrial.package_name &&
-              <>
+                  {freeTrial.package_name && (
+                    <>
                       <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
                         📦 {t('app.user.freeTrials.page.package')}
                       </span>
@@ -159,11 +160,11 @@ export default function UserFreeTrialDetailsPage() {
                         {freeTrial.package_name}
                       </span>
                     </>
-              }
+                  )}
 
                   {/* 💻 MAC */}
-                  {freeTrial.mac_address &&
-              <>
+                  {freeTrial.mac_address && (
+                    <>
                       <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
                         💻 {t('app.user.freeTrials.page.mac_address')}
                       </span>
@@ -171,11 +172,11 @@ export default function UserFreeTrialDetailsPage() {
                         {freeTrial.mac_address}
                       </span>
                     </>
-              }
+                  )}
 
                   {/* 🗒️ Note */}
-                  {freeTrial.note &&
-              <>
+                  {freeTrial.note && (
+                    <>
                       <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
                         🗒️ {t('app.user.freeTrials.page.note')}
                       </span>
@@ -183,21 +184,21 @@ export default function UserFreeTrialDetailsPage() {
                         {freeTrial.note}
                       </span>
                     </>
-              }
+                  )}
 
                   {/* 💬 WhatsApp/Telegram */}
-                  {freeTrial.whatsapp_telegram &&
-              <>
+                  {freeTrial.whatsapp_telegram && (
+                    <>
                       <span className="min-w-[120px] flex items-center font-bold drop-shadow-sm">
                         💬 {t('app.user.freeTrials.page.whatsapp_telegram')}
                       </span>
                       <span className="font-bold flex items-center tracking-wide">
                         {freeTrial.whatsapp_telegram ||
-                  session?.user?.whatsapp ||
-                  session?.user?.telegram}
+                          session?.user?.whatsapp ||
+                          session?.user?.telegram}
                       </span>
                     </>
-              }
+                  )}
 
                   {/* ⏰ Expiring At */}
                   <>
@@ -205,9 +206,9 @@ export default function UserFreeTrialDetailsPage() {
                       ⏰ {t('app.user.freeTrials.page.expiring_at')}
                     </span>
                     <span className="font-bold flex items-center tracking-wide">
-                      {freeTrial.expiring_at ?
-                  new Date(freeTrial.expiring_at).toLocaleString() :
-                  t('app.user.freeTrials.page.expiring_on_login')}
+                      {freeTrial.expiring_at
+                        ? new Date(freeTrial.expiring_at).toLocaleString()
+                        : t('app.user.freeTrials.page.expiring_on_login')}
                     </span>
                   </>
 
@@ -233,13 +234,13 @@ export default function UserFreeTrialDetailsPage() {
                 </div>
               </div>
             </div>
-        }
+          )}
 
         {/* ❌ Expired */}
         {!loading &&
-        freeTrial && (
-        freeTrial.status === 'disabled' || freeTrial.status === 'expired') &&
-        <div className="flex flex-col border-4 border-red-700 bg-red-300 rounded-2xl mb-6 p-4 shadow">
+          freeTrial &&
+          (freeTrial.status === 'disabled' || freeTrial.status === 'expired') && (
+            <div className="flex flex-col border-4 border-red-700 bg-red-300 rounded-2xl mb-6 p-4 shadow">
               <span className="text-3xl">❌</span>
               <span className="text-black font-bold">
                 {t('app.user.freeTrials.page.expired_title')}
@@ -252,11 +253,11 @@ export default function UserFreeTrialDetailsPage() {
                 </span>
               </span>
             </div>
-        }
+          )}
 
         {/* 🙅‍♂️ No Trial */}
-        {!loading && !freeTrial &&
-        <div className="flex flex-col border-4 border-orange-500 bg-orange-300 rounded-2xl mb-6 p-4 shadow">
+        {!loading && !freeTrial && (
+          <div className="flex flex-col border-4 border-orange-500 bg-orange-300 rounded-2xl mb-6 p-4 shadow">
             <span className="text-3xl">🙅‍♂️</span>
             <span className="text-2xl text-black">
               {t('app.user.freeTrials.page.no_trial_title')}
@@ -265,8 +266,8 @@ export default function UserFreeTrialDetailsPage() {
               {t('app.user.freeTrials.page.no_trial_message')}
             </span>
           </div>
-        }
+        )}
       </div>
-    </div>);
-
+    </div>
+  );
 }

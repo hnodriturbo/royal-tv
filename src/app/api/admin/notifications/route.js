@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/core/prisma.js';
 import { withRole, getUserId } from '@/lib/api/guards';

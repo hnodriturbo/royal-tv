@@ -8,7 +8,8 @@
  * - Uses i18n with full keys via a single `const t = useTranslations()`
  */
 
-'use client';import { useSearchParams } from "next/navigation";
+'use client';
+import { useSearchParams } from 'next/navigation';
 
 import { useEffect, useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
@@ -63,9 +64,9 @@ export default function MiddlePage() {
     // 🧭 Respect redirectTo when it is safe
     let chosenTarget = defaultTarget;
     if (
-    redirectToParam &&
-    !forbiddenRedirects.some((forbiddenPath) => redirectToParam.startsWith(forbiddenPath)))
-    {
+      redirectToParam &&
+      !forbiddenRedirects.some((forbiddenPath) => redirectToParam.startsWith(forbiddenPath))
+    ) {
       chosenTarget = redirectToParam;
     }
 
@@ -163,9 +164,9 @@ export default function MiddlePage() {
         chosenTarget = `/auth/signin?redirectTo=${encodeURIComponent(chosenTarget)}`;
       } else if (errorCode) {
         const errorKey =
-        errorCode === 'CredentialsSignin' || errorCode === 'Configuration' ?
-        'app.middlePage.messages.badCredentials' :
-        'app.middlePage.messages.unexpectedError';
+          errorCode === 'CredentialsSignin' || errorCode === 'Configuration'
+            ? 'app.middlePage.messages.badCredentials'
+            : 'app.middlePage.messages.unexpectedError';
         feedbackMessage = t(errorKey, {}, 'Unexpected error. Please try again.');
         uiColor = 'error';
         chosenTarget = '/auth/signin';
@@ -196,12 +197,12 @@ export default function MiddlePage() {
       });
     }
   }, [
-  searchParams,
-  status,
-  session,
-  alreadyRedirected,
-  redirectWithMessage /* 🧠 never add t here */]
-  );
+    searchParams,
+    status,
+    session,
+    alreadyRedirected,
+    redirectWithMessage /* 🧠 never add t here */
+  ]);
 
   // 👻 No UI, just logic
   return null;

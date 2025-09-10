@@ -1,9 +1,9 @@
-// eslint.config.js (ESM)
+// eslint.config.mjs  (minimal working flat config)
 import js from '@eslint/js';
-import nextPlugin from '@next/eslint-plugin-next';
-import eslintConfigPrettier from 'eslint-config-prettier';
-import prettierPlugin from 'eslint-plugin-prettier';
+import next from '@next/eslint-plugin-next';
 import reactHooks from 'eslint-plugin-react-hooks';
+import prettier from 'eslint-plugin-prettier';
+import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import globals from 'globals';
 
 export default [
@@ -15,37 +15,28 @@ export default [
       'dist/**',
       'coverage/**',
       'public/**',
-      'package.json',
-      'package-lock.json',
-      'yarn.lock',
-      'pnpm-lock.yaml',
       '*.md',
       '*.css',
       '*.scss',
-      '*.svg',
-      '*.eslintignore'
+      '*.svg'
     ]
   },
   js.configs.recommended,
   {
-    plugins: {
-      '@next/next': nextPlugin, // ⚡ Next rules namespace
-      prettier: prettierPlugin, // 🎨 Prettier as a rule
-      'react-hooks': reactHooks // 🪝 Hooks rules
-    },
+    files: ['**/*.{js,jsx,ts,tsx}'],
+    plugins: { '@next/next': next, 'react-hooks': reactHooks, prettier }, // ✅ object, not array
     languageOptions: {
       ecmaVersion: 2023,
       sourceType: 'module',
+      parserOptions: { ecmaFeatures: { jsx: true } }, // ✅ fix "<" JSX parsing
       globals: { ...globals.browser, ...globals.node }
     },
     rules: {
-      ...nextPlugin.configs.recommended.rules,
-      //...nextPlugin.configs['core-web-vitals']?.rules, // optional
-      '@next/next/google-font-display': 'off',
+      ...next.configs.recommended.rules, // ✅ only the rules
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       'prettier/prettier': 'warn'
     }
   },
-  prettierFlat
+  eslintConfigPrettier // keep last
 ];

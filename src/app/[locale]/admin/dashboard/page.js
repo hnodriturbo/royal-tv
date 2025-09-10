@@ -6,7 +6,8 @@
  * ===============================================================================
  */
 
-'use client';import { useRouter } from "next/navigation";
+'use client';
+import { useRouter } from 'next/navigation';
 
 import { useEffect } from 'react';
 import { Suspense } from 'react'; // ⏳ suspense for hook-using children
@@ -69,6 +70,6 @@ export default function AdminDashboard() {
           <NotificationCenter userRole="admin" />
         </Suspense>
       </div>
-    </div>);
-
+    </div>
+  );
 }

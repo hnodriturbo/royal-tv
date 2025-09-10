@@ -6,7 +6,8 @@
  * ===============================================================
  */
 
-'use client';import { useRouter } from "next/navigation";
+'use client';
+import { useRouter } from 'next/navigation';
 
 import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -40,6 +41,6 @@ export default function AdminNotificationsPage() {
       <h1 className="text-2xl font-bold mb-4">{t('app.admin.notifications.title')}</h1>
       {/* 🛎️ list */}
       <SeeAllNotifications userRole="admin" />
-    </div>);
-
+    </div>
+  );
 }

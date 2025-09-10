@@ -61,8 +61,8 @@ export default function PaymentInstructions() {
               href="https://www.coinbase.com/learn/crypto-basics/how-to-send-bitcoin"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-400 underline hover:text-pink-400">
-              
+              className="text-blue-400 underline hover:text-pink-400"
+            >
               {t('app.payments.instructions.link_coinbase')}
             </a>
           </li>
@@ -71,8 +71,8 @@ export default function PaymentInstructions() {
               href="https://www.bitcoin.com/get-started/how-to-send-bitcoin/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-400 underline hover:text-pink-400">
-              
+              className="text-blue-400 underline hover:text-pink-400"
+            >
               {t('app.payments.instructions.link_bitcoincom')}
             </a>
           </li>
@@ -81,8 +81,8 @@ export default function PaymentInstructions() {
               href="https://wasabiwallet.io/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-400 underline hover:text-pink-400">
-              
+              className="text-blue-400 underline hover:text-pink-400"
+            >
               {t('app.payments.instructions.link_wasabi')}
             </a>
           </li>
@@ -91,8 +91,8 @@ export default function PaymentInstructions() {
               href="https://atomicwallet.io/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-400 underline hover:text-pink-400">
-              
+              className="text-blue-400 underline hover:text-pink-400"
+            >
               {t('app.payments.instructions.link_atomic')}
             </a>
           </li>
@@ -101,14 +101,14 @@ export default function PaymentInstructions() {
               href="https://www.trustwallet.com/bitcoin-wallet"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-400 underline hover:text-pink-400">
-              
+              className="text-blue-400 underline hover:text-pink-400"
+            >
               {t('app.payments.instructions.link_trust')}
             </a>
           </li>
         </ul>
         <p className="mt-2 text-4xl font-bold">{t('app.payments.instructions.need_help')}</p>
       </div>
-    </div>);
-
+    </div>
+  );
 }

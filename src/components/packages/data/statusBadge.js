@@ -22,23 +22,23 @@ export default function StatusBadge({ status }) {
   if (status === 'waiting') {
     badgeColor = 'bg-yellow-400';
     icon = '⏳';
-    text =
-    <>
+    text = (
+      <>
         <strong>{t('app.payments.status.waiting.title')}</strong>
         <br />
         <span className="font-normal">{t('app.payments.status.waiting.desc')}</span>
-      </>;
-
+      </>
+    );
   } else if (status === 'pending') {
     badgeColor = 'bg-orange-400';
     icon = '⌛';
-    text =
-    <>
+    text = (
+      <>
         <strong>{t('app.payments.status.pending.title')}</strong>
         <br />
         <span className="font-normal">{t('app.payments.status.pending.desc')}</span>
-      </>;
-
+      </>
+    );
   } else if (status === 'sending') {
     badgeColor = 'bg-cyan-600';
     icon = '🚀';
@@ -46,33 +46,33 @@ export default function StatusBadge({ status }) {
   } else if (status === 'confirming') {
     badgeColor = 'bg-blue-400';
     icon = '🔄';
-    text =
-    <>
+    text = (
+      <>
         <strong>{t('app.payments.status.confirming.title')}</strong>
         <br />
         <span className="font-normal">{t('app.payments.status.confirming.desc')}</span>
-      </>;
-
+      </>
+    );
   } else if (['confirmed', 'paid', 'finished', 'completed'].includes(status)) {
     badgeColor = 'bg-green-500';
     icon = '✅';
-    text =
-    <>
+    text = (
+      <>
         <strong>🎉 {t('app.payments.status.completed.title')} 🎉</strong>
         <br />
         <span className="font-normal">{t('app.payments.status.completed.desc')}</span>
-      </>;
-
+      </>
+    );
   } else if (status === 'failed' || status === 'expired') {
     badgeColor = 'bg-red-500 text-white';
     icon = '❌';
-    text =
-    <>
+    text = (
+      <>
         <strong>{t('app.payments.status.failed.title')}</strong>
         <br />
         <span className="font-normal">{t('app.payments.status.failed.desc')}</span>
-      </>;
-
+      </>
+    );
   } else {
     badgeColor = 'bg-gray-400';
     icon = '❔';
@@ -81,11 +81,11 @@ export default function StatusBadge({ status }) {
 
   return (
     <div
-      className={`rounded-xl py-3 px-6 mb-6 mt-2 font-bold text-lg flex items-center justify-center gap-3 shadow-xl ${badgeColor}`}>
-      
+      className={`rounded-xl py-3 px-6 mb-6 mt-2 font-bold text-lg flex items-center justify-center gap-3 shadow-xl ${badgeColor}`}
+    >
       <span className="text-2xl">{icon}</span>
       <span className="text-center">{text}</span>
       <span className="text-xl ml-3">({t(`app.payments.status.${status}.label`, status)})</span>
-    </div>);
-
+    </div>
+  );
 }
