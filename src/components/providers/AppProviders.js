@@ -49,7 +49,6 @@ function AppContent({ children }) {
                 </div>
               </div>
 
-              {/* global helpers */}
               <WhatsAppLogo />
               <ShowMessages />
             </div>

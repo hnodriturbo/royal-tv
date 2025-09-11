@@ -2,9 +2,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+/* import { useSearchParams } from 'next/navigation'; */
 
-import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 // or '@/lib/i18n' if renamed
 import UserSubscriptionPanel from '@/components/reusableUI/socket/UserSubscriptionPanel';
@@ -24,8 +23,8 @@ export default function HomePage() {
   const locale = useLocale();
   const freeTrialStatus = useFreeTrialStatus(user?.user_id);
 
-  const searchParams = useSearchParams();
-  const submitted = searchParams.get('submitted');
+  /*   const searchParams = useSearchParams();
+  const submitted = searchParams.get('submitted'); */
 
   return (
     <div className="flex flex-col items-center justify-center w-full lg:mt-0 mt-12">

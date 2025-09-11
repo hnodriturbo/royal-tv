@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 // 👉 Our new locale config (JS/ESM)
-import { LOCALES, DEFAULT_LOCALE, isLocale } from '@/i18n/config.js';
+import { LOCALES, DEFAULT_LOCALE, isLocale } from './i18n/config.js';
 
 /** Public asset detection (skip as early as possible) */
 function isPublicAsset(pathname) {

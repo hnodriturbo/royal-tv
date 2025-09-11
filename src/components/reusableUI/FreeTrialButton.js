@@ -15,12 +15,12 @@ export default function FreeTrialButton({ user_id, refreshStatus }) {
   const requestTrial = async () => {
     try {
       setLoading(true);
-      showLoader({ text: t('socket.ui.freeTrial.requesting') });
+      showLoader({ text: t('components.freeTrialButton.loader_requesting') });
       await axiosInstance.post('/api/user/freeTrials/request', { user_id });
-      displayMessage(t('socket.ui.freeTrial.request_success'), 'success');
+      displayMessage(t('components.freeTrialButton.success_requested'), 'success');
       refreshStatus?.();
     } catch {
-      displayMessage(t('socket.ui.freeTrial.request_failed'), 'error');
+      displayMessage(t('components.freeTrialButton.error_generic'), 'error');
     } finally {
       hideLoader();
       setLoading(false);
@@ -35,7 +35,7 @@ export default function FreeTrialButton({ user_id, refreshStatus }) {
       aria-busy={loading}
       disabled={loading}
     >
-      {loading ? t('socket.ui.common.refreshing') : t('socket.ui.freeTrial.request_btn')}
+      {loading ? t('socket.ui.common.refreshing') : t('components.freeTrialButton.request_btn')}
     </button>
   );
 }

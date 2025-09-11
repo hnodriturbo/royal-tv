@@ -1,16 +1,5 @@
+// File: components/reusableUI/Pagination.js
 'use client';
-/**
- * =========================================
- * components/reusableUI/Pagination.js (Client)
- * -------------------------------------------
- * • Reusable pagination component with two modes:
- *   - Controlled (onPageChange): uses <button> handlers
- *   - Uncontrolled (no onPageChange): uses <Link> with hrefs
- * • 🌍 Locale note: when you use Link-mode, pass a `basePath`
- *   that’s already locale-aware, e.g. `basePath=/${locale}/admin/...`
- * • Keeps your classes & behavior intact
- * =========================================
- */
 
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
@@ -40,7 +29,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange, base
         </button>
       ) : (
         <Link
-          href={`${basePath}?page=${p}` /* 🔔 Ensure basePath already includes /{locale} */}
+          href={`${basePath}?page=${p}`}
           className={`px-3 py-1 rounded ${
             p === currentPage ? 'bg-blue-600 text-white' : 'bg-gray-400 hover:bg-gray-600'
           }`}

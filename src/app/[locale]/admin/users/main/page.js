@@ -1,22 +1,22 @@
+'use client';
 /**
  * ========== /app/[locale]/admin/users/main/page.js ==========
- * 👤 ADMIN USERS MAIN
- * - Cards for each user with key relations.
- * - Sorting dropdown + pagination.
- * - Actions: Free Trials, Live Chat, Subscriptions, Profile.
- * - All text translated via next-intl useTranslations().
- * - 🔒 Guards admin access; redirects if forbidden.
- * - 🧼 Button hygiene: no fragments in <button>, navigation uses <Link>, children wrapped.
- * ===========================================================
+ * 👤 ADMIN USERS MAIN (Client Component)
+ * ------------------------------------------------------------
+ * 🎯 Purpose: List users, allow sorting & pagination, and provide
+ *     quick navigation/actions (Free Trials, Live Chat, Subs, Profile).
+ * 🌍 Locale: Uses `useLocale()` so every <Link> is prefixed with /{locale}.
+ * 🧩 i18n: All strings via next-intl (namespace: app.admin.users.main.*).
+ * 🔐 Guard: Admin-only; redirects if unauthorized.
+ * 🔁 UX: Fetch on mount, client-side sort & pagination.
+ * 🧼 Hygiene: Keep your custom classes; no raw fragments in buttons.
+ * ============================================================
  */
 
-'use client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-
 import { useEffect, useState } from 'react';
-// 🌍 locale-aware nav
-import { useTranslations } from 'next-intl'; // 🌐 i18n
+import { useTranslations, useLocale } from 'next-intl'; // 🌍 locale + i18n
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import { useSession } from 'next-auth/react';
@@ -29,7 +29,8 @@ import ConversationActionButton from '@/components/reusableUI/ConversationAction
 import { SafeString } from '@/lib/ui/SafeString';
 
 export default function AdminUsersMainPage() {
-  // 🌐 translator
+  // 🌍 locale & translator
+  const locale = useLocale();
   const t = useTranslations();
 
   // 🔐 admin session/auth
@@ -77,7 +78,7 @@ export default function AdminUsersMainPage() {
     }
   }, [status, isAllowed, redirect, router]);
 
-  // ➕ enrich for sorting
+  // ➕ enrich for sorting (ensure safe defaults)
   const usersWithSortFields = users.map((singleUser) => ({
     ...singleUser,
     freeTrials: singleUser.freeTrials || [],
@@ -194,7 +195,7 @@ export default function AdminUsersMainPage() {
                 {/* 🎁 free trials */}
                 {singleUser.freeTrials && singleUser.freeTrials.length > 0 ? (
                   <Link
-                    href={`/admin/freeTrials/${singleUser.freeTrials[0].trial_id}`}
+                    href={`/${locale}/admin/freeTrials/${singleUser.freeTrials[0].trial_id}`}
                     className="btn-secondary w-full inline-flex items-center justify-center gap-2"
                   >
                     {/* 🧱 wrap contents to avoid fragment children */}
@@ -236,7 +237,7 @@ export default function AdminUsersMainPage() {
                 {/* 💬 live chats */}
                 {singleUser.totalLiveChats > 0 && singleUser.role !== 'admin' ? (
                   <Link
-                    href={`/admin/liveChat/user/${singleUser.user_id}`}
+                    href={`/${locale}/admin/liveChat/user/${singleUser.user_id}`}
                     className="btn-primary w-full inline-flex items-center justify-center gap-2 py-2"
                   >
                     <span className="inline-flex items-center gap-2">
@@ -268,7 +269,7 @@ export default function AdminUsersMainPage() {
                 {/* 📦 subscriptions */}
                 {singleUser.subscriptions && singleUser.subscriptions.length > 0 ? (
                   <Link
-                    href={`/admin/subscriptions/${singleUser.subscriptions[0].subscription_id}`}
+                    href={`/${locale}/admin/subscriptions/${singleUser.subscriptions[0].subscription_id}`}
                     className="btn-secondary w-full inline-flex items-center justify-center gap-2"
                   >
                     <span className="inline-flex items-center gap-2">
@@ -295,7 +296,7 @@ export default function AdminUsersMainPage() {
 
                 {/* 🪪 profile (always navigation) */}
                 <Link
-                  href={`/admin/users/${singleUser.user_id}`}
+                  href={`/${locale}/admin/users/${singleUser.user_id}`}
                   className="btn-secondary inline-flex items-center justify-center gap-2"
                 >
                   <span className="inline-flex items-center gap-2">

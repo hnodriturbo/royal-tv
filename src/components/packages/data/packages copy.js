@@ -1,20 +1,18 @@
-'use client';
 /**
  * ============================================================
- * 📦 Packages data + grid (/components/packages/data/packages.js)
+ * 📦 Packages data + grid
  * ------------------------------------------------------------
- * • Exports `paymentPackages` (with non-localized base paths)
- * • Exports `featuresKeys` for i18n bullet lists
- * • Renders <PackagesGrid /> with locale-aware links:
- *    - All internal paths prefixed with /{locale} at usage time
- * • ✅ Keeps your classes and UI structure intact
+ * - Exposes `paymentPackages` for pricing/cards
+ * - Exposes `featuresKeys` for i18n feature bullets
+ * - Renders <PackagesGrid /> using translated strings
  * ============================================================
  */
 
+'use client';
 import Link from 'next/link';
 
 import { useState } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl'; // 🌍 i18n
 
 // 💰 raw package data (slugs used for i18n keys)
 export const paymentPackages = [
@@ -86,7 +84,6 @@ export const paymentPackages = [
   }
 ].map((singlePackage) => ({
   ...singlePackage,
-  // 🌱 Base paths WITHOUT locale; consumers will prefix with /{locale}
   detailsUrl: `/packages/${singlePackage.slug}/seeMore`,
   buyNowUrl: `/packages/${singlePackage.slug}/buyNow`
 }));
@@ -124,9 +121,9 @@ function PackageCard({ pkg, authenticated, t }) {
   const [vpnChecked, setVpnChecked] = useState(false); // 🛡️ toggle
 
   const totalPrice = pkg.price + (adultChecked ? 10 : 0) + (vpnChecked ? 10 : 0); // 💵 compute
-  const buyNowUrl = `/${locale}${pkg.buyNowUrl}?adult=${adultChecked ? 1 : 0}&vpn=${
+  const buyNowUrl = `${pkg.buyNowUrl}?adult=${adultChecked ? 1 : 0}&vpn=${
     vpnChecked ? 1 : 0
-  }&price=${totalPrice}`; // 🔗 locale-aware
+  }&price=${totalPrice}`; // 🔗 url
 
   return (
     <div className="justify-center relative border-2 max-w-2xl container-style rounded-2xl p-8 flex flex-col items-center shadow-2xl transition-transform duration-300 hover:scale-102 hover:shadow-[0_8px_40px_0_rgba(0,0,0,0.40)] backdrop-blur-lg min-h-fit max-h-[200px]">
@@ -202,7 +199,7 @@ function PackageCard({ pkg, authenticated, t }) {
       <div className="flex flex-col gap-2 w-full mt-auto">
         {authenticated ? (
           <Link
-            href={buyNowUrl /* ✅ locale-aware buy link */}
+            href={buyNowUrl}
             className="btn-primary text-glow btn-glow text-black w-full py-3 rounded-xl font-bold text-xl tracking-wide shadow-xl hover:scale-102 text-center"
           >
             {t('app.packages.grid.buy_now')}
@@ -216,7 +213,7 @@ function PackageCard({ pkg, authenticated, t }) {
           </Link>
         )}
         <Link
-          href={`/${locale}${pkg.detailsUrl}` /* ✅ locale-aware details link */}
+          href={pkg.detailsUrl}
           className="btn-info text-glow text-black w-full py-3 rounded-xl font-bold text-lg tracking-wide shadow-lg hover:scale-102 text-center"
         >
           {t('app.packages.grid.more_info')}

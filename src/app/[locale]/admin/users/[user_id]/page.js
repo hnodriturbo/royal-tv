@@ -1,40 +1,43 @@
 'use client';
-
 /**
  * ========== /app/[locale]/admin/users/[user_id]/page.js ==========
- * 🪪 ADMIN USER PROFILE (Client)
- * ---------------------------------------------------------------
- * - Loads a single user's public profile (admin-only).
- * - Lets admin edit safe fields: name, username, email, role, whatsapp, telegram.
- * - Buttons are hygienic: never render raw objects/fragments inside <button>.
- * - Uses next-intl for all UI text (all keys under app.admin.userId.*).
- * - Uses axiosInstance + app handlers for loader/toasts.
- * - Navigation relies on locale-aware <Link/> and useRouter() from @/i18n.
+ * 🪪 ADMIN USER PROFILE (Client Component)
+ * -----------------------------------------------------------------
+ * 🎯 Purpose: View & edit a single user's profile (admin-only).
+ * 🌍 Locale: Uses `useLocale()` so all navigation is locale-aware (/{$locale}/...).
+ * 🧩 i18n: All UI text comes from next-intl (namespace: app.admin.userId.*).
+ * 🔐 Guard: Only renders for admins; redirects if unauthorized.
+ * 🔁 UX: Loads user on mount, supports PATCH save + DELETE with feedback.
+ * 🧼 Hygiene: No raw objects inside buttons; SafeString for unknown values.
+ * 💡 Note: Keep your custom utility classes intact.
  * =================================================================
- */ import Link from 'next/link';
+ */
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState, useCallback } from 'react';
-// 🌍 locale-aware nav
-import { useTranslations, useLocale } from 'next-intl'; // 🌐 i18n
-import { useParams, useRouter } from 'next/navigation'; // 🧭 read [user_id] from URL
+import { useTranslations, useLocale } from 'next-intl'; // 🌍 locale + i18n
+import { useParams, useRouter } from 'next/navigation'; // 🧭 route params + nav
+import { useSession } from 'next-auth/react';
+
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import { SafeString } from '@/lib/ui/SafeString';
 
 export default function AdminUserProfilePage() {
-  // 🌐 translator (scoped to page namespace)
+  // 🌍 locale & i18n
   const locale = useLocale();
-  const t = useTranslations(); // 🧠 using project’s next-intl pattern
+  const t = useTranslations();
 
-  // 🔐 admin guard
+  // 🔐 admin guard + session
   const { isAllowed, redirect } = useAuthGuard('admin');
+  const { status } = useSession();
   const router = useRouter();
 
   // 🧭 params
   const { user_id } = useParams(); // { user_id: 'uuid' }
 
-  // 🧰 app handlers
+  // 🧰 app handlers (toasts + loader)
   const { displayMessage, showLoader, hideLoader } = useAppHandlers();
 
   // 🗂️ local form state
@@ -47,10 +50,9 @@ export default function AdminUserProfilePage() {
     telegram: '',
     createdAt: null
   });
-
   const [isLoading, setIsLoading] = useState(false);
 
-  // 🔄 controlled change handler
+  // ✏️ controlled change handler
   const onChange = useCallback((event) => {
     const { name, value } = event.target;
     setFormValues((previous) => ({ ...previous, [name]: value }));
@@ -60,10 +62,12 @@ export default function AdminUserProfilePage() {
   const fetchUser = useCallback(async () => {
     if (!user_id) return;
     try {
-      showLoader({ text: t('app.admin.userId.loading') }); // ⏳
+      showLoader({ text: t('app.admin.userId.loading') }); // ⏳ show loader
       setIsLoading(true);
+
       const response = await axiosInstance.get(`/api/admin/users/${user_id}`);
       const loaded = response?.data ?? {};
+
       setFormValues({
         username: SafeString(loaded.username, ''),
         name: SafeString(loaded.name, ''),
@@ -73,41 +77,40 @@ export default function AdminUserProfilePage() {
         telegram: SafeString(loaded.telegram, ''),
         createdAt: loaded.createdAt ?? null
       });
-      displayMessage(t('app.admin.userId.loadSuccess'), 'success'); // ✅
+
+      displayMessage(t('app.admin.userId.loadSuccess'), 'success'); // ✅ feedback
     } catch (error) {
       displayMessage(
         t('app.admin.userId.loadFailed', {
           error: error?.response?.data?.error ? `: ${String(error.response.data.error)}` : ''
         }),
         'error'
-      ); // ❌
+      ); // 💥 feedback
     } finally {
       hideLoader();
       setIsLoading(false);
     }
-    // ⚠️ per project rule, do not put t in deps
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showLoader, hideLoader, displayMessage]);
+  }, [showLoader, hideLoader, displayMessage, user_id]);
 
-  // 🗑️ delete action
+  // 🗑️ delete action (uses outer locale; do NOT call hooks here)
   const onDelete = async () => {
-    const locale = useLocale();
     if (!user_id) return;
     const confirmation = window.confirm(t('app.admin.userId.confirmDelete'));
     if (!confirmation) return;
 
     try {
-      showLoader({ text: t('app.admin.userId.deleting') }); // 🗑️
+      showLoader({ text: t('app.admin.userId.deleting') }); // 🗑️ deleting...
       await axiosInstance.delete(`/api/admin/users/${user_id}`);
-      displayMessage(t('app.admin.userId.deleteSuccess'), 'success'); // 🎉
-      router.push(`/${locale}/admin/users/main`);
+      displayMessage(t('app.admin.userId.deleteSuccess'), 'success'); // 🎉 ok
+      router.push(`/${locale}/admin/users/main`); // 🌍 locale-aware redirect
     } catch (error) {
       displayMessage(
         t('app.admin.userId.deleteFailed', {
           error: error?.response?.data?.error ? `: ${String(error.response.data.error)}` : ''
         }),
         'error'
-      ); // 💥
+      ); // 🚨 error
     } finally {
       hideLoader();
     }
@@ -119,7 +122,7 @@ export default function AdminUserProfilePage() {
     if (!user_id) return;
 
     try {
-      showLoader({ text: t('app.admin.userId.saving') }); // 💾
+      showLoader({ text: t('app.admin.userId.saving') }); // 💾 saving...
       const payload = {
         username: formValues.username,
         name: formValues.name,
@@ -129,15 +132,15 @@ export default function AdminUserProfilePage() {
         telegram: formValues.telegram
       };
       await axiosInstance.patch(`/api/admin/users/${user_id}`, payload);
-      displayMessage(t('app.admin.userId.saveSuccess'), 'success'); // ✅
-      fetchUser(); // 🔁 refresh fields from server
+      displayMessage(t('app.admin.userId.saveSuccess'), 'success'); // ✅ ok
+      fetchUser(); // 🔁 refresh fields from server to reflect persisted values
     } catch (error) {
       displayMessage(
         t('app.admin.userId.saveFailed', {
           error: error?.response?.data?.error ? `: ${String(error.response.data.error)}` : ''
         }),
         'error'
-      ); // 🚨
+      ); // 🚨 error
     } finally {
       hideLoader();
     }
@@ -153,14 +156,16 @@ export default function AdminUserProfilePage() {
     }
   }, [formValues.createdAt]);
 
-  // 🚦 fetch when allowed
+  // 🚦 fetch or redirect based on guard and session
   useEffect(() => {
-    if (!isAllowed && redirect) {
-      router.replace(redirect); // 🔁
+    if (status !== 'loading' && !isAllowed && redirect) {
+      router.replace(redirect); // 🚪 bounce if forbidden
       return;
     }
-    if (isAllowed) fetchUser();
-  }, [isAllowed, redirect, router]);
+    if (status === 'authenticated' && isAllowed) {
+      fetchUser(); // 📥 load user profile
+    }
+  }, [status, isAllowed, redirect, router, fetchUser]);
 
   // 🛡️ block render if not allowed
   if (!isAllowed) return null;
@@ -168,7 +173,7 @@ export default function AdminUserProfilePage() {
   return (
     <div className="flex flex-col items-center justify-center w-full">
       <div className="container-style max-w-3xl w-full">
-        {/* 🏷️ title */}
+        {/* 🏷️ Title */}
         <div className="flex flex-col items-center text-center justify-center w-full">
           <h1 className="text-wonderful-5 text-2xl mb-0">
             {SafeString(t('app.admin.userId.title'))}
@@ -176,7 +181,7 @@ export default function AdminUserProfilePage() {
           <hr className="border border-gray-400 w-8/12 my-4" />
         </div>
 
-        {/* 🔙 back */}
+        {/* 🔙 Back (locale-aware) */}
         <div className="mb-4">
           <Link
             href={`/${locale}/admin/users/main`}
@@ -187,9 +192,9 @@ export default function AdminUserProfilePage() {
           </Link>
         </div>
 
-        {/* 📝 edit form */}
+        {/* 📝 Edit Form */}
         <form className="bg-gray-600 text-base-100 p-5 rounded-2xl shadow-md" onSubmit={onSave}>
-          {/* 🧩 username */}
+          {/* 🧩 Username */}
           <div className="mb-4">
             <label className="block mb-1">{SafeString(t('app.admin.userId.username'))}</label>
             <input
@@ -201,7 +206,7 @@ export default function AdminUserProfilePage() {
             />
           </div>
 
-          {/* 🧍 name */}
+          {/* 🧍 Name */}
           <div className="mb-4">
             <label className="block mb-1">{SafeString(t('app.admin.userId.name'))}</label>
             <input
@@ -213,7 +218,7 @@ export default function AdminUserProfilePage() {
             />
           </div>
 
-          {/* ✉️ email */}
+          {/* ✉️ Email */}
           <div className="mb-4">
             <label className="block mb-1">{SafeString(t('app.admin.userId.email'))}</label>
             <input
@@ -226,7 +231,7 @@ export default function AdminUserProfilePage() {
             />
           </div>
 
-          {/* 🏷️ role */}
+          {/* 🏷️ Role */}
           <div className="mb-4">
             <label className="block mb-1">{SafeString(t('app.admin.userId.role'))}</label>
             <select
@@ -240,7 +245,7 @@ export default function AdminUserProfilePage() {
             </select>
           </div>
 
-          {/* 💬 contact */}
+          {/* 💬 Contact */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block mb-1">{SafeString(t('app.admin.userId.whatsapp'))}</label>
@@ -264,26 +269,20 @@ export default function AdminUserProfilePage() {
             </div>
           </div>
 
-          {/* 🗓️ created at */}
+          {/* 🗓️ Created at */}
           <div className="mt-4 text-sm text-gray-300">
             <span className="font-bold">{SafeString(t('app.admin.userId.created'))}:</span>{' '}
             <span>{SafeString(createdDateText)}</span>
           </div>
 
-          {/* ☑️ actions */}
+          {/* ☑️ Actions */}
           <div className="mt-6 flex flex-col md:flex-row gap-3">
             <button
               type="submit"
               className="btn-primary inline-flex items-center justify-center gap-2"
             >
               <span aria-hidden="true">💾</span>
-              <span>
-                {
-                  SafeString(
-                    t('app.admin.userId.save') /* label chosen from same namespace? */
-                  ) /* 📝 If you prefer distinct label key, add "save": "Save" and use that instead. */
-                }
-              </span>
+              <span>{SafeString(t('app.admin.userId.save'))}</span>
             </button>
 
             <button
@@ -294,11 +293,12 @@ export default function AdminUserProfilePage() {
               aria-disabled={isLoading ? 'true' : 'false'}
             >
               <span aria-hidden="true">🗑️</span>
-              <span>{SafeString(t('app.admin.userId.delete') /* see note above */)}</span>
+              <span>{SafeString(t('app.admin.userId.delete'))}</span>
             </button>
 
+            {/* 💬 Open Live Chat (locale-aware) */}
             <Link
-              href={`/admin/liveChat/user/${user_id}`}
+              href={`/${locale}/admin/liveChat/user/${user_id}`}
               className="btn-secondary inline-flex items-center justify-center gap-2"
             >
               <span aria-hidden="true">💬</span>

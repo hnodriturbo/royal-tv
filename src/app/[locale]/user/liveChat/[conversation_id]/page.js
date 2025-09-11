@@ -1,9 +1,13 @@
-// File: app/[locale]/user/liveChat/[conversation_id]/page.js
 'use client';
-
 /**
- * 🗂 User Conversation Details
- * - Fix: no hooks inside callbacks; capture locale at top level and reuse
+ * ========================= /app/[locale]/user/liveChat/[conversation_id]/page.js =========================
+ * 🗂️ User Conversation Details (Client)
+ * --------------------------------------------------------------------------------------------------------
+ * • Loads a single conversation + messages for the logged-in user
+ * • Locale-aware navigation via `useLocale()` — all internal links use /{locale}/... prefixes
+ * • Uses project modals for edit/delete; safe redirects after destructive actions
+ * • Keeps your custom classes and socket refresh flow intact
+ * ========================================================================================================
  */
 
 import Link from 'next/link';
@@ -24,7 +28,7 @@ import IsAdminOnline from '@/components/reusableUI/socket/IsAdminOnline';
 
 export default function UserConversationDetailsPage() {
   const t = useTranslations();
-  const locale = useLocale(); // ✅ top-level
+  const locale = useLocale(); // 🌍 capture once
   const { conversation_id } = useParams();
   const router = useRouter();
   const { isAllowed, redirect } = useAuthGuard('user');
@@ -43,6 +47,7 @@ export default function UserConversationDetailsPage() {
 
   const { requestRefresh } = useRefreshMessages(conversation_id, 'live');
 
+  // 🔁 socket refresh trigger
   useEffect(() => {
     if (shouldRefresh) {
       requestRefresh?.();
@@ -50,6 +55,7 @@ export default function UserConversationDetailsPage() {
     }
   }, [shouldRefresh, requestRefresh]);
 
+  // 📥 load conversation + list
   const fetchConversationData = async () => {
     try {
       if (!conversation_id) return;
@@ -65,7 +71,6 @@ export default function UserConversationDetailsPage() {
 
       const { data: list } = await axiosInstance.get(`/api/user/liveChat/main`);
       setUserConversations(Array.isArray(list?.conversations) ? list.conversations : []);
-
       setIsReady(true);
     } catch {
       displayMessage(t('app.user.liveChat.conversation.failed_to_load'), 'error');
@@ -74,18 +79,21 @@ export default function UserConversationDetailsPage() {
     }
   };
 
+  // 🚦 mount guard
   useEffect(() => {
     if (status === 'authenticated' && isAllowed) {
       fetchConversationData();
     }
-  }, [status, isAllowed]); // do not include t
+  }, [status, isAllowed]);
 
+  // 🚫 redirect if forbidden
   useEffect(() => {
     if (status !== 'loading' && !isAllowed && redirect) router.replace(redirect);
   }, [status, isAllowed, redirect, router]);
 
   if (!isAllowed) return null;
 
+  // ✏️ edit modal
   const handleEditMessageModal = (message) =>
     openModal('editMessage', {
       title: t('app.user.liveChat.conversation.edit_title'),
@@ -105,6 +113,7 @@ export default function UserConversationDetailsPage() {
       )
     });
 
+  // 🗑️ delete modal
   const handleDeleteMessageModal = (message_id) =>
     openModal('deleteMessage', {
       title: t('app.user.liveChat.conversation.delete_title'),
@@ -130,7 +139,7 @@ export default function UserConversationDetailsPage() {
   return (
     <div className="flex flex-col items-center w-full">
       <div className="container-style w-full">
-        {/* Conversations sidebar */}
+        {/* 📚 Conversations sidebar */}
         <div className="w-full grid grid-cols-1 lg:grid-cols-[280px_auto] gap-6">
           <div className="lg:block hidden">
             <div className="sticky top-4">
@@ -148,7 +157,7 @@ export default function UserConversationDetailsPage() {
                     return (
                       <Link
                         key={c.conversation_id}
-                        href={`/user/liveChat/${c.conversation_id}`}
+                        href={`/${locale}/user/liveChat/${c.conversation_id}` /* ✅ locale-aware */}
                         className="px-2 py-3 rounded-lg text-xs font-bold w-full transition-colors border"
                         title={
                           isUnread
@@ -175,7 +184,7 @@ export default function UserConversationDetailsPage() {
             </div>
           </div>
 
-          {/* Live Chat Room */}
+          {/* 💬 Live Chat Room */}
           {isReady && conversationDetails && (
             <div className="flex flex-col flex-grow w-full">
               <LiveChatRoom
@@ -192,7 +201,7 @@ export default function UserConversationDetailsPage() {
           )}
         </div>
 
-        {/* Danger Zone */}
+        {/* 🧨 Danger Zone */}
         <div className="flex flex-col justify-center items-center w-full">
           <div className="w-8/12 max-w-lg">
             <div className="w-full p-2 mt-4 border border-red-500 rounded-lg text-center bg-red-400">
@@ -215,7 +224,7 @@ export default function UserConversationDetailsPage() {
                         'success'
                       );
                       setTimeout(() => {
-                        router.push(`/${locale}/user/liveChat/main`); // ✅ locale captured
+                        router.push(`/${locale}/user/liveChat/main`); // ✅ locale-aware
                       }, 1200);
                     }}
                   />

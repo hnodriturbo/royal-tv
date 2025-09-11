@@ -1,21 +1,22 @@
+'use client';
 /**
  *   ================== /app/[locale]/admin/logs/main/page.js ==================
  * 📜 Admin Logs Main
  * - Lists grouped logs by IP (table on desktop, cards on mobile).
  * - Client-side sort & pagination; auto-refresh every 10 minutes.
+ * - Locale-aware links via useLocale(); all <Link> paths prefixed with /{locale}.
+ * - Tables have outlines (borders) and row hover color (bg-gray-400).
  * - All text via next-intl: t('app.admin.logs.main.*' & shared status).
- * - 🛡️ Hardened: render-only safe text via SafeString() for any unknown values.
+ * - 🛡️ SafeString() ensures unknown values render safely.
  * ============================================================================
  */
-
-'use client';
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 // 🌍 locale-aware nav
-import { useTranslations } from 'next-intl'; // 🌐 i18n (full keys)
+import { useLocale, useTranslations } from 'next-intl'; // 🌐 i18n + locale
 
 import useAuthGuard from '@/hooks/useAuthGuard';
 import axiosInstance from '@/lib/core/axiosInstance';
@@ -30,8 +31,9 @@ import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import { SafeString } from '@/lib/ui/SafeString'; // 🧼 coerce unknown to string
 
 export default function AdminLogsMainPage() {
-  // 🌐 translator
+  // 🌐 translator + locale
   const t = useTranslations();
+  const locale = useLocale();
 
   // 🔐 session & guard
   const { status } = useSession();
@@ -48,19 +50,19 @@ export default function AdminLogsMainPage() {
   // 📥 fetch logs
   const fetchLogs = async () => {
     try {
-      showLoader({ text: t('app.admin.logs.main.loading') }); // ⏳ loader text
+      showLoader({ text: t('app.admin.logs.main.loading') });
       const response = await axiosInstance.get('/api/admin/logs/main');
-      setLogs(response.data.logs || []); // 📦 store rows
-      displayMessage(t('app.admin.logs.main.loadSuccess'), 'success'); // ✅ ok
+      setLogs(response.data.logs || []);
+      displayMessage(t('app.admin.logs.main.loadSuccess'), 'success');
     } catch (err) {
       displayMessage(
         t('app.admin.logs.main.loadFailed', {
           error: err?.response?.data?.error ? `: ${err.response.data.error}` : ''
         }),
         'error'
-      ); // ⚠️ failed
+      );
     } finally {
-      hideLoader(); // 🧹 close loader
+      hideLoader();
     }
   };
 
@@ -73,7 +75,7 @@ export default function AdminLogsMainPage() {
   // 🗂️ group logs by IP
   const logsByIp = {};
   logs.forEach((singleLog) => {
-    const ip = SafeString(singleLog.ip_address, '—'); // 🧼 always text
+    const ip = SafeString(singleLog.ip_address, '—');
     if (!logsByIp[ip]) logsByIp[ip] = [];
     logsByIp[ip].push(singleLog);
   });
@@ -82,9 +84,9 @@ export default function AdminLogsMainPage() {
   const groupedLogs = Object.keys(logsByIp).map((ip) => {
     const sortedForThisIp = logsByIp[ip]
       .slice()
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // ⏳ latest first
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     return {
-      ip_address: ip, // 🔢 already SafeString above
+      ip_address: ip,
       logs: sortedForThisIp,
       count: sortedForThisIp.length,
       latestLog: sortedForThisIp[0]
@@ -98,9 +100,9 @@ export default function AdminLogsMainPage() {
   });
 
   // 📑 pagination
-  const pageSize = 10; // 🔟 rows per page
-  const totalPages = Math.ceil(sortedGroupLogs.length / pageSize); // 🧮 total pages
-  const pagedLogs = sortedGroupLogs.slice((currentPage - 1) * pageSize, currentPage * pageSize); // ✂️ page slice
+  const pageSize = 10;
+  const totalPages = Math.ceil(sortedGroupLogs.length / pageSize);
+  const pagedLogs = sortedGroupLogs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   // 🗑️ delete all logs for an IP
   const handleDelete = (ip_address) => {
@@ -114,20 +116,20 @@ export default function AdminLogsMainPage() {
       cancelButtonText: t('app.admin.logs.main.deleteModal.cancel'),
       onConfirm: async () => {
         try {
-          showLoader({ text: t('app.admin.logs.main.deleting') }); // ⏳ deleting
-          await axiosInstance.delete(`/api/admin/logs/${encodeURIComponent(ip_address)}`); // 🧨 delete
-          displayMessage(t('app.admin.logs.main.deletedSuccess'), 'success'); // ✅ done
-          fetchLogs(); // 🔄 refresh
-        } catch (err) {
-          displayMessage(t('app.admin.logs.main.deleteFailed'), 'error'); // ❌ fail
+          showLoader({ text: t('app.admin.logs.main.deleting') });
+          await axiosInstance.delete(`/api/admin/logs/${encodeURIComponent(ip_address)}`);
+          displayMessage(t('app.admin.logs.main.deletedSuccess'), 'success');
+          fetchLogs();
+        } catch (_err) {
+          displayMessage(t('app.admin.logs.main.deleteFailed'), 'error');
         } finally {
-          hideLoader(); // 🧹 close loader
+          hideLoader();
         }
       },
       onCancel: () => {
-        displayMessage(t('app.admin.logs.main.deletionCancelled'), 'info'); // 🙅‍♀️ cancelled
-        hideModal(); // 🧹 close modal
-        hideLoader(); // 🧹 ensure loader off
+        displayMessage(t('app.admin.logs.main.deletionCancelled'), 'info');
+        hideModal();
+        hideLoader();
       }
     });
   };
@@ -135,15 +137,14 @@ export default function AdminLogsMainPage() {
   // 🚀 initial load when allowed
   useEffect(() => {
     if (status === 'authenticated' && isAllowed) {
-      fetchLogs(); // 📥 pull data
+      fetchLogs();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, isAllowed]);
 
   // 🚫 redirect if forbidden
   useEffect(() => {
     if (status !== 'loading' && !isAllowed && redirect) {
-      router.replace(redirect); // 🚪 bounce
+      router.replace(redirect);
     }
   }, [status, isAllowed, redirect, router]);
 
@@ -178,38 +179,53 @@ export default function AdminLogsMainPage() {
         {/* 💻 desktop table */}
         <div className="hidden xl:flex justify-center w-full">
           <div className="w-full max-w-full overflow-x-auto">
-            <table className="min-w-[950px] w-full border-separate border-spacing-0 text-shadow-dark-1">
+            <table className="min-w-[950px] w-full border border-gray-300 border-separate border-spacing-0 text-shadow-dark-1">
               <thead>
                 <tr className="bg-gray-600 text-base-100 font-bold">
-                  <th className="border px-2 py-1">{t('app.admin.logs.main.table.ip')}</th>
-                  <th className="border px-2 py-1">{t('app.admin.logs.main.table.logs')}</th>
-                  <th className="border px-2 py-1">{t('app.admin.logs.main.table.latestPage')}</th>
-                  <th className="border px-2 py-1">{t('app.admin.logs.main.table.latestUser')}</th>
-                  <th className="border px-2 py-1">{t('app.admin.logs.main.table.latestTime')}</th>
-                  <th className="border px-2 py-1">{t('app.admin.logs.main.table.actions')}</th>
+                  <th className="border border-gray-300 px-2 py-1">
+                    {t('app.admin.logs.main.table.ip')}
+                  </th>
+                  <th className="border border-gray-300 px-2 py-1">
+                    {t('app.admin.logs.main.table.logs')}
+                  </th>
+                  <th className="border border-gray-300 px-2 py-1">
+                    {t('app.admin.logs.main.table.latestPage')}
+                  </th>
+                  <th className="border border-gray-300 px-2 py-1">
+                    {t('app.admin.logs.main.table.latestUser')}
+                  </th>
+                  <th className="border border-gray-300 px-2 py-1">
+                    {t('app.admin.logs.main.table.latestTime')}
+                  </th>
+                  <th className="border border-gray-300 px-2 py-1">
+                    {t('app.admin.logs.main.table.actions')}
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {pagedLogs.map((group) => (
                   <tr key={group.ip_address} className="hover:bg-gray-400 text-center">
-                    <td className="border px-2 py-1">{SafeString(group.ip_address, '—')}</td>
-                    {/* 🧼 */}
-                    <td className="border px-2 py-1">{group.count}</td> {/* 🔢 */}
-                    <td className="border px-2 py-1">
-                      {SafeString(group.latestLog?.page, '—')} {/* 🧼 */}
+                    <td className="border border-gray-300 px-2 py-1">
+                      {SafeString(group.ip_address, '—')}
                     </td>
-                    <td className="border px-2 py-1">
-                      {SafeString(group.latestLog?.user?.name, '-')} {/* 🧼 */}
+                    <td className="border border-gray-300 px-2 py-1">{group.count}</td>
+                    <td className="border border-gray-300 px-2 py-1">
+                      {SafeString(group.latestLog?.page, '—')}
                     </td>
-                    <td className="border px-2 py-1">
-                      {new Date(group.latestLog.createdAt).toLocaleString()} {/* 🕒 */}
+                    <td className="border border-gray-300 px-2 py-1">
+                      {SafeString(group.latestLog?.user?.name, '-')}
                     </td>
-                    <td className="border px-2 py-1">
+                    <td className="border border-gray-300 px-2 py-1">
+                      {new Date(group.latestLog.createdAt).toLocaleString()}
+                    </td>
+                    <td className="border border-gray-300 px-2 py-1">
                       <div className="flex gap-2 justify-center">
                         {group.count > 1 && (
-                          <Link href={`/admin/logs/${encodeURIComponent(group.ip_address)}`}>
+                          <Link
+                            href={`/${locale}/admin/logs/${encodeURIComponent(group.ip_address)}`}
+                          >
                             <button className="btn-primary btn-sm">
-                              {t('app.admin.logs.main.action.view')} {/* 👁️ */}
+                              {t('app.admin.logs.main.action.view')}
                             </button>
                           </Link>
                         )}
@@ -248,11 +264,11 @@ export default function AdminLogsMainPage() {
               </div>
               <div>
                 <strong>{t('app.admin.logs.main.card.latestEvent')}:</strong>{' '}
-                {SafeString(group.latestLog?.event, '—')} {/* 🧼 */}
+                {SafeString(group.latestLog?.event, '—')}
               </div>
               <div>
                 <strong>{t('app.admin.logs.main.card.latestUser')}:</strong>{' '}
-                {SafeString(group.latestLog?.user?.name, '-')} {/* 🧼 */}
+                {SafeString(group.latestLog?.user?.name, '-')}
               </div>
               <div>
                 <strong>{t('app.admin.logs.main.card.latestTime')}:</strong>{' '}
@@ -261,7 +277,7 @@ export default function AdminLogsMainPage() {
 
               <div className="flex flex-row justify-between gap-2 mt-3">
                 {group.count > 1 && (
-                  <Link href={`/admin/logs/${encodeURIComponent(group.ip_address)}`}>
+                  <Link href={`/${locale}/admin/logs/${encodeURIComponent(group.ip_address)}`}>
                     {/* eslint-disable-next-line react/jsx-no-comment-textnodes */}
                     <button className="btn-primary w-full btn-glow">
                       {t('app.admin.logs.main.action.view')}
