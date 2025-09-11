@@ -2,7 +2,7 @@
 
 Staðbundin og alþjóðleg IPTV veflausn með greiðslum í gegnum Bitcoin, rauntíma spjalli og admin-yfirsýn.
 
-**Lénið:** https://www.royal-tv.tv  
+**Lénið:** https://www.royal-tv.tv  (ekki virkt í augnablikinu vegna uppfærslu tungumála og annarra uppfærslna)
 **Markmið:** Selja IPTV-áskriftir, sýna pakka, taka við greiðslum, styðja tvö tungumál (is/en) og veita hraða þjónustu í rauntíma.
 
 ---
