@@ -3,8 +3,8 @@
  * useIntervalRefresher 🕒
  * -----------------------------------------------------------
  * Props (positional, for brevity)
- * • onRefresh        → callback to run when the countdown hits 0
- * • intervalSeconds  → how long the timer should run (default 300 s = 5 min)
+ * • onRefresh        → callback to run when the countdown hits0
+ * • intervalSeconds  → how long the timer should run (default300s=5min)
  *
  * Returns
  * • secondsLeft      → current countdown value
@@ -23,7 +23,7 @@ import { useState, useEffect, useCallback } from 'react';
 
 export default function useIntervalRefresher(
   onRefresh, // 🛎️ function to trigger
-  intervalSeconds = 300 // ⏱️ default = 5 min
+  intervalSeconds = 300 // ⏱️ default = 5min
 ) {
   /* 🧮 countdown state */
   const [secondsLeft, setSecondsLeft] = useState(intervalSeconds);

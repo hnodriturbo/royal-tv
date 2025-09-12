@@ -35,7 +35,7 @@ export default function AdminLiveChatUsersPage() {
   const t = useTranslations();
   const locale = useLocale();
 
-  const { data: session, status } = useSession();
+  const { data: _session, status } = useSession();
   const router = useRouter();
   const { isAllowed, redirect } = useAuthGuard('admin');
   const { displayMessage, showLoader, hideLoader } = useAppHandlers();
@@ -163,7 +163,6 @@ export default function AdminLiveChatUsersPage() {
                           action="create"
                           user_id={u.user_id}
                           user={u}
-                          chatType="live"
                           onActionSuccess={fetchUsersWithConversations}
                           buttonText={t('app.admin.liveChat.users.start_new')}
                           isAdmin={true}
@@ -172,7 +171,6 @@ export default function AdminLiveChatUsersPage() {
                         <ConversationActionButton
                           action="deleteAll"
                           user_id={u.user_id}
-                          chatType="live"
                           onActionSuccess={fetchUsersWithConversations}
                           isAdmin={true}
                         />

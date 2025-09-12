@@ -3,9 +3,12 @@
  * ========================= /app/[locale]/user/liveChat/[conversation_id]/page.js =========================
  * 🗂️ User Conversation Details (Client)
  * --------------------------------------------------------------------------------------------------------
- * • Loads a single conversation + messages for the logged-in user
+ * • New layout to mirror Admin page structure
+ *   1) Presence header (IsAdminOnline) with same styling as admin
+ *   2) Conversation list (below presence)
+ *   3) Live chat room
+ *   4) Danger zone
  * • Locale-aware navigation via `useLocale()` — all internal links use /{locale}/... prefixes
- * • Uses project modals for edit/delete; safe redirects after destructive actions
  * • Keeps your custom classes and socket refresh flow intact
  * ========================================================================================================
  */
@@ -28,7 +31,7 @@ import IsAdminOnline from '@/components/reusableUI/socket/IsAdminOnline';
 
 export default function UserConversationDetailsPage() {
   const t = useTranslations();
-  const locale = useLocale(); // 🌍 capture once
+  const locale = useLocale();
   const { conversation_id } = useParams();
   const router = useRouter();
   const { isAllowed, redirect } = useAuthGuard('user');
@@ -38,7 +41,6 @@ export default function UserConversationDetailsPage() {
 
   const [conversationDetails, setConversationDetails] = useState(null);
   const [initialMessages, setInitialMessages] = useState([]);
-  const [userDetails, setUserDetails] = useState(null);
   const [userConversations, setUserConversations] = useState([]);
   const [currentSubject, setCurrentSubject] = useState('');
   const [isReady, setIsReady] = useState(false);
@@ -66,7 +68,6 @@ export default function UserConversationDetailsPage() {
       );
       setConversationDetails(conversationData);
       setInitialMessages(conversationData.messages);
-      setUserDetails(conversationData.owner);
       setCurrentSubject(conversationData.subject);
 
       const { data: list } = await axiosInstance.get(`/api/user/liveChat/main`);
@@ -93,28 +94,38 @@ export default function UserConversationDetailsPage() {
 
   if (!isAllowed) return null;
 
-  // ✏️ edit modal
-  const handleEditMessageModal = (message) =>
+  // ✏️ edit modal (socket-based)
+  const handleEditMessageModal = (messageId, oldMessage, onEditMessage) =>
     openModal('editMessage', {
       title: t('app.user.liveChat.conversation.edit_title'),
       description: t('app.user.liveChat.conversation.edit_desc'),
       confirmButtonText: t('app.user.liveChat.conversation.edit_confirm'),
       cancelButtonText: t('app.user.liveChat.conversation.cancel'),
       onConfirm: async () => {
-        hideModal();
-        setShouldRefresh(true);
+        try {
+          const updated = editTextAreaRef.current?.value?.trim();
+          if (updated && updated !== oldMessage) {
+            onEditMessage?.(messageId, updated); // 🔌 socket emit (edit_message)
+            displayMessage(t('app.user.liveChat.conversation.message_updated'), 'success');
+            setShouldRefresh(true);
+          }
+        } catch {
+          displayMessage(t('app.user.liveChat.conversation.message_edit_failed'), 'error');
+        } finally {
+          hideModal();
+        }
       },
       body: (
         <textarea
           ref={editTextAreaRef}
           className="w-full p-2 border rounded"
-          defaultValue={message?.text || ''}
+          defaultValue={oldMessage || ''}
         />
       )
     });
 
-  // 🗑️ delete modal
-  const handleDeleteMessageModal = (message_id) =>
+  // 🗑️ delete modal (socket-based)
+  const handleDeleteMessageModal = (messageId, onDeleteMessage) =>
     openModal('deleteMessage', {
       title: t('app.user.liveChat.conversation.delete_title'),
       description: t('app.user.liveChat.conversation.delete_desc'),
@@ -123,11 +134,9 @@ export default function UserConversationDetailsPage() {
       confirmButtonType: 'Danger',
       onConfirm: async () => {
         try {
-          await axiosInstance.delete(
-            `/api/user/liveChat/${conversation_id}/messages/${message_id}`
-          );
+          onDeleteMessage?.(messageId); // 🔌 socket emit (delete_message)
           displayMessage(t('app.user.liveChat.conversation.message_deleted'), 'success');
-          setShouldRefresh(true);
+          setShouldRefresh(true); // optional; helps sync lists/badges outside the room
         } catch {
           displayMessage(t('app.user.liveChat.conversation.message_delete_failed'), 'error');
         } finally {
@@ -136,72 +145,86 @@ export default function UserConversationDetailsPage() {
       }
     });
 
+  // 🔎 helpers
+  const renderUnreadBadge = (count) => (
+    <span className="inline-block ml-2 px-2 py-0.5 rounded-full bg-blue-900 text-white text-[14px] font-bold shadow">
+      {count === 1
+        ? t('app.user.liveChat.conversation.unread_badge_one')
+        : t('app.user.liveChat.conversation.unread_badge_other', { count })}
+    </span>
+  );
+
   return (
-    <div className="flex flex-col items-center w-full">
-      <div className="container-style w-full">
-        {/* 📚 Conversations sidebar */}
-        <div className="w-full grid grid-cols-1 lg:grid-cols-[280px_auto] gap-6">
-          <div className="lg:block hidden">
-            <div className="sticky top-4">
-              <div className="text-xl font-bold mb-2">
+    <div className="flex flex-col items-center w-full mt-4">
+      <div className="container-style lg:w-10/12 w-full mt-4 p-2">
+        {/* 1) Presence header — same styling block used on Admin page */}
+        <div className="flex items-center justify-center w-full">
+          <div className="container-style min-w-[220px] lg:max-w-lg w-10/12 p-2 text-center border mx-auto">
+            <IsAdminOnline />
+          </div>
+        </div>
+
+        {/* 2) Conversation list (below presence) */}
+        {userConversations.length > 0 && (
+          <div className="flex items-center justify-center mt-2 mb-4">
+            <div className="container-style w-11/12 lg:w-10/12 p-2">
+              <h3 className="text-lg font-bold mb-1 text-center">
                 {t('app.user.liveChat.conversation.list_title')}
+              </h3>
+              <div className="flex items-center justify-center">
+                <hr className="border border-white w-8/12 my-2" />
               </div>
+
               <div
-                className="flex flex-col gap-2"
-                style={{ maxHeight: '420px', overflowY: 'auto', width: '100%' }}
+                className="flex flex-col gap-1 p-1 w-full max-h-48 overflow-y-auto transition-all"
+                style={{ minWidth: 0, width: '100%' }}
               >
                 {userConversations
                   .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
                   .map((c) => {
+                    const isCurrent = c.conversation_id === conversation_id;
                     const isUnread = c.unreadCount > 0;
+                    const tooltip = isUnread
+                      ? t('app.user.liveChat.conversation.tooltip_unread')
+                      : t('app.user.liveChat.conversation.tooltip_all_read');
+
                     return (
                       <Link
                         key={c.conversation_id}
-                        href={`/${locale}/user/liveChat/${c.conversation_id}` /* ✅ locale-aware */}
-                        className="px-2 py-3 rounded-lg text-xs font-bold w-full transition-colors border"
-                        title={
-                          isUnread
-                            ? t('app.user.liveChat.conversation.tooltip_unread')
-                            : t('app.user.liveChat.conversation.tooltip_all_read')
-                        }
+                        href={`/${locale}/user/liveChat/${c.conversation_id}`}
+                        className={`px-2 py-3 rounded-lg text-xs font-bold w-full transition-colors border
+                          ${isCurrent ? 'border-2 border-green-300' : 'border border-transparent'}
+                          ${isUnread ? 'bg-purple-700 text-white hover:bg-purple-500' : 'bg-gray-500 hover:bg-slate-300 text-white'}
+                        `}
+                        title={tooltip}
                       >
-                        <span className="inline-flex items-center gap-2">
-                          <span>{c.subject || t('app.user.liveChat.conversation.no_subject')}</span>
-                          {isUnread && (
-                            <span className="inline-block ml-2 px-2 py-0.5 rounded-full bg-blue-900 text-white text-[14px] font-bold shadow">
-                              {c.unreadCount === 1
-                                ? t('app.user.liveChat.conversation.unread_badge_one')
-                                : t('app.user.liveChat.conversation.unread_badge_other', {
-                                    count: c.unreadCount
-                                  })}
-                            </span>
-                          )}
-                        </span>
+                        {c.subject || t('app.user.liveChat.conversation.no_subject')}
+                        {isUnread && renderUnreadBadge(c.unreadCount)}
                       </Link>
                     );
                   })}
               </div>
             </div>
           </div>
+        )}
 
-          {/* 💬 Live Chat Room */}
-          {isReady && conversationDetails && (
-            <div className="flex flex-col flex-grow w-full">
-              <LiveChatRoom
-                session={session}
-                conversation_id={conversation_id}
-                initialMessages={initialMessages}
-                chatType="live"
-                onEditMessageModal={handleEditMessageModal}
-                onDeleteMessageModal={handleDeleteMessageModal}
-                subject={currentSubject}
-                user={conversationDetails.owner}
-              />
-            </div>
-          )}
-        </div>
+        {/* 3) Live Chat Room */}
+        {isReady && conversationDetails && (
+          <div className="flex flex-col flex-grow w-full">
+            <LiveChatRoom
+              session={session}
+              conversation_id={conversation_id}
+              initialMessages={initialMessages}
+              chatType="live"
+              onEditMessageModal={handleEditMessageModal}
+              onDeleteMessageModal={handleDeleteMessageModal}
+              subject={currentSubject}
+              user={conversationDetails.owner}
+            />
+          </div>
+        )}
 
-        {/* 🧨 Danger Zone */}
+        {/* 4) Danger Zone */}
         <div className="flex flex-col justify-center items-center w-full">
           <div className="w-8/12 max-w-lg">
             <div className="w-full p-2 mt-4 border border-red-500 rounded-lg text-center bg-red-400">
@@ -217,14 +240,13 @@ export default function UserConversationDetailsPage() {
                     action="delete"
                     user_id={conversationDetails.owner.user_id}
                     conversation_id={conversation_id}
-                    chatType="live"
                     onActionSuccess={() => {
                       displayMessage(
                         t('app.user.liveChat.conversation.conversation_deleted'),
                         'success'
                       );
                       setTimeout(() => {
-                        router.push(`/${locale}/user/liveChat/main`); // ✅ locale-aware
+                        router.push(`/${locale}/user/liveChat/main`);
                       }, 1200);
                     }}
                   />

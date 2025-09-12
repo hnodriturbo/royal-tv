@@ -21,9 +21,9 @@ import useAuthGuard from '@/hooks/useAuthGuard'; // 🛡️ guard
 import Pagination from '@/components/reusableUI/Pagination'; // 🔢 pagination
 import { userSubscriptionSortOptions, getUserSubscriptionSortFunction } from '@/lib/utils/sorting'; // 🔀 sort utils
 import SortDropdown from '@/components/reusableUI/SortDropdown'; // ⬇️ sort dropdown
+
 // 🔎 query params
 import Countdown from '@/components/ui/countdown/Countdown'; // ⏳ small timer
-import RefreshCountdownTimer from '@/components/reusableUI/RefreshCountdownTimer'; // 🔄 page refresh (kept)
 import calculateMonthsDaysLeft from '@/lib/utils/calculateMonthsDaysLeft'; // 🗓️ human time helper
 import UserSubscriptionPanel from '@/components/reusableUI/socket/UserSubscriptionPanel'; // 💬 socket panel
 
@@ -106,7 +106,6 @@ export default function UserSubscriptionsMainPage() {
     if (status === 'authenticated' && isAllowed) {
       fetchSubscriptions(); // 📡 fetch
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, isAllowed]); // 🧵 minimal deps
 
   // ↩️ redirect when not allowed (after auth settles)
@@ -180,16 +179,16 @@ export default function UserSubscriptionsMainPage() {
 
               // 🎨 card color by status
               let borderColor = 'border-gray-400';
-              let bgColor = 'bg-black';
+              /* let bgColor = 'bg-black'; */
               if (sub.status === 'active') {
                 borderColor = 'border-green-700';
-                bgColor = 'bg-black';
+                /* bgColor = 'bg-black'; */
               } else if (sub.status === 'pending') {
                 borderColor = 'border-yellow-500';
-                bgColor = 'bg-yellow-100/10';
+                /* bgColor = 'bg-yellow-100/10'; */
               } else if (sub.status === 'expired' || sub.status === 'disabled') {
                 borderColor = 'border-red-700';
-                bgColor = 'bg-red-100/10';
+                /* bgColor = 'bg-red-100/10'; */
               }
 
               return (

@@ -20,7 +20,7 @@ import useAuthGuard from '@/hooks/useAuthGuard'; // 🚧 Protect route by role
 import SeeAllNotifications from '@/components/reusableUI/socket/SeeAllNotifications'; // 🛎️ See all notifications
 
 export default function UserNotificationsPage() {
-  const { data: session, status } = useSession();
+  const { data: _session, status } = useSession();
   const { isAllowed, redirect } = useAuthGuard('user');
   const router = useRouter();
 
@@ -35,8 +35,11 @@ export default function UserNotificationsPage() {
 
   return (
     <div className="flex flex-col items-center w-full py-6">
-      {/* 👤 SeeAllNotifications for user */}
-      <SeeAllNotifications userRole="user" />
+      {/* 🟢 Notification Center */}
+      <div className="lg:w-[800px] w-full mx-auto p-4">
+        {/* 👤 SeeAllNotifications for user */}
+        <SeeAllNotifications userRole="user" />
+      </div>
     </div>
   );
 }

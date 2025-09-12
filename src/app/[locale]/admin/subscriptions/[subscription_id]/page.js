@@ -26,7 +26,7 @@ import { SafeString } from '@/lib/ui/SafeString';
 
 export default function AdminUserSubscriptionsPage() {
   const t = useTranslations();
-  const { data: session, status } = useSession();
+  const { data: _session, status } = useSession();
   const { isAllowed, redirect } = useAuthGuard('admin');
   const { displayMessage, showLoader, hideLoader } = useAppHandlers();
   const { openModal, hideModal } = useModal();

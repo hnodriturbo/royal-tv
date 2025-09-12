@@ -86,7 +86,6 @@ export default function PackageBuyNowPage() {
     } finally {
       hideLoader();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     session?.user,
     paymentPackage,
@@ -134,7 +133,6 @@ export default function PackageBuyNowPage() {
       router.push(`/${locale}/user/subscriptions?paymentSuccess=1`); // ✅ locale captured
     });
     return unsubscribe;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onTransactionFinished, router, displayMessage, locale]);
 
   // kick off on auth ready
@@ -142,7 +140,6 @@ export default function PackageBuyNowPage() {
     if (status === 'authenticated' && isAllowed) {
       initializePaymentSession();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, isAllowed]);
 
   // guard redirects

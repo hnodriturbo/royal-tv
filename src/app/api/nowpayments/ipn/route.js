@@ -234,7 +234,10 @@ export async function POST(request) {
           'Payment was processed but the subscription did not get created properly. Please contact the admin through the Live Chat to let them know.',
           JSON.stringify(error?.response?.data || { message: String(error) })
         );
-      } catch {}
+      } catch (notifyErr) {
+        // Ensure non-empty block without affecting behavior
+        void notifyErr;
+      }
       return NextResponse.json({ error: 'MegaOTT subscription creation error' }, { status: 500 });
     }
   } else {

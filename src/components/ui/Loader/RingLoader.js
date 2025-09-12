@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { RingLoader as Spinner } from 'react-spinners'; // 🔄 third-party spinner
 import { useTranslations } from 'next-intl'; // 🌐 components.ringLoader.*
 

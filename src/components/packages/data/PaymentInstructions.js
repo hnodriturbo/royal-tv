@@ -5,7 +5,7 @@
 
 'use client';
 
-import React from 'react';
+import _React from 'react';
 import { useTranslations } from 'next-intl';
 
 export default function PaymentInstructions() {

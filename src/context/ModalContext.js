@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useState, useCallback } from 'react';
+import { createContext, useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { SafeString } from '@/lib/ui/SafeString';

@@ -9,7 +9,6 @@
  */
 
 'use client';
-import Link from 'next/link';
 
 import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl'; // 🌍 i18n — requested import path & style
@@ -23,7 +22,7 @@ export default function MoreInfoPage() {
 
   // 👤 auth status (optional for grid behaviors)
   const { data: session, status } = useSession();
-  const isAuthenticatedUser =
+  const authenticated =
     status === 'authenticated' && session?.user?.role && session.user.role !== 'guest';
 
   return (
@@ -40,7 +39,7 @@ export default function MoreInfoPage() {
           </h2>
         </div>
 
-        <PackagesGrid authenticated={isAuthenticatedUser} />
+        <PackagesGrid authenticated={authenticated} />
       </div>
     </div>
   );

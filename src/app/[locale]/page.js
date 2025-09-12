@@ -55,7 +55,7 @@ export default function HomePage() {
             freeTrialStatus === 'disabled' ||
             freeTrialStatus === 'expired' ||
             freeTrialStatus === 'pending' ? (
-              <UserSubscriptionPanel />
+              <UserSubscriptionPanel user_id={session?.user?.user_id} />
             ) : (
               <FreeTrialPanel user_id={user.user_id} className="w-full" />
             )

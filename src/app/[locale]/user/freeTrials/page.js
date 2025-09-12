@@ -43,7 +43,7 @@ export default function UserFreeTrialDetailsPage() {
     try {
       const { data } = await axiosInstance.get('/api/user/freeTrials');
       setFreeTrial(data || null);
-    } catch (error) {
+    } catch {
       setFreeTrial(null);
       displayMessage(t('app.user.freeTrials.page.load_failed'), 'error');
     } finally {
@@ -57,7 +57,6 @@ export default function UserFreeTrialDetailsPage() {
     if (status === 'authenticated' && isAllowed) {
       fetchFreeTrial();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, isAllowed]);
 
   // ↩️ redirect when not allowed (after auth settles)

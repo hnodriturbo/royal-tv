@@ -13,6 +13,8 @@ export const GET = withRole('user', async (_req, _ctx, session) => {
 
     return NextResponse.json(freeTrial ?? null);
   } catch (error) {
+    // Mark variable as used to satisfy no-unused-vars without changing behavior
+    void error;
     return NextResponse.json({ error: 'Failed to fetch free trial' }, { status: 500 });
   }
 });

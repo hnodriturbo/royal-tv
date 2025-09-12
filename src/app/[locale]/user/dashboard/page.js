@@ -2,7 +2,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import useLogout from '@/hooks/useLogout';
+
 import useAuthGuard from '@/hooks/useAuthGuard';
 
 import UserSubscriptionPanel from '@/components/reusableUI/socket/UserSubscriptionPanel';
@@ -15,7 +15,7 @@ export default function UserDashboard() {
   // 🔐 Auth/session setup
   const { data: session, status } = useSession();
   const { isAllowed, redirect } = useAuthGuard('user');
-  const logout = useLogout();
+
   const router = useRouter();
 
   // 🗣️ Translator for root dashboard bits
@@ -49,7 +49,7 @@ export default function UserDashboard() {
       </div>
 
       {/* 🔵 User Subscription Panel */}
-      <div className="w-full mx-auto">
+      <div className="lg:w-[600px] w-full mx-auto">
         {<UserSubscriptionPanel user_id={session?.user?.user_id} />}
       </div>
 

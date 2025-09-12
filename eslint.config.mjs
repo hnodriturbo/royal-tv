@@ -1,13 +1,14 @@
 // eslint.config.mjs
 import js from '@eslint/js';
 import next from '@next/eslint-plugin-next';
-import react from 'eslint-plugin-react'; // ✅ add
+import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import prettier from 'eslint-plugin-prettier';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import globals from 'globals';
 
 export default [
+  // 🧹 Ignore folders and assets
   {
     ignores: [
       'node_modules/**',
@@ -20,13 +21,23 @@ export default [
       '*.css',
       '*.scss',
       '*.svg'
-    ]
+    ],
+    linterOptions: { reportUnusedDisableDirectives: true } // 🔔 surfaces unused /* eslint-disable */
   },
 
+  // 🧠 Base JS rules
   js.configs.recommended,
 
-  // (Optional but nice): bring in React’s flat presets so JSX is handled well
-  // If your installed version supports .configs.flat:
+  // 🧩 Make Next plugin VISIBLE to Next (global block)
+  {
+    plugins: { '@next/next': next },
+    rules: {
+      ...next.configs.recommended.rules,
+      ...(next.configs['core-web-vitals']?.rules ?? {}) // ✅ include core-web-vitals if available
+    }
+  },
+
+  // 🧰 React/Prettier + your custom rules (scoped to source files)
   ...(react.configs?.flat?.recommended ? [react.configs.flat.recommended] : []),
   ...(react.configs?.flat?.['jsx-runtime'] ? [react.configs.flat['jsx-runtime']] : []),
 
@@ -34,7 +45,7 @@ export default [
     files: ['**/*.{js,jsx,ts,tsx}'],
     plugins: {
       '@next/next': next,
-      react, // ✅ add
+      react,
       'react-hooks': reactHooks,
       prettier
     },
@@ -44,21 +55,36 @@ export default [
       parserOptions: { ecmaFeatures: { jsx: true } },
       globals: { ...globals.browser, ...globals.node }
     },
-    settings: {
-      react: { version: 'detect' } // ✅ helps other react rules
-    },
+    settings: { react: { version: 'detect' } },
     rules: {
-      ...next.configs.recommended.rules,
+      // Next rules already applied globally; fine to keep recommended here too
+      // ...next.configs.recommended.rules,
 
-      // ✅ this is the key — marks JSX identifiers as “used”
+      // ✅ mark JSX vars as used
       'react/jsx-uses-vars': 'error',
-
-      // Not needed in React 17+ (no React import), but harmless if present:
       'react/jsx-uses-react': 'off',
-      'no-unused-vars': ['warn', { caughtErrors: 'all', caughtErrorsIgnorePattern: '^_' }],
+
+      // 🟨 make unused-vars calmer & underscore-friendly
+      'no-unused-vars': [
+        'warn',
+        {
+          vars: 'all',
+          args: 'after-used',
+          ignoreRestSiblings: true,
+          varsIgnorePattern: '^_', // allow const _unused = ...
+          argsIgnorePattern: '^_', // allow function fn(_unused) {}
+          destructuredArrayIgnorePattern: '^_'
+        }
+      ],
+
+      // Hooks
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'off',
+
+      // Prettier formatting as a warning (not blocking builds)
       'prettier/prettier': 'warn',
+
+      // ❌ disallow locale prop on next/link in App Router
       'no-restricted-syntax': [
         'error',
         {
@@ -66,11 +92,14 @@ export default [
           message: 'Do not use `locale` on next/link in the App Router. Prefix the path instead.'
         }
       ],
+
+      // PropTypes not required in your JS project
       'react/prop-types': 'off',
       'react/require-default-props': 'off',
       'react/no-typos': 'warn'
     }
   },
 
-  eslintConfigPrettier // keep last
+  // Keep last to turn off rules that conflict with Prettier
+  eslintConfigPrettier
 ];

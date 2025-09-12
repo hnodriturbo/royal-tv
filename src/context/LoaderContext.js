@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useState, useCallback, useRef } from 'react';
+import { createContext, useState, useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import RingLoader from '@/components/ui/Loader/RingLoader';
 import { useTranslations } from 'next-intl';

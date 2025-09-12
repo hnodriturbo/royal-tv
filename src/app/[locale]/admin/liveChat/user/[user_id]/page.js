@@ -35,7 +35,7 @@ export default function AdminLiveChatUserConversationsPage() {
   const t = useTranslations();
 
   // 🔐 session & guard
-  const { data: session, status } = useSession();
+  const { data: _session, status } = useSession();
   const { isAllowed, redirect } = useAuthGuard('admin');
   const router = useRouter();
 
@@ -96,8 +96,7 @@ export default function AdminLiveChatUserConversationsPage() {
     if (user_id && status === 'authenticated' && isAllowed) {
       fetchUserConversations();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user_id, status, isAllowed, locale]); // include locale so redirects include the right prefix
+  }, [user_id, status, isAllowed, locale]);
 
   // 🛑 redirect away if forbidden
   useEffect(() => {

@@ -13,11 +13,10 @@ import { useEffect } from 'react';
 import { Suspense } from 'react'; // ⏳ suspense for hook-using children
 import { useSession } from 'next-auth/react';
 
-import useLogout from '@/hooks/useLogout';
-import useAuthGuard from '@/hooks/useAuthGuard';
 // 🌍 locale-aware router
 import { useTranslations } from 'next-intl'; // 🌐 i18n (full keys)
 
+import useAuthGuard from '@/hooks/useAuthGuard';
 import NotificationCenter from '@/components/reusableUI/socket/NotificationCenter';
 import OnlineUsers from '@/components/reusableUI/socket/OnlineUsers';
 import IsAdminOnline from '@/components/reusableUI/socket/IsAdminOnline';
@@ -27,9 +26,8 @@ export default function AdminDashboard() {
   const t = useTranslations();
 
   // 👤 auth/session
-  const { data: session, status } = useSession();
+  const { data: _session, status } = useSession();
   const { isAllowed, redirect } = useAuthGuard('admin');
-  const logout = useLogout();
   const router = useRouter();
 
   // 🔒 redirect protection

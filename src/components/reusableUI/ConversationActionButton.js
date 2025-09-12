@@ -1,7 +1,6 @@
-// components/reusableUI/ConversationActionButton.js
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -10,6 +9,16 @@ import useModal from '@/hooks/useModal';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 import axiosInstance from '@/lib/core/axiosInstance';
 
+/**
+ * ConversationActionButton
+ * - Supports actions: create | delete | deleteAll
+ * - Shows subject + message fields for `create` using your Modal's custom content API
+ * - Calls optional `onActionSuccess` after a successful action
+ * - Reads session and hides itself unless role is "admin" or "user"
+ * - Uses unified API endpoints at /api/liveChat/{create|delete|deleteAll}
+ *
+ * ⚠️ i18n: All t() keys are kept exactly as provided.
+ */
 export default function ConversationActionButton({
   action = 'create',
   user_id,
@@ -17,13 +26,19 @@ export default function ConversationActionButton({
   user,
   buttonClass,
   size,
-  buttonText
+  buttonText,
+  onActionSuccess // optional: ({ action, conversation_id?, user_id?, created_id?, result }) => void
 }) {
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
-  const { data: session } = useSession();
-  const isAdmin = session?.user?.role === 'admin';
+  const { data: session, status } = useSession();
+
+  const role = session?.user?.role;
+  const isAdmin = role === 'admin';
+  const isUser = role === 'user';
+
+  // ⛔️ Do NOT return yet — call all hooks first to keep hook order consistent across renders
 
   const { openModal, hideModal } = useModal();
   const { createConversation } = useSocketHub();
@@ -36,122 +51,122 @@ export default function ConversationActionButton({
     [router, locale, isAdmin]
   );
 
-  // Accept optional { subject, message } from the modal
+  // Refs for create modal fields
+  const subjectRef = useRef(null);
+  const messageRef = useRef(null);
+
+  // CREATE
   const handleCreate = useCallback(
     async ({ subject, message } = {}) => {
       try {
-        // Socket first (pass extra args if your hub supports it; ignored otherwise)
-        const id = (await createConversation?.(user_id, user, { subject, message })) || null;
-        if (id) {
-          goTo(id);
+        // Prefer socket (if hub returns an id)
+        const createdId = (await createConversation?.(user_id, user, { subject, message })) || null;
+        if (createdId) {
+          onActionSuccess?.({ action: 'create', user_id, created_id: createdId, result: 'socket' });
+          goTo(createdId);
           return;
         }
-        // Single unified API route for admin + user
+
+        // Fallback to REST API
         const res = await axiosInstance.post('/api/liveChat/create', {
           user_id,
           subject,
           message
         });
-        goTo(res.data?.conversation_id || res.data?.id);
+        const id = res?.data?.conversation_id || res?.data?.id;
+        onActionSuccess?.({ action: 'create', user_id, created_id: id, result: res?.data });
+        goTo(id);
       } finally {
         hideModal();
       }
     },
-    [createConversation, user_id, user, goTo, hideModal]
+    [createConversation, user_id, user, goTo, hideModal, onActionSuccess]
   );
 
-  // ❌ Handle the delete of a single conversation
+  // DELETE one
   const handleDelete = useCallback(async () => {
     try {
-      const scope = isAdmin ? 'admin' : 'user';
-      await axiosInstance.delete(`/api/${scope}/liveChat/${conversation_id}`);
+      const res = await axiosInstance.delete('/api/liveChat/delete', {
+        data: { conversation_id }
+      });
+      onActionSuccess?.({ action: 'delete', conversation_id, result: res?.data });
     } finally {
       hideModal();
     }
-  }, [conversation_id, isAdmin, hideModal]);
+  }, [conversation_id, hideModal, onActionSuccess]);
 
-  // ❌ Only admin can delete all conversations for one user
+  // DELETE all (admin only)
   const handleDeleteAll = useCallback(async () => {
     try {
-      if (!isAdmin) return; // UI guard; API also enforces
-      await axiosInstance.delete(`/api/admin/liveChat/deleteAll`, {
-        params: { user_id }
+      if (!isAdmin) return; // UI guard; API should also enforce
+      const res = await axiosInstance.delete('/api/liveChat/deleteAll', {
+        data: { user_id }
       });
+      onActionSuccess?.({ action: 'deleteAll', user_id, result: res?.data });
     } finally {
       hideModal();
     }
-  }, [isAdmin, user_id, hideModal]);
+  }, [isAdmin, user_id, hideModal, onActionSuccess]);
 
+  // Modal definitions
   const createModal = useMemo(() => {
     if (action === 'create') {
-      // Build the form into the modal config so Subject + Message render again.
       const subjectPlaceholder = t('components.conversationActionButton.placeholder_subject');
       const messagePlaceholder = t('components.conversationActionButton.placeholder_message');
 
+      // Shared custom content used by both `customContent` and `body` fallbacks
+      const content = (
+        <div className="space-y-2">
+          <input
+            ref={subjectRef}
+            name="subject"
+            type="text"
+            className="w-full border rounded p-2"
+            placeholder={subjectPlaceholder}
+          />
+          <textarea
+            ref={messageRef}
+            name="message"
+            className="w-full border rounded p-2 h-28"
+            placeholder={messagePlaceholder}
+          />
+        </div>
+      );
+
+      const onConfirm = () => {
+        const subject = subjectRef.current?.value?.trim();
+        const message = messageRef.current?.value?.trim();
+        if (!subject || !message) return; // keep modal open if invalid
+        handleCreate({ subject, message });
+      };
+
       return {
         btn: buttonClass || 'btn-primary',
-        // keep your key naming
         label: buttonText || t('components.conversationActionButton.btn_start_new'),
         modal: {
           title: t('components.conversationActionButton.modal_create_title'),
           description: t('components.conversationActionButton.modal_create_description'),
           confirmText: t('components.conversationActionButton.modal_create_confirm'),
 
-          // ✅ Shape 1: what many custom modals use
+          // For modal implementations that read generated fields
           inputs: [
             { name: 'subject', type: 'text', placeholder: subjectPlaceholder, required: true },
-            {
-              name: 'message',
-              type: 'textarea',
-              placeholder: messagePlaceholder,
-              required: true
-            }
+            { name: 'message', type: 'textarea', placeholder: messagePlaceholder, required: true }
           ],
-
-          // ✅ Shape 2: alternate key your old modal may expect
           fields: [
             { name: 'subject', type: 'text', placeholder: subjectPlaceholder, required: true },
-            {
-              name: 'message',
-              type: 'textarea',
-              placeholder: messagePlaceholder,
-              required: true
-            }
+            { name: 'message', type: 'textarea', placeholder: messagePlaceholder, required: true }
           ],
 
-          // ✅ Shape 3: ultimate fallback — fully custom body (no class changes)
-          // If your modal supports a render/body/children prop, it will display this.
-          // If not, it will be ignored harmlessly.
-          render: ({ values = {}, setValue }) => (
-            <div>
-              <input
-                name="subject"
-                type="text"
-                placeholder={subjectPlaceholder}
-                value={values.subject ?? ''}
-                onChange={(e) => setValue?.('subject', e.target.value)}
-              />
-              <textarea
-                name="message"
-                placeholder={messagePlaceholder}
-                value={values.message ?? ''}
-                onChange={(e) => setValue?.('message', e.target.value)}
-              />
-            </div>
-          ),
+          // Primary: render real inputs (works like your admin page's customContent/body usage)
+          customContent: () => content,
+          body: content,
 
-          // Simple validation message using your i18n key
-          validate: (values) => {
-            if (!values?.subject?.trim() || !values?.message?.trim()) {
-              return t('components.conversationActionButton.validation_subject_message_required');
-            }
-          },
-
-          // onConfirm receives the form values from the modal
-          onConfirm: (values) => handleCreate(values)
+          onConfirm
         }
       };
     }
+
     if (action === 'delete') {
       return {
         btn: buttonClass || 'btn-danger',
@@ -164,7 +179,8 @@ export default function ConversationActionButton({
         }
       };
     }
-    // delete all
+
+    // deleteAll (admin only)
     return {
       btn: buttonClass || 'btn-danger',
       label: buttonText || t('components.conversationActionButton.btn_delete_all'),
@@ -179,6 +195,10 @@ export default function ConversationActionButton({
 
   const sizeClass = size === 'sm' ? 'btn-sm' : size === 'lg' ? 'btn-lg' : '';
   const disabled = action === 'deleteAll' && !isAdmin;
+
+  // ✅ Now it's safe to return conditionally — *after* all hooks have been called in this render
+  const isAllowed = status === 'authenticated' && (isAdmin || isUser);
+  if (!isAllowed) return null;
   if (action === 'deleteAll' && !isAdmin) return null;
 
   return (
@@ -193,36 +213,33 @@ export default function ConversationActionButton({
   );
 }
 
-/* 
-Usage of this button should be exactly like this:
-import ConversationActionButton from '@/components/reusableUI/ConversationActionButton';
-
-create:
-User to start new conversation with admin support:
-    <ConversationActionButton
-      action="create"
-      user_id={user.user_id}   // owner of the conversation (must be a normal user)
-      user={user}              // passed to socket hub if used
-    />
-
-Create conversation as admin to targetUser
+/**
+USAGE
+------
+1) Create (user or admin initiates):
 <ConversationActionButton
   action="create"
-  user_id={targetUser.user_id} // admin is creating for this user (the user get to be the owner)
+  user_id={targetUser.user_id}
   user={targetUser}
+  onActionSuccess={({ created_id }) => {
+    // optional toast etc.; navigation is automatic via goTo(created_id)
+  }}
 />
 
-
-Delete Conversation by conversation_id:
-  <ConversationActionButton
+2) Delete one conversation:
+<ConversationActionButton
   action="delete"
   conversation_id={conversation.conversation_id}
+  onActionSuccess={() => {
+    // e.g. show toast and redirect
+  }}
 />
 
-Delete All Conversations for admin only
-
-
-
-
-
+3) Delete ALL conversations for a user (admin only):
+<ConversationActionButton
+  action="deleteAll"
+  user_id={user.user_id}
+  onActionSuccess={() => {/* toast or refresh */
+/*}}
+/>
 */

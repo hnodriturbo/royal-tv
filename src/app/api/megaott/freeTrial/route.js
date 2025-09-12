@@ -5,8 +5,8 @@
  * Handles cookies/XSRF just like Postman/browser.
  *
  * Body JSON: {
- *   user_id: string,
- *   ...all other MegaOTT trial fields (see below)
+ * user_id: string,
+ * ...all other MegaOTT trial fields (see below)
  * }
  *
  * Creates only one active free trial per user.
@@ -125,7 +125,8 @@ export async function POST(request) {
         password: res.password || null,
         mac_address: res.mac_address || null,
         package_id: res.package?.id || null,
-        package_name: 'Free Trial For 24H' || null,
+        // ⛏️ FIX: remove constant truthy left-hand side of ||
+        package_name: 'Free Trial For 24H',
         template: res.template || null,
         max_connections: res.max_connections ?? null,
         forced_country: res.forced_country || null,

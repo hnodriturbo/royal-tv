@@ -14,7 +14,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { useMemo, useState } from 'react';
-import sidebarLinks from '@/lib/utils/sidebarLinks';
+/* import sidebarLinks from '@/lib/utils/sidebarLinks'; */
 import useLogout from '@/hooks/useLogout';
 import { useLocale, useTranslations } from 'next-intl';
 

@@ -8,8 +8,8 @@ import useAppHandlers from '@/hooks/useAppHandlers';
 
 const useAuthGuard = (requiredRole) => {
   const { data: session, status } = useSession();
-  const { displayMessage, showLoader, hideLoader } = useAppHandlers();
-  const router = useRouter();
+  const { showLoader, hideLoader } = useAppHandlers();
+  const _router = useRouter();
   const t = useTranslations();
   const locale = useLocale(); // ✅ top-level (not inside effects)
 

@@ -43,7 +43,7 @@ export default function NotificationCenter({ userRole = 'user' }) {
     getPreview,
     getDrawerSlice,
     resortNotifications,
-    refreshNotifications,
+    /* refreshNotifications, */
     removeNotification,
     clearAllNotifications
   } = useNotifications(user_id);

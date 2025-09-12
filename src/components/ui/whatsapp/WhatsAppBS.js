@@ -1,14 +1,14 @@
 'use client';
 
-import React from 'react';
-import { useTranslations } from 'next-intl'; // 🌐 components.whatsAppBS.*
-
 /**
  * 💬 WhatsAppLogo
  * ---------------
  * • Floating WhatsApp button.
  * • Adds translated title + aria-label (visible tooltip on hover).
  */
+
+import { useTranslations } from 'next-intl'; // 🌐 components.whatsAppBS.*
+
 export default function WhatsAppLogo() {
   const t = useTranslations(); // 🗣️ translator bound to current language
 

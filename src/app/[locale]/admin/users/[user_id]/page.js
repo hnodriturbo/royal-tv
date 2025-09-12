@@ -90,7 +90,6 @@ export default function AdminUserProfilePage() {
       hideLoader();
       setIsLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showLoader, hideLoader, displayMessage, user_id]);
 
   // 🗑️ delete action (uses outer locale; do NOT call hooks here)

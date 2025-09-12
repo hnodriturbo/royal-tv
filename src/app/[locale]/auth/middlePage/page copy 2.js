@@ -1,72 +1,55 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import { useTranslations, useLocale } from 'next-intl';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
+// Your existing redirect helper (toasts + loader + delay)
 import useAppRedirectHandlers from '@/hooks/useAppRedirectHandlers';
 
 const forbiddenRedirects = ['/auth/login', '/auth/middlePage'];
-
-const LOCALE_RE = /^\/([a-z]{2})(?=\/|$)/i;
-const stripLocale = (p) => p.replace(LOCALE_RE, '');
-const hasAnyLocale = (p) => LOCALE_RE.test(p);
 
 export default function MiddlePage() {
   const t = useTranslations();
   const locale = useLocale();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { data: session, status } = useSession();
   const { redirectWithMessage } = useAppRedirectHandlers();
 
-  // Persistent guard for dev (remount-safe)
-  const redirectedOnce = useRef(false);
-
+  const [alreadyRedirected, setAlreadyRedirected] = useState(false);
   const L = (path) => `/${locale}${path.startsWith('/') ? path : `/${path}`}`;
 
   useEffect(() => {
+    if (alreadyRedirected) return;
     if (status === 'loading') return;
 
-    if (redirectedOnce.current) return;
-    const guardKey = `mp:redirect:${searchParams.toString()}`;
-    if (typeof window !== 'undefined' && sessionStorage.getItem(guardKey)) return;
+    const loginFlag = searchParams.get('login') === 'true';
+    const logoutFlag = searchParams.get('logout') === 'true';
+    const guestFlag = searchParams.get('guest') === 'true';
+    const notLoggedInFlag = searchParams.get('notLoggedIn') === 'true';
+    const adminDenied = searchParams.get('admin') === 'false';
+    const userDenied = searchParams.get('user') === 'false';
+    const notFoundFlag = searchParams.get('not-found') === 'true';
+    const errorCode = searchParams.get('error');
+    const redirectToParam = searchParams.get('redirectTo');
+    const profileUpdated = searchParams.get('update') === 'profile';
+    const profilePasswordUpdated = searchParams.get('passwordUpdate') === 'profile';
+    const updateSuccess = searchParams.get('success') === 'true';
+    const paymentSuccess = searchParams.get('paymentSuccess') === 'true';
 
-    const qp = (key) => searchParams.get(key);
-    const loginFlag = qp('login') === 'true';
-    const logoutFlag = qp('logout') === 'true';
-    const guestFlag = qp('guest') === 'true';
-    const notLoggedInFlag = qp('notLoggedIn') === 'true';
-    const adminDenied = qp('admin') === 'false';
-    const userDenied = qp('user') === 'false';
-    const notFoundFlag = qp('not-found') === 'true';
-    const errorCode = qp('error');
-    const redirectToParam = qp('redirectTo') || '';
-    const profileUpdated = qp('update') === 'profile';
-    const profilePasswordUpdated = qp('passwordUpdate') === 'profile';
-    const updateSuccess = qp('success') === 'true';
-    const paymentSuccess = qp('paymentSuccess') === 'true';
+    if (loginFlag && status !== 'authenticated') return;
 
-    // Default target by role
     let defaultTarget = L('/');
     if (session?.user?.role === 'admin') defaultTarget = L('/admin/dashboard');
     if (session?.user?.role === 'user') defaultTarget = L('/user/dashboard');
 
-    // Normalize redirectTo
-    const safeRedirect = (() => {
-      if (!redirectToParam) return null;
-      const asPath = redirectToParam.startsWith('/') ? redirectToParam : `/${redirectToParam}`;
-
-      const checkPath = stripLocale(asPath);
-      if (forbiddenRedirects.some((p) => checkPath.startsWith(p))) {
-        return null;
-      }
-
-      if (hasAnyLocale(asPath)) return asPath;
-
-      return L(asPath);
-    })();
-
-    let chosenTarget = safeRedirect || defaultTarget;
+    let chosenTarget = defaultTarget;
+    if (redirectToParam && !forbiddenRedirects.some((p) => redirectToParam.startsWith(p))) {
+      chosenTarget = redirectToParam.startsWith('/')
+        ? L(redirectToParam)
+        : L(`/${redirectToParam}`);
+    }
 
     let feedbackMessage = '';
     let uiColor = 'info';
@@ -130,8 +113,7 @@ export default function MiddlePage() {
           default: 'Access denied! Redirecting to login…'
         });
         uiColor = 'error';
-        const backTarget = safeRedirect || defaultTarget;
-        chosenTarget = L(`/auth/signin?redirectTo=${encodeURIComponent(backTarget)}`);
+        chosenTarget = L(`/auth/signin?redirectTo=${encodeURIComponent(chosenTarget)}`);
       } else if (errorCode) {
         const key =
           errorCode === 'CredentialsSignin' || errorCode === 'Configuration'
@@ -152,8 +134,7 @@ export default function MiddlePage() {
     }
 
     if (feedbackMessage) {
-      redirectedOnce.current = true;
-      if (typeof window !== 'undefined') sessionStorage.setItem(guardKey, '1');
+      setAlreadyRedirected(true);
       redirectWithMessage({
         target: chosenTarget,
         message: feedbackMessage,
@@ -163,7 +144,7 @@ export default function MiddlePage() {
         pageDelay: delayMs
       });
     }
-  }, [searchParams, status, session, redirectWithMessage, t, locale]);
+  }, [searchParams, status, session, alreadyRedirected, redirectWithMessage, t, locale, router]);
 
   return null;
 }

@@ -26,7 +26,7 @@ export default function FreeTrialPanel({ user_id, className }) {
 
   // 🏷️ Hook for status, error, and refresher
   const { freeTrialStatus, error, refreshStatus } = useFreeTrialStatus(user_id);
-
+  console.log('free trial status:', freeTrialStatus);
   return (
     <div className={clsx('w-full max-w-2xl mx-auto flex flex-col items-center my-2', className)}>
       {/* 📝 ACTIVE status → deep link to credentials */}

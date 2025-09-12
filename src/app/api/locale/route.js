@@ -12,7 +12,10 @@ export async function POST(req) {
   let body = {};
   try {
     body = await req.json();
-  } catch {}
+  } catch {
+    // Ensure non-empty catch without changing behavior
+    body = {};
+  }
   const locale = normalize(body.locale);
   const res = NextResponse.json({ ok: true, locale });
   res.cookies.set('NEXT_LOCALE', locale, {

@@ -35,7 +35,7 @@ export default function FreeTrialButton({ user_id, refreshStatus }) {
       aria-busy={loading}
       disabled={loading}
     >
-      {loading ? t('socket.ui.common.refreshing') : t('components.freeTrialButton.request_btn')}
+      {loading ? t('socket.ui.common.refreshing') : t('socket.ui.freeTrialPanel.request_btn')}
     </button>
   );
 }

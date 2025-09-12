@@ -91,7 +91,6 @@ export default function AdminLiveChatConversationPage() {
 
   useEffect(() => {
     fetchConversationData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversation_id, status]);
 
   useEffect(() => {

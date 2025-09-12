@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useState, useCallback } from 'react';
+import { createContext, useState, useCallback } from 'react';
 import { SafeString } from '@/lib/ui/SafeString';
 
 const ErrorAndMessageContext = createContext();

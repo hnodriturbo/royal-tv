@@ -20,7 +20,6 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useSession } from 'next-auth/react';
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
-import useModal from '@/hooks/useModal';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import ConversationActionButton from '@/components/reusableUI/ConversationActionButton';
 import Pagination from '@/components/reusableUI/Pagination';
@@ -40,7 +39,6 @@ const UserConversations = () => {
 
   // 🧰 UI helpers
   const { displayMessage, showLoader, hideLoader } = useAppHandlers();
-  const { openModal, hideModal } = useModal();
 
   // 🗃️ Local state
   const [conversations, setConversations] = useState([]);
@@ -49,33 +47,40 @@ const UserConversations = () => {
   const [userId, setUserId] = useState('');
 
   // 📥 Fetch helper
-  const fetchUserConversations = useCallback(
-    async (page = 1) => {
-      try {
-        showLoader({ text: t('app.user.liveChat.main.loading') });
+  const fetchUserConversations = useCallback(async () => {
+    try {
+      showLoader({ text: t('app.user.liveChat.main.loading') });
 
-        const { data } = await axiosInstance.get('/api/user/liveChat/main');
-        const list = Array.isArray(data.conversations) ? data.conversations : [];
-        setConversations(list);
+      const { data } = await axiosInstance.get('/api/user/liveChat/main');
+      const list = Array.isArray(data.conversations) ? data.conversations : [];
+      setConversations(list);
 
-        // 👤 derive user id
-        if (session?.user?.user_id) setUserId(session.user.user_id);
-        else if (list.length > 0) setUserId(list[0].user_id);
+      // 👤 derive user id (prefer session id, fallback to first item)
+      setUserId(session?.user?.user_id ?? list[0]?.user_id ?? '');
 
-        // 🚪 auto-enter if only one
-        if (list.length === 1) {
-          router.replace(`/${locale}/user/liveChat/${list[0].conversation_id}`); // ✅ locale
-        }
-      } catch (error) {
-        console.error('❌ Fetch conversations failed:', error?.response || error);
-        displayMessage(t('app.user.liveChat.main.fetch_failed'), 'error');
-      } finally {
-        displayMessage(t('app.user.liveChat.main.fetch_success'), 'success');
-        hideLoader();
+      // 🚪 auto-enter if only one
+      if (list.length === 1) {
+        router.replace(`/${locale}/user/liveChat/${list[0].conversation_id}`);
       }
-    },
-    [router, session, showLoader, hideLoader, displayMessage, locale, t]
-  );
+
+      // ✅ success toast only on success
+      displayMessage(t('app.user.liveChat.main.fetch_success'), 'success');
+    } catch (e) {
+      console.error('❌ Fetch conversations failed:', e?.response || e);
+      displayMessage(t('app.user.liveChat.main.fetch_failed'), 'error');
+    } finally {
+      hideLoader();
+    }
+  }, [
+    // deps kept focused to please react-hooks/exhaustive-deps
+    router,
+    locale,
+    showLoader,
+    hideLoader,
+    displayMessage,
+    t,
+    session?.user?.user_id // stable primitive, not the whole session object
+  ]);
 
   // 🔃 Derived lists
   const sortedConversations = useLocalSorter(conversations, sortOrder, getConversationSortFunction);
@@ -91,7 +96,7 @@ const UserConversations = () => {
     if (status === 'authenticated' && isAllowed) {
       fetchUserConversations();
     }
-  }, [status, isAllowed, fetchUserConversations]);
+  }, [status, isAllowed]);
 
   // 🧭 redirect if blocked
   useEffect(() => {

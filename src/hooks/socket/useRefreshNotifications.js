@@ -32,7 +32,6 @@ export default function useRefreshNotifications(user_id) {
       );
       stop();
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user_id, refreshNotifications, onNotificationsList, displayMessage]);
 
   return {

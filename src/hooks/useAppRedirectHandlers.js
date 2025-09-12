@@ -61,7 +61,6 @@ const useAppRedirectHandlers = () => {
         if (!loaderOnly) displayMessage(''); // Clear message if it was displayed
       }, pageDelay + 500); // Ensure cleanup happens after navigation
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [showLoader, hideLoader, displayMessage, router]
   );
 

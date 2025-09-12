@@ -7,7 +7,6 @@
  * - Plays nicely with NotificationCenter styles
  */
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
@@ -36,8 +35,8 @@ export default function SeeAllNotifications() {
     markAsRead,
     resortNotifications,
     removeNotification,
-    clearAllNotifications,
-    refreshNotifications
+    clearAllNotifications
+    /* refreshNotifications */
   } = useNotifications(userId);
 
   const { openModal, hideModal } = useModal();

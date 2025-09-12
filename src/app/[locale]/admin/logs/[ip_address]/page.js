@@ -76,7 +76,6 @@ export default function AdminLogsByIpPage() {
     if (status === 'authenticated' && isAllowed && ip_address) {
       fetchLogs();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, isAllowed, ip_address]);
 
   // redirect if forbidden

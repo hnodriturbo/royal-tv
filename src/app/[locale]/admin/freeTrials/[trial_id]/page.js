@@ -1,75 +1,79 @@
+'use client';
 /**
  * ========== /app/[locale]/admin/freeTrials/[trial_id]/page.js ==========
  * 🎁 ADMIN → EDIT FREE TRIAL (Client Component)
- * - Loads one free trial by trial_id, allows editing fields and status.
- * - Emits notifications when status flips to "active".
- * - Text translations → next-intl useTranslations().
- * - Navigation → @/i18n useRouter().
+ * ----------------------------------------------------------------------
+ * • Loads one free trial by trial_id and allows editing safe fields.
+ * • 🚫 Notification logic removed: activation/disable + notifications are
+ *   now handled automatically by backend services.
+ * • Locale-aware navigation via `useLocale()` (prefix all internal links).
+ * • Translations via next-intl `useTranslations()`.
+ * • ✅ Keeps your custom Tailwind classes untouched.
  * ======================================================================
  */
 
-'use client';
 import Link from 'next/link';
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-// 🌍 router
-import { useTranslations, useLocale } from 'next-intl'; // 🌐 i18n
+import { useTranslations, useLocale } from 'next-intl'; // 🌍 i18n
 
 import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useAuthGuard from '@/hooks/useAuthGuard';
 import { useSession } from 'next-auth/react';
 import useModal from '@/hooks/useModal';
-import useSocketHub from '@/hooks/socket/useSocketHub';
-import { useCreateNotifications } from '@/hooks/socket/useCreateNotifications';
 import { SafeString } from '@/lib/ui/SafeString';
+import { formatErrorSuffix } from '@/lib/utils/errorMessage'; // 🧰 error helper (see snippet above)
 
 export default function AdminEditFreeTrialPage() {
-  // 🌐 translator
+  // 🌐 translator + locale
   const t = useTranslations();
   const locale = useLocale();
-  // 🦸 admin session/auth setup
-  const { data: session, status } = useSession();
-  const { displayMessage, showLoader, hideLoader } = useAppHandlers();
-  const [isSaving, setIsSaving] = useState(false);
+
+  // 🔐 admin guard & session
+  const { data: _session, status } = useSession(); // underscore to avoid no-unused-vars
   const { isAllowed, redirect } = useAuthGuard('admin');
-  const { openModal, hideModal } = useModal();
+
+  // 🧭 routing & modal
   const router = useRouter();
-  const params = useParams();
-  const { trial_id } = params;
+  const { openModal, hideModal } = useModal();
 
-  // 📡 socket helpers
-  const { freeTrialStatusUpdate } = useSocketHub();
-  const { createFreeTrialActivatedNotification } = useCreateNotifications();
+  // 🧰 UI helpers
+  const { displayMessage, showLoader, hideLoader } = useAppHandlers();
 
-  // 📝 local state
+  // 🗂️ state
+  const [isSaving, setIsSaving] = useState(false);
   const [freeTrial, setFreeTrial] = useState(null);
   const [formData, setFormData] = useState({});
-  const [previousStatus, setPreviousStatus] = useState('');
 
-  // 🔁 fetch single free trial
+  // 🔎 read params
+  const { trial_id } = useParams();
+
+  // 🔁 fetch this trial
   const fetchFreeTrial = async () => {
     try {
       showLoader({ text: t('app.admin.freeTrials.edit.loadingTrial') });
       const response = await axiosInstance.get(`/api/admin/freeTrials/${trial_id}`);
       setFreeTrial(response.data.freeTrial);
       setFormData(response.data.freeTrial);
-      setPreviousStatus(response.data.freeTrial.status);
-    } catch {
-      displayMessage(t('app.admin.freeTrials.edit.loadFailed'), 'error');
+    } catch (e) {
+      displayMessage(
+        t('app.admin.freeTrials.edit.loadFailed', { error: formatErrorSuffix(e) }),
+        'error'
+      );
     } finally {
       hideLoader();
     }
   };
 
-  // ✍️ change handler
+  // ✍️ generic change handler
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     setFormData((current) => ({ ...current, [name]: value }));
   };
 
-  // ⏱️ convert Date/ISO → datetime-local
+  // ⏱️ Date/ISO → datetime-local
   function toDatetimeLocalString(dateInput) {
     if (!dateInput) return '';
     const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
@@ -79,7 +83,7 @@ export default function AdminEditFreeTrialPage() {
     )}:${pad(date.getMinutes())}`;
   }
 
-  // 💾 update process
+  // 💾 update process (🚫 no notification logic here anymore)
   const handleUpdate = async () => {
     showLoader({ text: t('app.admin.freeTrials.edit.updatingTrial') });
     setIsSaving(true);
@@ -88,21 +92,19 @@ export default function AdminEditFreeTrialPage() {
       if (patchData.startDate) patchData.startDate = new Date(patchData.startDate).toISOString();
       if (patchData.endDate) patchData.endDate = new Date(patchData.endDate).toISOString();
 
-      const response = await axiosInstance.patch(`/api/admin/freeTrials/${trial_id}`, patchData);
-      const { trial: updatedTrial, previousStatus } = response.data;
+      await axiosInstance.patch(`/api/admin/freeTrials/${trial_id}`, patchData);
 
       displayMessage(t('app.admin.freeTrials.edit.updateSuccess'), 'success');
 
-      if (previousStatus !== updatedTrial.status && updatedTrial.status === 'active') {
-        createFreeTrialActivatedNotification(updatedTrial.user, updatedTrial);
-        freeTrialStatusUpdate(updatedTrial.user.user_id);
-      }
-
+      // 🚀 Back to list after a short pause
       setTimeout(() => {
         router.push(`/${locale}/admin/freeTrials/main`);
       }, 1200);
-    } catch {
-      displayMessage(t('app.admin.freeTrials.edit.updateFailed'), 'error');
+    } catch (e) {
+      displayMessage(
+        t('app.admin.freeTrials.edit.updateFailed', { error: formatErrorSuffix(e) }),
+        'error'
+      );
     } finally {
       hideLoader();
       setIsSaving(false);
@@ -124,8 +126,11 @@ export default function AdminEditFreeTrialPage() {
           displayMessage(t('app.admin.freeTrials.edit.deletedSuccess'), 'success');
           hideModal();
           router.replace(`/${locale}/admin/freeTrials/main`);
-        } catch {
-          displayMessage(t('app.admin.freeTrials.edit.deleteFailed'), 'error');
+        } catch (e) {
+          displayMessage(
+            t('app.admin.freeTrials.edit.deleteFailed', { error: formatErrorSuffix(e) }),
+            'error'
+          );
         } finally {
           hideLoader();
         }
@@ -147,12 +152,12 @@ export default function AdminEditFreeTrialPage() {
     }
   }, [formData.startDate]);
 
-  // 🧭 fetch once
+  // 🚦 initial load
   useEffect(() => {
-    if (trial_id && status === 'authenticated') {
+    if (trial_id && status === 'authenticated' && isAllowed) {
       fetchFreeTrial();
     }
-  }, [trial_id, status]);
+  }, [trial_id, status, isAllowed]); // (no need to depend on locale/t)
 
   // 🔒 redirect if forbidden
   useEffect(() => {
@@ -161,7 +166,7 @@ export default function AdminEditFreeTrialPage() {
     }
   }, [status, isAllowed, redirect, router]);
 
-  // 🛡️ block
+  // 🛡️ block pre-render
   if (!isAllowed || !freeTrial) return null;
 
   return (
@@ -234,7 +239,7 @@ export default function AdminEditFreeTrialPage() {
                 {t('app.admin.freeTrials.edit.field.freeTrialUsername')}
               </label>
               <input
-                className="input w-full lg:max-w-md"
+                className="input w/full lg:max-w-md"
                 name="free_trial_username"
                 placeholder={t('app.admin.freeTrials.edit.placeholder.username')}
                 value={formData.free_trial_username || ''}
@@ -248,7 +253,7 @@ export default function AdminEditFreeTrialPage() {
                 {t('app.admin.freeTrials.edit.field.freeTrialPassword')}
               </label>
               <input
-                className="input w-full lg:max-w-md"
+                className="input w/full lg:max-w-md"
                 name="free_trial_password"
                 placeholder={t('app.admin.freeTrials.edit.placeholder.password')}
                 value={formData.free_trial_password || ''}
@@ -262,7 +267,7 @@ export default function AdminEditFreeTrialPage() {
                 {t('app.admin.freeTrials.edit.field.portalUrl')}
               </label>
               <input
-                className="input w-full lg:max-w-md"
+                className="input w/full lg:max-w-md"
                 name="free_trial_url"
                 placeholder={t('app.admin.freeTrials.edit.placeholder.portalUrl')}
                 value={formData.free_trial_url || ''}
@@ -276,7 +281,7 @@ export default function AdminEditFreeTrialPage() {
                 {t('app.admin.freeTrials.edit.field.otherShortInfo')}
               </label>
               <input
-                className="input w-full lg:max-w-md"
+                className="input w/full lg:max-w-md"
                 name="free_trial_other"
                 placeholder={t('app.admin.freeTrials.edit.placeholder.otherShortInfo')}
                 value={formData.free_trial_other || ''}
@@ -290,7 +295,7 @@ export default function AdminEditFreeTrialPage() {
                 {t('app.admin.freeTrials.edit.field.additionalDetails')}
               </label>
               <textarea
-                className="input w-full lg:max-w-md"
+                className="input w/full lg:max-w-md"
                 name="additional_info"
                 placeholder={t('app.admin.freeTrials.edit.placeholder.additionalDetails')}
                 value={formData.additional_info || ''}
@@ -304,7 +309,7 @@ export default function AdminEditFreeTrialPage() {
                 {t('app.admin.freeTrials.edit.field.status')}
               </label>
               <select
-                className="input w-full lg:max-w-md"
+                className="input w/full lg:max-w-md"
                 name="status"
                 value={formData.status || ''}
                 onChange={handleInputChange}
@@ -323,7 +328,7 @@ export default function AdminEditFreeTrialPage() {
               </label>
               <input
                 type="datetime-local"
-                className="input w-full"
+                className="input w/full"
                 name="startDate"
                 value={toDatetimeLocalString(formData.startDate)}
                 onChange={handleInputChange}
@@ -337,7 +342,7 @@ export default function AdminEditFreeTrialPage() {
               </label>
               <input
                 type="datetime-local"
-                className="input w-full lg:max-w-md bg-gray-800 text-gray-400 cursor-not-allowed"
+                className="input w/full lg:max-w-md bg-gray-800 text-gray-400 cursor-not-allowed"
                 name="endDate"
                 value={
                   formData.startDate

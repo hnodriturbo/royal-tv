@@ -278,7 +278,6 @@ export default function AdminLogsMainPage() {
               <div className="flex flex-row justify-between gap-2 mt-3">
                 {group.count > 1 && (
                   <Link href={`/${locale}/admin/logs/${encodeURIComponent(group.ip_address)}`}>
-                    {/* eslint-disable-next-line react/jsx-no-comment-textnodes */}
                     <button className="btn-primary w-full btn-glow">
                       {t('app.admin.logs.main.action.view')}
                     </button>
