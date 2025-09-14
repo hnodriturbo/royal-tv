@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 // 🧭 App Router
 import { useTranslations } from 'next-intl'; // 🌐 components.countdownRedirect.*
-
+import { SafeString } from '@/lib/ui/SafeString';
 /**
  * 🔀 CountdownRedirect
  * --------------------
@@ -51,7 +51,9 @@ const CountdownRedirect = ({
       <div className="flex items-center justify-center">
         <div className="container-style p-6 items-center justify-center">
           {/* 🏷️ heading from parent (can be translated by caller) */}
-          <h2 className={`${messageSize} font-bold text-center`}>{message}</h2>
+          <h2 className={`${messageSize} font-bold text-center`}>
+            {SafeString(message, 'Countdown.message')}
+          </h2>
 
           {/* 🔢 translated counter line */}
           <p className={`${counterSize} mt-3 items-center text-center`}>

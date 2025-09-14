@@ -6,21 +6,33 @@ import { useSession, signOut } from 'next-auth/react';
 import { useTranslations, useLocale } from 'next-intl';
 import useAppRedirectHandlers from '@/hooks/useAppRedirectHandlers';
 
+/**
+ * MiddlePage — a single place to centralize cross-route redirects with UI messaging.
+ * Notes:
+ * - Keeps "remember last page" via ?redirectTo=
+ * - Ensures logout waits for the session cookie to clear (prevents auth middleware races)
+ * - Works with next-intl locales and avoids redirect loops back into /auth/*
+ */
+
 // Treat these as "do not send users back into these"
 const FORBIDDEN = new Set([
-  /*   '/auth/login',
-  '/auth/signin',
-  '/auth/signout', */
   '/auth/middlePage',
   '/auth/callback',
   '/auth/verify-request',
-  '/auth/error'
+  '/auth/error',
+  '/auth/reset',
+  '/auth/new-password',
+  '/auth/check-email',
+  '/auth/signin',
+  '/auth/signout'
 ]);
 
-const LOCALE_RE = /^\/([a-z]{2})(?=\/|$)/i;
-const stripLocale = (p) => p.replace(LOCALE_RE, '');
+const LOCALES = ['en', 'is'];
+const LOCALE_RE = new RegExp(`^/(?:${LOCALES.join('|')})(?:/|$)`, 'i');
+
+const stripLocale = (p) => p.replace(LOCALE_RE, '/');
 const hasAnyLocale = (p) => LOCALE_RE.test(p);
-const isTrivial = (p) => !p || p === '/' || p === '//';
+const isTrivial = (p) => !p || p === '/' || p === '//' || p === '/#' || p === '/?';
 
 export default function MiddlePage() {
   const t = useTranslations();
@@ -28,17 +40,20 @@ export default function MiddlePage() {
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { redirectWithMessage } = useAppRedirectHandlers(); // shows RingLoader + replaces URL after delay :contentReference[oaicite:1]{index=1}
+  const { redirectWithMessage } = useAppRedirectHandlers(); // shows loader + navigates after delay
 
   // remount-safe guard (dev/HMR)
   const navigated = useRef(false);
 
+  // locale helper
   const L = (path) => `/${locale}${path.startsWith('/') ? path : `/${path}`}`;
 
   useEffect(() => {
     if (status === 'loading' || navigated.current) return;
 
     const qp = (k) => searchParams.get(k);
+
+    // action flags
     const loginFlag = qp('login') === 'true';
     const logoutFlag = qp('logout') === 'true';
     const guestFlag = qp('guest') === 'true';
@@ -76,15 +91,54 @@ export default function MiddlePage() {
 
     // pick target + message
     if (status === 'authenticated') {
+      // ---- LOGOUT (special-cased to avoid cookie race with middleware) ----
       if (logoutFlag) {
-        signOut({ redirect: false });
-        target = L('/');
-        msg = 'Logout successful. Redirecting to Home…';
-        color = 'success';
-      } else if (loginFlag) {
+        // Run an async flow and exit early so nothing else runs in this effect.
+        (async () => {
+          try {
+            await signOut({ redirect: false });
+          } catch {
+            // ignore — we'll still hard-clear cookies below
+          }
+          try {
+            // Belt-and-suspenders: expire both Auth.js v5 and NextAuth v4 cookie names
+            if (typeof document !== 'undefined') {
+              const expire = (name, secure = false) => {
+                const base = `${name}=; Max-Age=0; Path=/; SameSite=Lax`;
+                document.cookie = secure ? `${base}; Secure` : base;
+              };
+              // Auth.js v5
+              expire('authjs.session-token');
+              expire('__Secure-authjs.session-token', true);
+              // NextAuth v4
+              expire('next-auth.session-token');
+              expire('__Secure-next-auth.session-token', true);
+            }
+          } finally {
+            navigated.current = true;
+            const dest = L('/');
+            const text = 'Logout successful. Redirecting to Home…';
+            redirectWithMessage({
+              target: dest,
+              message: text,
+              loaderText: text,
+              color: 'success',
+              loaderOnly: true,
+              pageDelay: 300
+            });
+            // failsafe: if SPA nav is blocked, hard navigate
+            setTimeout(() => {
+              if (typeof window !== 'undefined') window.location.assign(dest);
+            }, 800);
+          }
+        })();
+        return;
+      }
+
+      // ---- Authenticated: normal cases ----
+      if (loginFlag) {
         target = safeRedirect || target;
         try {
-          // prefer i18n if available; fall back to plain text
           msg = t('app.middlePage.messages.welcome', { name: session?.user?.name || 'User' });
         } catch {
           msg = `Welcome ${session?.user?.name || 'User'}! Redirecting…`;
@@ -107,18 +161,18 @@ export default function MiddlePage() {
         target = L('/auth/signin');
         msg = 'Unexpected error. Redirecting to sign in…';
         color = 'error';
+      } else if (notFound) {
+        target = L('/');
+        msg = 'Page does not exist. Redirecting to Home…';
+        color = 'info';
       } else {
         // authenticated + no flags → go to dashboard
         target = safeRedirect || target;
         msg = 'Redirecting…';
       }
     } else {
-      // unauthenticated
-      if (logoutFlag) {
-        target = L('/');
-        msg = 'Logout successful. Redirecting to Home…';
-        color = 'success';
-      } else if (notLoggedInFlag || guestFlag) {
+      // ---- Not authenticated ----
+      if (notLoggedInFlag || guestFlag) {
         target = L('/auth/signin');
         msg = 'You are not authorized! Redirecting to login…';
         color = 'error';
@@ -151,7 +205,6 @@ export default function MiddlePage() {
 
     // fire!
     navigated.current = true;
-    // show RingLoader + navigate after delay (your helper) :contentReference[oaicite:2]{index=2}
     redirectWithMessage({
       target,
       message: msg,

@@ -175,6 +175,8 @@ export default function LiveChatRoom({
     }
   };
 
+  const subjectText = SafeString(subject, '') || t('socket.ui.liveChatRoom.default_subject');
+
   return (
     <div className="text-pretty text-sm">
       <div className={clsx('container-style mx-auto flex flex-col gap-2 min-h-[400px]', className)}>
@@ -182,7 +184,7 @@ export default function LiveChatRoom({
         <div className="flex justify-between items-center">
           <h2 className="text-base font-bold">
             {t('socket.ui.chat.subject_label')}
-            <br /> <span className="text-wonderful-5 underline">{subject}</span>
+            <br /> <span className="text-wonderful-5 underline">{subjectText}</span>
           </h2>
           <span>
             {t('socket.ui.chat.online_count_label', { count: usersInRoom.length })}

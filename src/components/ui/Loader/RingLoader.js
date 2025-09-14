@@ -2,7 +2,7 @@
 
 import { RingLoader as Spinner } from 'react-spinners'; // 🔄 third-party spinner
 import { useTranslations } from 'next-intl'; // 🌐 components.ringLoader.*
-
+import { SafeString } from '@/lib/ui/SafeString';
 /**
  * 🟢 CustomRingLoader
  * -------------------
@@ -28,7 +28,7 @@ const CustomRingLoader = ({ size = 'medium', color = 'blue', text = '', textClas
       <Spinner size={sizeMap[size]} color={color} />
 
       {/* 🏷️ optional visible caption provided by parent */}
-      {text && <p className={`mt-4 ${textClassName}`}>{text}</p>}
+      {text && <p className={`mt-4 ${textClassName}`}>{SafeString(text, 'Loader.text')}</p>}
     </div>
   );
 };

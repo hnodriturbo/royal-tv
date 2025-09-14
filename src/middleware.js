@@ -48,7 +48,8 @@ export async function middleware(req) {
   const secret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
   const isProd = process.env.NODE_ENV === 'production';
   const cookieName = isProd ? '__Secure-authjs.session-token' : 'authjs.session-token';
-  const token = await getToken({ req, secret, cookieName }).catch(() => null);
+  const token = (await getToken({ req, secret }).catch(() => null)) || null;
+  /* const token = await getToken({ req, secret, cookieName }).catch(() => null); */
 
   // consider a session "valid" only if it has a user identity
   const hasValidSession = Boolean(token && (token.user_id || token.email || token.sub));

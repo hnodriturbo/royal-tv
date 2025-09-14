@@ -8,7 +8,7 @@ import useFreeTrialStatus from '@/hooks/socket/useFreeTrialStatus';
 import { useTranslations, useLocale } from 'next-intl';
 
 // ✅ Show packages grid and the guide on the homepage
-import PackagesGrid from '@/components/packages/data';
+import PackagesGrid from '@/components/packages/data/packages';
 import Guide from '@/components/packages/data/guide';
 
 export default function HomeClient() {

@@ -71,7 +71,10 @@ export default function AdminUserSubscriptionsPage() {
           ([key, value], idx) =>
             value && (
               <div key={idx}>
-                <strong>{key}:</strong> <span className="font-mono">{value}</span>
+                <strong>{key}:</strong>{' '}
+                <span className="font-mono break-words">
+                  {SafeString(value, 'Admin.Subscription.kv')}
+                </span>
               </div>
             )
         )}
@@ -148,7 +151,10 @@ export default function AdminUserSubscriptionsPage() {
                   {sub.package_name || t('app.admin.userSubscriptions.untitled')}
                 </h2>
                 <p>
-                  {t('app.admin.userSubscriptions.status')}: {sub.status}
+                  {t('app.admin.userSubscriptions.status')}:{' '}
+                  <span className="font-mono">
+                    {SafeString(sub.status, 'Admin.Subscription.status')}
+                  </span>
                 </p>
                 <p>
                   {t('app.admin.userSubscriptions.expires')}:{' '}

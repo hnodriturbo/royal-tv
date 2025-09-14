@@ -220,7 +220,9 @@ const UserConversations = () => {
               }
               className="border border-gray-300 rounded-lg p-4 shadow-sm bg-gray-500 text-white hover:cursor-pointer"
             >
-              <h3 className="font-semibold text-lg mb-2">{conversationItem.subject}</h3>
+              <h3 className="font-semibold text-lg mb-2">
+                {SafeString(conversationItem.subject, 'User.LiveChat.subject')}
+              </h3>
 
               <p className="mb-1">
                 <strong>{t('app.user.liveChat.main.id')}:</strong>{' '}

@@ -96,9 +96,15 @@ export const ModalProvider = ({ children }) => {
                 ❌
               </button>
               {/* Title (if provided) */}
-              {modalProps.title && <h2 className="text-2xl font-bold mb-4">{modalProps.title}</h2>}
+              {modalProps.title && (
+                <h2 className="text-2xl font-bold mb-4">
+                  {SafeString(modalProps.title, 'Modal.title')}
+                </h2>
+              )}
               {/* Description (if provided) */}
-              {modalProps.description && <p className="mb-4">{modalProps.description}</p>}
+              {modalProps.description && (
+                <p className="mb-4">{SafeString(modalProps.description, 'Modal.description')}</p>
+              )}
               {/* Render custom content: if it's a function, call it; otherwise, render as-is */}
               {typeof modalProps.customContent === 'function'
                 ? modalProps.customContent()

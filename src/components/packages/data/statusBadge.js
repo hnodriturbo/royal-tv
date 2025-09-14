@@ -14,6 +14,15 @@ import { useTranslations } from 'next-intl';
 
 export default function StatusBadge({ status }) {
   const t = useTranslations();
+  const upper = (s) => (s ? String(s).toUpperCase() : '');
+  const safeLabel = (() => {
+    try {
+      const v = t(`app.payments.status.${status}.label`);
+      return typeof v === 'string' ? v : upper(status);
+    } catch {
+      return upper(status);
+    }
+  })();
 
   let badgeColor = '';
   let icon = '';
@@ -76,7 +85,11 @@ export default function StatusBadge({ status }) {
   } else {
     badgeColor = 'bg-gray-400';
     icon = '❔';
-    text = <>{t('app.payments.status.unknown', 'Unknown status')}</>;
+    let unknown = 'Unknown status';
+    try {
+      unknown = t('app.payments.status.unknown');
+    } catch {}
+    text = <>{unknown}</>;
   }
 
   return (
@@ -84,8 +97,8 @@ export default function StatusBadge({ status }) {
       className={`rounded-xl py-3 px-6 mb-6 mt-2 font-bold text-lg flex items-center justify-center gap-3 shadow-xl ${badgeColor}`}
     >
       <span className="text-2xl">{icon}</span>
-      <span className="text-center">{text}</span>
-      <span className="text-xl ml-3">({t(`app.payments.status.${status}.label`, status)})</span>
+      <span className="text-center">{text}</span>+{' '}
+      <span className="text-xl ml-3">({safeLabel})</span>
     </div>
   );
 }
