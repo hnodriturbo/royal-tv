@@ -125,8 +125,6 @@ const UserConversations = () => {
             <ConversationActionButton
               action="create"
               user_id={userId}
-              user={session?.user}
-              isAdmin={false}
               buttonClass="btn-success border-radius-15"
               buttonText={t('app.user.liveChat.main.start_new')}
             />
@@ -196,8 +194,6 @@ const UserConversations = () => {
                           action="delete"
                           user_id={userId}
                           conversation_id={conversationItem.conversation_id}
-                          chatType="live"
-                          isAdmin={false}
                           buttonClass="bg-red-500 text-white px-3 py-1 rounded-xl hover:bg-red-600 transition text-sm"
                           buttonText={t('app.user.liveChat.main.delete')}
                           onActionSuccess={() => fetchUserConversations(currentPage)}
@@ -264,8 +260,6 @@ const UserConversations = () => {
                   action="delete"
                   user_id={userId}
                   conversation_id={conversationItem.conversation_id}
-                  chatType="live"
-                  isAdmin={false}
                   buttonClass="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition text-sm"
                   buttonText={t('app.user.liveChat.main.delete')}
                   onActionSuccess={() => fetchUserConversations(currentPage)}

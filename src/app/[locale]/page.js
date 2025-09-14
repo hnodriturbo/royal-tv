@@ -61,12 +61,14 @@ export default function HomePage() {
             )
           ) : null
         ) : (
-          <Link
-            href={`/${locale}/auth/signup`}
-            className="my-btn-dark-box-shadow btn-secondary btn-lg text-xl font-bold tracking-wider shadow-lg transition duration-1000 hover:scale-110 uppercase"
-          >
-            {t('app.home.page.cta_button')}
-          </Link>
+          <div className="flex justify-center">
+            <Link
+              href={`/${locale}/auth/signup`}
+              className="my-btn-dark-box-shadow btn-info btn-lg text-xl font-bold tracking-wider shadow-lg transition duration-1000 hover:scale-102 uppercase w-8/12"
+            >
+              {t('app.home.page.cta_button')}
+            </Link>
+          </div>
         )}
       </div>
 

@@ -154,7 +154,7 @@ export default function AdminLiveChatUsersPage() {
                       <div className="flex flex-row gap-2 justify-center">
                         <Link
                           href={`/${locale}/admin/liveChat/user/${u.user_id}`}
-                          className="btn-primary"
+                          className="btn-info"
                         >
                           {t('app.admin.liveChat.users.view')}
                         </Link>
@@ -164,15 +164,14 @@ export default function AdminLiveChatUsersPage() {
                           user_id={u.user_id}
                           user={u}
                           onActionSuccess={fetchUsersWithConversations}
-                          buttonText={t('app.admin.liveChat.users.start_new')}
-                          isAdmin={true}
+                          /* buttonText={t('app.admin.liveChat.users.start_new')} */
                         />
 
                         <ConversationActionButton
                           action="deleteAll"
                           user_id={u.user_id}
+                          user={u}
                           onActionSuccess={fetchUsersWithConversations}
-                          isAdmin={true}
                         />
                       </div>
                     </td>
@@ -218,19 +217,13 @@ export default function AdminLiveChatUsersPage() {
                 <ConversationActionButton
                   action="create"
                   user_id={u.user_id}
-                  user={u}
-                  chatType="live"
                   onActionSuccess={fetchUsersWithConversations}
-                  buttonText={t('app.admin.liveChat.users.start_new')}
-                  isAdmin={true}
                 />
 
                 <ConversationActionButton
                   action="deleteAll"
                   user_id={u.user_id}
-                  chatType="live"
                   onActionSuccess={fetchUsersWithConversations}
-                  isAdmin={true}
                 />
               </div>
             </div>

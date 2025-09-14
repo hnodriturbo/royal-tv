@@ -36,7 +36,6 @@ export default function useNotifications(userId) {
     deleteNotification,
     clearNotifications,
     onNotificationsError,
-    // locale
     setLocale
   } = useSocketHub();
 
@@ -150,10 +149,17 @@ export default function useNotifications(userId) {
     requestNotifications(userId);
   }, [userId, requestNotifications]);
 
+  // ✅ Optimistic delete + let server confirm later
   const removeNotification = useCallback(
     (notification_id) => {
       if (!userId || !notification_id) return;
-      deleteNotification(notification_id, userId);
+      setNotifications((prev) => {
+        const target = prev.find((n) => n.notification_id === notification_id);
+        const next = prev.filter((n) => n.notification_id !== notification_id);
+        if (target && !target.is_read) setUnreadCount((c) => Math.max(0, c - 1));
+        return next;
+      });
+      deleteNotification(notification_id, userId); // server will ack via refresh/push
     },
     [deleteNotification, userId]
   );

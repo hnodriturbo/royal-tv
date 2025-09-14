@@ -1,21 +1,14 @@
-/**
- * src/hooks/useLogout
- * This file handles using the hook of logging out users
- */
-
+// hooks/useLogout.js
 'use client';
-import { signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
 
 const useLogout = () => {
-  const logout = async () => {
-    try {
-      await signOut({ callbackUrl: '/auth/middlePage?logout=true' });
-    } catch (error) {
-      console.error('Error logging out:', error);
-    }
+  const router = useRouter();
+  const locale = useLocale();
+  return () => {
+    router.push(`/${locale}/auth/middlePage?logout=true`);
   };
-
-  return logout;
 };
 
 export default useLogout;

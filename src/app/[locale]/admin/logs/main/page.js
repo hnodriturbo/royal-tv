@@ -120,7 +120,7 @@ export default function AdminLogsMainPage() {
           await axiosInstance.delete(`/api/admin/logs/${encodeURIComponent(ip_address)}`);
           displayMessage(t('app.admin.logs.main.deletedSuccess'), 'success');
           fetchLogs();
-        } catch (_err) {
+        } catch {
           displayMessage(t('app.admin.logs.main.deleteFailed'), 'error');
         } finally {
           hideLoader();

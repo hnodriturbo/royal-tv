@@ -21,13 +21,16 @@ export const ModalProvider = ({ children }) => {
   const [modalProps, setModalProps] = useState({});
 
   // 🟢 Color class mapping
-  const confirmButtonTypeToClass = {
-    Danger: 'btn-danger',
-    Success: 'btn-success',
-    Purple: 'bg-purple-600 hover:bg-purple-800',
-    Info: 'btn-info',
-    Secondary: 'btn-secondary w-1/4'
+  const BTN_BY_TYPE = {
+    primary: 'btn-primary',
+    danger: 'btn-danger',
+    success: 'btn-success',
+    info: 'btn-info',
+    secondary: 'btn-secondary',
+    purple: 'bg-purple-600 hover:bg-purple-800'
   };
+  const normalizeType = (v) => (typeof v === 'string' ? v.trim().toLowerCase() : '');
+
   // 🟢 Modal size mapping (extend as needed)
   const modalSizeToClass = {
     sm: 'max-w-sm',
@@ -109,7 +112,11 @@ export const ModalProvider = ({ children }) => {
                       modalProps.onCancel?.();
                       hideModal();
                     }}
-                    className="btn-secondary"
+                    className={
+                      modalProps.cancelButtonClass
+                        ? modalProps.cancelButtonClass
+                        : BTN_BY_TYPE[normalizeType(modalProps.cancelButtonType)] || 'btn-secondary'
+                    }
                   >
                     <span>
                       {SafeString(modalProps.cancelButtonText ?? t('common.buttons.cancel'), '')}
@@ -119,13 +126,12 @@ export const ModalProvider = ({ children }) => {
 
                 {modalProps.confirmButtonText && (
                   <button
-                    className={`px-4 py-2 rounded text-white font-bold transition-all duration-200
-                      ${
-                        modalProps.confirmButtonClass
-                          ? modalProps.confirmButtonClass
-                          : confirmButtonTypeToClass[modalProps.confirmButtonType || 'Info']
-                      }
-                    `}
+                    className={`px-4 py-2 rounded text-white font-bold transition-all duration-200 ${
+                      modalProps.confirmButtonClass
+                        ? modalProps.confirmButtonClass
+                        : BTN_BY_TYPE[normalizeType(modalProps.confirmButtonType)] ||
+                          BTN_BY_TYPE.info
+                    }`}
                     onClick={() => {
                       if (modalProps.onConfirm) modalProps.onConfirm(); // ✅ Handle confirm
                       hideModal(); // ✅ Close the modal

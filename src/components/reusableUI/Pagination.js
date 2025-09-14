@@ -3,15 +3,12 @@
  * =========================================
  * components/reusableUI/Pagination.js (Client)
  * -------------------------------------------
- * • Reusable pagination component with two modes:
- *   - Controlled (onPageChange): uses <button> handlers
- *   - Uncontrolled (no onPageChange): uses <Link> with hrefs
- * • 🌍 Locale note: when you use Link-mode, pass a `basePath`
- *   that’s already locale-aware, e.g. `basePath=/${locale}/admin/...`
- * • Keeps your classes & behavior intact
+ * • Shows: first 3, last 3, and a 3-wide window around current page
+ * • Inserts ellipses between non-adjacent blocks
+ * • For small totals (≤ 7), shows all pages (no ellipses)
+ * • Controlled (onPageChange) or Link-based (basePath)
  * =========================================
  */
-
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
@@ -22,37 +19,76 @@ export default function Pagination({ currentPage, totalPages, onPageChange, base
 
   const goTo = (p) => {
     if (p < 1 || p > totalPages) return;
-    onPageChange?.(p);
+    if (onPageChange) onPageChange(p);
   };
 
-  const pageItem = (p) => (
-    <li key={p}>
-      {onPageChange ? (
-        <button
-          type="button"
-          className={`px-3 py-1 rounded ${
-            p === currentPage ? 'bg-blue-600 text-white' : 'bg-gray-400 hover:bg-gray-600'
-          }`}
-          onClick={() => goTo(p)}
-          aria-current={p === currentPage ? 'page' : undefined}
-        >
-          {p}
-        </button>
-      ) : (
-        <Link
-          href={`${basePath}?page=${p}` /* 🔔 Ensure basePath already includes /{locale} */}
-          className={`px-3 py-1 rounded ${
-            p === currentPage ? 'bg-blue-600 text-white' : 'bg-gray-400 hover:bg-gray-600'
-          }`}
-          aria-current={p === currentPage ? 'page' : undefined}
-        >
-          {p}
-        </Link>
-      )}
-    </li>
+  function range(a, b) {
+    const res = [];
+    for (let i = a; i <= b; i += 1) res.push(i);
+    return res;
+  }
+
+  function getItems(cp, tp) {
+    if (tp <= 7) return range(1, tp);
+
+    const first = range(1, Math.min(3, tp));
+    const middleStart = Math.max(1, cp - 1);
+    const middleEnd = Math.min(tp, cp + 1);
+    const middle = range(middleStart, middleEnd);
+    const last = range(Math.max(1, tp - 2), tp);
+
+    const merged = [...first, ...middle, ...last]
+      .filter((n, i, arr) => n >= 1 && n <= tp && arr.indexOf(n) === i)
+      .sort((a, b) => a - b);
+
+    // Insert ellipses where gaps exist
+    const out = [];
+    for (let i = 0; i < merged.length; i += 1) {
+      const p = merged[i];
+      if (i > 0 && p - merged[i - 1] > 1) out.push('dots-' + i);
+      out.push(p);
+    }
+    return out;
+  }
+
+  const items = getItems(currentPage, totalPages);
+
+  const PageButton = ({ p }) => (
+    <button
+      type="button"
+      className={`px-3 py-1 rounded ${
+        p === currentPage ? 'bg-blue-600 text-white' : 'bg-gray-400 hover:bg-gray-600'
+      }`}
+      onClick={() => goTo(p)}
+      aria-current={p === currentPage ? 'page' : undefined}
+    >
+      {p}
+    </button>
   );
 
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+  const PageLink = ({ p }) => (
+    <Link
+      href={`${basePath}?page=${p}` /* basePath should already include /{locale} if needed */}
+      className={`px-3 py-1 rounded ${
+        p === currentPage ? 'bg-blue-600 text-white' : 'bg-gray-400 hover:bg-gray-600'
+      }`}
+      aria-current={p === currentPage ? 'page' : undefined}
+    >
+      {p}
+    </Link>
+  );
+
+  const renderItem = (it, idx) => {
+    if (typeof it === 'string' && it.startsWith('dots-')) {
+      return (
+        <li key={it} aria-hidden="true" className="px-2 select-none">
+          …
+        </li>
+      );
+    }
+    const p = it;
+    return <li key={p}>{onPageChange ? <PageButton p={p} /> : <PageLink p={p} />}</li>;
+  };
 
   return (
     <nav aria-label={t('components.pagination.aria_pagination')}>
@@ -60,7 +96,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange, base
         {onPageChange ? (
           <button
             type="button"
-            className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded"
+            className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded disabled:opacity-50"
             onClick={() => goTo(currentPage - 1)}
             disabled={currentPage <= 1}
             aria-label={t('components.pagination.previous')}
@@ -70,20 +106,21 @@ export default function Pagination({ currentPage, totalPages, onPageChange, base
         ) : (
           <Link
             href={`${basePath}?page=${Math.max(1, currentPage - 1)}`}
-            className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded"
+            className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded aria-disabled:opacity-50"
             aria-disabled={currentPage <= 1}
             aria-label={t('components.pagination.previous')}
+            tabIndex={currentPage <= 1 ? -1 : 0}
           >
             ←
           </Link>
         )}
 
-        {pages.map(pageItem)}
+        {items.map(renderItem)}
 
         {onPageChange ? (
           <button
             type="button"
-            className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded"
+            className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded disabled:opacity-50"
             onClick={() => goTo(currentPage + 1)}
             disabled={currentPage >= totalPages}
             aria-label={t('components.pagination.next')}
@@ -93,9 +130,10 @@ export default function Pagination({ currentPage, totalPages, onPageChange, base
         ) : (
           <Link
             href={`${basePath}?page=${Math.min(totalPages, currentPage + 1)}`}
-            className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded"
+            className="px-4 py-2 bg-gray-400 hover:bg-gray-600 rounded aria-disabled:opacity-50"
             aria-disabled={currentPage >= totalPages}
             aria-label={t('components.pagination.next')}
+            tabIndex={currentPage >= totalPages ? -1 : 0}
           >
             →
           </Link>

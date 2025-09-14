@@ -35,7 +35,7 @@ export default function UserDashboard() {
   return (
     <div className="flex flex-col items-center justify-center w-full lg:mt-0 mt-10">
       {/* 🟠 Main dashboard card */}
-      <div className="container-style w-10/12 lg:w-[600px] mx-auto mb-6">
+      <div className="container-style w-10/12 lg:w-[600px] mx-auto mb-4 p-4">
         {/* 🏷️ Header, localized */}
         <div className="font-bold text-center underline text-wonderful-1 text-black lg:text-4xl text-2xl whitespace-nowrap">
           {t('app.user.dashboard.page.welcome')}{' '}
@@ -44,12 +44,12 @@ export default function UserDashboard() {
       </div>
 
       {/* 🟣 Free Trial Panel (socket-powered) */}
-      <div className="w-full mx-auto mb-4">
+      <div className="lg:w-[600px] w-10/12 p-4">
         <FreeTrialPanel user_id={session?.user?.user_id} className="container-style" />
       </div>
 
       {/* 🔵 User Subscription Panel */}
-      <div className="lg:w-[600px] w-full mx-auto">
+      <div className="lg:w-[600px] w-10/12 p-4">
         {<UserSubscriptionPanel user_id={session?.user?.user_id} />}
       </div>
 
@@ -59,7 +59,7 @@ export default function UserDashboard() {
       </div>
 
       {/* 🧑‍💼 Admin Online Indicator */}
-      <div className="container-style w-11/12 lg:w-[600px] mx-auto">
+      <div className="container-style lg:w-[600px] mx-auto">
         <IsAdminOnline user_id={session?.user?.user_id} />
       </div>
     </div>

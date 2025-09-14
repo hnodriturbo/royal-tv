@@ -107,7 +107,9 @@ const ConversationsPage = () => {
             <hr className="md:hidden border border-gray-400 w-8/12 my-4" />
 
             {/* ⏳ AutoRefresh centered in its column */}
-            <div className="flex-1 flex justify-center items-center">{AutoRefresh}</div>
+            <div className="flex-1 flex justify-center items-center">
+              <AutoRefresh />
+            </div>
           </div>
         </div>
         {/* ===================💻 Desktop: Responsive Table View (Desktop) =================== */}

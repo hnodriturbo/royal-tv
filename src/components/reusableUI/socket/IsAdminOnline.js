@@ -1,12 +1,13 @@
-/**
- * 🟢 IsAdminOnline.js
- * Shows compact admin online indicator & admin list for the user conversation page.
- * - Localized with i18n client (`useTranslations`)
- * - Locale-aware when opening a conversation via nested button
- */
 'use client';
 
+/**
+ * 🟢 IsAdminOnline.js
+ * Shows compact admin online indicator & admin list for the *user* conversation page.
+ * Renders the "Start conversation" button ONLY for non-admin users.
+ */
+
 import { useTranslations, useLocale } from 'next-intl';
+import { useSession } from 'next-auth/react';
 
 import ConversationActionButton from '@/components/reusableUI/ConversationActionButton';
 import useIsAdminOnline from '@/hooks/socket/useIsAdminOnline';
@@ -14,7 +15,14 @@ import useIsAdminOnline from '@/hooks/socket/useIsAdminOnline';
 const IsAdminOnline = ({ user_id }) => {
   const t = useTranslations();
   const locale = useLocale();
+  const { data: session } = useSession();
 
+  // Viewer’s role (the person looking at the page)
+  const role = session?.user?.role;
+  const isViewerAdmin = role === 'admin';
+  const showCreateForUser = !isViewerAdmin && !!user_id; // only show for non-admins with a user_id
+
+  // Socket-derived admin presence
   const { isAdminOnline, adminInfo, singleAdmin } = useIsAdminOnline();
 
   const statusLabel = isAdminOnline ? (
@@ -24,6 +32,7 @@ const IsAdminOnline = ({ user_id }) => {
   );
 
   let adminLine = null;
+
   if (!isAdminOnline) {
     adminLine = <span className="text-lg">{t('socket.ui.isAdminOnline.no_admin_online')}</span>;
   } else if (singleAdmin) {
@@ -35,12 +44,11 @@ const IsAdminOnline = ({ user_id }) => {
             {singleAdmin.name || t('socket.ui.isAdminOnline.admin_support')}
           </span>
         </span>
-        <ConversationActionButton
-          buttonClass="btn-primary"
-          action="create"
-          user_id={user_id}
-          locale={locale}
-        />
+
+        {/* Show action button ONLY to non-admin viewers */}
+        {showCreateForUser ? (
+          <ConversationActionButton action="create" user_id={user_id} buttonClass="btn-primary" />
+        ) : null}
       </>
     );
   } else if (Array.isArray(adminInfo) && adminInfo.length > 1) {
@@ -55,7 +63,11 @@ const IsAdminOnline = ({ user_id }) => {
             </span>
           ))}
         </span>
-        <ConversationActionButton action="create" user_id={user_id} locale={locale} />
+
+        {/* Show action button ONLY to non-admin viewers */}
+        {showCreateForUser ? (
+          <ConversationActionButton action="create" user_id={user_id} buttonClass="btn-primary" />
+        ) : null}
       </>
     );
   }

@@ -59,14 +59,14 @@ export default [
     rules: {
       // Next rules already applied globally; fine to keep recommended here too
       // ...next.configs.recommended.rules,
-
+      'no-empty': ['error', { allowEmptyCatch: true }],
       // ✅ mark JSX vars as used
       'react/jsx-uses-vars': 'error',
       'react/jsx-uses-react': 'off',
 
       // 🟨 make unused-vars calmer & underscore-friendly
       'no-unused-vars': [
-        'warn',
+        'off',
         {
           vars: 'all',
           args: 'after-used',
@@ -82,7 +82,7 @@ export default [
       'react-hooks/exhaustive-deps': 'off',
 
       // Prettier formatting as a warning (not blocking builds)
-      'prettier/prettier': 'warn',
+      'prettier/prettier': 'off',
 
       // ❌ disallow locale prop on next/link in App Router
       'no-restricted-syntax': [

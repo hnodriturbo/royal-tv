@@ -1,5 +1,8 @@
+// LanguageSwitcher.js (patched)
 'use client';
-import { usePathname, useSearchParams } from 'next/navigation';
+
+import { useEffect, useState } from 'react';
+import { onNavigate } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 import Flag from 'react-world-flags';
@@ -7,15 +10,36 @@ import { SafeString } from '@/lib/ui/SafeString';
 import Link from 'next/link';
 
 const SUPPORTED_LOCALES = ['en', 'is'];
+const AUTH_FLAGS = new Set([
+  'login',
+  'logout',
+  'admin',
+  'user',
+  'notLoggedIn',
+  'error',
+  'redirectTo',
+  'paymentSuccess',
+  'update',
+  'passwordUpdate',
+  'success'
+]);
 
 function getPathWithoutLocale(incomingPath) {
   const safePath = typeof incomingPath === 'string' && incomingPath.length > 0 ? incomingPath : '/';
-  const [, possibleLocale, ...restSegments] = safePath.split('/');
+  const [, possibleLocale, ...rest] = safePath.split('/');
   if (SUPPORTED_LOCALES.includes(String(possibleLocale).toLowerCase())) {
-    const rebuilt = '/' + restSegments.join('/');
+    const rebuilt = '/' + rest.join('/');
     return rebuilt === '//' || rebuilt === '/' ? '/' : rebuilt;
   }
   return safePath;
+}
+
+function sanitizeSearch(search) {
+  if (!search) return '';
+  const sp = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
+  AUTH_FLAGS.forEach((k) => sp.delete(k));
+  const s = sp.toString();
+  return s ? `?${s}` : '';
 }
 
 function writeLocaleCookies(targetLocale) {
@@ -28,44 +52,57 @@ function isCheckoutPath(currentPathname) {
   return /\/packages\/[^/]+\/buyNow(?:\/|$)/i.test(currentPathname || '');
 }
 
+function withLocale(basePath, locale) {
+  const path = basePath?.startsWith('/') ? basePath : `/${basePath || ''}`;
+  return `/${locale}${path === '/' ? '' : path}`;
+}
+
 export default function LanguageSwitcher() {
   const activeLocale = useLocale();
   const t = useTranslations();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { setLocale } = useSocketHub();
+  const [url, setUrl] = useState({ pathname: '/', search: '' });
 
-  const disabled = isCheckoutPath(pathname);
+  useEffect(() => {
+    const update = () =>
+      setUrl({ pathname: window.location.pathname, search: window.location.search });
+    update();
+    let unsubscribe = () => {};
+    try {
+      unsubscribe = onNavigate(() => update());
+    } catch {}
+    window.addEventListener('popstate', update);
+    return () => {
+      window.removeEventListener('popstate', update);
+      unsubscribe && unsubscribe();
+    };
+  }, []);
 
-  // Build a locale-less href + carry query string
-  const base = getPathWithoutLocale(pathname);
-  const query = searchParams?.toString();
-  const hrefBase = query ? `${base}?${query}` : base;
+  const disabled = isCheckoutPath(url.pathname);
+  const base = getPathWithoutLocale(url.pathname);
+  const hrefBase = sanitizeSearch(url.search) ? `${base}${sanitizeSearch(url.search)}` : base;
+
+  const englishHref = withLocale(hrefBase, 'en');
+  const icelandicHref = withLocale(hrefBase, 'is');
 
   const classes = (off) =>
     `px-2 py-1 rounded-full transition ${
-      off ? 'ring-2 ring-white cursor-not-allowed opacity-60' : 'opacity-80 hover:opacity-100'
+      off
+        ? 'ring-2 ring-white cursor-not-allowed opacity-60 pointer-events-none'
+        : 'opacity-80 hover:opacity-100'
     }`;
 
-  // When using Link, use aria-disabled instead of disabled
   const handleClick = (locale) => {
     try {
       writeLocaleCookies(locale);
       setLocale(locale);
-    } catch {
-      /* noop */
-    }
+    } catch {}
   };
 
   return (
-    <div
-      className="fixed top-3 right-3 z-[9999] flex items-center gap-2 rounded-full
-                 bg-black/50 backdrop-blur px-3 py-2 border border-white/10 shadow"
-    >
-      {/* 🇬🇧 English */}
+    <div className="fixed top-3 right-3 z-[9999] flex items-center gap-2 rounded-full bg-black/50 backdrop-blur px-3 py-2 border border-white/10 shadow">
       <Link
-        href={hrefBase}
-        locale="en"
+        href={englishHref}
         prefetch
         onClick={() => handleClick('en')}
         aria-label={SafeString(t('app.languageSwitcher.english_label'))}
@@ -83,10 +120,8 @@ export default function LanguageSwitcher() {
         </span>
       </Link>
 
-      {/* 🇮🇸 Icelandic */}
       <Link
-        href={hrefBase}
-        locale="is"
+        href={icelandicHref}
         prefetch
         onClick={() => handleClick('is')}
         aria-label={SafeString(t('app.languageSwitcher.icelandic_label'))}

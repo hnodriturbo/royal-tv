@@ -140,11 +140,8 @@ export default function AdminLiveChatUserConversationsPage() {
         <div className="flex justify-center w-full mb-6">
           <ConversationActionButton
             action="create"
-            user_id={user?.user_id}
-            user={user}
-            chatType="live"
-            buttonText={t('app.admin.liveChat.userConversations.create_new')}
-            isAdmin={true}
+            user_id={user.user_id}
+            onActionSuccess={fetchUserConversations}
           />
         </div>
 
@@ -210,9 +207,7 @@ export default function AdminLiveChatUserConversationsPage() {
                             action="delete"
                             user_id={user?.user_id}
                             conversation_id={c.conversation_id}
-                            chatType="live"
                             onActionSuccess={fetchUserConversations}
-                            isAdmin={true}
                           />
                         </div>
                       </td>
@@ -256,9 +251,7 @@ export default function AdminLiveChatUserConversationsPage() {
                   action="delete"
                   user_id={user?.user_id}
                   conversation_id={c.conversation_id}
-                  chatType="live"
                   onActionSuccess={fetchUserConversations}
-                  isAdmin={true}
                 />
               </div>
             </div>

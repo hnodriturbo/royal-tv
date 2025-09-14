@@ -578,6 +578,9 @@
   .text-shadow-dark-2 {
     text-shadow: var(--text-shadow-dark-2) !important;
   }
+  .text-shadow-none {
+    text-shadow: none !important;
+  }
   /* ----------------------------------------------------------------------------------- */
 }
 

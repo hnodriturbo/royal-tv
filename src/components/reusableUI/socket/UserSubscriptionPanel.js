@@ -3,11 +3,10 @@
 /**
  * UserSubscriptionPanel.jsx
  * ------------------------------------------------------------
- * • Socket-driven read-only panel (no create flows here)
- * • If user has a subscription ⇒ show status + button to view list
- * • If no subscription ⇒ show localized dropdown + purchase flow
- * • Locale-aware, compact layout via container-style-sm
- * • Redirects to /{locale}/packages/{slug}/buyNow
+ * • Self-styled card (no external container required)
+ * • Status color map (text + badge background)
+ * • Read-only: shows current sub or lets user pick & buy
+ * • Locale-aware, socket + REST fallback preserved
  * ------------------------------------------------------------
  */
 
@@ -23,6 +22,32 @@ import axiosInstance from '@/lib/core/axiosInstance';
 import useAppHandlers from '@/hooks/useAppHandlers';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 
+// 🎨 Status → styles (badge + text). Keep names stable.
+const STATUS_STYLES = {
+  active: {
+    badge: 'bg-green-700 text-shadow-none ring-1 ring-green-500/30'
+  },
+  pending: {
+    badge: 'bg-amber-200 text-shadow-none ring-1 ring-amber-500/30'
+  },
+  expired: { badge: 'bg-rose-200 text-shadow-none ring-1 ring-rose-500/30' },
+  disabled: { badge: 'bg-gray-300 text-shadow-none ring-1 ring-gray-500/30' },
+  unknown: { badge: 'bg-slate-200 text-shadow-none ring-1 ring-slate-500/30' }
+};
+
+function StatusPill({ statusKey, label }) {
+  const key = STATUS_STYLES[statusKey] ? statusKey : 'unknown';
+  const { badge } = STATUS_STYLES[key];
+  return (
+    <span className={`inline-flex items-center rounded-full px-3 py-1 ${badge}`}>
+      <span aria-hidden className="mr-1">
+        ●
+      </span>
+      {label}
+    </span>
+  );
+}
+
 /**
  * Props
  * @param {{ user_id?: string, userId?: string, role?: 'user'|'admin'|'guest' }} props
@@ -33,18 +58,17 @@ export default function UserSubscriptionPanel(props) {
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
+
   const { data: session } = useSession();
   const { showLoader, hideLoader, displayMessage } = useAppHandlers();
-  const hub = useSocketHub();
+  const { fetchSubscriptions, onSubscriptionsList, socketConnected } = useSocketHub();
 
   // ✅ Resolve identity & role (props override session)
   const userId = user_id ?? userIdProp ?? session?.user?.user_id ?? null;
   const role = roleProp ?? session?.user?.role ?? (userId ? 'user' : 'guest');
   const isGuest = role === 'guest' || !userId;
 
-  // ──────────────────────────────────────────────────────────
-  // Packages (exclude trials) — label localized where possible
-  // ──────────────────────────────────────────────────────────
+  // Packages (exclude trials)
   const plans = useMemo(() => (paymentPackages || []).filter((p) => !p.isTrial), []);
 
   const toLocalized = useCallback(
@@ -62,30 +86,24 @@ export default function UserSubscriptionPanel(props) {
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ──────────────────────────────────────────────────────────
-  // Subscriptions — socket list + REST fallback
-  // ──────────────────────────────────────────────────────────
+  // ── Live subscriptions via socket
   useEffect(() => {
-    if (!hub) return;
+    if (!fetchSubscriptions || !onSubscriptionsList) return;
 
-    // Ask server for the list (for current user bound to socket)
-    hub.fetchSubscriptions?.(); // emits 'fetch_subscriptions' → 'subscriptions_list' reply
-
-    const offList = hub.onSubscriptionsList?.((payload) => {
+    const offList = onSubscriptionsList((payload) => {
       const list = Array.isArray(payload) ? payload : payload?.subscriptions;
       if (Array.isArray(list)) setSubscriptions(list);
       setLoading(false);
     });
 
-    // We intentionally DO NOT listen to onSubscriptionCreated here
-    // per requirement: this panel is read-only and should not handle creation events.
+    if (socketConnected) fetchSubscriptions();
 
     return () => {
       if (typeof offList === 'function') offList();
     };
-  }, [hub]);
+  }, [fetchSubscriptions, onSubscriptionsList, socketConnected]);
 
-  // REST fallback (authoritative GET /api/user/subscriptions)
+  // ── REST fallback (authoritative)
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -93,8 +111,9 @@ export default function UserSubscriptionPanel(props) {
         const res = await axiosInstance.get('/api/user/subscriptions');
         const list = res?.data?.subscriptions;
         if (alive && Array.isArray(list)) setSubscriptions(list);
-      } catch {
-        // silent — socket may still succeed
+      } catch (err) {
+        // Keep silent but not empty (lint-safe)
+        console.debug('subscriptions REST fallback failed', err);
       } finally {
         if (alive) setLoading(false);
       }
@@ -109,6 +128,17 @@ export default function UserSubscriptionPanel(props) {
     return subscriptions.find((s) => s?.status === 'active') || subscriptions[0] || null;
   }, [subscriptions]);
 
+  // Normalize status key for styling + i18n
+  const statusKey = useMemo(() => {
+    const key = String(current?.status || 'unknown').toLowerCase();
+    return ['active', 'pending', 'expired', 'disabled'].includes(key) ? key : 'unknown';
+  }, [current]);
+
+  const statusLabel = useMemo(() => {
+    const i18nKey = statusKey;
+    return t(`socket.ui.subscriptions.status.${i18nKey}`);
+  }, [statusKey, t]);
+
   const startPurchase = useCallback(async () => {
     if (!selectedSlug) {
       displayMessage(t('socket.ui.subscriptions.select_package'), 'warning');
@@ -117,22 +147,34 @@ export default function UserSubscriptionPanel(props) {
     try {
       showLoader({ text: t('socket.ui.subscriptions.loading') });
       router.push(`/${locale}/packages/${selectedSlug}/buyNow`);
-    } catch {
+    } catch (err) {
       displayMessage(t('socket.ui.subscriptions.checkout_failed'), 'error');
+      console.error('startPurchase failed', err);
     } finally {
       hideLoader();
     }
   }, [selectedSlug, router, locale, showLoader, hideLoader, displayMessage, t]);
 
   // ──────────────────────────────────────────────────────────
-  // Render
+  // Render (self-styled card)
   // ──────────────────────────────────────────────────────────
+
+  // Guest: sign-up CTA only (no Buy Now UI)
   if (isGuest) {
     return (
-      <div className="container-style-sm flex flex-col items-center text-center">
-        <h2 className="text-2xl font-bold mb-2">{t('socket.ui.subscriptions.none_title')}</h2>
-        <p className="text-sm text-gray-300 mb-4">{t('socket.ui.subscriptions.none_blurb')}</p>
-        <Link href={`/${locale}/auth/signup`} className="btn-primary">
+      <div
+        className="
+          w-full max-w-3xl mx-auto
+          rounded-2xl border border-white/10
+          bg-gradient-to-br from-slate-900/10 to-slate-600/10
+          shadow-lg p-6 md:p-8 text-center
+        "
+      >
+        <h2 className="text-2xl font-bold tracking-tight mb-2">
+          {t('socket.ui.subscriptions.none_title')}
+        </h2>
+        <p className="text-sm text-gray-300 mb-5">{t('socket.ui.subscriptions.none_blurb')}</p>
+        <Link href={`/${locale}/auth/signup`} className="btn-primary inline-flex">
           {t('socket.ui.subscription.create_account', { default: 'Create Account' })}
         </Link>
       </div>
@@ -140,35 +182,35 @@ export default function UserSubscriptionPanel(props) {
   }
 
   return (
-    <div className="container-style-sm flex flex-col items-center">
-      {/* Title depends on having a subscription */}
-      <h2 className="text-2xl font-bold mb-2">
-        {current ? t('socket.ui.subscriptions.have_one') : t('socket.ui.subscriptions.none_title')}
-      </h2>
+    <div className="container-style w-full max-w-3xl mx-auto shadow-lg p-4 text-center">
+      {/* Title */}
+      <header className="mb-4">
+        <h2 className="text-2xl font-bold">
+          {current
+            ? t('socket.ui.subscriptions.have_one')
+            : t('socket.ui.subscriptions.none_title')}
+        </h2>
+      </header>
 
       {loading ? (
-        <div className="text-sm text-gray-300 mb-4">{t('socket.ui.subscriptions.loading')}</div>
+        <div className="animate-pulse text-sm text-gray-300">
+          {t('socket.ui.subscriptions.loading')}
+        </div>
       ) : current ? (
-        // ✅ Has at least one subscription → show status + CTA to list page
-        <div className="w-full max-w-xl text-center">
-          <div className="text-sm text-gray-300 mb-3">
-            {t('socket.ui.subscriptions.status_label')}{' '}
-            <b>
-              {(() => {
-                const key = String(current.status || 'unknown').toLowerCase();
-                const known = ['active', 'pending', 'expired', 'disabled'];
-                const i18nKey = known.includes(key) ? key : 'unknown';
-                return t(`socket.ui.subscriptions.status.${i18nKey}`);
-              })()}
-            </b>
+        // ✅ Has subscription → status + CTA
+        <div className="w-full text-center">
+          <div className="mb-4">
+            <span className="mr-2 font-medium">{t('socket.ui.subscriptions.status_label')}</span>
+            <StatusPill statusKey={statusKey} label={statusLabel} />
           </div>
-          <Link href={`/${locale}/user/subscriptions`} className="btn-primary inline-block">
+
+          <Link href={`/${locale}/user/subscriptions`} className="btn-success inline-flex">
             {t('socket.ui.subscriptions.view_yours')}
           </Link>
         </div>
       ) : (
-        // ❌ No subscription → render purchase panel
-        <div className="w-full max-w-xl">
+        // ❌ No subscription → purchase flow
+        <div className="w-full">
           <p className="text-sm text-gray-300 mb-4">{t('socket.ui.subscriptions.none_blurb')}</p>
 
           {/* Package selector */}
@@ -178,7 +220,7 @@ export default function UserSubscriptionPanel(props) {
             </label>
             <select
               id="plan"
-              className="w-full rounded-2xl border border-gray-700 p-3"
+              className="w-full rounded-2xl border border-gray-700 bg-black/30 p-3"
               value={selectedSlug}
               onChange={(e) => setSelectedSlug(e.target.value)}
             >
@@ -198,22 +240,21 @@ export default function UserSubscriptionPanel(props) {
 
           {/* Selected plan preview & action */}
           {selectedSlug && (
-            <div className="border border-gray-700 rounded-2xl p-4 bg-gray-300/60">
+            <div className="border border-gray-700 rounded-2xl p-4 text-black">
               {plans
                 .filter((p) => p.slug === selectedSlug)
-                .map((p) => (
-                  <div key={p.slug}>
-                    <div className="text-xl font-bold mb-1">
-                      {SafeString(toLocalized(p.name ?? p.title))}
+                .map((p) => {
+                  const name = SafeString(toLocalized(p.name ?? p.title));
+                  const desc = SafeString(toLocalized(p.description ?? ''));
+                  const price = SafeString(toLocalized(p.priceLabel ?? p.duration ?? ''));
+                  return (
+                    <div key={p.slug}>
+                      <div className="text-xl font-bold mb-1">{name}</div>
+                      <div className="text-sm text-gray-800 mb-3">{desc}</div>
+                      <div className="text-lg font-semibold mb-3">{price}</div>
                     </div>
-                    <div className="text-sm text-gray-300 mb-3">
-                      {SafeString(toLocalized(p.description ?? ''))}
-                    </div>
-                    <div className="text-lg font-semibold mb-3">
-                      {SafeString(toLocalized(p.priceLabel ?? p.duration ?? ''))}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               <button className="btn-primary mt-1" type="button" onClick={startPurchase}>
                 {t('socket.ui.subscriptions.buy_additional')}
               </button>

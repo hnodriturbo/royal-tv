@@ -254,12 +254,8 @@ export default function AdminUsersMainPage() {
                 ) : (
                   singleUser.role !== 'admin' && (
                     <ConversationActionButton
-                      // 🧩 external component handles its own button UI
                       action="create"
-                      buttonClass="w-full flex flex-col items-center py-4 border border-white rounded-md btn-primary"
                       user_id={singleUser.user_id}
-                      user={singleUser}
-                      isAdmin={true}
                       size="lg"
                       buttonText={`💬 ${t('app.admin.users.main.startConversation')}`}
                     />

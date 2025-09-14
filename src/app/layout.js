@@ -10,7 +10,10 @@ import './styles/linearGradientStyles.css';
 import './styles/globals.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
-export default function RootLayout({ children }) {
+import RenderErrorCatcher from '@/components/dev/RenderErrorCatcher';
+import DevClientBridge from '@/components/dev/DevClientBridge';
+
+export default function RootLayout({ children, params }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -20,7 +23,10 @@ export default function RootLayout({ children }) {
           backgroundSize: 'cover'
         }}
       >
-        {children}
+        {/* Dev-only UI hints & console enrichment */}
+        {process.env.NEXT_PUBLIC_DEBUG_INVALID_ELEMENT === '1' ? <DevClientBridge /> : null}
+        {/* Your existing providers can wrap here if needed */}
+        <RenderErrorCatcher>{children}</RenderErrorCatcher>
       </body>
     </html>
   );

@@ -1,3 +1,4 @@
+// src/components/reusableUI/ConversationActionButton.js
 'use client';
 
 import { useCallback, useMemo, useRef } from 'react';
@@ -7,42 +8,59 @@ import { useSession } from 'next-auth/react';
 
 import useModal from '@/hooks/useModal';
 import useSocketHub from '@/hooks/socket/useSocketHub';
+import useAppHandlers from '@/hooks/useAppHandlers';
 import axiosInstance from '@/lib/core/axiosInstance';
 
 /**
  * ConversationActionButton
- * - Supports actions: create | delete | deleteAll
- * - Shows subject + message fields for `create` using your Modal's custom content API
- * - Calls optional `onActionSuccess` after a successful action
- * - Reads session and hides itself unless role is "admin" or "user"
- * - Uses unified API endpoints at /api/liveChat/{create|delete|deleteAll}
+ * actions: "create" | "delete" | "deleteAll"
  *
- * ⚠️ i18n: All t() keys are kept exactly as provided.
+ * Props (normalized):
+ * - create/deleteAll need the **owner id** via one of:
+ *   { user_id, targetUid, owner_id, user?.user_id }
+ * - delete needs the **conversation id** via one of:
+ *   { conversation_id, conversationId }
+ *
+ * Optional:
+ * - user (object, used by socket create)
+ * - buttonClass, size ('sm'|'lg'), buttonText
+ * - onActionSuccess({ action, conversation_id?, user_id?, created_id?, result })
  */
-export default function ConversationActionButton({
-  action = 'create',
-  user_id,
-  conversation_id,
-  user,
-  buttonClass,
-  size,
-  buttonText,
-  onActionSuccess // optional: ({ action, conversation_id?, user_id?, created_id?, result }) => void
-}) {
-  const t = useTranslations();
+export default function ConversationActionButton(props) {
+  const {
+    action = 'create',
+    // owner id variants
+    user_id,
+    targetUid,
+    owner_id,
+    user,
+    // delete one variants
+    conversation_id,
+    conversationId,
+    // ui
+    buttonClass,
+    size,
+    buttonText,
+    onActionSuccess
+  } = props;
+
+  const t = useTranslations('components.conversationActionButton');
   const locale = useLocale();
   const router = useRouter();
   const { data: session, status } = useSession();
+  const { openModal, hideModal } = useModal();
+  const { createConversation } = useSocketHub();
+  const { displayMessage, showLoader, hideLoader } = useAppHandlers();
 
   const role = session?.user?.role;
   const isAdmin = role === 'admin';
   const isUser = role === 'user';
+  // ---- normalize IDs --------------------------------------------------------
+  const ownerId = user_id ?? targetUid ?? owner_id ?? (user && user.user_id) ?? null;
 
-  // ⛔️ Do NOT return yet — call all hooks first to keep hook order consistent across renders
+  const convoId = conversation_id ?? conversationId ?? null;
 
-  const { openModal, hideModal } = useModal();
-  const { createConversation } = useSocketHub();
-
+  // ---- navigation -----------------------------------------------------------
   const goTo = useCallback(
     (id) => {
       if (!id) return;
@@ -51,195 +69,264 @@ export default function ConversationActionButton({
     [router, locale, isAdmin]
   );
 
-  // Refs for create modal fields
+  // ---- refs used by create modal -------------------------------------------
   const subjectRef = useRef(null);
   const messageRef = useRef(null);
 
-  // CREATE
+  // ---- helpers --------------------------------------------------------------
+  const show = (msg, type = 'info') => {
+    try {
+      if (typeof displayMessage === 'function') displayMessage(msg, type);
+    } catch (err) {
+      // fall back to console in dev
+      if (process.env.NODE_ENV !== 'production')
+        console.error('[ConversationActionButton] toast failed:', err);
+    }
+  };
+
+  // ---- actions --------------------------------------------------------------
   const handleCreate = useCallback(
     async ({ subject, message } = {}) => {
       try {
-        // Prefer socket (if hub returns an id)
-        const createdId = (await createConversation?.(user_id, user, { subject, message })) || null;
-        if (createdId) {
-          onActionSuccess?.({ action: 'create', user_id, created_id: createdId, result: 'socket' });
-          goTo(createdId);
+        if (!ownerId) {
+          show(t('error_generic_create'), 'error');
+          console.error('[ConversationActionButton] create: missing ownerId');
+          return;
+        }
+        if (!subject || !message) {
+          show(t('validation_subject_message_required'), 'error');
           return;
         }
 
-        // Fallback to REST API
-        const res = await axiosInstance.post('/api/liveChat/create', {
-          user_id,
-          subject,
-          message
+        showLoader?.({ text: t('loader_creating') });
+
+        // 1) Try socket first
+        let createdId = null;
+        try {
+          if (typeof createConversation === 'function') {
+            createdId = await createConversation(ownerId, user, { subject, message });
+          }
+        } catch (err) {
+          console.error('[ConversationActionButton] socket create failed, will fallback:', err);
+        }
+
+        // 2) Fallback to REST (with timeout)
+        if (!createdId) {
+          try {
+            const res = await axiosInstance.post(
+              '/api/liveChat/create',
+              { user_id: ownerId, subject, message },
+              { timeout: 15000 } // 15s timeout → t('error_timeout')
+            );
+            createdId = res?.data?.conversation_id || res?.data?.id || null;
+          } catch (err) {
+            if (err?.code === 'ECONNABORTED') {
+              show(t('error_timeout'), 'error');
+            } else {
+              show(t('error_generic_create'), 'error');
+            }
+            console.error('[ConversationActionButton] REST create failed:', err);
+            return;
+          }
+        }
+
+        if (!createdId) {
+          show(t('error_generic_create'), 'error');
+          console.error('[ConversationActionButton] create: no id returned');
+          return;
+        }
+
+        show(t('success_created'), 'success');
+        onActionSuccess?.({
+          action: 'create',
+          user_id: ownerId,
+          created_id: createdId,
+          result: 'ok'
         });
-        const id = res?.data?.conversation_id || res?.data?.id;
-        onActionSuccess?.({ action: 'create', user_id, created_id: id, result: res?.data });
-        goTo(id);
+        goTo(createdId);
+      } catch (err) {
+        show(t('error_generic_create'), 'error');
+        console.error('[ConversationActionButton] create failed:', err);
       } finally {
+        hideLoader?.();
         hideModal();
       }
     },
-    [createConversation, user_id, user, goTo, hideModal, onActionSuccess]
+    [ownerId, user, createConversation, goTo, onActionSuccess, show, showLoader, hideLoader, t]
   );
 
-  // DELETE one
   const handleDelete = useCallback(async () => {
     try {
+      if (!convoId) {
+        show(t('error_delete_failed'), 'error');
+        console.error('[ConversationActionButton] delete: missing conversation_id');
+        return;
+      }
+      showLoader?.({ text: t('loader_deleting_one') });
       const res = await axiosInstance.delete('/api/liveChat/delete', {
-        data: { conversation_id }
+        data: { conversation_id: convoId }
       });
-      onActionSuccess?.({ action: 'delete', conversation_id, result: res?.data });
+      show(t('success_deleted_one'), 'success');
+      onActionSuccess?.({ action: 'delete', conversation_id: convoId, result: res?.data });
+    } catch (err) {
+      show(t('error_delete_failed'), 'error');
+      console.error('[ConversationActionButton] delete failed:', err);
     } finally {
+      hideLoader?.();
       hideModal();
     }
-  }, [conversation_id, hideModal, onActionSuccess]);
+  }, [convoId, onActionSuccess, show, showLoader, hideLoader, t]);
 
-  // DELETE all (admin only)
   const handleDeleteAll = useCallback(async () => {
     try {
-      if (!isAdmin) return; // UI guard; API should also enforce
+      if (!isAdmin) {
+        console.error('[ConversationActionButton] deleteAll blocked: not admin');
+        return;
+      }
+      if (!ownerId) {
+        show(t('error_delete_all_failed'), 'error');
+        console.error('[ConversationActionButton] deleteAll: missing ownerId');
+        return;
+      }
+      showLoader?.({ text: t('loader_deleting_all') });
       const res = await axiosInstance.delete('/api/liveChat/deleteAll', {
-        data: { user_id }
+        data: { user_id: ownerId }
       });
-      onActionSuccess?.({ action: 'deleteAll', user_id, result: res?.data });
+      show(t('success_deleted_all'), 'success');
+      onActionSuccess?.({ action: 'deleteAll', user_id: ownerId, result: res?.data });
+    } catch (err) {
+      show(t('error_delete_all_failed'), 'error');
+      console.error('[ConversationActionButton] deleteAll failed:', err);
     } finally {
+      hideLoader?.();
       hideModal();
     }
-  }, [isAdmin, user_id, hideModal, onActionSuccess]);
+  }, [isAdmin, ownerId, onActionSuccess, show, showLoader, hideLoader, t]);
 
-  // Modal definitions
+  // ---- modal config ---------------------------------------------------------
   const createModal = useMemo(() => {
-    if (action === 'create') {
-      const subjectPlaceholder = t('components.conversationActionButton.placeholder_subject');
-      const messagePlaceholder = t('components.conversationActionButton.placeholder_message');
+    if (action !== 'create') return null;
 
-      // Shared custom content used by both `customContent` and `body` fallbacks
-      const content = (
-        <div className="space-y-2">
-          <input
-            ref={subjectRef}
-            name="subject"
-            type="text"
-            className="w-full border rounded p-2"
-            placeholder={subjectPlaceholder}
-          />
-          <textarea
-            ref={messageRef}
-            name="message"
-            className="w-full border rounded p-2 h-28"
-            placeholder={messagePlaceholder}
-          />
-        </div>
-      );
+    const subjectPh = t('placeholder_subject');
+    const messagePh = t('placeholder_message');
 
-      const onConfirm = () => {
-        const subject = subjectRef.current?.value?.trim();
-        const message = messageRef.current?.value?.trim();
-        if (!subject || !message) return; // keep modal open if invalid
-        handleCreate({ subject, message });
-      };
+    const content = (
+      <div className="space-y-2">
+        <input
+          ref={subjectRef}
+          name="subject"
+          type="text"
+          className="w-full border rounded p-2"
+          placeholder={subjectPh}
+        />
+        <textarea
+          ref={messageRef}
+          name="message"
+          className="w-full border rounded p-2 h-28"
+          placeholder={messagePh}
+        />
+      </div>
+    );
 
-      return {
-        btn: buttonClass || 'btn-primary',
-        label: buttonText || t('components.conversationActionButton.btn_start_new'),
-        modal: {
-          title: t('components.conversationActionButton.modal_create_title'),
-          description: t('components.conversationActionButton.modal_create_description'),
-          confirmText: t('components.conversationActionButton.modal_create_confirm'),
+    const onConfirm = () => {
+      const subject = subjectRef.current?.value?.trim();
+      const message = messageRef.current?.value?.trim();
+      if (!subject || !message) {
+        show(t('validation_subject_message_required'), 'error');
+        return; // keep modal open
+      }
+      handleCreate({ subject, message });
+    };
 
-          // For modal implementations that read generated fields
-          inputs: [
-            { name: 'subject', type: 'text', placeholder: subjectPlaceholder, required: true },
-            { name: 'message', type: 'textarea', placeholder: messagePlaceholder, required: true }
-          ],
-          fields: [
-            { name: 'subject', type: 'text', placeholder: subjectPlaceholder, required: true },
-            { name: 'message', type: 'textarea', placeholder: messagePlaceholder, required: true }
-          ],
-
-          // Primary: render real inputs (works like your admin page's customContent/body usage)
-          customContent: () => content,
-          body: content,
-
-          onConfirm
-        }
-      };
-    }
-
-    if (action === 'delete') {
-      return {
-        btn: buttonClass || 'btn-danger',
-        label: buttonText || t('components.conversationActionButton.btn_delete_one'),
-        modal: {
-          title: t('components.conversationActionButton.modal_delete_title'),
-          description: t('components.conversationActionButton.modal_delete_description'),
-          confirmText: t('components.conversationActionButton.modal_delete_confirm'),
-          onConfirm: handleDelete
-        }
-      };
-    }
-
-    // deleteAll (admin only)
     return {
-      btn: buttonClass || 'btn-danger',
-      label: buttonText || t('components.conversationActionButton.btn_delete_all'),
+      btn: buttonClass || 'btn-primary',
+      label: buttonText || t('btn_start_new'),
       modal: {
-        title: t('components.conversationActionButton.modal_delete_all_title'),
-        description: t('components.conversationActionButton.modal_delete_all_description'),
-        confirmText: t('components.conversationActionButton.modal_delete_all_confirm'),
-        onConfirm: handleDeleteAll
+        title: t('modal_create_title'),
+        description: t('modal_create_description'),
+        confirmButtonText: t('modal_create_confirm'),
+        confirmButtonClass: 'btn-primary',
+        cancelButtonText: t('modal_cancel'),
+        cancelButtonType: 'Danger',
+        // optional schema for consumers that render from it
+        inputs: [
+          { name: 'subject', type: 'text', placeholder: subjectPh, required: true },
+          { name: 'message', type: 'textarea', placeholder: messagePh, required: true }
+        ],
+        fields: [
+          { name: 'subject', type: 'text', placeholder: subjectPh, required: true },
+          { name: 'message', type: 'textarea', placeholder: messagePh, required: true }
+        ],
+        customContent: () => content,
+        body: content,
+        onConfirm,
+        onCancel: () => hideModal()
       }
     };
-  }, [action, buttonClass, buttonText, t, handleCreate, handleDelete, handleDeleteAll]);
+  }, [action, buttonClass, buttonText, t, handleCreate, hideModal, show]);
+
+  const deleteOneModal = useMemo(() => {
+    if (action !== 'delete') return null;
+    return {
+      btn: buttonClass || 'btn-danger',
+      label: buttonText || t('btn_delete_one'),
+      modal: {
+        title: t('modal_delete_title'),
+        description: t('modal_delete_description'),
+        confirmButtonText: t('modal_delete_confirm'),
+        confirmButtonType: 'Danger',
+        cancelButtonText: t('modal_cancel'),
+        onConfirm: handleDelete,
+        onCancel: () => hideModal()
+      }
+    };
+  }, [action, buttonClass, buttonText, t, handleDelete, hideModal]);
+
+  const deleteAllModal = useMemo(() => {
+    if (action !== 'deleteAll') return null;
+    return {
+      btn: buttonClass || 'btn-danger',
+      label: buttonText || t('btn_delete_all'),
+      modal: {
+        title: t('modal_delete_all_title'),
+        description: t('modal_delete_all_description'),
+        confirmButtonText: t('modal_delete_all_confirm'),
+        confirmButtonType: 'Danger',
+        cancelButtonText: t('modal_cancel'),
+        onConfirm: handleDeleteAll,
+        onCancel: () => hideModal()
+      }
+    };
+  }, [action, buttonClass, buttonText, t, handleDeleteAll, hideModal]);
+
+  const cfg =
+    action === 'create' ? createModal : action === 'delete' ? deleteOneModal : deleteAllModal;
+
+  // ---- visibility guards ----------------------------------------------------
+  const isAuthed = status === 'authenticated';
+  const roleOK =
+    (action === 'create' && (isAdmin || isUser)) ||
+    (action === 'delete' && (isAdmin || isUser)) ||
+    (action === 'deleteAll' && isAdmin);
+
+  const propsOK =
+    (action === 'create' && !!ownerId) ||
+    (action === 'delete' && !!convoId) ||
+    (action === 'deleteAll' && !!ownerId);
+
+  if (!isAuthed || !roleOK || !cfg || !propsOK) return null;
 
   const sizeClass = size === 'sm' ? 'btn-sm' : size === 'lg' ? 'btn-lg' : '';
   const disabled = action === 'deleteAll' && !isAdmin;
 
-  // ✅ Now it's safe to return conditionally — *after* all hooks have been called in this render
-  const isAllowed = status === 'authenticated' && (isAdmin || isUser);
-  if (!isAllowed) return null;
-  if (action === 'deleteAll' && !isAdmin) return null;
-
   return (
     <button
       type="button"
-      className={`${createModal.btn} ${sizeClass}`}
-      onClick={() => openModal(`chat_${action}`, createModal.modal)}
+      className={`${cfg.btn} ${sizeClass}`}
+      onClick={() => openModal(`chat_${action}`, cfg.modal)}
       disabled={disabled}
     >
-      {createModal.label}
+      {cfg.label}
     </button>
   );
 }
-
-/**
-USAGE
-------
-1) Create (user or admin initiates):
-<ConversationActionButton
-  action="create"
-  user_id={targetUser.user_id}
-  user={targetUser}
-  onActionSuccess={({ created_id }) => {
-    // optional toast etc.; navigation is automatic via goTo(created_id)
-  }}
-/>
-
-2) Delete one conversation:
-<ConversationActionButton
-  action="delete"
-  conversation_id={conversation.conversation_id}
-  onActionSuccess={() => {
-    // e.g. show toast and redirect
-  }}
-/>
-
-3) Delete ALL conversations for a user (admin only):
-<ConversationActionButton
-  action="deleteAll"
-  user_id={user.user_id}
-  onActionSuccess={() => {/* toast or refresh */
-/*}}
-/>
-*/

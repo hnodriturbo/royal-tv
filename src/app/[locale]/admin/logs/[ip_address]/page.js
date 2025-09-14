@@ -258,7 +258,7 @@ export default function AdminLogsByIpPage() {
               className="btn-danger font-bold py-3 px-7 text-xl rounded-xl w-full max-w-md btn-glow transition-all duration-150"
               onClick={handleDeleteAllForIp}
             >
-              {t('app.admin.logs.byIp.dangerZone.confirm')}
+              {t('app.admin.logs.byIp.dangerZone.button')}
             </button>
           </div>
         </div>
