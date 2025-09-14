@@ -13,8 +13,9 @@
 
 import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl'; // 🌍 i18n access
-import PackagesGrid from '@/components/packages/data/packages'; // 🧱 default export = grid component
-import Guide from '@/components/packages/data/guide'; // 📘 central guide
+
+import PackagesGrid from '@/components/packages/data/packages';
+import Guide from '@/components/packages/data/guide';
 
 export default function AllPackagesPage() {
   // 🗣️ i18n handle for this page

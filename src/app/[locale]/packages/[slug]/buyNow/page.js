@@ -149,7 +149,12 @@ export default function PackageBuyNowPage() {
     }
   }, [status, isAllowed, redirect, router]);
 
-  if (!paymentPackage) return notFound();
+  if (!paymentPackage)
+    return (
+      <div className="container-style">
+        <h1>Could not find package. Try again later</h1>
+      </div>
+    );
   if (!isAllowed) return null;
 
   return (
