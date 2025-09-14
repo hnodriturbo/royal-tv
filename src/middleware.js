@@ -41,7 +41,7 @@ export async function middleware(req) {
   if (isMiddle(pathname)) return NextResponse.next();
 
   // Auth state (let getToken pick the correct cookie name)
-  const secret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
+  const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
   const token = (await getToken({ req, secret }).catch(() => null)) || null;
 
   const hasValidSession = Boolean(token && (token.user_id || token.email || token.sub));

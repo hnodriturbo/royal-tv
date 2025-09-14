@@ -89,7 +89,7 @@ export default function StatusBadge({ status }) {
     try {
       unknown = t('app.payments.status.unknown');
     } catch {}
-    text = <>{unknown}</>;
+    text = unknown;
   }
 
   return (

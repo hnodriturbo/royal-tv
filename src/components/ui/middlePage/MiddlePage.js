@@ -6,33 +6,21 @@ import { useSession, signOut } from 'next-auth/react';
 import { useTranslations, useLocale } from 'next-intl';
 import useAppRedirectHandlers from '@/hooks/useAppRedirectHandlers';
 
-/**
- * MiddlePage — a single place to centralize cross-route redirects with UI messaging.
- * Notes:
- * - Keeps "remember last page" via ?redirectTo=
- * - Ensures logout waits for the session cookie to clear (prevents auth middleware races)
- * - Works with next-intl locales and avoids redirect loops back into /auth/*
- */
-
 // Treat these as "do not send users back into these"
 const FORBIDDEN = new Set([
+  /*   '/auth/login',
+  '/auth/signin',
+  '/auth/signout', */
   '/auth/middlePage',
   '/auth/callback',
   '/auth/verify-request',
-  '/auth/error',
-  '/auth/reset',
-  '/auth/new-password',
-  '/auth/check-email',
-  '/auth/signin',
-  '/auth/signout'
+  '/auth/error'
 ]);
 
-const LOCALES = ['en', 'is'];
-const LOCALE_RE = new RegExp(`^/(?:${LOCALES.join('|')})(?:/|$)`, 'i');
-
-const stripLocale = (p) => p.replace(LOCALE_RE, '/');
+const LOCALE_RE = /^\/([a-z]{2})(?=\/|$)/i;
+const stripLocale = (p) => p.replace(LOCALE_RE, '');
 const hasAnyLocale = (p) => LOCALE_RE.test(p);
-const isTrivial = (p) => !p || p === '/' || p === '//' || p === '/#' || p === '/?';
+const isTrivial = (p) => !p || p === '/' || p === '//';
 
 export default function MiddlePage() {
   const t = useTranslations();
@@ -42,10 +30,10 @@ export default function MiddlePage() {
   const router = useRouter();
   const { redirectWithMessage } = useAppRedirectHandlers(); // shows loader + navigates after delay
 
-  // remount-safe guard (dev/HMR)
+  // remount-safe guard (dev/HMR/strict)
   const navigated = useRef(false);
 
-  // locale helper
+  // locale-aware path
   const L = (path) => `/${locale}${path.startsWith('/') ? path : `/${path}`}`;
 
   useEffect(() => {
@@ -53,7 +41,7 @@ export default function MiddlePage() {
 
     const qp = (k) => searchParams.get(k);
 
-    // action flags
+    // action flags (KEEPING ALL)
     const loginFlag = qp('login') === 'true';
     const logoutFlag = qp('logout') === 'true';
     const guestFlag = qp('guest') === 'true';
@@ -87,33 +75,15 @@ export default function MiddlePage() {
     // message + delay
     let msg = 'Redirecting…';
     let color = 'info';
-    let delayMs = 2000;
+    let delayMs = 1200;
 
     // pick target + message
     if (status === 'authenticated') {
-      // ---- LOGOUT (special-cased to avoid cookie race with middleware) ----
+      // ---- LOGOUT (minimal change: await signOut to avoid prod race) ----
       if (logoutFlag) {
-        // Run an async flow and exit early so nothing else runs in this effect.
         (async () => {
           try {
             await signOut({ redirect: false });
-          } catch {
-            // ignore — we'll still hard-clear cookies below
-          }
-          try {
-            // Belt-and-suspenders: expire both Auth.js v5 and NextAuth v4 cookie names
-            if (typeof document !== 'undefined') {
-              const expire = (name, secure = false) => {
-                const base = `${name}=; Max-Age=0; Path=/; SameSite=Lax`;
-                document.cookie = secure ? `${base}; Secure` : base;
-              };
-              // Auth.js v5
-              expire('authjs.session-token');
-              expire('__Secure-authjs.session-token', true);
-              // NextAuth v4
-              expire('next-auth.session-token');
-              expire('__Secure-next-auth.session-token', true);
-            }
           } finally {
             navigated.current = true;
             const dest = L('/');
@@ -126,16 +96,16 @@ export default function MiddlePage() {
               loaderOnly: true,
               pageDelay: 300
             });
-            // failsafe: if SPA nav is blocked, hard navigate
+            // failsafe: hard replace in case SPA nav stalls
             setTimeout(() => {
-              if (typeof window !== 'undefined') window.location.assign(dest);
+              if (typeof window !== 'undefined') window.location.replace(dest);
             }, 800);
           }
         })();
         return;
       }
 
-      // ---- Authenticated: normal cases ----
+      // ---- Authenticated: normal cases (UNCHANGED) ----
       if (loginFlag) {
         target = safeRedirect || target;
         try {
@@ -166,12 +136,12 @@ export default function MiddlePage() {
         msg = 'Page does not exist. Redirecting to Home…';
         color = 'info';
       } else {
-        // authenticated + no flags → go to dashboard
+        // authenticated + no flags → go to dashboard / safeRedirect
         target = safeRedirect || target;
         msg = 'Redirecting…';
       }
     } else {
-      // ---- Not authenticated ----
+      // ---- Not authenticated (UNCHANGED) ----
       if (notLoggedInFlag || guestFlag) {
         target = L('/auth/signin');
         msg = 'You are not authorized! Redirecting to login…';
@@ -214,13 +184,13 @@ export default function MiddlePage() {
       pageDelay: delayMs
     });
 
-    // last-ditch safety: if we’re somehow still here after delay + 800ms, hard-navigate
+    // last-ditch safety: if still here after delay + 800ms, hard-navigate
     const failSafe = setTimeout(() => {
       if (typeof window !== 'undefined') {
         const stillHere = window.location.pathname + window.location.search === here;
-        if (stillHere) window.location.assign(target);
+        if (stillHere) window.location.replace(target);
       }
-    }, delayMs + 800);
+    }, delayMs + 2000);
 
     return () => clearTimeout(failSafe);
   }, [status, session, searchParams, t, locale, redirectWithMessage, router]);
