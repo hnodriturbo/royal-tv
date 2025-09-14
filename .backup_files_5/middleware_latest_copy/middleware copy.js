@@ -19,39 +19,47 @@ const isAdminPath = (p) => withOptionalLocale('admin').test(p);
 const isUserPath = (p) => withOptionalLocale('user').test(p);
 const isMiddle = (p) => withOptionalLocale('auth/middlePage').test(p);
 
-// ⛔ Do NOT match /api/* at all (esp. /api/auth/*)
+const isPublicAsset = (p) =>
+  p.startsWith('/_next') || p.startsWith('/images') || p.startsWith('/favicon') || p.includes('.');
+
+// 🚫 Never run on NextAuth API
 export const config = {
-  matcher: [
-    // everything except _next, static assets, and api
-    '/((?!_next|.*\\..*|api).*)'
-  ]
+  matcher: ['/((?!_next|.*\\..*|api/auth).*)', '/api/:path*']
 };
 
 export async function middleware(req) {
   const { pathname, search } = req.nextUrl;
 
-  // Locale prefix
+  // Let all /api/* pass (esp. /api/auth/*)
+  if (pathname.startsWith('/api/')) return NextResponse.next();
+  if (isPublicAsset(pathname)) return NextResponse.next();
+
+  // Ensure locale prefix for pages
   if (!hasLocale(pathname)) {
     const url = req.nextUrl.clone();
     url.pathname = `/${inferLocale(req, pathname)}${pathname}`;
     return NextResponse.redirect(url);
   }
 
-  // Always allow the middlePage
+  // Always allow middlePage
   if (isMiddle(pathname)) return NextResponse.next();
 
-  // Auth state (let getToken pick the correct cookie name)
+  // Auth state
   const secret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
+  const isProd = process.env.NODE_ENV === 'production';
+  const cookieName = isProd ? '__Secure-authjs.session-token' : 'authjs.session-token';
   const token = (await getToken({ req, secret }).catch(() => null)) || null;
+  /* const token = await getToken({ req, secret, cookieName }).catch(() => null); */
 
+  // consider a session "valid" only if it has a user identity
   const hasValidSession = Boolean(token && (token.user_id || token.email || token.sub));
   const role = hasValidSession ? (token.role === 'admin' ? 'admin' : 'user') : 'guest';
   const locale = inferLocale(req, pathname);
 
-  // Guests can view /auth/*
+  // 🔓 If NOT logged in and on /auth/* (signin/signup/etc.), let it render
   if (!hasValidSession && isAuthPath(pathname)) return NextResponse.next();
 
-  // Logged-in users should not see /auth/* (except middlePage above)
+  // 🔐 If logged in and on /auth/* (except middlePage), redirect to a landing
   if (hasValidSession && isAuthPath(pathname)) {
     const url = req.nextUrl.clone();
     url.pathname =
@@ -64,7 +72,7 @@ export async function middleware(req) {
     return NextResponse.redirect(url);
   }
 
-  // Gate protected areas for guests, preserving redirectTo
+  // Gate protected areas when not logged in (keep redirectTo feature)
   if (!hasValidSession && (isAdminPath(pathname) || isUserPath(pathname))) {
     const url = req.nextUrl.clone();
     url.pathname = `/${locale}/auth/signin`;
@@ -72,7 +80,7 @@ export async function middleware(req) {
     return NextResponse.redirect(url);
   }
 
-  // Admin-only gate
+  // Admin-only gate for logged-in non-admins (choose where you want to send them)
   if (hasValidSession && isAdminPath(pathname) && role !== 'admin') {
     const url = req.nextUrl.clone();
     url.pathname = `/${locale}/auth/signin`;

@@ -87,7 +87,7 @@ export default function MiddlePage() {
     // message + delay
     let msg = 'Redirecting…';
     let color = 'info';
-    let delayMs = 1200;
+    let delayMs = 2000;
 
     // pick target + message
     if (status === 'authenticated') {
