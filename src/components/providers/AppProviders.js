@@ -19,12 +19,19 @@ import { LoaderProvider } from '@/context/LoaderContext';
 import { ModalProvider } from '@/context/ModalContext';
 
 // 🧩 UI pieces
+/* 
+import ShowMessages from '@/components/ui/showErrorAndMessages/ShowMessages';
 import LanguageSwitcher from '@/components/languageSwitcher/LanguageSwitcher';
+
+
+
+
+ */
 import Sidebar from '@/components/Sidebar';
 import Footer from '@/components/Footer';
-import WhatsAppLogo from '@/components/ui/whatsapp/WhatsAppBS';
-import ShowMessages from '@/components/ui/showErrorAndMessages/ShowMessages';
 import LogPageView from '@/components/reusableUI/socket/LogPageView';
+import WhatsAppLogo from '@/components/ui/whatsapp/WhatsAppBS';
+
 import ErrorBoundary from '@/lib/debug/ErrorBoundary';
 
 function AppContent({ children }) {
@@ -40,7 +47,7 @@ function AppContent({ children }) {
           <ModalProvider>
             <div className="min-h-screen flex flex-col">
               <div className="min-h-screen w-full">
-                <LanguageSwitcher />
+                {/* <LanguageSwitcher /> */}
                 <Sidebar />
 
                 <div className="lg:ml-64 flex flex-col min-h-screen">
@@ -50,7 +57,7 @@ function AppContent({ children }) {
               </div>
 
               <WhatsAppLogo />
-              <ShowMessages />
+              {/* <ShowMessages /> */}
             </div>
           </ModalProvider>
         </LoaderProvider>

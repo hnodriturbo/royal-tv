@@ -7,8 +7,8 @@ import FreeTrialPanel from '@/components/reusableUI/socket/FreeTrialPanel';
 import useFreeTrialStatus from '@/hooks/socket/useFreeTrialStatus';
 import { useTranslations, useLocale } from 'next-intl';
 
-// ✅ Use the real component, not the data module
-import { PackagesGrid } from '@/components/packages/data'; // <-- fix
+// ✅ Show packages grid and the guide on the homepage
+import PackagesGrid from '@/components/packages/data';
 import Guide from '@/components/packages/data/guide';
 
 export default function HomeClient() {
