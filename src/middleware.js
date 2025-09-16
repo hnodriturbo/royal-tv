@@ -5,7 +5,16 @@ import { getToken } from 'next-auth/jwt';
 const LOCALES = ['en', 'is'];
 const DEFAULT_LOCALE = 'en';
 
+// ---------- helpers ----------
 const hasLocale = (p) => new RegExp(`^/(?:${LOCALES.join('|')})(?:/|$)`, 'i').test(p);
+const withOptionalLocale = (seg) => new RegExp(`^/(?:${LOCALES.join('|')})?/${seg}(?:/|$)`, 'i');
+
+const isMiddle = (p) => withOptionalLocale('auth/middlePage').test(p);
+// exclude middlePage from auth check so it’s always allowed
+const isAuthPath = (p) => withOptionalLocale('auth').test(p) && !isMiddle(p);
+const isAdminPath = (p) => withOptionalLocale('admin').test(p);
+const isUserPath = (p) => withOptionalLocale('user').test(p);
+
 const inferLocale = (req, pathname) => {
   const seg = pathname.split('/')[1];
   if (LOCALES.includes(seg)) return seg;
@@ -13,16 +22,14 @@ const inferLocale = (req, pathname) => {
   return LOCALES.includes(cookie) ? cookie : DEFAULT_LOCALE;
 };
 
-const withOptionalLocale = (seg) => new RegExp(`^/(?:${LOCALES.join('|')})?/${seg}(?:/|$)`, 'i');
-const isAuthPath = (p) => withOptionalLocale('auth').test(p);
-const isAdminPath = (p) => withOptionalLocale('admin').test(p);
-const isUserPath = (p) => withOptionalLocale('user').test(p);
-const isMiddle = (p) => withOptionalLocale('auth/middlePage').test(p);
-
 const isPublicAsset = (p) =>
   p.startsWith('/_next') || p.startsWith('/images') || p.startsWith('/favicon') || p.includes('.');
 
-// 🚫 Never run on NextAuth API
+// 🧩 role policy: allow admins to access /user/* by default (set env to 'false' for strict)
+const allowAdminOnUserPath =
+  (process.env.ALLOW_ADMIN_ON_USER_PATH ?? 'true').toLowerCase() !== 'false';
+
+// 🚫 Never run on NextAuth API (but run on other APIs) + pages
 export const config = {
   matcher: ['/((?!_next|.*\\..*|api/auth).*)', '/api/:path*']
 };
@@ -30,36 +37,48 @@ export const config = {
 export async function middleware(req) {
   const { pathname, search } = req.nextUrl;
 
-  // Let all /api/* pass (esp. /api/auth/*)
+  // let APIs pass (especially /api/auth/* which we excluded in matcher, but keep this guard)
   if (pathname.startsWith('/api/')) return NextResponse.next();
   if (isPublicAsset(pathname)) return NextResponse.next();
 
-  // Ensure locale prefix for pages
+  // locale prefix
   if (!hasLocale(pathname)) {
     const url = req.nextUrl.clone();
     url.pathname = `/${inferLocale(req, pathname)}${pathname}`;
     return NextResponse.redirect(url);
   }
 
-  // Always allow middlePage
+  // always allow middlePage
   if (isMiddle(pathname)) return NextResponse.next();
 
-  // Auth state
-  const secret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
-  const isProd = process.env.NODE_ENV === 'production';
-  const cookieName = isProd ? '__Secure-authjs.session-token' : 'authjs.session-token';
-  const token = (await getToken({ req, secret, cookieName }).catch(() => null)) || null;
-  /* const token = await getToken({ req, secret }).catch(() => null); */
+  // ---------- auth state ----------
+  const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
 
-  // consider a session "valid" only if it has a user identity
+  // Use explicit cookie names (fast path). Try both v5 and v4 variants.
+  const isProd = process.env.NODE_ENV === 'production';
+  const cookieCandidates = isProd
+    ? ['__Secure-authjs.session-token', '__Secure-next-auth.session-token']
+    : ['authjs.session-token', 'next-auth.session-token'];
+
+  let token = null;
+  for (const cookieName of cookieCandidates) {
+    try {
+      token = await getToken({ req, secret, cookieName });
+      if (token) break;
+    } catch {
+      /* ignore and try next */
+    }
+  }
+
   const hasValidSession = Boolean(token && (token.user_id || token.email || token.sub));
   const role = hasValidSession ? (token.role === 'admin' ? 'admin' : 'user') : 'guest';
   const locale = inferLocale(req, pathname);
 
-  // 🔓 If NOT logged in and on /auth/* (signin/signup/etc.), let it render
+  // ---------- routing rules ----------
+  // Guests may view /auth/* pages
   if (!hasValidSession && isAuthPath(pathname)) return NextResponse.next();
 
-  // 🔐 If logged in and on /auth/* (except middlePage), redirect to a landing
+  // Logged-in users should not see /auth/* (middlePage already excluded)
   if (hasValidSession && isAuthPath(pathname)) {
     const url = req.nextUrl.clone();
     url.pathname =
@@ -72,19 +91,27 @@ export async function middleware(req) {
     return NextResponse.redirect(url);
   }
 
-  // Gate protected areas when not logged in (keep redirectTo feature)
+  // --- Not logged in but hit protected (admin/user) → MiddlePage with notLoggedIn flag
   if (!hasValidSession && (isAdminPath(pathname) || isUserPath(pathname))) {
     const url = req.nextUrl.clone();
-    url.pathname = `/${locale}/auth/signin`;
-    url.search = `?redirectTo=${encodeURIComponent(pathname + (search || ''))}`;
+    url.pathname = `/${locale}/auth/middlePage`;
+    url.search = `?notLoggedIn=true&redirectTo=${encodeURIComponent(pathname + (search || ''))}`;
     return NextResponse.redirect(url);
   }
 
-  // Admin-only gate for logged-in non-admins (choose where you want to send them)
+  // --- Logged in but not admin on /admin/* → MiddlePage with admin=false
   if (hasValidSession && isAdminPath(pathname) && role !== 'admin') {
     const url = req.nextUrl.clone();
-    url.pathname = `/${locale}/auth/signin`;
-    url.search = `?redirectTo=${encodeURIComponent(`/${locale}/`)}`;
+    url.pathname = `/${locale}/auth/middlePage`;
+    url.search = `?admin=false&redirectTo=${encodeURIComponent(`/${locale}/`)}`;
+    return NextResponse.redirect(url);
+  }
+
+  // --- Logged in but not allowed on /user/* (only if strict mode) → user=false
+  if (hasValidSession && isUserPath(pathname) && !allowAdminOnUserPath && role !== 'user') {
+    const url = req.nextUrl.clone();
+    url.pathname = `/${locale}/auth/middlePage`;
+    url.search = `?user=false&redirectTo=${encodeURIComponent(`/${locale}/`)}`;
     return NextResponse.redirect(url);
   }
 
