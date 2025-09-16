@@ -25,6 +25,7 @@ export const paymentPackages = [
     order_description: '6 Months',
     duration: '6 Months (60$)',
     devices: 1,
+    /* Remember to change this to 60 */
     price: 30,
     package_id: 3,
     paid: true

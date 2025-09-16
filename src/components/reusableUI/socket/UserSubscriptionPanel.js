@@ -220,7 +220,7 @@ export default function UserSubscriptionPanel(props) {
             </label>
             <select
               id="plan"
-              className="w-full rounded-2xl border border-gray-700 bg-black/30 p-3"
+              className="w-full rounded-2xl border border-gray-700 p-3"
               value={selectedSlug}
               onChange={(e) => setSelectedSlug(e.target.value)}
             >
@@ -240,7 +240,7 @@ export default function UserSubscriptionPanel(props) {
 
           {/* Selected plan preview & action */}
           {selectedSlug && (
-            <div className="border border-gray-700 rounded-2xl p-4 text-black">
+            <div className="border border-gray-700 rounded-2xl p-4 bg-gradient-to-br from-indigo-900/80 to-sky-800/80">
               {plans
                 .filter((p) => p.slug === selectedSlug)
                 .map((p) => {
@@ -255,8 +255,12 @@ export default function UserSubscriptionPanel(props) {
                     </div>
                   );
                 })}
-              <button className="btn-primary mt-1" type="button" onClick={startPurchase}>
-                {t('socket.ui.subscriptions.buy_additional')}
+              <button
+                className="btn-secondary btn-glow w-1/2 mt-1"
+                type="button"
+                onClick={startPurchase}
+              >
+                {t('socket.ui.subscriptions.buy_now')}
               </button>
             </div>
           )}

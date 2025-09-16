@@ -45,11 +45,11 @@ export async function middleware(req) {
   if (isMiddle(pathname)) return NextResponse.next();
 
   // Auth state
-  const secret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
+  const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
   const isProd = process.env.NODE_ENV === 'production';
   const cookieName = isProd ? '__Secure-authjs.session-token' : 'authjs.session-token';
-  const token = (await getToken({ req, secret }).catch(() => null)) || null;
-  /* const token = await getToken({ req, secret, cookieName }).catch(() => null); */
+  const token = (await getToken({ req, secret, cookieName }).catch(() => null)) || null;
+  /* const token = await getToken({ req, secret }).catch(() => null); */
 
   // consider a session "valid" only if it has a user identity
   const hasValidSession = Boolean(token && (token.user_id || token.email || token.sub));

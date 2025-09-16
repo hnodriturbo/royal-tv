@@ -1,51 +1,72 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import { usePathname } from 'next/navigation';
 import useAppHandlers from '@/hooks/useAppHandlers';
 
-const useAuthGuard = (requiredRole) => {
-  const { data: session, status } = useSession();
-  const { showLoader, hideLoader } = useAppHandlers();
-  const _router = useRouter();
+/**
+ * useAuthGuard(requiredRole)
+ *
+ * - Keeps the same return API: { isAllowed, redirect }
+ * - isAllowed is:
+ *     null   → still loading (don’t render, loader shown automatically)
+ *     true   → authenticated + role OK
+ *     false  → blocked (redirect available)
+ * - redirect gives the path to replace() with if blocked
+ */
+export default function useAuthGuard(requiredRole /* 'admin' | 'user' */) {
+  const { status, data } = useSession();
+  const locale = useLocale();
+  const pathname = usePathname();
   const t = useTranslations();
-  const locale = useLocale(); // ✅ top-level (not inside effects)
+  const { showLoader, hideLoader } = useAppHandlers();
 
-  const [isChecking, setIsChecking] = useState(status === 'loading');
+  const isLoading = status === 'loading';
+  const isAuthed = status === 'authenticated';
+  const role = (data?.user?.role ?? 'guest').toLowerCase();
 
-  // show/hide loader while session is loading
+  // role logic
+  const roleAllows = useMemo(() => {
+    if (!isAuthed) return false;
+    if (!requiredRole) return true;
+    if (requiredRole === 'admin') return role === 'admin';
+    if (requiredRole === 'user') return role === 'user';
+    return false;
+  }, [isAuthed, requiredRole, role]);
+
+  // loader control
+  const loaderShown = useRef(false);
   useEffect(() => {
-    if (status === 'loading') {
-      showLoader({ text: t('common.auth.checking') });
-      setIsChecking(true);
-    } else {
+    if (isLoading && !loaderShown.current) {
+      const text = t('common.loader.loading', { default: 'Loading...' });
+      showLoader({ text });
+      loaderShown.current = true;
+    }
+    if (!isLoading && loaderShown.current) {
       hideLoader();
-      setIsChecking(false);
+      loaderShown.current = false;
     }
-  }, [status, showLoader, hideLoader, t]);
+  }, [isLoading, showLoader, hideLoader, t]);
 
-  const userRole = session?.user?.role || 'guest';
-  const isAllowed = requiredRole ? userRole === requiredRole : Boolean(session);
-
-  // compute redirect URL for the caller to use
-  const redirect = useMemo(() => {
-    if (isChecking) return null;
-
-    if (userRole === 'guest') {
-      return `/${locale}/auth/middlePage?notLoggedIn=true`;
+  // redirect target
+  let redirect = null;
+  if (!isLoading) {
+    if (!isAuthed) {
+      redirect = `/${locale}/auth/signin?redirectTo=${encodeURIComponent(pathname)}`;
+    } else if (!roleAllows) {
+      redirect = `/${locale}/`;
     }
+  }
 
-    if (requiredRole && userRole !== requiredRole) {
-      const query = requiredRole === 'admin' ? 'admin=false' : 'user=false';
-      return `/${locale}/auth/middlePage?${query}`;
-    }
-
-    return null;
-  }, [isChecking, userRole, requiredRole, locale]);
+  // normalize isAllowed for consumers
+  let isAllowed = null;
+  if (isLoading) {
+    isAllowed = null; // pending
+  } else {
+    isAllowed = isAuthed && roleAllows;
+  }
 
   return { isAllowed, redirect };
-};
-
-export default useAuthGuard;
+}

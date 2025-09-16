@@ -20,6 +20,23 @@ import {
   getOutboundLocale
 } from './notificationHelpers.js';
 
+// --- i18n seed for socket notifications (prod-safe) ---
+import fs from 'node:fs';
+import path from 'node:path';
+(function seedSocketDictionariesOnce() {
+  if (globalThis.__ROYAL_TRANSLATIONS__) return;
+  try {
+    const base = path.resolve(process.cwd(), 'src', 'messages'); // ⬅️ your folder
+    const en = JSON.parse(fs.readFileSync(path.join(base, 'en.json'), 'utf8'));
+    const is = JSON.parse(fs.readFileSync(path.join(base, 'is.json'), 'utf8'));
+    globalThis.__ROYAL_TRANSLATIONS__ = { en, is };
+    console.log('[i18n] notificationEvents: translations loaded from', base);
+  } catch (e) {
+    console.warn('[i18n] notificationEvents: failed to load translations:', e?.message);
+    globalThis.__ROYAL_TRANSLATIONS__ = { en: {}, is: {} };
+  }
+})();
+
 // 🧭 admin targets
 const ADMIN_USER_ID = process.env.ADMIN_USER_ID || null;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || null;

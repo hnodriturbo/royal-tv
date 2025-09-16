@@ -20,7 +20,7 @@ import { ModalProvider } from '@/context/ModalContext';
 
 // 🧩 UI pieces
 /* 
-import ShowMessages from '@/components/ui/showErrorAndMessages/ShowMessages';
+
 import LanguageSwitcher from '@/components/languageSwitcher/LanguageSwitcher';
 
 
@@ -31,6 +31,7 @@ import Sidebar from '@/components/Sidebar';
 import Footer from '@/components/Footer';
 import LogPageView from '@/components/reusableUI/socket/LogPageView';
 import WhatsAppLogo from '@/components/ui/whatsapp/WhatsAppBS';
+import ShowMessages from '@/components/ui/showErrorAndMessages/ShowMessages';
 
 import ErrorBoundary from '@/lib/debug/ErrorBoundary';
 
@@ -57,7 +58,7 @@ function AppContent({ children }) {
               </div>
 
               <WhatsAppLogo />
-              {/* <ShowMessages /> */}
+              <ShowMessages />
             </div>
           </ModalProvider>
         </LoaderProvider>
