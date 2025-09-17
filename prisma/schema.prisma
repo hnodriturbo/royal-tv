@@ -206,6 +206,33 @@ model Log {
   @@index([createdAt])
 }
 
+model PublicLiveChatConversation {
+  public_conversation_id String   @id @default(uuid()) @db.Uuid
+  subject                String?
+  read                   Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  messages PublicLiveChatMessage[]
+}
+
+model PublicLiveChatMessage {
+  public_message_id      String        @id @default(uuid()) @db.Uuid
+  public_conversation_id String        @db.Uuid
+  sender_guest_id        String?
+  sender_is_admin        Boolean       @default(false)
+  message                String
+  status                 MessageStatus @default(sent)
+  readAt                 DateTime?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
+  conversation PublicLiveChatConversation @relation(fields: [public_conversation_id], references: [public_conversation_id], onDelete: Cascade)
+
+  @@index([public_conversation_id])
+  @@index([status])
+}
+
 enum Role {
   admin
   user
