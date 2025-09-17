@@ -1,15 +1,12 @@
-// LanguageSwitcher.js (patched)
 'use client';
 
-import { useEffect, useState } from 'react';
-import { onNavigate } from 'next/navigation';
-import { useLocale, useTranslations } from 'next-intl';
-import useSocketHub from '@/hooks/socket/useSocketHub';
-import Flag from 'react-world-flags';
-import { SafeString } from '@/lib/ui/SafeString';
 import Link from 'next/link';
+import { useEffect, useMemo } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+import { usePathname, useSearchParams } from 'next/navigation';
+import useSocketHub from '@/hooks/socket/useSocketHub';
 
-const SUPPORTED_LOCALES = ['en', 'is'];
+const SUPPORTED = new Set(['en', 'is']);
 const AUTH_FLAGS = new Set([
   'login',
   'logout',
@@ -24,17 +21,17 @@ const AUTH_FLAGS = new Set([
   'success'
 ]);
 
-function getPathWithoutLocale(incomingPath) {
-  const safePath = typeof incomingPath === 'string' && incomingPath.length > 0 ? incomingPath : '/';
-  const [, possibleLocale, ...rest] = safePath.split('/');
-  if (SUPPORTED_LOCALES.includes(String(possibleLocale).toLowerCase())) {
-    const rebuilt = '/' + rest.join('/');
-    return rebuilt === '//' || rebuilt === '/' ? '/' : rebuilt;
+function stripLocale(pathname) {
+  const parts = (pathname || '/').split('/');
+  const maybe = (parts[1] || '').toLowerCase();
+  if (SUPPORTED.has(maybe)) {
+    const rest = '/' + parts.slice(2).join('/');
+    return rest === '//' || rest === '/' ? '/' : rest;
   }
-  return safePath;
+  return pathname || '/';
 }
 
-function sanitizeSearch(search) {
+function sanitize(search) {
   if (!search) return '';
   const sp = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
   AUTH_FLAGS.forEach((k) => sp.delete(k));
@@ -42,101 +39,108 @@ function sanitizeSearch(search) {
   return s ? `?${s}` : '';
 }
 
-function writeLocaleCookies(targetLocale) {
-  const oneYear = 60 * 60 * 24 * 365;
-  document.cookie = `NEXT_LOCALE=${targetLocale}; path=/; max-age=${oneYear}`;
-  document.cookie = `locale=${targetLocale}; path=/; max-age=${oneYear}`;
-}
-
-function isCheckoutPath(currentPathname) {
-  return /\/packages\/[^/]+\/buyNow(?:\/|$)/i.test(currentPathname || '');
-}
-
 function withLocale(basePath, locale) {
-  const path = basePath?.startsWith('/') ? basePath : `/${basePath || ''}`;
-  return `/${locale}${path === '/' ? '' : path}`;
+  const p = basePath && basePath.startsWith('/') ? basePath : `/${basePath || ''}`;
+  return `/${locale}${p === '/' ? '' : p}`;
+}
+
+function setLocaleCookies(nextLocale) {
+  const oneYear = 60 * 60 * 24 * 365;
+  document.cookie = `NEXT_LOCALE=${nextLocale}; path=/; max-age=${oneYear}`;
+  document.cookie = `locale=${nextLocale}; path=/; max-age=${oneYear}`;
+}
+
+function isCheckout(pathname) {
+  return /\/packages\/[^/]+\/buyNow(?:\/|$)/i.test(pathname || '');
 }
 
 export default function LanguageSwitcher() {
-  const activeLocale = useLocale();
+  const locale = (useLocale() || 'en').toLowerCase();
   const t = useTranslations();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { setLocale } = useSocketHub();
-  const [url, setUrl] = useState({ pathname: '/', search: '' });
 
-  useEffect(() => {
-    const update = () =>
-      setUrl({ pathname: window.location.pathname, search: window.location.search });
-    update();
-    let unsubscribe = () => {};
+  // guard translations so missing/group keys never crash
+  const ts = (key, fallback = '') => {
     try {
-      unsubscribe = onNavigate(() => update());
+      const v = t(key);
+      return typeof v === 'string' || typeof v === 'number' ? String(v) : fallback;
+    } catch {
+      return fallback;
+    }
+  };
+
+  const disabled = isCheckout(pathname || '/');
+  const base = stripLocale(pathname || '/');
+  const searchRaw = searchParams?.toString() || '';
+  const search = sanitize(searchRaw ? `?${searchRaw}` : '');
+  const hrefBase = (base || '/') + (search || '');
+
+  const enHref = useMemo(() => withLocale(hrefBase, 'en'), [hrefBase]);
+  const isHref = useMemo(() => withLocale(hrefBase, 'is'), [hrefBase]);
+
+  // keep socket aware of current locale
+  useEffect(() => {
+    try {
+      setLocale(locale);
     } catch {}
-    window.addEventListener('popstate', update);
-    return () => {
-      window.removeEventListener('popstate', update);
-      unsubscribe && unsubscribe();
-    };
-  }, []);
+  }, [locale, setLocale]);
 
-  const disabled = isCheckoutPath(url.pathname);
-  const base = getPathWithoutLocale(url.pathname);
-  const hrefBase = sanitizeSearch(url.search) ? `${base}${sanitizeSearch(url.search)}` : base;
-
-  const englishHref = withLocale(hrefBase, 'en');
-  const icelandicHref = withLocale(hrefBase, 'is');
-
-  const classes = (off) =>
+  const cls = (off) =>
     `px-2 py-1 rounded-full transition ${
       off
         ? 'ring-2 ring-white cursor-not-allowed opacity-60 pointer-events-none'
         : 'opacity-80 hover:opacity-100'
     }`;
 
-  const handleClick = (locale) => {
+  const onClick = (next) => {
+    setLocaleCookies(next);
     try {
-      writeLocaleCookies(locale);
-      setLocale(locale);
+      setLocale(next);
     } catch {}
   };
 
   return (
     <div className="fixed top-3 right-3 z-[9999] flex items-center gap-2 rounded-full bg-black/50 backdrop-blur px-3 py-2 border border-white/10 shadow">
       <Link
-        href={englishHref}
+        href={enHref}
         prefetch
-        onClick={() => handleClick('en')}
-        aria-label={SafeString(t('app.languageSwitcher.english_label'))}
-        aria-current={activeLocale === 'en' ? 'true' : undefined}
-        aria-disabled={disabled || activeLocale === 'en' ? 'true' : undefined}
-        className={classes(disabled || activeLocale === 'en')}
+        onClick={() => onClick('en')}
+        aria-label={ts('app.languageSwitcher.english_label', 'English')}
+        aria-current={locale === 'en' ? 'true' : undefined}
+        aria-disabled={disabled || locale === 'en' ? 'true' : undefined}
+        className={cls(disabled || locale === 'en')}
         title={
           disabled
-            ? SafeString(t('app.languageSwitcher.disabled_tooltip'))
-            : SafeString(t('app.languageSwitcher.english_tooltip'))
+            ? ts(
+                'app.languageSwitcher.disabled_tooltip',
+                'Language switching is unavailable on this page'
+              )
+            : ts('app.languageSwitcher.english_tooltip', 'Switch to English')
         }
       >
-        <span className="inline-flex items-center" aria-hidden="true">
-          <Flag code="GB" style={{ width: '1.5em', height: '1.5em' }} />
-        </span>
+        <span aria-hidden="true">🇬🇧</span>
       </Link>
 
       <Link
-        href={icelandicHref}
+        href={isHref}
         prefetch
-        onClick={() => handleClick('is')}
-        aria-label={SafeString(t('app.languageSwitcher.icelandic_label'))}
-        aria-current={activeLocale === 'is' ? 'true' : undefined}
-        aria-disabled={disabled || activeLocale === 'is' ? 'true' : undefined}
-        className={classes(disabled || activeLocale === 'is')}
+        onClick={() => onClick('is')}
+        aria-label={ts('app.languageSwitcher.icelandic_label', 'Íslenska')}
+        aria-current={locale === 'is' ? 'true' : undefined}
+        aria-disabled={disabled || locale === 'is' ? 'true' : undefined}
+        className={cls(disabled || locale === 'is')}
         title={
           disabled
-            ? SafeString(t('app.languageSwitcher.disabled_tooltip'))
-            : SafeString(t('app.languageSwitcher.icelandic_tooltip'))
+            ? ts(
+                'app.languageSwitcher.disabled_tooltip',
+                'Language switching is unavailable on this page'
+              )
+            : ts('app.languageSwitcher.icelandic_tooltip', 'Skipta í íslensku')
         }
       >
-        <span className="inline-flex items-center" aria-hidden="true">
-          <Flag code="IS" style={{ width: '1.5em', height: '1.5em' }} />
-        </span>
+        <span aria-hidden="true">🇮🇸</span>
       </Link>
     </div>
   );
