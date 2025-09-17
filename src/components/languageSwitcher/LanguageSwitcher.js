@@ -88,7 +88,7 @@ export default function LanguageSwitcher() {
   }, [locale, setLocale]);
 
   const cls = (off) =>
-    `px-2 py-1 rounded-full transition ${
+    `text-center px-2 py-1 rounded-full transition ${
       off
         ? 'ring-2 ring-white cursor-not-allowed opacity-60 pointer-events-none'
         : 'opacity-80 hover:opacity-100'
@@ -120,7 +120,7 @@ export default function LanguageSwitcher() {
             : ts('app.languageSwitcher.english_tooltip', 'Switch to English')
         }
       >
-        <span aria-hidden="true">🇬🇧</span>
+        <span aria-hidden="true">EN🇮🇸</span>
       </Link>
 
       <Link
