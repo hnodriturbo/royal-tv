@@ -10,6 +10,14 @@
 
 
 ---
+## 17 sept 2025
+- ✅ Created branch for issue [#4](https://github.com/hnodriturbo/royal-tv/issues/4)
+- 🏛️ Created two tables in schema.prisma file
+  - PublicLiveChatConversation & PublicLiveChatMessage
+- Pushed the tables to the postgres database
+- ❌ Closed the branch after moving from in progress to done.
+- ✅ DONE 
+
 
 ## 16 sept 2025
 - ✅ Deleted old branches; will now create branches on the go
