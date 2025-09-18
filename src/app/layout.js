@@ -14,7 +14,7 @@ export default function RootLayout({ children, params }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className="w/full min-h-screen"
+        className="w-full min-h-screen lg:mt-6 mt-16"
         style={{
           background: "url('/images/background/background.png') no-repeat center center fixed",
           backgroundSize: 'cover'

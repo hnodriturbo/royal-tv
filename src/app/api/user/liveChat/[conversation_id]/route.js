@@ -3,7 +3,7 @@ import prisma from '@/lib/core/prisma';
 import { withRole, getUserId } from '@/lib/api/guards';
 
 export const GET = withRole('user', async (_req, ctx, session) => {
-  const { conversation_id } = ctx.params;
+  const { conversation_id } = await ctx.params;
   const user_id = getUserId(session);
 
   try {

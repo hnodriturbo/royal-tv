@@ -87,7 +87,7 @@ export default function MiddlePage() {
           } finally {
             navigated.current = true;
             const dest = L('/');
-            const text = 'Logout successful. Redirecting to Home…';
+            const text = t('app.middlePage.messages.logoutSuccess');
             redirectWithMessage({
               target: dest,
               message: text,

@@ -135,172 +135,188 @@ export default function AdminFreeTrialsPage() {
           <h1 className="text-wonderful-5 text-2xl mb-0">{t('app.admin.freeTrials.main.title')}</h1>
           <hr className="border border-gray-400 w-8/12 my-4" />
         </div>
-
-        {/* 🔧 controls row */}
-        <div className="flex justify-center items-center w-full">
-          <div className="flex flex-col w-10/12 mb-3 items-center md:flex-row md:space-x-3 md:space-y-0 space-y-10">
-            <div className="flex-1 flex justify-center items-center m-0">
-              <SortDropdown
-                options={freeTrialSortOptions}
-                value={sortOrder}
-                onChange={setSortOrder}
-              />
-            </div>
-            <hr className="md:hidden border border-gray-400 w-8/12 my-4" />
-            <div className="flex-1 flex justify-center items-center">
-              <AutoRefresh />
-            </div>
+        {pagedTrials.length === 0 ? (
+          // 🚫 No data state
+          <div className="flex justify-center items-center w-full py-20">
+            <p className="text-xl font-semibold text-gray-400">
+              {t('app.admin.freeTrials.main.no_data') || 'No Free Trials Found'}
+            </p>
           </div>
-        </div>
+        ) : (
+          <>
+            {/* 🔧 controls row */}
+            <div className="flex justify-center items-center w-full">
+              <div className="flex flex-col w-10/12 mb-3 items-center md:flex-row md:space-x-3 md:space-y-0 space-y-10">
+                <div className="flex-1 flex justify-center items-center m-0">
+                  <SortDropdown
+                    options={freeTrialSortOptions}
+                    value={sortOrder}
+                    onChange={setSortOrder}
+                  />
+                </div>
+                <hr className="md:hidden border border-gray-400 w-8/12 my-4" />
+                <div className="flex-1 flex justify-center items-center">
+                  <AutoRefresh />
+                </div>
+              </div>
+            </div>
 
-        {/* 💻 desktop table */}
-        <div className="hidden xl:flex justify-center w-full">
-          <div className="w-full max-w-full overflow-x-auto">
-            <table className="min-w-[850px] w-full border border-gray-300 border-separate border-spacing-0 text-shadow-dark-1">
-              <thead>
-                <tr className="bg-gray-600 text-base-100 font-bold">
-                  <th className="border border-gray-300 px-4 py-2">
-                    {t('app.admin.freeTrials.main.table.user')}
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2">
-                    {t('app.admin.freeTrials.main.table.username')}
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2">
-                    {t('app.admin.freeTrials.main.table.email')}
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2">
-                    {t('app.admin.freeTrials.main.table.status')}
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2">
-                    {t('app.admin.freeTrials.main.table.created')}
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2">
-                    {t('app.admin.freeTrials.main.table.startDate')}
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2">
-                    {t('app.admin.freeTrials.main.table.endDate')}
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2">
-                    {t('app.admin.freeTrials.main.table.actions')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="text-center">
-                {pagedTrials.map((trial) => (
-                  <tr key={trial.trial_id} className="hover:bg-gray-400">
-                    <td className="border border-gray-300 px-4 py-2">{trial.user?.name || '-'}</td>
-                    <td className="border border-gray-300 px-4 py-2">
-                      {trial.user?.username || '-'}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2">{trial.user?.email || '-'}</td>
-                    <td
-                      className={`border border-gray-300 px-4 py-2 font-bold ${STATUS_COLOR_MAP[trial.status]}`}
+            {/* 💻 desktop table */}
+            <div className="hidden lg:flex justify-center w-full">
+              <div className="w-full max-w-full overflow-x-auto">
+                <table className="min-w-[850px] w-full border border-gray-300 border-separate border-spacing-0 text-shadow-dark-1">
+                  <thead>
+                    <tr className="bg-gray-600 text-base-100 font-bold">
+                      <th className="border border-gray-300 px-4 py-2">
+                        {t('app.admin.freeTrials.main.table.user')}
+                      </th>
+                      <th className="border border-gray-300 px-4 py-2">
+                        {t('app.admin.freeTrials.main.table.username')}
+                      </th>
+                      <th className="border border-gray-300 px-4 py-2">
+                        {t('app.admin.freeTrials.main.table.email')}
+                      </th>
+                      <th className="border border-gray-300 px-4 py-2">
+                        {t('app.admin.freeTrials.main.table.status')}
+                      </th>
+                      <th className="border border-gray-300 px-4 py-2">
+                        {t('app.admin.freeTrials.main.table.created')}
+                      </th>
+                      <th className="border border-gray-300 px-4 py-2">
+                        {t('app.admin.freeTrials.main.table.startDate')}
+                      </th>
+                      <th className="border border-gray-300 px-4 py-2">
+                        {t('app.admin.freeTrials.main.table.endDate')}
+                      </th>
+                      <th className="border border-gray-300 px-4 py-2">
+                        {t('app.admin.freeTrials.main.table.actions')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-center">
+                    {pagedTrials.map((trial) => (
+                      <tr key={trial.trial_id} className="hover:bg-gray-400">
+                        <td className="border border-gray-300 px-4 py-2">
+                          {trial.user?.name || '-'}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2">
+                          {trial.user?.username || '-'}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2">
+                          {trial.user?.email || '-'}
+                        </td>
+                        <td
+                          className={`border border-gray-300 px-4 py-2 font-bold ${STATUS_COLOR_MAP[trial.status]}`}
+                        >
+                          {t(`app.admin.freeTrials.status.${trial.status}`)}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2">
+                          {trial.createdAt ? new Date(trial.createdAt).toLocaleString() : '—'}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2">
+                          {trial.startDate ? new Date(trial.startDate).toLocaleString() : '—'}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2">
+                          {trial.endDate ? new Date(trial.endDate).toLocaleString() : '—'}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2">
+                          <div className="flex flex-row gap-2 w-fit justify-center">
+                            <Link href={`/${locale}/admin/freeTrials/${trial.trial_id}`}>
+                              <button className="btn-primary btn-sm">
+                                {t('app.admin.freeTrials.main.action.viewEdit')}
+                              </button>
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(trial.trial_id)}
+                              className="btn-danger"
+                            >
+                              <span className="inline-flex items-center gap-2">
+                                <span aria-hidden="true">🗑️</span>
+                                <span>
+                                  {SafeString(t('app.admin.freeTrials.main.action.delete'))}
+                                </span>
+                              </span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* 📱 mobile cards */}
+            <div className="lg:hidden flex flex-col gap-4 w-full mt-6">
+              {pagedTrials.map((trial) => (
+                <div
+                  key={trial.trial_id}
+                  className="border border-gray-300 rounded-2xl p-4 shadow-sm bg-gray-600 text-base-100 font-bold"
+                >
+                  <div className="flex justify-between mb-2">
+                    <h3 className="font-semibold text-lg">
+                      {trial.user?.name || '-'}
+                      <span className="ml-2 text-xs text-muted">
+                        {trial.user?.username && `(${trial.user.username})`}
+                      </span>
+                    </h3>
+                    <span
+                      className={`px-4 py-2 rounded text-sm font-bold ${STATUS_COLOR_MAP[trial.status]}`}
                     >
                       {t(`app.admin.freeTrials.status.${trial.status}`)}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2">
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-sm">
+                    <div>
+                      <strong>{t('app.admin.freeTrials.main.table.email')}:</strong>{' '}
+                      {trial.user?.email || '-'}
+                    </div>
+                    <div>
+                      <strong>{t('app.admin.freeTrials.main.table.created')}:</strong>{' '}
                       {trial.createdAt ? new Date(trial.createdAt).toLocaleString() : '—'}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2">
+                    </div>
+                    <div>
+                      <strong>{t('app.admin.freeTrials.main.table.startDate')}:</strong>{' '}
                       {trial.startDate ? new Date(trial.startDate).toLocaleString() : '—'}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2">
+                    </div>
+                    <div>
+                      <strong>{t('app.admin.freeTrials.main.table.endDate')}:</strong>{' '}
                       {trial.endDate ? new Date(trial.endDate).toLocaleString() : '—'}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2">
-                      <div className="flex flex-row gap-2 w-fit justify-center">
-                        <Link href={`/${locale}/admin/freeTrials/${trial.trial_id}`}>
-                          <button className="btn-primary btn-sm">
-                            {t('app.admin.freeTrials.main.action.viewEdit')}
-                          </button>
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(trial.trial_id)}
-                          className="btn-danger"
-                        >
-                          <span className="inline-flex items-center gap-2">
-                            <span aria-hidden="true">🗑️</span>
-                            <span>{SafeString(t('app.admin.freeTrials.main.action.delete'))}</span>
-                          </span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* 📱 mobile cards */}
-        <div className="xl:hidden flex flex-col gap-4 w-full mt-6">
-          {pagedTrials.map((trial) => (
-            <div
-              key={trial.trial_id}
-              className="border border-gray-300 rounded-2xl p-4 shadow-sm bg-gray-600 text-base-100 font-bold"
-            >
-              <div className="flex justify-between mb-2">
-                <h3 className="font-semibold text-lg">
-                  {trial.user?.name || '-'}
-                  <span className="ml-2 text-xs text-muted">
-                    {trial.user?.username && `(${trial.user.username})`}
-                  </span>
-                </h3>
-                <span
-                  className={`px-4 py-2 rounded text-sm font-bold ${STATUS_COLOR_MAP[trial.status]}`}
-                >
-                  {t(`app.admin.freeTrials.status.${trial.status}`)}
-                </span>
-              </div>
-              <div className="space-y-1 text-sm">
-                <div>
-                  <strong>{t('app.admin.freeTrials.main.table.email')}:</strong>{' '}
-                  {trial.user?.email || '-'}
+                    </div>
+                  </div>
+                  <div className="flex flex-row gap-3 mt-4 w-full">
+                    <Link
+                      href={`/${locale}/admin/freeTrials/${trial.trial_id}`}
+                      className="flex-1 flex justify-start"
+                    >
+                      <button className="btn-primary w-full">
+                        {t('app.admin.freeTrials.main.action.viewEdit')}
+                      </button>
+                    </Link>
+                    <div className="flex-1 flex justify-end">
+                      <button
+                        className="btn-danger w-full"
+                        onClick={() => handleDelete(trial.trial_id)}
+                      >
+                        {t('app.admin.freeTrials.main.action.delete')}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <strong>{t('app.admin.freeTrials.main.table.created')}:</strong>{' '}
-                  {trial.createdAt ? new Date(trial.createdAt).toLocaleString() : '—'}
-                </div>
-                <div>
-                  <strong>{t('app.admin.freeTrials.main.table.startDate')}:</strong>{' '}
-                  {trial.startDate ? new Date(trial.startDate).toLocaleString() : '—'}
-                </div>
-                <div>
-                  <strong>{t('app.admin.freeTrials.main.table.endDate')}:</strong>{' '}
-                  {trial.endDate ? new Date(trial.endDate).toLocaleString() : '—'}
-                </div>
-              </div>
-              <div className="flex flex-row gap-3 mt-4 w-full">
-                <Link
-                  href={`/${locale}/admin/freeTrials/${trial.trial_id}`}
-                  className="flex-1 flex justify-start"
-                >
-                  <button className="btn-primary w-full">
-                    {t('app.admin.freeTrials.main.action.viewEdit')}
-                  </button>
-                </Link>
-                <div className="flex-1 flex justify-end">
-                  <button
-                    className="btn-danger w-full"
-                    onClick={() => handleDelete(trial.trial_id)}
-                  >
-                    {t('app.admin.freeTrials.main.action.delete')}
-                  </button>
-                </div>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* 🔢 pagination */}
-        <div className="flex justify-center mt-4">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        </div>
+            {/* 🔢 pagination */}
+            <div className="flex justify-center mt-4">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

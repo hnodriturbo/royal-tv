@@ -88,153 +88,167 @@ export default function AdminLiveChatUsersPage() {
           <h1 className="text-wonderful-5">{t('app.admin.liveChat.users.title')}</h1>
           <hr className="border border-gray-400 w-8/12 my-4" />
         </div>
-
-        {/* 🔄 Sorting + Refresh */}
-        <div className="flex justify-center items-center w-full">
-          <div className="flex flex-col w-10/12 mb-3 items-center md:flex-row md:space-x-3 md:space-y-0 space-y-10">
-            <div className="flex-1 flex justify-center items-center">
-              <SortDropdown
-                options={userWithConversationsSortOptions}
-                value={sortOrder}
-                onChange={setSortOrder}
-              />
-            </div>
-            <hr className="md:hidden border border-gray-400 w-8/12 my-4" />
-            <div className="flex-1 flex justify-center items-center">
-              <AutoRefresh />
-            </div>
+        {pagedUsers.length === 0 ? (
+          // 🚫 No data state
+          <div className="flex justify-center items-center w-full py-20">
+            <p className="text-xl font-semibold text-gray-400">
+              {t('app.admin.liveChat.users.no_data') || 'No Live Chats Found'}
+            </p>
           </div>
-        </div>
-
-        {/* 💻 Desktop Table */}
-        <div className="hidden xl:flex justify-center w-full">
-          <div className="w-full max-w-full overflow-x-auto">
-            <table className="min-w-[500px] w-full border border-gray-300 border-separate border-spacing-0">
-              <thead>
-                <tr className="bg-gray-600">
-                  <th className="border border-gray-300 px-2 py-1">
-                    {t('app.admin.liveChat.users.table_user')}
-                  </th>
-                  <th className="border border-gray-300 px-2 py-1">
-                    {t('app.admin.liveChat.users.table_email')}
-                  </th>
-                  <th className="border border-gray-300 px-2 py-1">
-                    {t('app.admin.liveChat.users.table_count')}
-                  </th>
-                  <th className="border border-gray-300 px-2 py-1">
-                    {t('app.admin.liveChat.users.table_unread')}
-                  </th>
-                  <th className="border border-gray-300 px-2 py-1">
-                    {t('app.admin.liveChat.users.table_last')}
-                  </th>
-                  <th className="border border-gray-300 px-2 py-1">
-                    {t('app.admin.liveChat.users.table_action')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="text-center">
-                {pagedUsers.map((u) => (
-                  <tr key={u.user_id} className="hover:bg-gray-400">
-                    <td className="border border-gray-300 px-2 py-1">{u.name || 'N/A'}</td>
-                    <td className="border border-gray-300 px-2 py-1">{u.email || 'N/A'}</td>
-                    <td className="border border-gray-300 px-2 py-1">{u.conversationCount}</td>
-                    <td className="border border-gray-300 px-2 py-1">
-                      {u.unreadConvoCount > 0 ? (
-                        <span className="text-green-500 font-bold">● {u.unreadConvoCount}</span>
-                      ) : (
-                        <span className="text-gray-400">0</span>
-                      )}
-                    </td>
-                    <td className="border border-gray-300 px-2 py-1">
-                      {u.lastMessage
-                        ? new Date(u.lastMessage).toLocaleString()
-                        : t('app.admin.liveChat.users.no_messages')}
-                    </td>
-                    <td className="border border-gray-300 px-2 py-1">
-                      <div className="flex flex-row gap-2 justify-center">
-                        <Link
-                          href={`/${locale}/admin/liveChat/user/${u.user_id}`}
-                          className="btn-info"
-                        >
-                          {t('app.admin.liveChat.users.view')}
-                        </Link>
-
-                        <ConversationActionButton
-                          action="create"
-                          user_id={u.user_id}
-                          user={u}
-                          onActionSuccess={fetchUsersWithConversations}
-                          /* buttonText={t('app.admin.liveChat.users.start_new')} */
-                        />
-
-                        <ConversationActionButton
-                          action="deleteAll"
-                          user_id={u.user_id}
-                          user={u}
-                          onActionSuccess={fetchUsersWithConversations}
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* 📱 Mobile Cards */}
-        <div className="xl:hidden flex flex-col gap-4 w-full mt-6">
-          {pagedUsers.map((u) => (
-            <div key={u.user_id} className="border rounded-2xl p-4 bg-gray-500">
-              <div className="flex justify-between mb-2">
-                <h3>{u.name || 'N/A'}</h3>
-                <span>
-                  {t('app.admin.liveChat.users.table_email')}: {u.email || 'N/A'}
-                </span>
-              </div>
-              <p>
-                <strong>{t('app.admin.liveChat.users.table_count')}:</strong> {u.conversationCount}
-              </p>
-              <p>
-                <strong>{t('app.admin.liveChat.users.table_last')}:</strong>{' '}
-                {u.lastMessage
-                  ? new Date(u.lastMessage).toLocaleString()
-                  : t('app.admin.liveChat.users.no_messages')}
-              </p>
-              <p>
-                <strong>{t('app.admin.liveChat.users.table_unread')}:</strong>{' '}
-                {u.unreadConvoCount > 0 ? (
-                  <span className="text-green-500 font-bold">● {u.unreadConvoCount}</span>
-                ) : (
-                  <span className="text-gray-400">0</span>
-                )}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-2 mt-3">
-                <Link href={`/${locale}/admin/liveChat/user/${u.user_id}`} className="btn-primary">
-                  {t('app.admin.liveChat.users.view')}
-                </Link>
-
-                <ConversationActionButton
-                  action="create"
-                  user_id={u.user_id}
-                  onActionSuccess={fetchUsersWithConversations}
-                />
-
-                <ConversationActionButton
-                  action="deleteAll"
-                  user_id={u.user_id}
-                  onActionSuccess={fetchUsersWithConversations}
-                />
+        ) : (
+          <>
+            {/* 🔄 Sorting + Refresh */}
+            <div className="flex justify-center items-center w-full">
+              <div className="flex flex-col w-10/12 mb-3 items-center md:flex-row md:space-x-3 md:space-y-0 space-y-10">
+                <div className="flex-1 flex justify-center items-center">
+                  <SortDropdown
+                    options={userWithConversationsSortOptions}
+                    value={sortOrder}
+                    onChange={setSortOrder}
+                  />
+                </div>
+                <hr className="md:hidden border border-gray-400 w-8/12 my-4" />
+                <div className="flex-1 flex justify-center items-center">
+                  <AutoRefresh />
+                </div>
               </div>
             </div>
-          ))}
-        </div>
 
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
+            {/* 💻 Desktop Table */}
+            <div className="hidden lg:flex justify-center w-full">
+              <div className="w-full max-w-full overflow-x-auto">
+                <table className="min-w-[500px] w-full border border-gray-300 border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-gray-600">
+                      <th className="border border-gray-300 px-2 py-1">
+                        {t('app.admin.liveChat.users.table_user')}
+                      </th>
+                      <th className="border border-gray-300 px-2 py-1">
+                        {t('app.admin.liveChat.users.table_email')}
+                      </th>
+                      <th className="border border-gray-300 px-2 py-1">
+                        {t('app.admin.liveChat.users.table_count')}
+                      </th>
+                      <th className="border border-gray-300 px-2 py-1">
+                        {t('app.admin.liveChat.users.table_unread')}
+                      </th>
+                      <th className="border border-gray-300 px-2 py-1">
+                        {t('app.admin.liveChat.users.table_last')}
+                      </th>
+                      <th className="border border-gray-300 px-2 py-1">
+                        {t('app.admin.liveChat.users.table_action')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-center">
+                    {pagedUsers.map((u) => (
+                      <tr key={u.user_id} className="hover:bg-gray-400">
+                        <td className="border border-gray-300 px-2 py-1">{u.name || 'N/A'}</td>
+                        <td className="border border-gray-300 px-2 py-1">{u.email || 'N/A'}</td>
+                        <td className="border border-gray-300 px-2 py-1">{u.conversationCount}</td>
+                        <td className="border border-gray-300 px-2 py-1">
+                          {u.unreadConvoCount > 0 ? (
+                            <span className="text-green-500 font-bold">● {u.unreadConvoCount}</span>
+                          ) : (
+                            <span className="text-gray-400">0</span>
+                          )}
+                        </td>
+                        <td className="border border-gray-300 px-2 py-1">
+                          {u.lastMessage
+                            ? new Date(u.lastMessage).toLocaleString()
+                            : t('app.admin.liveChat.users.no_messages')}
+                        </td>
+                        <td className="border border-gray-300 px-2 py-1">
+                          <div className="flex flex-row gap-2 justify-center">
+                            <Link
+                              href={`/${locale}/admin/liveChat/user/${u.user_id}`}
+                              className="btn-info"
+                            >
+                              {t('app.admin.liveChat.users.view')}
+                            </Link>
+
+                            <ConversationActionButton
+                              action="create"
+                              user_id={u.user_id}
+                              user={u}
+                              onActionSuccess={fetchUsersWithConversations}
+                              /* buttonText={t('app.admin.liveChat.users.start_new')} */
+                            />
+
+                            <ConversationActionButton
+                              action="deleteAll"
+                              user_id={u.user_id}
+                              user={u}
+                              onActionSuccess={fetchUsersWithConversations}
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* 📱 Mobile Cards */}
+            <div className="lg:hidden flex flex-col gap-4 w-full mt-6">
+              {pagedUsers.map((u) => (
+                <div key={u.user_id} className="border rounded-2xl p-4 bg-gray-500">
+                  <div className="flex justify-between mb-2">
+                    <h3>{u.name || 'N/A'}</h3>
+                    <span>
+                      {t('app.admin.liveChat.users.table_email')}: {u.email || 'N/A'}
+                    </span>
+                  </div>
+                  <p>
+                    <strong>{t('app.admin.liveChat.users.table_count')}:</strong>{' '}
+                    {u.conversationCount}
+                  </p>
+                  <p>
+                    <strong>{t('app.admin.liveChat.users.table_last')}:</strong>{' '}
+                    {u.lastMessage
+                      ? new Date(u.lastMessage).toLocaleString()
+                      : t('app.admin.liveChat.users.no_messages')}
+                  </p>
+                  <p>
+                    <strong>{t('app.admin.liveChat.users.table_unread')}:</strong>{' '}
+                    {u.unreadConvoCount > 0 ? (
+                      <span className="text-green-500 font-bold">● {u.unreadConvoCount}</span>
+                    ) : (
+                      <span className="text-gray-400">0</span>
+                    )}
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2 mt-3">
+                    <Link
+                      href={`/${locale}/admin/liveChat/user/${u.user_id}`}
+                      className="btn-primary"
+                    >
+                      {t('app.admin.liveChat.users.view')}
+                    </Link>
+
+                    <ConversationActionButton
+                      action="create"
+                      user_id={u.user_id}
+                      onActionSuccess={fetchUsersWithConversations}
+                    />
+
+                    <ConversationActionButton
+                      action="deleteAll"
+                      user_id={u.user_id}
+                      onActionSuccess={fetchUsersWithConversations}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </>
+        )}
       </div>
     </div>
   );

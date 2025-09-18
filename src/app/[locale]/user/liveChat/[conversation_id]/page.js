@@ -168,7 +168,7 @@ export default function UserConversationDetailsPage() {
         {userConversations.length > 0 && (
           <div className="flex items-center justify-center mt-2 mb-4">
             <div className="container-style w-11/12 lg:w-10/12 p-2">
-              <h3 className="text-lg font-bold mb-1 text-center">
+              <h3 className="text-2xl font-bold mb-1 text-center text-outline-dark-2 text-purple-400 text-underline">
                 {t('app.user.liveChat.conversation.list_title')}
               </h3>
               <div className="flex items-center justify-center">

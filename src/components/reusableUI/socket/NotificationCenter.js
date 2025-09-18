@@ -202,7 +202,7 @@ export default function NotificationCenter({ userRole = 'user' }) {
               <button
                 type="button"
                 onClick={() => toggleExpanded(notif.notification_id, notif)}
-                className="w-full text-left flex justify-between items-center px-5 py-3"
+                className="w-full text-left flex justify-between items-center px-5 py-3 cursor-pointer"
                 aria-expanded={!!expandedIds[notif.notification_id]}
               >
                 <div className={`flex items-center gap-2 ${!notif.is_read ? 'font-bold' : ''}`}>
@@ -237,15 +237,19 @@ export default function NotificationCenter({ userRole = 'user' }) {
                         type="button"
                         onClick={() => handleDeleteNotificationModal(notif.notification_id)}
                         title={SafeString(t('socket.ui.notifications.actions.delete') ?? '')}
+                        className="btn-sm btn-danger cursor-pointer px-3 py-1.5 rounded-md text-sm"
                       >
-                        🗑️ {SafeString(t('socket.ui.notifications.actions.delete') ?? '')}
+                        🗑️ {SafeString(t('socket.ui.notifications.actions.delete') ?? '')}{' '}
+                        {/* ❌ */}
                       </button>
-                      {/* 🔗 Open link (locale-aware) */}
+
+                      {/* 🔗 Open (locale-aware) */}
                       <button
                         type="button"
                         onClick={() => router.push(`/${locale}${SafeString(notif.link, '/')}`)}
+                        className="btn-sm btn-primary cursor-pointer px-3 py-1.5 rounded-md text-sm"
                       >
-                        {SafeString(t('socket.ui.notifications.actions.open') ?? '')}
+                        {SafeString(t('socket.ui.notifications.actions.open') ?? '')} {/* 🔓 */}
                       </button>
                     </div>
                   )}
@@ -272,21 +276,32 @@ export default function NotificationCenter({ userRole = 'user' }) {
       {!drawerOpen && (
         <div className="flex flex-row w-full max-w-xl justify-between items-center my-4 gap-2">
           {canSeeMore && (
-            <button type="button" onClick={() => setDrawerPage((prev) => prev + 1)}>
-              👇 {SafeString(t('socket.ui.notifications.see_more') ?? '')}
+            <button
+              type="button"
+              onClick={() => {
+                // 🚪 open drawer instead of paging a closed view
+                setDrawerOpen(true); // ✅ show the drawer
+                setDrawerPage(1); // 🔢 start at first drawer page
+              }}
+              className="btn btn-secondary cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm"
+            >
+              👇 {SafeString(t('socket.ui.notifications.see_more') ?? '')} {/* 👀 */}
             </button>
           )}
+
           {!drawerOpen && totalNotifications > 0 && (
-            <div className="w-full flex-1 justify-end mb-2 pr-2 text-sm">
-              {t('socket.ui.notifications.total', { count: totalNotifications })}
+            <div className="w-full flex-1 justify-center mb-2 pr-2 text-sm">
+              {t('socket.ui.notifications.total', { count: totalNotifications })} {/* 🔢 */}
             </div>
           )}
+
           {notifications.length > 0 && (
             <button
               type="button"
               onClick={() => router.push(`/${locale}/${String(userRole ?? 'user')}/notifications`)}
+              className="btn btn-primary cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm"
             >
-              🗂️ {String(t('socket.ui.notifications.see_all') ?? '')}
+              🗂️ {String(t('socket.ui.notifications.see_all') ?? '')} {/* 📚 */}
             </button>
           )}
         </div>
@@ -306,7 +321,7 @@ export default function NotificationCenter({ userRole = 'user' }) {
                   <button
                     type="button"
                     onClick={() => toggleExpanded(notif.notification_id, notif)}
-                    className="w-full text-left flex justify-between items-center px-5 py-3"
+                    className="w-full text-left flex justify-between items-center px-5 py-3 cursor-pointer"
                     aria-expanded={!!expandedIds[notif.notification_id]}
                   >
                     <div className={`flex items-center gap-2 ${!notif.is_read ? 'font-bold' : ''}`}>
@@ -334,23 +349,28 @@ export default function NotificationCenter({ userRole = 'user' }) {
                           {SafeString(notif.body, 'NotificationCenter.body')}
                         </p>
                       </div>
-                      {shouldShowButton(notif) && (
-                        <div className="flex justify-between items-center mt-3">
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteNotificationModal(notif.notification_id)}
-                            title={String(t('socket.ui.notifications.actions.delete') ?? '')}
-                          >
-                            🗑️ {String(t('socket.ui.notifications.actions.delete') ?? '')}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => router.push(`/${locale}${String(notif.link ?? '/')}`)}
-                          >
-                            {String(t('socket.ui.notifications.actions.open') ?? '')}
-                          </button>
-                        </div>
-                      )}
+                      {shouldShowButton(notif) &&
+                        typeof notif.link === 'string' &&
+                        notif.link.trim().length > 0 && (
+                          <div className="flex justify-between items-center mt-3">
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteNotificationModal(notif.notification_id)}
+                              title={String(t('socket.ui.notifications.actions.delete') ?? '')}
+                              className="btn-sm btn-danger cursor-pointer px-3 py-1.5 rounded-md text-sm"
+                            >
+                              🗑️ {String(t('socket.ui.notifications.actions.delete') ?? '')}{' '}
+                              {/* ❌ */}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => router.push(`/${locale}${String(notif.link ?? '/')}`)}
+                              className="btn-sm btn-secondary cursor-pointer px-3 py-1.5 rounded-md text-sm"
+                            >
+                              {String(t('socket.ui.notifications.actions.open') ?? '')} {/* 🔓 */}
+                            </button>
+                          </div>
+                        )}
                       <div className="mt-2 pt-3 border-t border-gray-800 text-xs text-gray-500">
                         <div>{new Date(notif.createdAt).toLocaleString()}</div>
                         {notif.type && (
@@ -370,8 +390,11 @@ export default function NotificationCenter({ userRole = 'user' }) {
           <div className="flex flex-row w-full max-w-xl items-center my-4 gap-2">
             <div className="flex-1 flex justify-start">
               {moreToShow ? (
-                <button className="btn-primary" onClick={() => setDrawerPage((prev) => prev + 1)}>
-                  👇 {SafeString(t('socket.ui.notifications.see_more'), '')}
+                <button
+                  className="btn btn-secondary cursor-pointer px-3 py-1.5 rounded-md text-sm"
+                  onClick={() => setDrawerPage((prev) => prev + 1)} // ➕ paginate drawer
+                >
+                  👇 {SafeString(t('socket.ui.notifications.see_more'), '')} {/* 📥 */}
                 </button>
               ) : null}
             </div>
@@ -390,9 +413,9 @@ export default function NotificationCenter({ userRole = 'user' }) {
               <div className="flex-1 flex justify-end">
                 <Link
                   href={`/${locale}/${userRole}/notifications`}
-                  className="btn-outline-primary text-center block"
+                  className="btn btn-primary cursor-pointer text-center block px-3 py-1.5 rounded-md text-sm"
                 >
-                  🗂️ {t('socket.ui.notifications.see_all')}
+                  🗂️ {t('socket.ui.notifications.see_all')} {/* 📚 */}
                 </Link>
               </div>
             )}

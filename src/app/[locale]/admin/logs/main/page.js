@@ -177,7 +177,7 @@ export default function AdminLogsMainPage() {
         </div>
 
         {/* 💻 desktop table */}
-        <div className="hidden xl:flex justify-center w-full">
+        <div className="hidden lg:flex justify-center w-full">
           <div className="w-full max-w-full overflow-x-auto">
             <table className="min-w-[950px] w-full border border-gray-300 border-separate border-spacing-0 text-shadow-dark-1">
               <thead>
@@ -249,7 +249,7 @@ export default function AdminLogsMainPage() {
         </div>
 
         {/* 📱 mobile cards */}
-        <div className="xl:hidden flex flex-col gap-4 w-full mt-6">
+        <div className="lg:hidden flex flex-col gap-4 w-full mt-6">
           {pagedLogs.map((group) => (
             <div
               key={group.ip_address}

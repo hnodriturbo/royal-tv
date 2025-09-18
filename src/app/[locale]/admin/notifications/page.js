@@ -37,10 +37,11 @@ export default function AdminNotificationsPage() {
 
   return (
     <div className="flex flex-col items-center w-full py-6">
-      {/* 🏷️ title */}
-      <h1 className="text-2xl font-bold mb-4">{t('app.admin.notifications.title')}</h1>
-      {/* 🛎️ list */}
-      <SeeAllNotifications userRole="admin" />
+      {/* 🟢 Notification Center */}
+      <div className="lg:w-[800px] w-full mx-auto p-4">
+        {/* 🛎️ list */}
+        <SeeAllNotifications userRole="admin" />
+      </div>
     </div>
   );
 }

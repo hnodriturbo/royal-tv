@@ -100,127 +100,141 @@ export default function AdminSubscriptionsPage() {
           <h1 className="text-4xl font-extrabold">{t('app.admin.subscriptions.title')}</h1>
           <hr className="border border-gray-400 w-8/12 my-4" />
         </div>
-
-        {/* 🔽 Sort control */}
-        <div className="flex justify-center items-center">
-          <SortDropdown
-            options={userSubscriptionSortOptions}
-            value={sortOrder}
-            onChange={setSortOrder}
-          />
-        </div>
-
-        {/* 💻 Desktop table (borders + hover) */}
-        <div className="hidden xl:flex justify-center w-full">
-          <div className="w-full max-w-full overflow-x-auto">
-            <table className="min-w-[850px] w-full border border-gray-300 border-separate border-spacing-0">
-              <thead>
-                <tr className="bg-gray-600">
-                  <th className="border border-gray-300 px-2 py-1">
-                    {t('app.admin.subscriptions.table_user')}
-                  </th>
-                  <th className="border border-gray-300 px-2 py-1">
-                    {t('app.admin.subscriptions.table_product')}
-                  </th>
-                  <th className="border border-gray-300 px-2 py-1">
-                    {t('app.admin.subscriptions.table_username')}
-                  </th>
-                  <th className="border border-gray-300 px-2 py-1">
-                    {t('app.admin.subscriptions.table_status')}
-                  </th>
-                  <th className="border border-gray-300 px-2 py-1">
-                    {t('app.admin.subscriptions.table_created')}
-                  </th>
-                  <th className="border border-gray-300 px-2 py-1">
-                    {t('app.admin.subscriptions.table_expiring')}
-                  </th>
-                  <th className="border border-gray-300 px-2 py-1">
-                    {t('app.admin.subscriptions.table_actions')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="text-center">
-                {pagedSubscriptions.map((sub) => (
-                  <tr key={sub.subscription_id} className="hover:bg-gray-400">
-                    <td className="border border-gray-300 px-2 py-1">{sub.user?.name || '-'}</td>
-                    <td className="border border-gray-300 px-2 py-1">{sub.package_name || '-'}</td>
-                    <td className="border border-gray-300 px-2 py-1">{sub.username || '-'}</td>
-                    <td
-                      className={`border border-gray-300 px-2 py-1 font-bold ${STATUS_COLOR_MAP[sub.status]}`}
-                    >
-                      {sub.status}
-                    </td>
-                    <td className="border border-gray-300 px-2 py-1">
-                      {sub.createdAt ? new Date(sub.createdAt).toLocaleString() : '—'}
-                    </td>
-                    <td className="border border-gray-300 px-2 py-1">
-                      {sub.expiring_at ? new Date(sub.expiring_at).toLocaleString() : '—'}
-                    </td>
-                    <td className="border border-gray-300 px-2 py-1">
-                      <Link
-                        href={`/${locale}/admin/subscriptions/${sub.subscription_id}`}
-                        className="btn-primary"
-                      >
-                        {t('app.admin.subscriptions.view')}
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {pagedSubscriptions.length === 0 ? (
+          // 🚫 No data state
+          <div className="flex justify-center items-center w-full py-20">
+            <p className="text-xl font-semibold text-gray-400">
+              {t('app.admin.subscriptions.no_data') || 'No Subscriptions Found'}
+            </p>
           </div>
-        </div>
-
-        {/* 📱 Mobile cards */}
-        <div className="xl:hidden flex flex-col gap-4 w-full mt-6">
-          {pagedSubscriptions.map((sub) => (
-            <div
-              key={sub.subscription_id}
-              className="border rounded-2xl p-4 bg-gray-600 text-base-100"
-            >
-              {/* 🧾 Top line */}
-              <div className="flex justify-between mb-2">
-                <h3>{sub.user?.name || '-'}</h3>
-                <span className={`px-4 py-2 rounded ${STATUS_COLOR_MAP[sub.status]}`}>
-                  {sub.status}
-                </span>
-              </div>
-
-              {/* 📋 Details */}
-              <p>
-                <strong>{t('app.admin.subscriptions.table_product')}:</strong>{' '}
-                {sub.package_name || '-'}
-              </p>
-              <p>
-                <strong>{t('app.admin.subscriptions.table_username')}:</strong>{' '}
-                {sub.username || '-'}
-              </p>
-              <p>
-                <strong>{t('app.admin.subscriptions.table_created')}:</strong>{' '}
-                {sub.createdAt ? new Date(sub.createdAt).toLocaleString() : '—'}
-              </p>
-              <p>
-                <strong>{t('app.admin.subscriptions.table_expiring')}:</strong>{' '}
-                {sub.expiring_at ? new Date(sub.expiring_at).toLocaleString() : '—'}
-              </p>
-
-              {/* 🔗 View details */}
-              <Link
-                href={`/${locale}/admin/subscriptions/${sub.subscription_id}`}
-                className="btn-primary mt-3"
-              >
-                {t('app.admin.subscriptions.view')}
-              </Link>
+        ) : (
+          <>
+            {/* 🔽 Sort control */}
+            <div className="flex justify-center items-center">
+              <SortDropdown
+                options={userSubscriptionSortOptions}
+                value={sortOrder}
+                onChange={setSortOrder}
+              />
             </div>
-          ))}
-        </div>
 
-        {/* 🔢 Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
+            {/* 💻 Desktop table (borders + hover) */}
+            <div className="hidden lg:flex justify-center w-full">
+              <div className="w-full max-w-full overflow-x-auto">
+                <table className="min-w-[850px] w-full border border-gray-300 border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-gray-600">
+                      <th className="border border-gray-300 px-2 py-1">
+                        {t('app.admin.subscriptions.table_user')}
+                      </th>
+                      <th className="border border-gray-300 px-2 py-1">
+                        {t('app.admin.subscriptions.table_product')}
+                      </th>
+                      <th className="border border-gray-300 px-2 py-1">
+                        {t('app.admin.subscriptions.table_username')}
+                      </th>
+                      <th className="border border-gray-300 px-2 py-1">
+                        {t('app.admin.subscriptions.table_status')}
+                      </th>
+                      <th className="border border-gray-300 px-2 py-1">
+                        {t('app.admin.subscriptions.table_created')}
+                      </th>
+                      <th className="border border-gray-300 px-2 py-1">
+                        {t('app.admin.subscriptions.table_expiring')}
+                      </th>
+                      <th className="border border-gray-300 px-2 py-1">
+                        {t('app.admin.subscriptions.table_actions')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-center">
+                    {pagedSubscriptions.map((sub) => (
+                      <tr key={sub.subscription_id} className="hover:bg-gray-400">
+                        <td className="border border-gray-300 px-2 py-1">
+                          {sub.user?.name || '-'}
+                        </td>
+                        <td className="border border-gray-300 px-2 py-1">
+                          {sub.package_name || '-'}
+                        </td>
+                        <td className="border border-gray-300 px-2 py-1">{sub.username || '-'}</td>
+                        <td
+                          className={`border border-gray-300 px-2 py-1 font-bold ${STATUS_COLOR_MAP[sub.status]}`}
+                        >
+                          {sub.status}
+                        </td>
+                        <td className="border border-gray-300 px-2 py-1">
+                          {sub.createdAt ? new Date(sub.createdAt).toLocaleString() : '—'}
+                        </td>
+                        <td className="border border-gray-300 px-2 py-1">
+                          {sub.expiring_at ? new Date(sub.expiring_at).toLocaleString() : '—'}
+                        </td>
+                        <td className="border border-gray-300 px-2 py-1">
+                          <Link
+                            href={`/${locale}/admin/subscriptions/${sub.subscription_id}`}
+                            className="btn-primary"
+                          >
+                            {t('app.admin.subscriptions.view')}
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* 📱 Mobile cards */}
+            <div className="lg:hidden flex flex-col gap-4 w-full mt-16">
+              {pagedSubscriptions.map((sub) => (
+                <div
+                  key={sub.subscription_id}
+                  className="border rounded-2xl p-4 bg-gray-600 text-base-100"
+                >
+                  {/* 🧾 Top line */}
+                  <div className="flex justify-between mb-2">
+                    <h3>{sub.user?.name || '-'}</h3>
+                    <span className={`px-4 py-2 rounded ${STATUS_COLOR_MAP[sub.status]}`}>
+                      {sub.status}
+                    </span>
+                  </div>
+
+                  {/* 📋 Details */}
+                  <p>
+                    <strong>{t('app.admin.subscriptions.table_product')}:</strong>{' '}
+                    {sub.package_name || '-'}
+                  </p>
+                  <p>
+                    <strong>{t('app.admin.subscriptions.table_username')}:</strong>{' '}
+                    {sub.username || '-'}
+                  </p>
+                  <p>
+                    <strong>{t('app.admin.subscriptions.table_created')}:</strong>{' '}
+                    {sub.createdAt ? new Date(sub.createdAt).toLocaleString() : '—'}
+                  </p>
+                  <p>
+                    <strong>{t('app.admin.subscriptions.table_expiring')}:</strong>{' '}
+                    {sub.expiring_at ? new Date(sub.expiring_at).toLocaleString() : '—'}
+                  </p>
+
+                  {/* 🔗 View details */}
+                  <Link
+                    href={`/${locale}/admin/subscriptions/${sub.subscription_id}`}
+                    className="btn-primary mt-3"
+                  >
+                    {t('app.admin.subscriptions.view')}
+                  </Link>
+                </div>
+              ))}
+            </div>
+
+            {/* 🔢 Pagination */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </>
+        )}
       </div>
     </div>
   );

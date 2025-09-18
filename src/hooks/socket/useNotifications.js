@@ -23,7 +23,7 @@
  *   ======================= useNotifications.js =======================
  * 🔔 Real-time notifications with locale re-sync on change.
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocale } from 'next-intl';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 
@@ -42,6 +42,9 @@ export default function useNotifications(userId) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  // 🧳 in-flight deletes (IDs we already sent)
+  const deletingRef = useRef(new Set());
 
   // 🌍 current UI locale
   const currentLocale = useLocale?.() || 'en';
@@ -148,6 +151,42 @@ export default function useNotifications(userId) {
     setLoading(true);
     requestNotifications(userId);
   }, [userId, requestNotifications]);
+
+  /*   
+  // ✅ Optimistic delete + at-most-once emit
+  const removeNotification = useCallback(
+    (notification_id) => {
+      if (!userId || !notification_id) return;
+
+      // 🚧 ignore duplicates within a short window
+      if (deletingRef.current.has(notification_id)) return; // ⛔ already sent
+      deletingRef.current.add(notification_id); // 🏷️ mark in-flight
+
+      // 🧹 auto-clear the mark after a few seconds (safety)
+      setTimeout(() => deletingRef.current.delete(notification_id), 4000); // ⏳
+
+      // 🧠 optimistic UI update first
+      setNotifications((prev) => {
+        const target = prev.find((n) => n.notification_id === notification_id);
+        const next = prev.filter((n) => n.notification_id !== notification_id);
+        if (target && !target.is_read) setUnreadCount((c) => Math.max(0, c - 1));
+        return next;
+      });
+
+      // 📡 single, deduped emit to server
+      deleteNotification(notification_id, userId);
+    },
+    [deleteNotification, userId]
+  );
+
+  // 🧽 whenever the server pushes an authoritative list, clear any stale in-flight ids
+  useEffect(() => {
+    const stop = onNotificationsList(() => {
+      deletingRef.current.clear(); // 🧹 reset gates after a refresh
+    });
+    return () => stop && stop();
+  }, [onNotificationsList]);
+ */
 
   // ✅ Optimistic delete + let server confirm later
   const removeNotification = useCallback(

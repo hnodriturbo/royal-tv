@@ -50,7 +50,7 @@ import path from 'node:path'; // 🛣️ cross-OS path building
     // 🤝 final fallback: still set keys so downstream code remains safe
     globalThis.__ROYAL_TRANSLATIONS__ = { en: {}, is: {} }; // 🪺 empty but present
   }
-});
+})();
 
 // 🧭 admin targets
 const ADMIN_USER_ID = process.env.ADMIN_USER_ID || null;
@@ -118,8 +118,22 @@ export async function createAndDispatchNotification({
 
   const safeRow = sanitizeNotificationForClient(createdRow);
 
+  // 🌍 Always try to honor the active socket locale for both roles
+  const locale = getOutboundLocale(socket); // 🧭 picks socket.data.currentLocale ('en'|'is')
+
   if (isAdmin) {
-    if (recipientUserId) io.to(recipientUserId).emit('notification_received', safeRow);
+    // 👑 Admins were not localized before; now we try the same dictionary as user (fallback-safe)
+    const maybeLocalized = await localizeUserNotification({
+      locale,
+      type,
+      event,
+      english: englishSource, // 🪪 English snapshot is the fallback
+      data
+    });
+    const safeLocalized = sanitizeNotificationForClient(maybeLocalized); // 🧼 strings only
+    if (recipientUserId) {
+      io.to(recipientUserId).emit('notification_received', { ...safeRow, ...safeLocalized }); // 📬 push localized
+    }
   } else {
     const locale = getOutboundLocale(socket);
     const localized = await localizeUserNotification({
@@ -279,8 +293,21 @@ export default function registerNotificationEvents(io, socket) {
 
       const list = await Promise.all(
         rows.map(async (row) => {
-          if (row.for_admin) return sanitizeNotificationForClient(row);
-          const englishSnapshot = { title: row.title, body: row.body, link: row.link };
+          const englishSnapshot = { title: row.title, body: row.body, link: row.link }; // 🪪
+
+          if (row.for_admin) {
+            // 👑 Localize admin rows too (fallback to English if missing) 🌍
+            const localized = await localizeUserNotification({
+              locale: outboundLocale,
+              type: row.type,
+              event: row.event,
+              english: englishSnapshot,
+              data: row.data || {}
+            });
+            return sanitizeNotificationForClient({ ...row, ...localized }); // 🧼
+          }
+
+          // 👤 User rows localized ✅
           const localized = await localizeUserNotification({
             locale: outboundLocale,
             type: row.type,
@@ -325,12 +352,34 @@ export default function registerNotificationEvents(io, socket) {
     }
   });
 
+  /* 
   // 🗑️ Delete one
   socket.on('delete_notification', async ({ notification_id, user_id }) => {
     try {
       await prisma.notification.delete({ where: { notification_id } });
       io.to(user_id).emit('notifications_list_refresh', { user_id });
     } catch {
+      socket.emit('notifications_error', { message: 'Error deleting notification' });
+    }
+  }); 
+*/
+
+  // 🗑️ Delete one (idempotent + resilient) ✅
+  socket.on('delete_notification', async ({ notification_id, user_id }) => {
+    try {
+      if (!notification_id || !user_id) {
+        throw new Error('Missing required fields');
+      }
+
+      // Idempotent + scoped to the owner user
+      await prisma.notification.deleteMany({
+        where: { notification_id, user_id }
+      });
+
+      // 🔄 Tell client(s) to refresh their notification list
+      io.to(String(user_id)).emit('notifications_list_refresh', { user_id });
+    } catch (err) {
+      console.error('❌ delete_notification failed:', err.message || err);
       socket.emit('notifications_error', { message: 'Error deleting notification' });
     }
   });

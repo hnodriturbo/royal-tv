@@ -115,7 +115,7 @@ export default function SeeAllNotifications() {
             <div key={notif.notification_id} className={cardClass(notif)}>
               <button
                 type="button"
-                className="w-full text-left flex justify-between items-center px-5 py-3"
+                className="w-full text-left flex justify-between items-center px-5 py-3 cursor-pointer"
                 onClick={() => toggle(notif.notification_id, notif)}
                 aria-expanded={!!expanded[notif.notification_id]}
               >
@@ -145,26 +145,32 @@ export default function SeeAllNotifications() {
                   </div>
 
                   <div className="flex justify-between items-center mt-2">
-                    <button type="button" onClick={() => handleDelete(notif.notification_id)}>
-                      🗑️ {t('socket.ui.notifications.actions.delete')}
+                    {/* 🗑️ delete */}
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(notif.notification_id)}
+                      className="btn btn-danger cursor-pointer px-3 py-1.5 rounded-md text-sm" // 👈 style + pointer
+                      title={String(t('socket.ui.notifications.actions.delete') ?? '')} // 🏷️ a11y
+                    >
+                      🗑️ {t('socket.ui.notifications.actions.delete')} {/* ❌ */}
                     </button>
-                    {shouldShowButton(notif) && (
-                      <button
-                        type="button"
-                        onClick={() => router.push(`/${locale}${String(notif.link ?? '/')}`)}
-                      >
-                        {t('socket.ui.notifications.actions.open')}
-                      </button>
-                    )}
-                  </div>
 
-                  <div className="mt-3 pt-2 border-t border-gray-800 text-xs text-gray-500">
-                    <div>{new Date(notif.createdAt).toLocaleString()}</div>
-                    {notif.type && (
-                      <div>
-                        {t('socket.ui.notifications.type_label')}: {SafeString(notif.type)}
-                      </div>
-                    )}
+                    {/* 🔗 open (only if link is a non-empty string) */}
+                    {shouldShowButton(notif) &&
+                      typeof notif.link === 'string' &&
+                      notif.link.trim().length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            router.push(
+                              `/${locale}${String(notif.link).startsWith('/') ? '' : '/'}${String(notif.link).replace(/^\//, '')}`
+                            )
+                          } // 🌍 locale-aware + safe leading slash
+                          className="btn btn-primary cursor-pointer px-3 py-1.5 rounded-md text-sm"
+                        >
+                          {t('socket.ui.notifications.actions.open')} {/* 🔓 */}
+                        </button>
+                      )}
                   </div>
                 </div>
               </div>
