@@ -21,21 +21,36 @@ import {
 } from './notificationHelpers.js';
 
 // --- i18n seed for socket notifications (prod-safe) ---
-import fs from 'node:fs';
-import path from 'node:path';
+import fs from 'node:fs'; // 📖 read files
+import path from 'node:path'; // 🛣️ cross-OS path building
+
 (function seedSocketDictionariesOnce() {
-  if (globalThis.__ROYAL_TRANSLATIONS__) return;
-  try {
-    const base = path.resolve(process.cwd(), 'src', 'messages'); // ⬅️ your folder
-    const en = JSON.parse(fs.readFileSync(path.join(base, 'en.json'), 'utf8'));
-    const is = JSON.parse(fs.readFileSync(path.join(base, 'is.json'), 'utf8'));
-    globalThis.__ROYAL_TRANSLATIONS__ = { en, is };
-    console.log('[i18n] notificationEvents: translations loaded from', base);
-  } catch (e) {
-    console.warn('[i18n] notificationEvents: failed to load translations:', e?.message);
-    globalThis.__ROYAL_TRANSLATIONS__ = { en: {}, is: {} };
+  // 🤏 helper: is the current global empty or missing?
+  const isEmptyDicts = (g) => {
+    if (!g || typeof g !== 'object') return true; // 🕳️ no global yet
+    const enSize = Object.keys(g.en || {}).length; // 🔢 count keys
+    const isSize = Object.keys(g.is || {}).length;
+    return enSize === 0 && isSize === 0; // 🧪 both empty → treat as "not loaded"
+  };
+
+  // 🧯 only load if missing or empty
+  if (!isEmptyDicts(globalThis.__ROYAL_TRANSLATIONS__)) {
+    console.log('[i18n] notificationEvents: using preloaded translations'); // 👍
+    return; // 🏁 already good
   }
-})();
+
+  try {
+    const base = path.resolve(process.cwd(), 'src', 'messages'); // 🗺️ <cwd>/src/messages
+    const en = JSON.parse(fs.readFileSync(path.join(base, 'en.json'), 'utf8')); // 🇬🇧
+    const is = JSON.parse(fs.readFileSync(path.join(base, 'is.json'), 'utf8')); // 🇮🇸
+    globalThis.__ROYAL_TRANSLATIONS__ = { en, is }; // 🧰 set dictionaries
+    console.log('[i18n] notificationEvents: ✅ translations loaded from', base); // 🎉
+  } catch (e) {
+    console.warn('[i18n] notificationEvents: ⚠️ failed to load translations:', e?.message); // 🧱
+    // 🤝 final fallback: still set keys so downstream code remains safe
+    globalThis.__ROYAL_TRANSLATIONS__ = { en: {}, is: {} }; // 🪺 empty but present
+  }
+});
 
 // 🧭 admin targets
 const ADMIN_USER_ID = process.env.ADMIN_USER_ID || null;

@@ -7,7 +7,7 @@ module.exports = {
       cwd: '/root/royal-tv',
       env: {
         NODE_ENV: 'production',
-        MESSAGES_DIR: '/root/royal-tv/messages'
+        MESSAGES_DIR: '/root/royal-tv/src/messages'
       },
       node_args: '-r dotenv/config'
     },
@@ -18,7 +18,7 @@ module.exports = {
       cwd: '/root/royal-tv',
       env: {
         NODE_ENV: 'production',
-        MESSAGES_DIR: '/root/royal-tv/messages'
+        MESSAGES_DIR: '/root/royal-tv/src/messages'
       },
       node_args: '-r dotenv/config'
     }

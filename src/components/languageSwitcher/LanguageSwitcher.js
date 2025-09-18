@@ -120,7 +120,7 @@ export default function LanguageSwitcher() {
             : ts('app.languageSwitcher.english_tooltip', 'Switch to English')
         }
       >
-        <span aria-hidden="true">EN🇮🇸</span>
+        <span aria-hidden="true">EN</span>
       </Link>
 
       <Link
@@ -140,7 +140,7 @@ export default function LanguageSwitcher() {
             : ts('app.languageSwitcher.icelandic_tooltip', 'Skipta í íslensku')
         }
       >
-        <span aria-hidden="true">🇮🇸</span>
+        <span aria-hidden="true">IS</span>
       </Link>
     </div>
   );

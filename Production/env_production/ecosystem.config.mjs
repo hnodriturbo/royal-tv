@@ -18,7 +18,7 @@ export default {
       env: {
         NODE_ENV: 'production',
         DOTENV_CONFIG_PATH: DOTENV_PROD,
-        MESSAGES_DIR: '/root/royal-tv/messages'
+        MESSAGES_DIR: '/root/royal-tv/src/messages' // 👈 fix: include /src
       },
       time: true,
       max_restarts: 10,
