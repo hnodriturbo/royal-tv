@@ -6,17 +6,17 @@
 
 ## Workflow (Quick Guide)
 
-- **One issue ⇒ one branch** (exact branch name below).
+- **One issue ⇒ one branch** (exact branch names below).
 - Keep commits small and focused. Open a PR that **closes** the issue.
 - If something depends on another item, I mark it **blocked** until the dependency is done.
 
 **Definition of Done (global)**
 
-- ✅ All acceptance criteria for that issue met.
+- ✅ All success criteria for that issue met.
 - ✅ Unit/smoke tests (where applicable) pass locally.
 - ✅ No regressions to existing live chat.
 
-**Labels I use:** `public-chat`, `socket`, `db`, `ui`, `ai`, `infra`
+**Labels I use:** `public-chat`, `socket`, `db`, `ui`, `ai`
 
 ---
 
@@ -38,8 +38,8 @@
 - [ ] Wire event handlers into the Socket.IO server bootstrap.
 - [ ] Add minimal validation (guest id; rate limits TODO if needed).
 
-**Acceptance**
-- [ ] Socket test client can open a **public room**, exchange messages, and refresh history.
+**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
+- [ ] Using a test client, I can create a **public room**, exchange messages, and refresh history without errors.
 
 ---
 
@@ -54,8 +54,8 @@
 - [ ] Add listeners: `onPublicRoomReady`, `onPublicReceiveMessage`, `onPublicMessageEdited`, `onPublicMessageDeleted`, `onPublicMessagesRefreshed`.
 - [ ] Ensure **pre-connect queuing** and **cleanup on unmount** match live behavior.
 
-**Acceptance**
-- [ ] Smoke test confirms listeners can register **before/after** socket connection and events flush reliably.
+**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
+- [ ] Listeners registered **before or after** connect receive events; queued emits flush after connect; teardown removes listeners cleanly.
 
 ---
 
@@ -71,8 +71,8 @@
 - [ ] `usePublicUnreadMessages.js`
 - [ ] Each hook scopes updates to the current `public_conversation_id` only.
 
-**Acceptance**
-- [ ] Hooks emit/receive only within their target public conversation; no cross-room leaks.
+**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
+- [ ] Events and state updates affect only the active public conversation; no cross-room leaks in manual tests.
 
 ---
 
@@ -86,8 +86,8 @@
 - [ ] Ensure server emits `online_users_update`; implement `request_online_users` flow if not already.
 - [ ] Add a visual badge/state in the widget.
 
-**Acceptance**
-- [ ] Toggling admin presence updates the badge **within ≤ 2s**.
+**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
+- [ ] Toggling admin presence updates the badge within **≤ 2s** in the widget.
 
 ---
 
@@ -101,8 +101,8 @@
 - [ ] Log requests (rate limit optional) and handle errors.
 - [ ] (Optional) Persist Q&A to `PublicLiveChatMessage` (mark bot via `sender_is_bot` or `sender_is_admin = true`).
 
-**Acceptance**
-- [ ] Calling the endpoint from the widget returns a plausible answer; errors handled gracefully.
+**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
+- [ ] Calling from the widget returns a sensible response; error cases return controlled error payloads.
 
 ---
 
@@ -116,8 +116,8 @@
 - [ ] Minimal Tailwind layout (no CLS), responsive down to ~360px.
 - [ ] Message list with autoscroll + overflow handling.
 
-**Acceptance**
-- [ ] Toggle open/close works; layout is stable; list scrolls to last message.
+**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
+- [ ] Toggle works reliably; layout stays stable; message list autoscrolls to the latest message.
 
 ---
 
@@ -132,8 +132,8 @@
 - [ ] If **admin offline** → call `/api/public-chatbot`; (optional) persist to `Public*`.
 - [ ] Mode switches seamlessly when admin presence changes.
 
-**Acceptance**
-- [ ] Flipping admin presence while chatting switches modes without losing messages.
+**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
+- [ ] Flipping presence mid-chat preserves conversation and switches mode without message loss or UI glitches.
 
 ---
 
@@ -146,8 +146,8 @@
 - [ ] Import and mount `<PublicLiveChatWidget />` in `AppProviders` → `AppContent`.
 - [ ] Pass `session`/`user` if available; otherwise guest mode.
 
-**Acceptance**
-- [ ] Widget is present across routes; existing socket features (e.g., LogPageView) remain unaffected.
+**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
+- [ ] Widget appears across routes; existing socket features remain unaffected (manual navigation test).
 
 ---
 
@@ -161,8 +161,8 @@
 - [ ] Unread counts reset on focus/open.
 - [ ] Presence indicators render consistently.
 
-**Acceptance**
-- [ ] Typing shows when agent types; unread behaves like existing live chat.
+**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
+- [ ] Typing indicator shows as expected; unread counters reset on focus; presence renders consistently across views.
 
 ---
 
@@ -176,8 +176,8 @@
 - [ ] Document architecture + event matrix + routing logic.
 - [ ] Add screenshots/GIFs to README.
 
-**Acceptance**
-- [ ] README covers setup, event names, data flow, and how the widget switches modes.
+**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
+- [ ] README explains setup, event names, data flow, and mode switching clearly; smoke tests pass.
 
 ---
 
@@ -192,10 +192,10 @@
 - [ ] (Option A) **Schema**: Add `sender_is_bot Boolean @default(false)` to `PublicLiveChatMessage` and run migration.
 - [ ] (Option B) **No schema change**: Tag bot via `sender_guest_id = 'bot'` and document.
 - [ ] Regenerate Prisma Client.
-- [ ] Minimal DAO helpers for `PublicLiveChatConversation` and `PublicLiveChatMessage`.
+- [ ] Minimal **data access helpers** for `PublicLiveChatConversation` and `PublicLiveChatMessage` (read/write functions used by routes/events).
 
-**Acceptance**
-- [ ] I can create/read a Public conversation and messages via Prisma (manual script or route).
+**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
+- [ ] I can create/read a Public conversation and messages via Prisma (manual script or route) with predictable results.
 
 ---
 
