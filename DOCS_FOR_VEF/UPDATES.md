@@ -19,7 +19,7 @@
 - ✅ Double language is officially finished. All text will be written and used with useLocale or useTranslations and added to dictionaries on the go.
 - 🚀 Create special chapter for public live chat in the language dictionaries to use on the go. 
 
-- 1️⃣ Starting working on step 1 of the plan. Branch  
+- 1️⃣ Starting working on step 1 of the plan. **Branch:** `feature/public-chat-db`
 
 ---
 

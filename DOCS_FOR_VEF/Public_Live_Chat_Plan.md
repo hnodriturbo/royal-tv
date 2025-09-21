@@ -279,8 +279,8 @@ If I need to use labels I will use these.
 - [ ] Minimal **data access helpers** for `PublicLiveChatConversation` and `PublicLiveChatMessage` (read/write functions used by routes/events).
 
 **What the finished part should do**
-- I can create/read a Public conversation and its messages via Prisma (manual script or test route).
-- The chosen bot-marking approach works (field or sentinel guest id).
+- I have pushed the new database to the prisma client and generate again.
+- The chosen bot-marking approach works
 - Helpers expose simple read/write calls used by sockets/APIs.
 
 ---
