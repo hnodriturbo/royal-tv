@@ -13,7 +13,7 @@ I update the two docs above as the **source of truth**.
 > I keep the **full plan (with chapters)** in the repo. This comment is a quick checklist for tracking.
 
 ## Status Checklist (Issues → Branches)
-- [ ] **1) Scaffold Public Chat DB usage** — `feature/public-chat-db`
+- [x] **1) Scaffold Public Chat DB usage** — `feature/public-chat-db`
 - [ ] **2) Server: Public socket events (mirror live)** — `feature/public-socket-events`
 - [ ] **3) Client socket hub: add public_* wrappers** — `feature/public-socket-hub`
 - [ ] **4) Client hooks parity for public chat** — `feature/hooks-public-chat`
