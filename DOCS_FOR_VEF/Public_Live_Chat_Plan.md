@@ -1,28 +1,70 @@
+# Public Live Chat Plan File
+
+## Chapters
+
+- [Public Live Chat Plan File](#public-live-chat-plan-file)
+  - [Chapters](#chapters)
+- [Public Live Chat — Project Plan (Issues Board: **To Do → In Progress → Done**)](#public-live-chat--project-plan-issues-board-to-do--in-progress--done)
+  - [Workflow (Quick Guide)](#workflow-quick-guide)
+  - [TO DO](#to-do)
+    - [2) Server: Public socket events (mirror live)](#2-server-public-socket-events-mirror-live)
+    - [3) Client socket hub: add `public_*` wrappers](#3-client-socket-hub-add-public_-wrappers)
+    - [4) Client hooks parity for public chat](#4-client-hooks-parity-for-public-chat)
+    - [5) Admin online detector (reuse)](#5-admin-online-detector-reuse)
+    - [6) AI bot endpoint](#6-ai-bot-endpoint)
+    - [7) Widget UI (bottom-left)](#7-widget-ui-bottom-left)
+    - [8) Glue logic (routing: AI ↔ live)](#8-glue-logic-routing-ai--live)
+    - [9) AppProviders integration](#9-appproviders-integration)
+    - [10) Polish: typing / unread / presence parity](#10-polish-typing--unread--presence-parity)
+    - [11) QA \& Docs](#11-qa--docs)
+  - [IN PROGRESS](#in-progress)
+    - [1) Scaffold Public Chat DB usage](#1-scaffold-public-chat-db-usage)
+  - [DONE](#done)
+  - [Mini-Guide: Issues / Branches / PRs](#mini-guide-issues--branches--prs)
+- [From up-to-date master](#from-up-to-date-master)
+
+
 # Public Live Chat — Project Plan (Issues Board: **To Do → In Progress → Done**)
 
-> **Voice:** first-person (my plan, my board). Every item here is an **Issue** with a matching **Branch**. I move issues across columns as I work.
+> Every item here is an **Issue** with a matching **Branch** that I create for each issue and merge that branch when finished. I move issues across columns as I work.
 
 ---
+
+<a id="Workflow"></a>
 
 ## Workflow (Quick Guide)
 
 - **One issue ⇒ one branch** (exact branch names below).
-- Keep commits small and focused. Open a PR that **closes** the issue.
-- If something depends on another item, I mark it **blocked** until the dependency is done.
+- I will try to keep commits small and precise.
+- Open a Pull Request that **closes** the issue.
+- Some items depend on another being finished (like some testing but I will update the md files on a seperate working tree)
+
+---
+
+<a id="DoD"></a>
 
 **Definition of Done (global)**
 
-- ✅ All success criteria for that issue met.
-- ✅ Unit/smoke tests (where applicable) pass locally.
-- ✅ No regressions to existing live chat.
+- ✅ All items under **“What the finished part should do”** are true.
+- ✅ I’ve tested locally and noted what I did in `UPDATES.md`.
+- ✅ No conflicts to existing live chat.
 
+---
+
+If I need to use labels I will use these.
 **Labels I use:** `public-chat`, `socket`, `db`, `ui`, `ai`
 
 ---
 
+<a id="TO-DO"></a>
+
 ## TO DO
 
 > I move an issue to **In Progress** the moment I create its branch.
+
+---
+
+<a id="2-Server-Public-socket-events"></a>
 
 ### 2) Server: Public socket events (mirror live)
 **Branch:** `feature/public-socket-events`
@@ -38,10 +80,14 @@
 - [ ] Wire event handlers into the Socket.IO server bootstrap.
 - [ ] Add minimal validation (guest id; rate limits TODO if needed).
 
-**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
-- [ ] Using a test client, I can create a **public room**, exchange messages, and refresh history without errors.
+**What the finished part should do**
+- A test client can open a **public room**, send/receive messages, and request recent history.
+- Server emits the correct `public_*` events and persists to `PublicLiveChat*` tables.
+- Basic validation prevents obviously invalid payloads (missing guest id, etc.) without crashing the server.
 
 ---
+
+<a id="3-Client-socket-hub"></a>
 
 ### 3) Client socket hub: add `public_*` wrappers
 **Branch:** `feature/public-socket-hub`
@@ -54,10 +100,14 @@
 - [ ] Add listeners: `onPublicRoomReady`, `onPublicReceiveMessage`, `onPublicMessageEdited`, `onPublicMessageDeleted`, `onPublicMessagesRefreshed`.
 - [ ] Ensure **pre-connect queuing** and **cleanup on unmount** match live behavior.
 
-**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
-- [ ] Listeners registered **before or after** connect receive events; queued emits flush after connect; teardown removes listeners cleanly.
+**What the finished part should do**
+- Events emitted **before connect** are queued and delivered after the socket connects.
+- All public listeners receive events reliably whether registered before or after connection.
+- Unmount removes public listeners to avoid leaks/duplicates.
 
 ---
+
+<a id="4-Client-hooks-parity"></a>
 
 ### 4) Client hooks parity for public chat
 **Branch:** `feature/hooks-public-chat`
@@ -71,10 +121,14 @@
 - [ ] `usePublicUnreadMessages.js`
 - [ ] Each hook scopes updates to the current `public_conversation_id` only.
 
-**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
-- [ ] Events and state updates affect only the active public conversation; no cross-room leaks in manual tests.
+**What the finished part should do**
+- Hooks update only the targeted **public** conversation.
+- No cross-room bleed; switching conversations resets listeners/state appropriately.
+- Typing/unread/participants hooks track only their active conversation.
 
 ---
+
+<a id="5-Admin-online-detector"></a>
 
 ### 5) Admin online detector (reuse)
 **Branch:** `feature/admin-online`
@@ -86,10 +140,14 @@
 - [ ] Ensure server emits `online_users_update`; implement `request_online_users` flow if not already.
 - [ ] Add a visual badge/state in the widget.
 
-**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
-- [ ] Toggling admin presence updates the badge within **≤ 2s** in the widget.
+**What the finished part should do**
+- The widget shows a clear “admin online/offline” state.
+- State changes within ~2 seconds after admin presence toggles.
+- The state is consumable by routing logic to flip AI/live modes.
 
 ---
+
+<a id="6-AI-bot-endpoint"></a>
 
 ### 6) AI bot endpoint
 **Branch:** `feature/public-ai-endpoint`
@@ -101,10 +159,14 @@
 - [ ] Log requests (rate limit optional) and handle errors.
 - [ ] (Optional) Persist Q&A to `PublicLiveChatMessage` (mark bot via `sender_is_bot` or `sender_is_admin = true`).
 
-**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
-- [ ] Calling from the widget returns a sensible response; error cases return controlled error payloads.
+**What the finished part should do**
+- The endpoint returns a reasonable text reply for valid input and a controlled error for invalid input.
+- (If enabled) Bot replies are saved with a clear bot/admin marker.
+- Failures don’t crash the API route; logs are helpful for debugging.
 
 ---
+
+<a id="7-Widget-UI"></a>
 
 ### 7) Widget UI (bottom-left)
 **Branch:** `feature/public-chat-widget-ui`
@@ -116,10 +178,14 @@
 - [ ] Minimal Tailwind layout (no CLS), responsive down to ~360px.
 - [ ] Message list with autoscroll + overflow handling.
 
-**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
-- [ ] Toggle works reliably; layout stays stable; message list autoscrolls to the latest message.
+**What the finished part should do**
+- Toggle opens/closes the panel; focus is trapped while open; ESC closes.
+- Layout remains stable across viewport sizes (including ~360px).
+- Message view autoscrolls to the latest message when new items arrive.
 
 ---
+
+<a id="8-Glue-logic-AI-live"></a>
 
 ### 8) Glue logic (routing: AI ↔ live)
 **Branch:** `feature/public-chat-routing`
@@ -132,10 +198,14 @@
 - [ ] If **admin offline** → call `/api/public-chatbot`; (optional) persist to `Public*`.
 - [ ] Mode switches seamlessly when admin presence changes.
 
-**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
-- [ ] Flipping presence mid-chat preserves conversation and switches mode without message loss or UI glitches.
+**What the finished part should do**
+- While chatting, flipping admin presence switches AI↔live without losing the conversation thread.
+- Logged-in users prefer live chat when admin is online; guests use public chat; offline falls back to AI.
+- UI reflects the current mode and continues sending/receiving accordingly.
 
 ---
+
+<a id="9-AppProviders-integration"></a>
 
 ### 9) AppProviders integration
 **Branch:** `feature/add-widget-to-appproviders`
@@ -146,10 +216,14 @@
 - [ ] Import and mount `<PublicLiveChatWidget />` in `AppProviders` → `AppContent`.
 - [ ] Pass `session`/`user` if available; otherwise guest mode.
 
-**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
-- [ ] Widget appears across routes; existing socket features remain unaffected (manual navigation test).
+**What the finished part should do**
+- The widget is visible on all pages/routes.
+- Existing socket features (e.g., LogPageView) keep working unchanged.
+- Session/guest mode is detected and forwarded to the widget.
 
 ---
+
+<a id="10-Polish"></a>
 
 ### 10) Polish: typing / unread / presence parity
 **Branch:** `feature/public-chat-polish`
@@ -161,27 +235,37 @@
 - [ ] Unread counts reset on focus/open.
 - [ ] Presence indicators render consistently.
 
-**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
-- [ ] Typing indicator shows as expected; unread counters reset on focus; presence renders consistently across views.
+**What the finished part should do**
+- Typing indicator appears correctly when the agent types.
+- Unread counts clear when the widget gains focus or the conversation is opened.
+- Presence visuals look consistent across the app.
 
 ---
 
-### 11) QA & Docs
-**Branch:** `chore/public-chat-readme`
+<a id="11-Overview-of-the-project"></a>
 
-**Intent:** Stabilize and document the system.
+### 11) QA & Docs
+**Branch:** `Public_Live_Chat_Plan/overview`
+
+**Intent:** Make sure everything works cleanly.
 
 **Tasks**
 - [ ] Smoke test: guest AI chat, guest live chat, logged-in live chat.
 - [ ] Document architecture + event matrix + routing logic.
-- [ ] Add screenshots/GIFs to README.
+- [ ] Add screenshots/GIFs to UPDATES.md file.
 
-**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
-- [ ] README explains setup, event names, data flow, and mode switching clearly; smoke tests pass.
+**What the finished part should do**
+- All three chat paths work end-to-end locally.
+- UPDATES.md clearly explains setup, data flow, and how routing switches modes.
+- Screens/GIFs show the widget behavior and flow.
 
 ---
 
+<a id="IN-PROGRESS"></a>
+
 ## IN PROGRESS
+
+<a id="1-Scaffold-Public-Chat-DB-usage"></a>
 
 ### 1) Scaffold Public Chat DB usage
 **Branch:** `feature/public-chat-db`
@@ -189,15 +273,19 @@
 **Intent:** Prepare the DB layer for public chat.
 
 **Tasks**
-- [ ] (Option A) **Schema**: Add `sender_is_bot Boolean @default(false)` to `PublicLiveChatMessage` and run migration.
+- [x] (Option A) **Schema**: Add `sender_is_bot Boolean @default(false)` to `PublicLiveChatMessage` and run migration.
 - [ ] (Option B) **No schema change**: Tag bot via `sender_guest_id = 'bot'` and document.
-- [ ] Regenerate Prisma Client.
+- [x] Regenerate Prisma Client.
 - [ ] Minimal **data access helpers** for `PublicLiveChatConversation` and `PublicLiveChatMessage` (read/write functions used by routes/events).
 
-**Success Criteria** *(I’ll log my test steps/results in `UPDATES.md`)*  
-- [ ] I can create/read a Public conversation and messages via Prisma (manual script or route) with predictable results.
+**What the finished part should do**
+- I can create/read a Public conversation and its messages via Prisma (manual script or test route).
+- The chosen bot-marking approach works (field or sentinel guest id).
+- Helpers expose simple read/write calls used by sockets/APIs.
 
 ---
+
+<a id="DONE"></a>
 
 ## DONE
 
@@ -206,6 +294,8 @@
 - *None yet*
 
 ---
+
+<a id="Mini-Guide"></a>
 
 ## Mini-Guide: Issues / Branches / PRs
 

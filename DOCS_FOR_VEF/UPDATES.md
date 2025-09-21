@@ -15,8 +15,11 @@
 ## 21 sept 2025 - Sunday
 - ✨ Edited the issues to the latest update of the Public_Live_Chat_Plan.md file.
 - 📌 Made a checkout of the master branch and tagged it with a version.
--  
+- ⚡ Finished creating the markdown documentation files for master. 
+- ✅ Double language is officially finished. All text will be written and used with useLocale or useTranslations and added to dictionaries on the go.
+- 🚀 Create special chapter for public live chat in the language dictionaries to use on the go. 
 
+- 1️⃣ Starting working on step 1 of the plan. Branch  
 
 ---
 
