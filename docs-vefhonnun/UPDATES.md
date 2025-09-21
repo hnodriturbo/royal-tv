@@ -22,7 +22,7 @@
 - 1️⃣ Starting working on step 1 of the plan. **Branch:** `feature/public-chat-db`
 - ✅ Finished working on final version of the tables for PublicLiveChatConversation and PublicLiveChatMessage.
 
-- Starting step 2 **2) Server: Public socket events (mirror live)** — `feature/public-socket-events` 
+- Starting step 2 **2) Server: Public socket events** — `feature/public-socket-events` 
 
 ---
 
