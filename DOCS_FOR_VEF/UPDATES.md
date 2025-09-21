@@ -8,9 +8,21 @@
 
 ## Structure layout is oldest at the bottom and latest at the top.
 
-## 20 sept 2025
+---
+
+---
+
+## 21 sept 2025 - Sunday
+- ✨ Edited the issues to the latest update of the Public_Live_Chat_Plan.md file.
+- 📌 Made a checkout of the master branch and tagged it with a version.
+-  
+
+
+---
+
+## 20 sept 2025 - Saturday
 - ✅ Created Plan and issues for each part of the plan. With markdown coding for each part that has checkboxes for each issue.
-- ✅ Created special branch for holding the udpates.md file.
+- ✅ Created special folder for the UPDATES.md (this file) and for the Public_Live_Chat_Plan.md which will hold the progress.
 
 ---
 
