@@ -21,13 +21,15 @@ model User {
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
 
-  freeTrials            FreeTrial[]            @relation("UserFreeTrials")
-  liveChatConversations LiveChatConversation[] @relation("LiveConversations")
-  liveChatMessages      LiveChatMessage[]      @relation("LiveMessages")
-  notifications         Notification[]         @relation("UserNotifications")
-  subscriptions         Subscription[]         @relation("UserSubscriptions")
-  subscriptionPayments  SubscriptionPayment[]  @relation("UserSubscriptionPayments")
-  logs                  Log[]                  @relation("UserLogs")
+  freeTrials                  FreeTrial[]                  @relation("UserFreeTrials")
+  liveChatConversations       LiveChatConversation[]       @relation("LiveConversations")
+  liveChatMessages            LiveChatMessage[]            @relation("LiveMessages")
+  notifications               Notification[]               @relation("UserNotifications")
+  subscriptions               Subscription[]               @relation("UserSubscriptions")
+  subscriptionPayments        SubscriptionPayment[]        @relation("UserSubscriptionPayments")
+  logs                        Log[]                        @relation("UserLogs")
+  publicLiveChatConversations PublicLiveChatConversation[] @relation("UserPublicConversations")
+  publicLiveChatMessages      PublicLiveChatMessage[]      @relation("UserPublicMessages")
 
   @@index([username])
   @@index([email])
@@ -208,19 +210,26 @@ model Log {
 
 model PublicLiveChatConversation {
   public_conversation_id String   @id @default(uuid()) @db.Uuid
+  owner_id               String?  @db.Uuid
   subject                String?
   read                   Boolean  @default(false)
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 
   messages PublicLiveChatMessage[]
+  owner    User?                   @relation("UserPublicConversations", fields: [owner_id], references: [user_id], onDelete: Cascade)
+
+  @@index([updatedAt])
+  @@index([owner_id])
 }
 
 model PublicLiveChatMessage {
   public_message_id      String        @id @default(uuid()) @db.Uuid
   public_conversation_id String        @db.Uuid
+  sender_user_id         String?       @db.Uuid
   sender_guest_id        String?
   sender_is_admin        Boolean       @default(false)
+  sender_is_bot          Boolean       @default(false)
   message                String
   status                 MessageStatus @default(sent)
   readAt                 DateTime?
@@ -228,9 +237,12 @@ model PublicLiveChatMessage {
   updatedAt              DateTime      @updatedAt
 
   conversation PublicLiveChatConversation @relation(fields: [public_conversation_id], references: [public_conversation_id], onDelete: Cascade)
+  user         User?                      @relation("UserPublicMessages", fields: [sender_user_id], references: [user_id], onDelete: Cascade, map: "PublicLiveChatMessage_user_id_fkey")
 
   @@index([public_conversation_id])
   @@index([status])
+  @@index([public_conversation_id, createdAt])
+  @@index([sender_user_id])
 }
 
 enum Role {

@@ -1,7 +1,37 @@
 {
     "editor.formatOnSave": true,
+    "tailwindCSS.cwd": "${workspaceFolder}/website",
     "search.exclude": { "**/.next": true, "website/.next": true, "website/node_modules": true },
-    "tailwindCSS.experimental.configFile": "website/tailwind.config.js",
+    "tailwindCSS.experimental.configFile": "website/src/app/styles/globals.css",
     "eslint.workingDirectories": [ "website", "docs-vefhonnun" ],
-    "files.associations": { "*.css": "postcss" }
+    "files.associations": { "*.css": "postcss" },
+    "tailwindCSS.includeLanguages": {
+        "postcss": "css",
+        "css": "css",
+        "javascript": "javascriptreact",
+        "javascriptreact": "javascriptreact",
+        "typescript": "typescriptreact",
+        "typescriptreact": "typescriptreact",
+        "html": "html"
+    },
+    "tailwindCSS.emmetCompletions": true,
+    "css.validate": false,
+    "scss.validate": false,
+    "less.validate": false,
+    "css.lint.unknownAtRules": "ignore",
+    "scss.lint.unknownAtRules": "ignore",
+    "less.lint.unknownAtRules": "ignore",
+    "editor.colorDecorators": true,
+    "tailwindCSS.colorDecorators": true,
+    "tailwindCSS.experimental.classRegex": [
+        [ "class(?:Name)?\\s*=\\s*[\"'` ]([ ^\"'`]*)[\"'` ]", 1 ],
+        [ "className:\\s*[\"'` ]([ ^\"'`]*)[\"'` ]", 1 ],
+        [ "tw`([^`]*)`", 1 ],
+        [ "tw=[\"'` ]([ ^\"'`]*)[\"'` ]", 1 ],
+        [ "clsx\\(([^)]*)\\)", 1 ],
+        [ "cn\\(([^)]*)\\)", 1 ],
+        [ "class\\s*=\\s*[\"'` ]([ ^\"'`]*)[\"'` ]", 1 ]
+    ],
+    "editor.quickSuggestions": { "other": true, "comments": false, "strings": true },
+    "explorer.fileNesting.enabled": false
 }
