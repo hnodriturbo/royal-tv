@@ -1,0 +1,1120 @@
+{
+    "common": {
+        "time": {
+            "less_than_one_day": "less than 1 day",
+            "month_singular": "month",
+            "month_plural": "months",
+            "day_singular": "day",
+            "day_plural": "days",
+            "separator": ", ",
+            "left": "left"
+        },
+        "loader": { "loading": "Loading..." },
+        "buttons": { "confirm": "Confirm", "cancel": "Cancel" },
+        "auth": {
+            "checking": "Checking authentication...",
+            "redirect_logged_in": "Welcome! Taking you to your dashboard..."
+        },
+        "errors": {
+            "generic": "Something went wrong.",
+            "network": "Network error. Please try again.",
+            "AUTH/SESSION_EXPIRED": "Your session expired. Please sign in again.",
+            "NETWORK/TIMEOUT": "The server took too long to respond. Try again."
+        }
+    },
+    "app": {
+        "languageSwitcher": {
+            "english_label": "Switch language to English",
+            "icelandic_label": "Switch language to Icelandic",
+            "english_tooltip": "English",
+            "icelandic_tooltip": "Icelandic",
+            "disabled_tooltip": "Language switching disabled on checkout"
+        },
+        "admin": {
+            "dashboard": { "title": "Admin Dashboard" },
+            "freeTrials": {
+                "status": { "active": "Active", "pending": "Pending", "disabled": "Disabled" },
+                "main": {
+                    "no_data": "No Trials found!",
+                    "title": "All Free Trial Requests",
+                    "loading": "Loading free trials...",
+                    "loadSuccess": "Free trials loaded!",
+                    "loadFailed": "Failed to load free trials {error}",
+                    "deleting": "Deleting free trial...",
+                    "deletedSuccess": "Free trial deleted!",
+                    "deleteFailed": "Delete failed.",
+                    "deletionCancelled": "Deletion cancelled.",
+                    "deleteModal": {
+                        "title": "Delete Free Trial",
+                        "description": "Are you sure you want to delete this free trial request? This cannot be undone.",
+                        "confirm": "Delete",
+                        "cancel": "Cancel"
+                    },
+                    "table": {
+                        "user": "User",
+                        "username": "Username",
+                        "email": "Email",
+                        "status": "Status",
+                        "created": "Created",
+                        "startDate": "Start Date",
+                        "endDate": "End Date",
+                        "actions": "Actions"
+                    },
+                    "action": { "viewEdit": "View/Edit", "delete": "Delete" }
+                },
+                "edit": {
+                    "title": "Edit Free Trial For {name}",
+                    "unknownUser": "unknown user",
+                    "userInfo": "User Information",
+                    "field": {
+                        "name": "Name",
+                        "email": "Email",
+                        "whatsapp": "WhatsApp",
+                        "telegram": "Telegram",
+                        "userId": "User ID",
+                        "currentStatus": "Current Status",
+                        "freeTrialUsername": "Free Trial Username",
+                        "freeTrialPassword": "Free Trial Password",
+                        "portalUrl": "Portal URL",
+                        "otherShortInfo": "Other Short Info",
+                        "additionalDetails": "Additional Details",
+                        "status": "Status",
+                        "startDate": "Start Date",
+                        "endDateAuto": "End Date (auto)"
+                    },
+                    "placeholder": {
+                        "username": "Username",
+                        "password": "Password",
+                        "portalUrl": "Portal URL",
+                        "otherShortInfo": "Other short info",
+                        "additionalDetails": "Additional details"
+                    },
+                    "selectStatus": "Select Status",
+                    "deleteTrial": "Delete Trial",
+                    "saveChanges": "Save Changes",
+                    "saving": "Saving...",
+                    "returnToList": "Return To Free Trials",
+                    "loadingTrial": "Loading free trial...",
+                    "loadFailed": "Failed to load free trial",
+                    "updatingTrial": "Updating free trial...",
+                    "updateSuccess": "Free trial updated successfully",
+                    "updateFailed": "Failed to update free trial",
+                    "deletingTrial": "Deleting free trial...",
+                    "deletedSuccess": "Free trial deleted!",
+                    "deleteFailed": "Delete failed.",
+                    "deletionCancelled": "Deletion cancelled.",
+                    "deleteModal": {
+                        "title": "Delete Free Trial",
+                        "description": "Are you sure you want to delete this free trial? This cannot be undone.",
+                        "confirm": "Delete",
+                        "cancel": "Cancel"
+                    }
+                }
+            },
+            "notifications": { "title": "Admin Notifications" },
+            "logs": {
+                "main": {
+                    "title": "All User Activity Logs (by IP)",
+                    "loading": "Loading activity logs...",
+                    "loadSuccess": "Activity logs loaded!",
+                    "loadFailed": "Failed to load activity logs {error}",
+                    "deleting": "Deleting logs...",
+                    "deletedSuccess": "Logs deleted!",
+                    "deleteFailed": "Delete failed.",
+                    "deletionCancelled": "Deletion cancelled.",
+                    "deleteModal": {
+                        "title": "Delete All Logs for This IP",
+                        "description": "Are you sure you want to delete ALL logs for IP: {ip}? This cannot be undone.",
+                        "confirm": "Delete",
+                        "cancel": "Cancel"
+                    },
+                    "table": {
+                        "ip": "IP Address",
+                        "logs": "Logs",
+                        "latestPage": "Latest Page",
+                        "latestUser": "Latest User",
+                        "latestTime": "Latest Time",
+                        "actions": "Actions"
+                    },
+                    "action": { "view": "View", "delete": "Delete" },
+                    "card": {
+                        "ip": "IP Address",
+                        "logs": "Logs",
+                        "latestEvent": "Latest Event",
+                        "latestUser": "Latest User",
+                        "latestTime": "Latest Time"
+                    }
+                },
+                "byIp": {
+                    "title": "Activity Logs for IP: {ip}",
+                    "loading": "Loading logs for IP...",
+                    "loadSuccess": "Logs loaded!",
+                    "loadFailed": "Failed to load logs {error}",
+                    "deleting": "Deleting logs...",
+                    "deletedSuccess": "Logs deleted!",
+                    "deleteFailed": "Delete failed.",
+                    "deletionCancelled": "Deletion cancelled.",
+                    "deleteModal": {
+                        "title": "Delete All Logs for This IP",
+                        "description": "Are you sure you want to delete ALL logs for IP: {ip}? This cannot be undone.",
+                        "confirm": "Delete",
+                        "cancel": "Cancel"
+                    },
+                    "table": {
+                        "time": "Time",
+                        "user": "User",
+                        "event": "Event",
+                        "page": "Page",
+                        "description": "Description",
+                        "userAgent": "User Agent"
+                    },
+                    "guest": "Guest",
+                    "card": { "event": "Event", "pageVisited": "Page Visited" },
+                    "dangerZone": {
+                        "title": "Danger Zone",
+                        "description": "Deleting all logs for this IP is permanent and cannot be undone.",
+                        "button": "Delete All Logs for This IP"
+                    },
+                    "backToAll": "← Back To All Logs"
+                }
+            },
+            "liveChat": {
+                "page": {
+                    "loading": "Loading conversation…",
+                    "load_failed": "Failed to load conversation",
+                    "edit_title": "Edit Message",
+                    "edit_confirm": "Save",
+                    "cancel": "Cancel",
+                    "delete_title": "Delete Message",
+                    "delete_description": "Are you sure you want to delete this message?",
+                    "delete_confirm": "Delete",
+                    "msg_updated": "Message updated!",
+                    "msg_edit_error": "There was an error editing the message",
+                    "msg_deleted": "Message deleted!",
+                    "msg_delete_error": "There was an error deleting your message. Please try again later.",
+                    "user_info": "User Info",
+                    "name": "Name",
+                    "email": "Email",
+                    "username": "Username",
+                    "other_conversations": "Other Conversations",
+                    "unread_tooltip": "Unread messages in this conversation",
+                    "all_read_tooltip": "All messages read",
+                    "no_subject": "No Subject",
+                    "unread_badge_one": "1 Unread Message",
+                    "unread_badge_other": "{count} Unread Messages",
+                    "danger_zone": "Danger Zone",
+                    "danger_warning": "Deleting removes all messages permanently.",
+                    "delete_success": "Conversation deleted successfully!"
+                },
+                "users": {
+                    "no_data": "No conversations found!",
+                    "title": "Users with Conversations",
+                    "fetching": "Fetching conversations…",
+                    "loaded": "User conversations loaded!",
+                    "fetch_failed": "Failed to fetch conversations",
+                    "table_user": "User",
+                    "table_email": "Email",
+                    "table_count": "# Conversations",
+                    "table_unread": "# Unread Conv.",
+                    "table_last": "Last Message",
+                    "table_action": "Action",
+                    "no_messages": "No messages",
+                    "view": "View",
+                    "start_new": "Start New Conversation"
+                },
+                "userConversations": {
+                    "title": "Conversations for {username}",
+                    "loading": "Loading conversations…",
+                    "load_failed": "Failed to load user conversations",
+                    "create_new": "Start New Conversation",
+                    "table_id": "Conversation ID",
+                    "table_subject": "Subject",
+                    "table_updated": "Last Updated",
+                    "table_unread": "Unread Messages",
+                    "table_action": "Action",
+                    "empty": "No conversations found.",
+                    "view_messages": "View Messages",
+                    "no_subject": "No Subject",
+                    "last_updated": "Last Updated",
+                    "unread": "Unread Messages",
+                    "email_label": "E-mail",
+                    "subject_label": "Subject"
+                }
+            },
+            "profile": {
+                "title": "Admin Profile",
+                "loading": "Fetching your admin profile...",
+                "fetch_error": "Error fetching profile",
+                "updating": "Updating profile...",
+                "updated": "Profile updated successfully",
+                "update_error": "Error updating profile",
+                "password_mismatch": "New password and confirmation do not match",
+                "updating_password": "Updating password...",
+                "password_updated": "Password updated successfully",
+                "password_update_error": "Error updating password",
+                "change_password": "Change Password",
+                "profile_of": "{name} Profile",
+                "field_name": "Name",
+                "field_email": "Email",
+                "field_username": "Username",
+                "field_whatsapp": "WhatsApp",
+                "field_telegram": "Telegram",
+                "field_oldPassword": "Old Password",
+                "field_newPassword": "New Password",
+                "field_confirmPassword": "Confirm Password",
+                "preferred_contact": "Preferred Contact Way",
+                "receive_emails": "I want to receive important emails about my account",
+                "update_profile": "Update Profile",
+                "back_to_profile": "Back to Profile",
+                "update_password": "Update Password",
+                "return_dashboard": "Return to Dashboard"
+            },
+            "subscriptions": {
+                "no_data": "No Subscriptions Found!",
+                "title": "All Subscriptions",
+                "loading": "Loading subscriptions...",
+                "loaded": "All subscriptions loaded!",
+                "load_failed": "Failed to load subscriptions",
+                "table_user": "User",
+                "table_product": "Product",
+                "table_username": "Username",
+                "table_status": "Status",
+                "table_created": "Created",
+                "table_expiring": "Expiring At",
+                "table_actions": "Actions",
+                "view": "View"
+            },
+            "userSubscriptions": {
+                "title": "User Subscriptions",
+                "loading": "Loading subscriptions...",
+                "loaded": "All subscriptions loaded!",
+                "load_failed": "Failed to load subscriptions",
+                "user_info": "User Information",
+                "name": "Name",
+                "email": "Email",
+                "untitled": "Subscription",
+                "status": "Status",
+                "expires": "Expires At",
+                "no_expiry": "No expiry",
+                "time_left": "{time} left",
+                "delete_btn": "Delete Subscription",
+                "delete_title": "Delete Subscription",
+                "delete_description": "Are you sure you want to delete this subscription?",
+                "delete_confirm": "Delete",
+                "delete_failed": "Delete failed",
+                "deleted": "Subscription deleted",
+                "cancel": "Cancel",
+                "payments": "Payments",
+                "payment_details": "Payment Details",
+                "no_payment": "No payment data",
+                "close": "Close",
+                "deleting": "Deleting subscription..."
+            },
+            "users": {
+                "main": {
+                    "no_data": "Engir notendur fundust!",
+                    "title": "All Users (Cards View)",
+                    "loading": "Loading users...",
+                    "loadSuccess": "Users loaded!",
+                    "loadFailed": "Failed to load users{error}",
+                    "noUsers": "No users found.",
+                    "email": "Email",
+                    "joined": "Joined {date}",
+                    "whatsapp": "WhatsApp",
+                    "telegram": "Telegram",
+                    "preferredContact": "Preferred Contact",
+                    "freeTrials": "Free Trials",
+                    "liveChats": "Live Chats",
+                    "subscriptions": "Subscriptions",
+                    "profile": "Profile",
+                    "total": "Total",
+                    "unread": "Unread",
+                    "startConversation": "Start Conversation"
+                }
+            },
+            "userId": {
+                "title": "Admin • User Profile",
+                "back": "Back",
+                "openLiveChat": "Open Live Chat",
+                "loading": "Loading user…",
+                "loadSuccess": "User loaded",
+                "loadFailed": "Failed to load user{error}",
+                "saving": "Saving changes…",
+                "saveSuccess": "Changes saved",
+                "saveFailed": "Failed to save changes{error}",
+                "deleting": "Deleting user…",
+                "deleteSuccess": "User deleted",
+                "deleteFailed": "Failed to delete user{error}",
+                "confirmDelete": "Delete this user? This cannot be undone.",
+                "username": "Username",
+                "username_placeholder": "Enter username",
+                "name": "Name",
+                "name_placeholder": "Enter full name",
+                "email": "Email",
+                "email_placeholder": "name@example.com",
+                "role": "Role",
+                "role_user": "User",
+                "role_admin": "Admin",
+                "whatsapp": "WhatsApp",
+                "telegram": "Telegram",
+                "created": "Created",
+                "save": "Save",
+                "delete": "Delete"
+            }
+        },
+        "footer": {
+            "more_info_buy_now": "More Info & Buy Now",
+            "telegram": "Telegram",
+            "rights": "All rights reserved."
+        },
+        "navigation": {
+            "home": "Home",
+            "more_info": "More Info",
+            "faq": "FAQ",
+            "register": "Register",
+            "login": "Login",
+            "dashboard": "Dashboard",
+            "buy_package": "Buy Package",
+            "subscriptions": "Subscriptions",
+            "notifications": "Notifications",
+            "live_chats": "Live Chats",
+            "free_trial": "Free Trial",
+            "free_trials": "Free Trials",
+            "profile": "Profile",
+            "logs": "Logs",
+            "users": "Users",
+            "logout": "Logout",
+            "telegram": "Telegram",
+            "rights": "Royal IPTV 2025"
+        },
+        "home": {
+            "page": {
+                "hero": {
+                    "title": "Welcome to Royal TV, the Ultimate IPTV Experience! 🌟👑",
+                    "subtitle": "Watch over 20,000 premium TV stations from all around the world—right from your screen, wherever you are!",
+                    "blurb_line1": "(That’s every major sports, movie, and entertainment channel—plus tons more you never knew you needed.)",
+                    "blurb_line2": "All traffic is fully encrypted for your total peace of mind.",
+                    "blurb_line3": "Enjoy Royal TV’s exclusive secure streaming, available day and night, every single day!"
+                },
+                "body": {
+                    "line1": "Experience a new era of streaming with Royal TV!",
+                    "line2": "Dive into high-quality shows, blockbuster movies, non-stop kids programming, and the world’s top international channels.",
+                    "line3": "With our range of flexible packages, you get unbeatable variety,",
+                    "fast_support": "super-fast",
+                    "body_tail": "support, and deals you won’t find anywhere else—only at Royal TV!",
+                    "cta": "Register now and unlock a universe of entertainment. Double the value, double the fun, double the satisfaction—guaranteed!"
+                },
+                "thank_you": "Thank you for contacting us! We’ll get back to you as soon as possible. ({countdown})",
+                "cta_button": "Register Now & Claim Your FREE 1-Day Trial Access!"
+            }
+        },
+        "more-info": { "packages_heading": "Our Subscription Packages 👇" },
+        "faq": {
+            "heading": "FAQ ❓❓❓",
+            "items": {
+                "what_is_iptv_q": "What is IPTV and how do I use it?",
+                "what_is_iptv_a": "IPTV is a service that allows you to stream live TV through apps installed on your device. It’s supported on most modern devices including smart TVs, phones, and computers.",
+                "getting_started_q": "How do I get started?",
+                "getting_started_a": "It’s super easy! Just reach out to us and we’ll guide you through everything — including a free trial setup.",
+                "icelandic_channels_q": "Are the Icelandic channels available?",
+                "icelandic_channels_a": "Yes, all channels from Iceland are available — even sports channels — so you can watch what you want anytime.",
+                "free_trial_q": "Can I get a free trial?",
+                "free_trial_a": "Yes, we offer free trials in most cases. Availability may vary depending on server capacity.",
+                "simultaneous_streams_q": "How many people can watch at the same time?",
+                "simultaneous_streams_a": "This depends on your subscription plan, but typically one device is allowed per account unless multi-stream is enabled.",
+                "requirements_q": "What do I need to start watching?",
+                "requirements_a": "All you need is a stable internet connection and a compatible device. We’ll help you set up the rest.",
+                "special_equipment_q": "Do I need special equipment?",
+                "special_equipment_a": "No special equipment is required. Any device that supports IPTV apps — like Smart TVs, Android boxes, or phones — will work.",
+                "works_everywhere_q": "Does Royal TV work everywhere?",
+                "works_everywhere_a": "Yes, you can use the service anywhere in the world as long as you have internet access.",
+                "channel_issue_q": "What happens if a channel doesn’t work?",
+                "channel_issue_a": "We monitor and update our streams constantly. If you notice an issue, contact support and we’ll look into it right away.",
+                "refunds_q": "Do you offer refunds?",
+                "refunds_a": "Due to the nature of digital services, we don’t offer refunds. We always recommend starting with a free trial first.",
+                "renew_q": "How do I renew my subscription?",
+                "renew_a": "Renewing is easy — just visit our website or contact support and we’ll assist you with the process.",
+                "multi_device_q": "Can I use the same account on multiple devices?",
+                "multi_device_a": "Accounts are usually limited to one device unless your plan includes multi-device access. Contact us to upgrade.",
+                "stability_q": "Is the service stable and reliable?",
+                "stability_a": "Yes! We focus on delivering a smooth and reliable experience with minimal buffering and downtime.",
+                "channels_count_q": "How many channels are available?",
+                "channels_count_a": "Approximately 12–14,000 channels are available from many countries, including premium channels.",
+                "apple_android_tv_q": "Can I use it on Apple TV or Android TV?",
+                "apple_android_tv_a": "Absolutely! Royal TV supports most major platforms including Apple TV, Android TV, Fire Stick, and more.",
+                "support_q": "Do you have customer support?",
+                "support_a": "Yes, our support team is available via live chat, email, and other platforms to help you anytime you need.",
+                "commitment_q": "Is there a long-term commitment?",
+                "commitment_a": "The shortest plan is 6 months and the longest is 1 year. You pay a one-time fee for the selected period.",
+                "content_types_q": "What kind of content do you offer?",
+                "content_types_a": "Royal TV includes live TV channels, movies, series, sports, and more — all in one place.",
+                "hd_4k_q": "Can I watch in HD or 4K?",
+                "hd_4k_a": "Yes, many of our channels and content support HD and even 4K streaming for the best quality.",
+                "slow_internet_q": "Will it work on slow internet?",
+                "slow_internet_a": "We recommend at least a 10 Mbps connection for the best experience, but adaptive quality helps lower connections too.",
+                "legal_q": "Is it legal to use IPTV?",
+                "legal_a": "We only provide services in compliance with applicable laws. Please ensure you use IPTV services legally in your region."
+            }
+        },
+        "user": {
+            "dashboard": { "page": { "welcome": "Welcome", "user": "User" }},
+            "freeTrials": {
+                "page": {
+                    "checking_status": "Checking your free trial status...",
+                    "load_failed": "Failed to load your free trial status.",
+                    "details_heading": "🎁 Free Trial Details",
+                    "ready_title": "Your free trial is ready!",
+                    "username": "Username:",
+                    "password": "Password:",
+                    "portal_link": "Portal Link:",
+                    "dns_link": "DNS Link:",
+                    "dns_link_samsung_lg": "DNS Link (Samsung/LG):",
+                    "package": "Package:",
+                    "mac_address": "MAC Address:",
+                    "note": "Note:",
+                    "whatsapp_telegram": "WhatsApp/Telegram:",
+                    "expiring_at": "Expiring At:",
+                    "expiring_on_login": "Will start counting on first login",
+                    "claimed_at": "Claimed At:",
+                    "updated_at": "Updated At:",
+                    "expired_title": "Your free trial has expired.",
+                    "used_trial": "You have already used your free trial.",
+                    "purchase_prompt": "💼 Please purchase a subscription to continue enjoying our service!",
+                    "no_trial_title": "No free trial request found.",
+                    "no_trial_message": "🤔 If you believe this is a mistake, please contact support."
+                }
+            },
+            "liveChat": {
+                "main": {
+                    "loading": "Loading your conversations…",
+                    "fetch_failed": "Failed to load conversations",
+                    "fetch_success": "Conversations fetched successfully",
+                    "header": "Your Conversations",
+                    "start_new": "Start New Conversation",
+                    "no_conversations": "No conversations found.",
+                    "id": "ID",
+                    "subject": "Subject",
+                    "unread": "Unread",
+                    "last_message": "Last Message",
+                    "action": "Action",
+                    "read": "✅ Read",
+                    "view": "View",
+                    "delete": "Delete",
+                    "none": "None",
+                    "unread_badge_one": "1 unread",
+                    "unread_badge_other": "{count} unread",
+                    "tooltip_unread": "You have unread messages",
+                    "tooltip_all_read": "All messages are read",
+                    "other_conversations": "Other Conversations",
+                    "no_subject": "No subject"
+                },
+                "conversation": {
+                    "cancel": "Cancel",
+                    "conversation_deleted": "Conversation deleted successfully.",
+                    "danger_message": "Deleting this conversation is permanent and cannot be undone.",
+                    "danger_zone": "Danger Zone",
+                    "delete": "Delete",
+                    "delete_message": "Delete Message",
+                    "delete_prompt": "Are you sure you want to delete this message?",
+                    "email": "Email:",
+                    "edit_message": "Edit Message",
+                    "error_delete": "Could not delete message.",
+                    "error_edit": "Could not update message.",
+                    "fail": "Failed to load conversation.",
+                    "loading": "Loading conversation...",
+                    "message_deleted": "Message deleted successfully.",
+                    "message_updated": "Message updated successfully.",
+                    "name": "Name:",
+                    "no_subject": "No subject",
+                    "other_conversations": "Other Conversations",
+                    "save": "Save",
+                    "tooltip_all_read": "All messages read",
+                    "tooltip_unread": "Unread messages in this conversation",
+                    "unread_badge_one": "1 new",
+                    "unread_badge_other": "{count} new",
+                    "user_info": "User Information",
+                    "username": "Username:",
+                    "list_title": "Your Conversations:"
+                }
+            },
+            "profile": {
+                "page": {
+                    "fetching": "Fetching your profile...",
+                    "error_fetching": "Error fetching profile",
+                    "updating": "Updating profile...",
+                    "update_success": "Profile updated successfully",
+                    "error_updating": "Error updating profile",
+                    "password_mismatch": "New password and confirmation do not match",
+                    "password_updating": "Updating password...",
+                    "password_update_success": "Password updated successfully",
+                    "error_password_update": "Error updating password",
+                    "change_password": "Change Password",
+                    "update_profile": "Update Profile",
+                    "profile": "Profile",
+                    "user_profile": "User Profile",
+                    "old_password": "Old Password:",
+                    "new_password": "New Password:",
+                    "confirm_password": "Confirm Password:",
+                    "back_to_profile": "Back to Profile",
+                    "update_password": "Update Password",
+                    "return_dashboard": "Return to Dashboard",
+                    "preferred_contact": "Preferred Contact Way:",
+                    "send_emails": "I want to receive important emails about my account",
+                    "field": {
+                        "name": "Name:",
+                        "email": "Email:",
+                        "username": "Username:",
+                        "whatsapp": "WhatsApp:",
+                        "telegram": "Telegram:"
+                    }
+                }
+            },
+            "subscriptions": {
+                "page": {
+                    "title": "Your Subscriptions",
+                    "pageTitle": "Subscription",
+                    "loading": "Loading subscriptions...",
+                    "loaded": "Subscriptions loaded!",
+                    "load_failed": "Failed to load subscriptions",
+                    "payment_success_title": "Payment Successful!",
+                    "payment_success_message": "Your payment was received and your subscription is now pending admin approval.\nThis page will refresh automatically every hour! You will get notified of any changes.",
+                    "disappear_notice": "This will disappear in 30 seconds."
+                },
+                "status": {
+                    "active": "✅ Active",
+                    "pending": "🕒 Pending",
+                    "expired": "❌ Expired",
+                    "disabled": "🚫 Disabled",
+                    "unknown": "❔ Unknown"
+                },
+                "fields": {
+                    "username_label": "Username:",
+                    "password_label": "Password:",
+                    "portal_link_label": "Portal Link:",
+                    "dns_link_label": "DNS Link:",
+                    "samsung_lg_dns_label": "Samsung/LG DNS Link:",
+                    "mac_address_label": "MAC Address:",
+                    "template_label": "Template:",
+                    "connections_label": "Connections:",
+                    "adult_label": "Adult:",
+                    "vpn_label": "VPN Protection:",
+                    "country_label": "Country:",
+                    "whatsapp_telegram_label": "WhatsApp/Telegram:",
+                    "paid_label": "Paid:",
+                    "note_label": "Additional Note:",
+                    "expires_at_label": "Expires At:",
+                    "created_at_label": "Created At:",
+                    "yes": "Yes ✅",
+                    "no": "No ❌",
+                    "paid_yes": "Yes 💸",
+                    "paid_no": "Not Paid ⏳",
+                    "country_all": "All Countries",
+                    "payment_title": "💳 Payment:",
+                    "payment_none": "No payments yet.",
+                    "payment_status_label": "Status:",
+                    "payment_invoice_label": "Inv:",
+                    "payment_amount_label": "Amount:",
+                    "payment_created_label": "Paid At:"
+                }
+            }
+        },
+        "buyNow": {
+            "loginRequiredTitle": "Login required",
+            "creatingInvoice": "Creating secure BTC invoice...",
+            "invoiceReady": "Your secure BTC invoice is ready.",
+            "widgetError": "Could not load payment widget.",
+            "initError": "Could not initialize payment. Please refresh.",
+            "paymentComplete": "✅ Payment complete! Your subscription will now be created and admin will activate it as soon as possible.",
+            "title": "Buy {package} Subscription",
+            "price": "Only ${price}",
+            "iframeTitle": "Buy {package} - Crypto Payment",
+            "widgetFallback": "Can't load widget",
+            "loadingWidget": "Loading BTC payment widget...",
+            "note": "Note:",
+            "policy": "The total amount you will pay includes both your subscription price and all required Bitcoin network fees.",
+            "network": "Crypto payments may sometimes take several minutes to be confirmed, depending on network congestion.",
+            "patienceTitle": "Patience is key!",
+            "patienceText": "This window will automatically update when your payment is received.",
+            "important": "Important:",
+            "doNotClose": "Please do not close or navigate away from this page while your payment is processing.",
+            "instructions": "Instructions are below!",
+            "loginRequiredText": "Sign in or create an account to continue with the payment.",
+            "loginButton": "Login",
+            "registerButton": "Register",
+            "loadingSession": "Checking login status..."
+        },
+        "packages": {
+            "main": {
+                "title": "Choose Your Royal TV Plan 👑",
+                "subtitle": "Pick a package that fits you best. You can add Adult and VPN in the package selector."
+            },
+            "guide": {
+                "title": "How to Get Started with Royal TV 🚀",
+                "steps": {
+                    "register": {
+                        "title": "Register for a Royal TV account",
+                        "detail": "Quick, secure, and including a FREE 1-day trial!"
+                    },
+                    "request_trial": {
+                        "title": "Request your free trial",
+                        "detail": "Log in to your dashboard and click \"Request My Free Trial\"."
+                    },
+                    "already_had": {
+                        "title": "Already had your free trial?",
+                        "detail": "Go straight to choosing and purchasing your favorite subscription package!"
+                    },
+                    "pay_btc": {
+                        "title": "Pay with Bitcoin",
+                        "detail": "Use our secure payment widget (on the Buy Now page, fully encrypted)."
+                    },
+                    "instant_activation": "INSTANT ACTIVATION of your subscription.",
+                    "setup": {
+                        "title": "Set up your IPTV app",
+                        "detail": "Open your player, add a playlist, and enter the credentials & URL we provide. Then start streaming!"
+                    },
+                    "done": "Done! Enjoy unlimited channels and premium content with Royal TV. 🎬"
+                },
+                "apps": {
+                    "title": "Best IPTV Apps for Every Device 📲📺💻",
+                    "android": {
+                        "title": "Android Apps 🤖",
+                        "maxplayer": "MaxPlayer (Top pick!)",
+                        "tivimate": "TiviMate (Android, Firestick, Android TV)",
+                        "smarters": "Smarters Player Lite (iOS, Android, Windows, Mac)",
+                        "any_app": "Royal TV works with most IPTV apps—stream your way!"
+                    },
+                    "smarttv": {
+                        "title": "Smart TV Apps 📺",
+                        "maxplayer": "MaxPlayer (Top pick!)",
+                        "smarters": "IPTV Smarters Player",
+                        "any_app": "Browse your TV’s app store—Royal TV supports most Smart TV apps!"
+                    },
+                    "cross": {
+                        "title": "Cross-Platform Apps 🌐",
+                        "maxplayer": "MaxPlayer (All devices)",
+                        "smarters": "IPTV Smarters Player (iOS, Android, Windows, Mac, Smart TV)",
+                        "any_app": "Many more apps available—Royal TV can stream anywhere!"
+                    }
+                }
+            },
+            "grid": {
+                "single_device": "Single Device",
+                "two_devices": "2 Devices",
+                "only": "ONLY",
+                "usd": "USD",
+                "feature_full_hd": "Full HD Channels",
+                "feature_premium": "Premium Movies & Sports",
+                "feature_20000": "20,000 channels from all over the world",
+                "feature_icelandic": "All Icelandic Channels Included!",
+                "feature_vpn_addon": "VPN on your connection for extra $10",
+                "feature_adult_addon": "Adult content for extra $10",
+                "watch_two_devices": "Watch on 2 devices at once",
+                "adult_addon_label": "Adult content (+$10)",
+                "adult_addon_details": "Unlocks 200+ Adult Live Channels and unlimited adult movies.",
+                "vpn_addon_label": "VPN protection (+$10)",
+                "buy_now": "Buy Now",
+                "register_to_buy": "Register to Buy",
+                "more_info": "More Info",
+                "watch_single_device": "Stream on 1 device at a time",
+                "not_found_title": "Package not found !",
+                "not_found_desc": "The selected package was not found. Please go back",
+                "back_to_packages": "Back to Packages"
+            },
+            "products": {
+                "6m": { "order_description": "6 Months", "duration": "6 Months (60$)" },
+                "6m_extra": {
+                    "order_description": "6 Months + Extra Device",
+                    "duration": "6 Months + Extra Device (100$)"
+                },
+                "12m": { "order_description": "1 Year (Most Popular)", "duration": "1 Year (Most Popular) (100$)" },
+                "12m_extra": {
+                    "order_description": "1 Year + Extra Device",
+                    "duration": "1 Year + Extra Device (160$)"
+                },
+                "24m": { "order_description": "2 Years", "duration": "2 Years (160$)" },
+                "24m_extra": {
+                    "order_description": "2 Years + Extra Device",
+                    "duration": "2 Years + Extra Device (240$)"
+                }
+            }
+        },
+        "payments": {
+            "instructions": {
+                "title": "How to Pay with Bitcoin",
+                "steps": {
+                    "open_wallet": "Open your Bitcoin wallet (phone or computer).",
+                    "tap_send": "Tap \"Send\" or \"Transfer\".",
+                    "copy_paste": "Copy & paste the address and the exact Bitcoin amount shown below.",
+                    "double_check": "Double-check all info, then tap Send."
+                },
+                "wait_here": "Please stay on this page and don’t close it until payment is 100% complete.",
+                "youll_get_confirmation": "You’ll get a confirmation notification and email as soon as payment is completed.",
+                "done": "DONE!",
+                "activated_when_complete": "Your subscription is activated as soon as the payment completes fully.",
+                "qr_tip": "Tip: You can also scan the QR code below with your wallet app—this fills in everything automatically!",
+                "beginner_title": "New to Bitcoin?",
+                "link_coinbase": "How to send Bitcoin (Coinbase Guide)",
+                "link_bitcoincom": "Step-by-step: How to send Bitcoin (bitcoin.com)",
+                "link_wasabi": "Download Wasabi Wallet (privacy-focused desktop wallet)",
+                "link_atomic": "Download Atomic Wallet (multi-crypto desktop/mobile)",
+                "link_trust": "Download Trust Wallet (easy mobile wallet)",
+                "need_help": "Need help? Message support in your dashboard anytime!"
+            },
+            "status": {
+                "waiting": {
+                    "title": "Waiting for payment to start...",
+                    "desc": "Scan the QR code or copy the address to send your Bitcoin payment. Remember to send the exact amount shown next to the QR code.",
+                    "label": "Waiting"
+                },
+                "pending": {
+                    "title": "Payment pending...",
+                    "desc": "Your payment is being processed. You don’t need to do anything — this usually only takes a short time.",
+                    "label": "Pending"
+                },
+                "sending": { "title": "Payment has been sent from your wallet...", "label": "Sending" },
+                "confirming": {
+                    "title": "Payment is confirming...",
+                    "desc": "It has been received and is waiting for enough confirmations. This usually takes a few minutes.",
+                    "label": "Confirming"
+                },
+                "completed": {
+                    "title": "Payment confirmed / completed",
+                    "desc": "Your subscription has been created and is now active. Welcome to Royal TV!",
+                    "label": "Completed"
+                },
+                "failed": {
+                    "title": "Payment failed or expired.",
+                    "desc": "If you see “expired” or “failed”, please wait for the next confirmation attempt. This can take up to 1 hour and retries automatically.",
+                    "label": "Failed"
+                },
+                "unknown": "Unknown status"
+            }
+        },
+        "signin": {
+            "title": "Sign In",
+            "signupWelcomeMessage": "Welcome, {username}! Please enter your password to finish registration.",
+            "fillBothFields": "Please fill in both username and password.",
+            "loggingIn": "Logging in...",
+            "loginSuccess": "Login successful! Redirecting...",
+            "wrongCredentials": "Wrong username or password",
+            "loginError": "Login error: {error}",
+            "usernamePlaceholder": "Enter your username",
+            "passwordPlaceholder": "Enter your password",
+            "rememberMe": "Remember me",
+            "submitButton": "Sign In",
+            "noAccountPrompt": "Don’t have an account?",
+            "signUpLink": "Sign up"
+        },
+        "signup": {
+            "title": "Create Your Account And Get Your Free Trial",
+            "labels": {
+                "name": "Name",
+                "username": "Username",
+                "email": "Email",
+                "whatsapp": "WhatsApp",
+                "telegram": "Telegram",
+                "preferredContact": "Contact",
+                "password": "Password",
+                "confirmPassword": "Confirm Password",
+                "receiveEmails": "Receive e-mails ?"
+            },
+            "placeholders": {
+                "fullName": "Full Name",
+                "username": "Username",
+                "email": "Email Address",
+                "whatsapp": "WhatsApp (optional)",
+                "telegram": "Telegram (optional)",
+                "preferredContact": "Preferred Contact Way",
+                "password": "Password",
+                "confirmPassword": "Confirm Password"
+            },
+            "contact": {
+                "email": "Email",
+                "whatsapp": "WhatsApp",
+                "telegram": "Telegram",
+                "website": "From the Website"
+            },
+            "selectPreferred": "Please select your preferred contact method.",
+            "passwordsDontMatch": "Passwords do not match.",
+            "creatingAccount": "Creating your account...",
+            "accountCreated": "Account created successfully! Check your email.",
+            "failedCreate": "Failed to create account",
+            "submitButton": "Sign Up",
+            "haveAccountPrompt": "Already have an account?",
+            "signInLink": "Sign in"
+        },
+        "middlePage": {
+            "messages": {
+                "welcome": "Welcome {name}! Redirecting…",
+                "logoutSuccess": "Logout successful. Redirecting to Home…",
+                "profileUpdated": "Profile updated successfully! Redirecting…",
+                "passwordUpdated": "Profile Password updated successfully! Redirecting…",
+                "paymentComplete": "✅ Payment complete! Your subscription is being created and pending admin approval.",
+                "accessDenied": "Access denied for this section.",
+                "accessDeniedLogin": "Access denied! Redirecting to login…",
+                "notAuthorized": "You are not authorized! Redirecting to login…",
+                "badCredentials": "Incorrect username or password.",
+                "unexpectedError": "Unexpected error. Please try again.",
+                "pageMissing": "Page does not exist. Redirecting to Home…"
+            }
+        }
+    },
+    "socket": {
+        "connected": "Connected",
+        "disconnected": "Disconnected",
+        "reconnecting": "Trying to reconnect…",
+        "connect_error": "Unable to connect to the server.",
+        "timeout": "Socket connection timed out.",
+        "ui": {
+            "common": {
+                "refresh": "Refresh",
+                "refreshing": "Refreshing…",
+                "edit": "Edit",
+                "delete": "Delete",
+                "someone": "Someone is writing"
+            },
+            "chat": {
+                "subject_label": "Subject:",
+                "online_count_label": "Online: {count}",
+                "unread_count_label": "Unread: {count}",
+                "edited": "(edited)",
+                "input_placeholder": "Type a message…",
+                "send": "Send",
+                "refreshed": "Messages refreshed"
+            },
+            "logPageView": {
+                "description": "Visited \"{                        page                        }\" page"
+            },
+            "online_users": { "title": "Online Users" },
+            "roles": { "admin": "admin", "user": "user", "guest": "guest" },
+            "refresh_messages": { "button_title": "Refresh messages", "button_text": "🔃 Refresh Messages" },
+            "see_all_notifications": {
+                "title": "All Notifications",
+                "no_notifications": "No notifications yet.",
+                "delete_title": "Delete Notification",
+                "delete_description": "Are you sure you want to delete this notification? This cannot be undone.",
+                "delete_all_title": "Delete ALL Notifications",
+                "delete_all_description": "Are you sure you want to permanently delete ALL notifications? This cannot be undone!",
+                "delete_button": "Delete",
+                "cancel_button": "Cancel",
+                "delete_all_button": "Delete All",
+                "open_content": "Open Content",
+                "delete_notification": "Delete notification",
+                "danger_zone": "Danger Zone",
+                "clear_all_notifications": "Clear All Notifications"
+            },
+            "liveChatRoom": { "default_subject": "Live Chat" },
+            "notifications": {
+                "title": "Notifications",
+                "empty": "No notifications yet.",
+                "empty_more": "No additional notifications.",
+                "see_more": "See More",
+                "see_less": "See Less",
+                "see_all": "See All Notifications",
+                "total": "Total Notifications: {count}",
+                "showing_range": "Showing {start}–{end} of {total} notifications",
+                "type_label": "Type",
+                "danger_zone": "Danger Zone",
+                "actions": { "delete": "Delete", "open": "Open Content", "clear_all": "Clear All Notifications" },
+                "liveChatRoom": { "default_subject": "Live Chat" },
+                "modals": {
+                    "common": { "cancel": "Cancel" },
+                    "delete": {
+                        "title": "Delete Notification",
+                        "description": "Are you sure you want to delete this notification? This cannot be undone.",
+                        "confirm": "Delete"
+                    },
+                    "clear_all": {
+                        "title": "Delete ALL Notifications",
+                        "description": "Are you sure you want to permanently delete ALL notifications? This cannot be undone!",
+                        "confirm": "Delete All"
+                    }
+                },
+                "user": {
+                    "newUserRegistration": {
+                        "title": "🎉 Welcome to Royal IPTV!",
+                        "body": "Hello {name}, and thank you for joining Royal IPTV! 🎊\nYour account ({email}) was created on {createdAt}.\n• Username: {username}\n• Preferred contact: {preferredContactWay}\n• Email notifications enabled: {sendEmails}\n👉 Request your free trial by clicking the request free trial button!\nNeed help? Contact us on WhatsApp or use Live Chat for support!"
+                    },
+                    "freeTrial": {
+                        "created": {
+                            "title": "🎁 Free trial created!",
+                            "body": "Hi {name}!\n\nYour free trial will automatically be activated on your first official login.\n• Package: {package_name}\n• Expires exactly 1 day after your first login.\n\n🎬 Use your credentials in your IPTV app to enjoy your free trial right away!\n• You can find your credentials by clicking Open in this notification.\nNeed help? Contact us on WhatsApp or use Live Chat for support!"
+                        }
+                    },
+                    "subscription": {
+                        "created": {
+                            "title": "📺 Subscription created!",
+                            "body": "Hi {name}!\n\nYour subscription was created on {createdAt}.\n• Package: {package_name}\n• Order: {order_description}\n• Expires: {expiring_at}\n🚀 Use your credentials to add a new playlist in your IPTV app and start watching immediately!\nNeed help? Contact us on WhatsApp or use Live Chat for support!"
+                        }
+                    },
+                    "payment": {
+                        "title": "💳 Payment received!",
+                        "body": "Thank you! Your payment for order #{order_id} has been received.\n\n• Amount Paid: {amount_paid} {price_currency}\n• Invoice ID: {invoice_id}\n• Received: {received_at}\n• Status: {status}\nNeed help? Contact us on WhatsApp or use Live Chat for support!"
+                    },
+                    "liveChatMessage": {
+                        "title": "💬 New Live Chat message!",
+                        "body": "You have a new message from Royal TV support on {createdAt}.\nSubject: {subject}\nMessage: {message}\nNeed help? Contact us on WhatsApp or use Live Chat for support!"
+                    },
+                    "error": {
+                        "title": "⚠️ System error!",
+                        "body": "• Error Title: {errorTitle}\n• Error Message: {errorMessage}\n• Details: {errorDetails}"
+                    }
+                },
+                "admin": {
+                    "newUserRegistration": {
+                        "title": "👤 New user registration",
+                        "body": "A new user just signed up:\n\n• Name: {name}\n• Email: {email}\n• Username: {username}\n• User ID: {user_id}\n• Registered: {createdAt}\n• Preferred contact: {preferredContactWay}\n• WhatsApp: {whatsapp}\n• Telegram: {telegram}\n👉 Click Open to review the user profile and settings."
+                    },
+                    "freeTrial": {
+                        "created": {
+                            "title": "🎁 Free trial created",
+                            "body": "A free trial was created and activated:\n\n• Name: {name}\n• Email: {email}\n• Username: {username}\n• User ID: {user_id}\n• Trial ID: {trial_id}\n• Package: {package_name}\n• Adult Channels: {adult}\n👉 Open to view full details."
+                        }
+                    },
+                    "subscription": {
+                        "created": {
+                            "title": "📺 Subscription created",
+                            "body": "A new subscription was created and activated:\n\n• Name: {name}\n• Email: {email}\n• Username: {username}\n• User ID: {user_id}\n• Subscription ID: {subscription_id}\n• Order ID: {order_id}\n• Package: {package_name}\n• Expires: {expiring_at}\n• Devices Allowed: {max_connections}\n• Adult Channels: {adult}\n• VPN: {enable_vpn}\n👉 Open to review or modify access."
+                        }
+                    },
+                    "payment": {
+                        "title": "💳 Payment received",
+                        "body": "A payment was received:\n\n• Name: {name}\n• Email: {email}\n• Username: {username}\n• User ID: {user_id}\n• Amount Paid (Fiat): {amount_paid} {price_currency}\n• Amount Received (Crypto): {actually_paid} {pay_currency}\n• Currency: {pay_currency}\n• Network: {network}\n• Payment address: {pay_address}\n• Invoice: {invoice_id}\n• Payment ID: {payment_id}\n• Received at: {received_at}\n• Subscription ID: {subscription_id}\n• Order ID: {order_id}\n• Status: {status}\n\n👉 Click Open to confirm and activate if needed."
+                    },
+                    "liveChatMessage": {
+                        "title": "💬 New Live Chat message",
+                        "body": "You have a new message from {name} on {createdAt}.\nSubject: {subject}\nMessage: {message}\n👉 Click Open to reply."
+                    },
+                    "error": {
+                        "title": "⚠️ System error",
+                        "body": "An error occurred!\n• user_id: {user_id}\n• User Name: {name}\n• Error Title: {errorTitle}\n• Error Message: {errorMessage}\n• Details: {errorDetails}"
+                    }
+                }
+            },
+            "typing": { "you": "You are typing…", "other": "{name} is writing…" },
+            "subscriptions": {
+                "loading": "Loading subscriptions…",
+                "have_one": "You have a subscription!",
+                "status_label": "Status:",
+                "status": {
+                    "active": "ACTIVE",
+                    "pending": "PENDING",
+                    "expired": "EXPIRED",
+                    "disabled": "DISABLED",
+                    "unknown": "UNKNOWN"
+                },
+                "view_yours": "View Your Subscription",
+                "buy_additional": "Purchase Additional Subscription",
+                "none_title": "No Subscription Found",
+                "none_blurb": "Purchase a subscription to start enjoying all premium features !",
+                "select_package": "-- Select a subscription package --",
+                "buy_now": "Buy This Subscription",
+                "select_first": "Choose a package first",
+                "checkout_failed": "Checkout failed"
+            },
+            "freeTrialPanel": {
+                "your_free_trial_is": "Your Free Trial is",
+                "active_caps": "ACTIVE",
+                "click_to_view_credentials": "Click here to see your login credentials!",
+                "your_free_trial_has": "Your Free Trial has",
+                "expired_caps": "EXPIRED",
+                "or_is_unavailable": "or is unavailable.",
+                "request_btn": "Request Free Trial"
+            },
+            "isAdminOnline": {
+                "admin_info": "Admin Info",
+                "is_admin_online_label": "Is Admin Online:",
+                "online": "Online",
+                "offline": "Offline",
+                "no_admin_online": "No admin currently online.",
+                "online_admin": "Online Admin:",
+                "online_admins": "Online Admins:",
+                "admin_support": "Admin Support"
+            }
+        },
+        "hooks": { "useRefreshNotifications": { "all_notifications_refreshed": "🔄 All notifications refreshed!" }}
+    },
+    "components": {
+        "countdown": {
+            "seconds_remaining_singular": "{seconds} second remaining…",
+            "seconds_remaining_plural": "{seconds} seconds remaining…"
+        },
+        "countdownBanner": { "default_thank_you": "Thank you!" },
+        "countdownRedirect": {
+            "redirecting_in_singular": "Redirecting in {seconds} second…",
+            "redirecting_in_plural": "Redirecting in {seconds} seconds…"
+        },
+        "ringLoader": { "loading_tooltip": "Loading" },
+        "showMessages": { "toast_title": "Notification" },
+        "whatsAppBS": { "open_whatsapp": "Open WhatsApp", "chat_with_us": "Chat with us on WhatsApp" },
+        "common": { "cancel": "Cancel" },
+        "freeTrialButton": {
+            "confirm_title": "Confirm Free Trial Request",
+            "confirm_description": "Are you sure you want to request your free trial? You can only get one per account. You will be notified as soon as it is ready! 🎉",
+            "confirm_yes": "Yes, request my free trial!",
+            "loader_requesting": "Requesting your free trial…",
+            "success_requested": "✅ Free trial requested! You can start watching right now!",
+            "error_generic": "Trial request failed. Try again later.",
+            "loading_label": "Requesting…",
+            "button_label": "Request Free Trial"
+        },
+        "pagination": {
+            "aria_pagination": "Pagination navigation",
+            "previous": "Previous page",
+            "next": "Next page",
+            "aria_go_to_page": "Go to page {page}"
+        },
+        "refreshCountdownTimer": {
+            "auto_refresh_in": "auto‑refresh in",
+            "refresh_now": "Refresh Now",
+            "pause": "Pause",
+            "resume": "Resume",
+            "paused": "paused"
+        },
+        "reusableTable": { "actions": "Actions" },
+        "sampleReusableTable": {
+            "user_list": "User List",
+            "name": "Name",
+            "email": "Email",
+            "view": "View",
+            "loader_loading_users": "Loading users...",
+            "error_could_not_load": "Could not load users."
+        },
+        "sortDropdown": { "sort_label": "Sort:", "sort_aria": "Sort order selector" },
+        "useConversationsList": {
+            "loader_fetching": "Fetching Data...",
+            "loader_refreshing": "Refreshing...",
+            "success_loaded": "Data loaded ✔️",
+            "error_failed_load": "Failed to load data ❌"
+        },
+        "conversationActionButton": {
+            "validation_subject_message_required": "Subject and message cannot be empty",
+            "loader_creating": "Creating conversation...",
+            "error_timeout": "Timeout: Could not create conversation",
+            "error_missing_user_for_notification": "Notification error: missing user information",
+            "success_created": "Conversation created!",
+            "error_generic_create": "Error: Could not create conversation",
+            "loader_deleting_one": "Deleting conversation…",
+            "success_deleted_one": "Conversation deleted",
+            "error_delete_failed": "Delete failed",
+            "loader_deleting_all": "Deleting all conversations…",
+            "success_deleted_all": "All conversations deleted",
+            "error_delete_all_failed": "Delete all failed",
+            "btn_start_new": "Start New Conversation",
+            "btn_delete_one": "Delete Conv.",
+            "btn_delete_all": "Delete All Conv.",
+            "modal_create_title": "Start New Conversation",
+            "modal_create_description": "Enter subject and your message below:",
+            "modal_create_confirm": "Create Conversation",
+            "placeholder_subject": "Enter subject",
+            "placeholder_message": "Type your message here...",
+            "modal_delete_title": "Delete Conversation",
+            "modal_delete_description": "This will permanently delete the conversation and all messages within it.",
+            "modal_delete_confirm": "Delete",
+            "modal_delete_all_title": "Delete ALL Conversations for User",
+            "modal_delete_all_description": "This will permanently delete ALL conversations and messages for this user.",
+            "modal_delete_all_confirm": "Delete All",
+            "modal_cancel": "Cancel"
+        }
+    }
+}

@@ -1,0 +1,532 @@
+{
+  "generatedAtISO": "2025-08-15T12:11:59.453Z",
+  "totalFilesChanged": 52,
+  "totalReplacementsPerformed": 55,
+  "changes": [
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\app\\[locale]\\auth\\middlePage\\page.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\app\\[locale]\\auth\\signin\\page.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\app\\[locale]\\auth\\signup\\page.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\app\\[locale]\\packages\\data\\guide.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\app\\[locale]\\packages\\data\\packages.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\app\\[locale]\\packages\\data\\PaymentInstructions.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\app\\[locale]\\packages\\data\\statusBadge.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\app\\[locale]\\page.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\app\\[locale]\\user\\dashboard\\page.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\app\\[locale]\\user\\freeTrials\\page.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\app\\[locale]\\user\\liveChat\\main\\page.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\app\\[locale]\\user\\liveChat\\[conversation_id]\\page.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\app\\[locale]\\user\\profile\\page.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\Footer.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\ConversationActionButton.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\DashboardActionButton.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\FreeTrialButton.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\Pagination.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\RefreshCountdownTimer-2.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\RefreshCountdownTimer.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\reusableTable.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\sampleReusableTable.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\socket\\FreeTrialPanel.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\socket\\IsAdminOnline.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\socket\\LiveChatRoom.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\socket\\LogPageView.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\socket\\NotificationCenter.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\socket\\OnlineUsers.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\socket\\RefreshFreeTrialsButton.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\socket\\RefreshMessages.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\socket\\RefreshNotifications.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\socket\\SeeAllNotifications.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\socket\\TypingIndicator.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\socket\\UserSubscriptionPanel.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\SortDropdown.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\reusableUI\\useConversationsList.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\Sidebar.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\ui\\countdown\\Countdown.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\ui\\countdown\\countdownBanner.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\ui\\countdown\\CountdownRedirect.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\ui\\Loader\\RingLoader.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\ui\\showErrorAndMessages\\ShowMessages.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\components\\ui\\whatsapp\\WhatsAppBS.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\constants\\adminNotificationTemplates copy.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\constants\\notificationSystem copy.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\constants\\userNotificationTemplates copy.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\context\\LoaderContext.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\context\\ModalContext.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\hooks\\socket\\useRefreshNotifications.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\hooks\\useAppRedirectHandlers.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\hooks\\useAuthGuard.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "file": "C:\\Hnodri Stuff\\GitHub_Repositories\\My_Repositories\\royal-tv\\src\\replace-imports.js",
+      "changes": [
+        {
+          "target": "@/lib/i18n/storage/client",
+          "replacement": "@/lib/i18n/client",
+          "count": 2
+        },
+        {
+          "target": "@/lib/i18n/storage/server",
+          "replacement": "@/lib/i18n/server",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

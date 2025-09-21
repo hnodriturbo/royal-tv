@@ -1,286 +1,100 @@
-# Universal .gitignore File
+# ──────────────────────────────────────────────────────────────────────────────
+# Repo layout
+# - App lives in /website
+# - Docs live in /docs-vefhonnun
+# - Build artifacts and local env files are ignored
+# ──────────────────────────────────────────────────────────────────────────────
 
+# App build artifacts
+website/node_modules/
+website/.next/
+website/.vscode/
+website/out/
+website/dist/
+website/coverage/
 
-# My Own Added .gitignore files
-Production/
+# Optional per-env local files (never commit secrets)
+website/.env
+website/.env.local
+website/.env.production
+website/.env.development
+# If you keep envs at repo root instead, uncomment below:
+#.env
+#.env.local
+#.env.production
 
-####################################################################################################
+# Prisma (optional: if you ever generate SQLite locally)
+website/prisma/*.db
+website/prisma/*.sqlite
+website/prisma/*.sqlite-journal
 
-# All Other Files to be Ignored
+# Production assets (decide if code or infra)
+# If these are runtime assets the app needs at runtime:
+#   move them under website/Production/ and keep tracked as needed.
+# If they are deploy-only or machine local, ignore them:
+website/Production/
 
-# Node modules
-node_modules/
-
-# Virtual environment
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-*.json
-*.lock
+# Logs & temp
 *.log
-
-# Package Managers and Dependency Files
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-Pipfile.lock
-
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# C extensions
-*.so
-
-# Additional folders
-Other_Stuff/
-Bootstrap_independent/
-
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# PyInstaller
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-/docs/_build/
-
-# PyBuilder
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# pipenv
-# Pipfile.lock
-
-# PEP 582
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# System files
-.DS_Store
-Thumbs.db
-
-# IDE / Editor settings
-.vscode/
-.idea/
-*.sublime-project
-*.sublime-workspace
-*.code-workspace
-
-# Log files
-*.log
-*.log.*
-
-# Binary files
-*.exe
-*.dll
-*.out
-*.obj
-*.app
-*.ipa
-*.apk
-
-# Temporary files
+*.log-*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
 *.tmp
-*.swp
 *.temp
 *.cache
+.cache/
+.tmp/
 
-# macOS specific
+# OS junk
 .DS_Store
-.AppleDouble
-.LSOverride
-
-# Windows specific
 Thumbs.db
 Desktop.ini
-$RECYCLE.BIN/
 
-# Backup files
-*.bak
-*.orig
-*.save
-
-# Compression files
-*.zip
-*.tar
-*.tar.gz
-*.rar
-*.7z
-
-# Miscellaneous
-*.key
-*.pem
-*.crt
-
-# Frontend build files
-public/build/
-.next/
-.nuxt/
-
-# Generated static assets
-out/
-
-# Environment Secrets
-.env.*
-.secret
-secrets.yml
-
-# Java-related
-*.class
-*.jar
-*.war
-*.ear
-
-# Go
-*.exe
-*.test
-/vendor/
-
-# Rust
-/target/
-*.rs.bk
-
-# C/C++
-*.dSYM/
-*.o
-*.obj
-*.a
-*.lo
-*.la
-*.ll
-*.s
-*.swp
-CMakeFiles/
-CTestTestfile.cmake
-
-# PHP
-/vendor/
-
-# Ruby
-*.gem
-/log/
-/tmp/
-
-# Android
-.gradle/
-/local.properties
-.idea/workspace.xml
-.idea/libraries
-/.cxx/
-
-# iOS
-*.xcodeproj/
-*.xcworkspace/
-Pods/
-
-# Database files
-*.sqlite3
-*.db
-
-# Logs
-*.log
-*.log.*
-*.log-*
-
-# Coverage directory used by tools like istanbul
-coverage/
-
-# VS Code
-.vscode/*
+# Editors / IDE
+.vscode/
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Tooling / build caches
+.next/
+dist/
+out/
+coverage/
+.eslintcache
+
+# Node (root, in case you accidentally install here)
+node_modules/
+
+# Lockfiles — DO NOT IGNORE (keep them tracked for reproducible installs)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Misc archives/binaries
+*.zip
+*.tar
+*.tar.gz
+*.7z
+*.rar
+*.exe
+*.dll
+*.out
+*.obj
+
+# If you use GitHub Pages or static export (adjust as needed)
+# docs/ or site build output:
+docs/_build/
+
+# If you ever add Python tooling locally (safe ignores)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
