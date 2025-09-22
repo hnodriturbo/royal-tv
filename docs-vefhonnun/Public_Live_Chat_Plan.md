@@ -14,7 +14,7 @@ I update the two docs above as the **source of truth**.
 
 ## Status Checklist (Issues → Branches)
 - [x] **1) Scaffold Public Chat DB usage** — `feature/public-chat-db`
-- [ ] **2) Server: Public socket events** — `feature/public-socket-events`
+- [x] **2) Server: Public socket events** — `feature/public-socket-events`
 - [ ] **3) Client socket hub: add public_* wrappers** — `feature/public-socket-hub`
 - [ ] **4) Client hooks parity for public chat** — `feature/hooks-public-chat`
 - [ ] **5) Widget UI (bottom-left)** — `feature/public-chat-widget-ui`
@@ -35,7 +35,7 @@ I update the two docs above as the **source of truth**.
   - [x] Regenerate Prisma Client.
 
 - **2) Server: Public socket events** — `feature/public-socket-events`  
-  - [ ] Create `publicRoomEvents.js` and `publicMessageEvents.js`.  
+  - [x] Create `publicRoomEvents.js` and `publicMessageEvents.js`.  
   - [ ] Prefix all `public_*` events: create/join/leave/send/edit/delete/mark_read/refresh.  
   - [ ] Register them in Socket.IO bootstrap.
 

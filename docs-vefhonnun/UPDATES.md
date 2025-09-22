@@ -11,7 +11,11 @@
 ---
 
 ---
-
+## 22 sept 2025 - Monday
+- ⚡ Started step 2 by creating publicMessageEvents.js & publicRoomEvents
+- ⚙️ Fixed index.js (added pickValue helper so all guests get guest role and guest-id using the socket.id)
+- 🕗 I am working to finish coding the event files.  
+---
 ## 21 sept 2025 - Sunday
 - ✨ Edited the issues to the latest update of the Public_Live_Chat_Plan.md file.
 - 📌 Made a checkout of the master branch and tagged it with a version.
