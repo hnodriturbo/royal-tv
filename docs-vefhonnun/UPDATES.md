@@ -15,6 +15,13 @@
 - ⚡ Started step 2 by creating publicMessageEvents.js & publicRoomEvents
 - ⚙️ Fixed index.js (added pickValue helper so all guests get guest role and guest-id using the socket.id)
 - 🕗 I am working to finish coding the event files.  
+
+- **📚 Spent 4 hours today on the computer working.**
+- It takes a long time figuring out how to keep this system specially away from the main liveChat system.
+- A long time went into learning where to start and how to organize the event files making sure all fits.
+- Spent time working on reading all other codes related to the socket system.
+- Decided to add extra file later that handles connecting the client with cookies to socket.io so a conversation can be persisted between pages and even login and logout.
+
 ---
 ## 21 sept 2025 - Sunday
 - ✨ Edited the issues to the latest update of the Public_Live_Chat_Plan.md file.
@@ -27,6 +34,8 @@
 - ✅ Finished working on final version of the tables for PublicLiveChatConversation and PublicLiveChatMessage.
 
 - Starting step 2 **2) Server: Public socket events** — `feature/public-socket-events` 
+
+
 
 ---
 
