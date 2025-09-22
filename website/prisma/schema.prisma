@@ -211,6 +211,7 @@ model Log {
 model PublicLiveChatConversation {
   public_conversation_id String   @id @default(uuid()) @db.Uuid
   owner_id               String?  @db.Uuid
+  owner_guest_id         String?
   subject                String?
   read                   Boolean  @default(false)
   createdAt              DateTime @default(now())
@@ -221,6 +222,7 @@ model PublicLiveChatConversation {
 
   @@index([updatedAt])
   @@index([owner_id])
+  @@index([owner_guest_id])
 }
 
 model PublicLiveChatMessage {
