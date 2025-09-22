@@ -21,16 +21,25 @@ const connectionHandler = (io, socket, globalState) => {
   globalState.onlineUsers ||= {}; // 🌐 presence keyed by user_id
   globalState.activeUsersInLiveRoom ||= {}; // 💬 live chat participation map
 
+  // 🧰 Helper: treat nullish, "", "null", "undefined" as no value (short + clear)
+  const pickValue = (value) => {
+    if (value == null || value === '' || value === 'null' || value === 'undefined') {
+      return null;
+    } else {
+      return value;
+    }
+  };
+
   // 📥 handshake sources
   const query = socket.handshake?.query || {};
   /*   const auth = socket.handshake?.auth || {};
   const hdrs = socket.handshake?.headers || socket.request?.headers || {}; */
 
   // 🧱 Basic, readable defaults (no typeof noise)
-  const userId = (query.user_id && String(query.user_id).trim()) || `guest-${socket.id}`; // 🆔
-  const userRole = (query.role && String(query.role).trim()) || 'guest'; // 👤
-  const userName = (query.name && String(query.name).trim()) || userId; // 🏷️
-  const userLocale = (query.locale && String(query.locale).trim()) || 'en'; // 🌍 initial locale
+  const userId = pickValue(query.user_id) || `guest-${socket.id}`; // 🆔
+  const userRole = pickValue(query.role) || 'guest'; // 👤 User Role
+  const userName = pickValue(query.name) || userId; // 🏷️ User Name
+  const userLocale = pickValue(query.locale) || 'en'; // 🌍 initial locale
 
   // 📦 Canonical per-connection user data (the source of truth on the socket)
   socket.userData = {
