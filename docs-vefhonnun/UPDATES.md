@@ -9,6 +9,10 @@
 ## Structure layout is oldest at the bottom and latest at the top.
 
 ---
+## 23 sept 2025 - Tuesday
+- edited index.js for better flow of connection (added public_identity_id) and cookie persistancy for public live chat in middleware also and removed disconnection code from userEvents.js
+- edited index.js better so now it can filter tabs so if user has multiple tabs open the message isnt delivered to all tabs, only the one where the conversation started. (or is open).
+- Cannot do more today because of the surgery.
 
 ---
 ## 22 sept 2025 - Monday
