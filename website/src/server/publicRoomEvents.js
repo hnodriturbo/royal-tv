@@ -10,13 +10,15 @@
  *   • public_leave_room        { public_conversation_id: string }
  *
  * Outbound emits:
- *   • public_room_users_update { public_conversation_id, users }
+ *   • public_room_users_update
+ *       - LOBBY: { room_id, users }
+ *       - CONVERSATION: { public_conversation_id, users }
  *   • public_live_chat_room_created { public_conversation_id, owner_id }
  *   • public_live_chat_room_ready   { public_conversation_id }
  *
  * Notes:
- *   • Presence registry lives in globalState.activeUsersInPublicRoom (shared map).
- *   • Lobby presence lives in globalState.publicLobby (shared array).
+ *   • Presence registry lives in globalState.activeUsersInPublicRoom (shared room).
+ *   • Lobby presence lives in globalState.publicLobby (shared room array).
  *   • Per-user room already exists from the connection handler (join(user_id)).
  *   • Admin-online gating will be handled later in UI/hooks (not here).
  */
