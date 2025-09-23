@@ -109,19 +109,23 @@ const connectionHandler = (io, socket, globalState) => {
 
   // 🔌 Cleanup on disconnect (single handler — centralized) 🌬️
   socket.on('disconnect', (reason) => {
-    const { user_id } = socket.userData;
+    const isGuest = socket.userData.role === 'guest';
+    const currentKey = isGuest ? socket.userData.public_identity_id : socket.userData.user_id;
 
-    // 1) Remove global online presence
-    if (globalState.onlineUsers[user_id]) {
-      delete globalState.onlineUsers[user_id];
+    // 1️⃣  Remove global online presence
+    if (globalState.onlineUsers[socket.userData.user_id]) {
+      delete globalState.onlineUsers[socket.userData.user_id];
     }
+
     // 📡 Broadcast updated presence
     io.emit('online_users_update', Object.values(globalState.onlineUsers));
 
-    // 2) Remove from legacy live rooms
+    // 2️⃣  Remove from legacy live rooms
     for (const roomId of Object.keys(globalState.activeUsersInLiveRoom)) {
       const before = globalState.activeUsersInLiveRoom[roomId] || [];
-      const after = before.filter((u) => u.user_id !== user_id);
+      const after = before.filter((u) =>
+        isGuest ? u.public_identity_id !== currentKey : u.user_id !== currentKey
+      );
       if (after.length !== before.length) {
         globalState.activeUsersInLiveRoom[roomId] = after;
         io.to(roomId).emit('room_users_update', {
@@ -131,10 +135,12 @@ const connectionHandler = (io, socket, globalState) => {
       }
     }
 
-    // 3) Remove from public lobby
+    // 3️⃣  Remove from public lobby
     if (Array.isArray(globalState.publicLobby) && globalState.publicLobby.length) {
       const before = globalState.publicLobby;
-      const after = before.filter((u) => u.user_id !== user_id);
+      const after = before.filter((u) =>
+        isGuest ? u.public_identity_id !== currentKey : u.user_id !== currentKey
+      );
       if (after.length !== before.length) {
         globalState.publicLobby = after;
         io.to('public_live_chat_lobby').emit('public_room_users_update', {
@@ -144,10 +150,12 @@ const connectionHandler = (io, socket, globalState) => {
       }
     }
 
-    // 4) Remove from public conversation rooms + typing
+    // 4️⃣  Remove from public conversation rooms
     for (const convoId of Object.keys(globalState.activeUsersInPublicRoom)) {
       const before = globalState.activeUsersInPublicRoom[convoId] || [];
-      const after = before.filter((u) => u.user_id !== user_id);
+      const after = before.filter((u) =>
+        isGuest ? u.public_identity_id !== currentKey : u.user_id !== currentKey
+      );
       if (after.length !== before.length) {
         globalState.activeUsersInPublicRoom[convoId] = after;
         io.to(convoId).emit('public_room_users_update', {

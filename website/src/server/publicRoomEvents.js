@@ -23,7 +23,7 @@
  *   • Admin-online gating will be handled later in UI/hooks (not here).
  */
 
-import prisma from '@/lib/core/prisma.js'; // 📦 Prisma
+import prisma from '../lib/core/prisma.js'; // 📦 Prisma
 
 // 🧪 UUID verification
 const isUuid = (value) => typeof value === 'string' && /^[0-9a-fA-F-]{36}$/.test(value);
@@ -33,13 +33,13 @@ const PUBLIC_LOBBY_ROOM = 'public_live_chat_lobby';
 
 export default function registerPublicRoomEvents(io, socket, globalState) {
   /* --------------------------------------------------------------------------------------- */
-
-  // ✨ Create the rooms array
-  globalState.activeUsersInPublicRoom ||= {}; // 📚 { [public_conversation_id]: userData[] }
-  globalState.publicLobby ||= []; // 🏠 lobby presence list
-
-  // 🚀 Create the publicRooms array
-  const publicRooms = globalState.activeUsersInPublicRoom; // 🗺️ Per-conversation presence map
+  // 🗂️ Helper: ensure a room map exists (create the room map if it doesnt already exist)
+  const ensureRoomMap = (id) => {
+    if (!globalState.activeUersInPublicRoom[id]) {
+      globalState.activeUersInPublicRoom[id] = {};
+    }
+    return globalState.activeUersInPublicRoom[id];
+  };
 
   /* --------------------------------------------------------------------------------------- */
 
