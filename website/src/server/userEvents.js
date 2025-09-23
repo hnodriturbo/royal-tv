@@ -1,16 +1,18 @@
-// 👥 src/server/events/userEvents.js
 /**
- * registerUserEvents
- * ------------------
- * Tracks global online-users and cleans up on disconnect.
+ * ========== src/server/events/userEvents.js ==========
+ *
+ * 👥 User/presence helpers (NO disconnect binding here).
+ *
+ * 🧠 Purpose:
+ *  • Serve on-demand presence snapshots to the client
+ *
  */
-
 export default function registerUserEvents(io, socket, globalState) {
   // Client asks for full online list
   socket.on('request_online_users', () => {
     socket.emit('online_users_update', Object.values(globalState.onlineUsers));
   });
-
+  /* 
   // On disconnect, remove from all lists & broadcast
   socket.on('disconnect', () => {
     const { user_id, name } = socket.userData;
@@ -29,5 +31,6 @@ export default function registerUserEvents(io, socket, globalState) {
     }
 
     console.log(`❌ Disconnected: ${name}`);
-  });
+  }); 
+  */
 }
