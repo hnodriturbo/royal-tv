@@ -18,6 +18,7 @@
 // 🧷 Cookie names used across the app
 export const COOKIE_PUBLIC_ID = 'public_identity_id'; // 🪪 HttpOnly (set by Next middleware)
 export const COOKIE_LAST_ROOM = 'public_last_conversation_id'; // 🧷 non-HttpOnly (set by client)
+export const COOKIE_LOCALE = 'NEXT_LOCALE'; // 🌍 user/guest locale
 
 // 📡 Event names for client cookie writes
 export const EV_COOKIE_SET_LAST_ROOM = 'public_cookie:set_last_room';
@@ -51,15 +52,16 @@ function readCookie(cookieHeader, cookieName) {
     if (key === cookieName) {
       // 🧵 Try to decode percent-encoded values, fall back safely
       try {
-        console.log(`[SOCKET COOKIE] decoded raw cookie value: ${decodeURIComponent(rawValue)}`);
-        return decodeURIComponent(rawValue);
+        const decoded = decodeURIComponent(rawValue);
+        console.log(`[SOCKET COOKIE] readCookie(${cookieName}) →`, decoded);
+        return decoded;
       } catch {
+        console.log(`[SOCKET COOKIE] readCookie(${cookieName}) → raw`, rawValue);
         return rawValue;
       }
     }
   }
-
-  // ❌ Not foundS
+  // ❌ Not found
   return null;
 }
 
@@ -70,21 +72,64 @@ function readCookie(cookieHeader, cookieName) {
  */
 export default function createCookieUtils({ cookieHeader, socket }) {
   // 🔐 Keep local references
-  const rawHeader = cookieHeader || '';
-  const currentSocket = socket;
+  const rawCookieHeader = cookieHeader || '';
+  const currentSocketId = socket?.id || 'no-socket';
+  console.log(`[SOCKET COOKIE] createCookieUtils → socket:${currentSocketId}`);
 
   // 🔎 Read any cookie from the handshake header
-  const getCookie = (name) => readCookie(rawHeader, name);
+  const getCookie = (cookieName) => {
+    const value = readCookie(rawCookieHeader, cookieName);
+    console.log(`[SOCKET COOKIE] getCookie(${cookieName}) →`, value);
+    return value;
+  };
 
-  // 🪪 Resolve public identity (prefer query value if provided)
-  const getPublicIdentityId = (queryPublicId) =>
-    queryPublicId || getCookie(COOKIE_PUBLIC_ID) || null;
+  // 🪪 Resolve stable public identity (prefer query > HttpOnly cookie)
+  const getPublicIdentityId = (queryPublicIdentityId) => {
+    const queryValue = (queryPublicIdentityId || '').trim();
+    const cookieValue = getCookie(COOKIE_PUBLIC_ID);
+    const resolved = queryValue || cookieValue || null;
+    console.log(
+      `[SOCKET COOKIE] getPublicIdentityId → query:${queryValue || 'empty'} cookie:${cookieValue || 'empty'} resolved:${resolved || 'null'}`
+    );
+    return resolved;
+  };
 
-  // 🧷 Read last open room id (non-HttpOnly cookie, set on client)
-  const getLastPublicRoomId = () => getCookie(COOKIE_LAST_ROOM);
+  // 🧷 Read last open room id (non-HttpOnly, set by client)
+  const getLastPublicRoomId = () => {
+    const lastRoomId = getCookie(COOKIE_LAST_ROOM);
+    console.log(`[SOCKET COOKIE] getLastPublicRoomId →`, lastRoomId || 'null');
+    return lastRoomId;
+  };
 
+  // 🌍 Read locale or fallback
+  const getLocaleOrDefault = (defaultLocale = 'en') => {
+    const locale = getCookie(COOKIE_LOCALE) || defaultLocale;
+    console.log(`[SOCKET COOKIE] getLocaleOrDefault →`, locale);
+    return locale;
+  };
+
+  // 📝 Ask client to remember last room (client writes non-HttpOnly cookie)
+  const rememberLastRoom = (public_conversation_id, maxAgeDays = 14) => {
+    if (!socket) return;
+    console.log(
+      `[SOCKET COOKIE] rememberLastRoom → room:${public_conversation_id} maxAgeDays:${maxAgeDays}`
+    );
+    socket.emit(EV_COOKIE_SET_LAST_ROOM, {
+      cookieName: COOKIE_LAST_ROOM,
+      public_conversation_id,
+      maxAgeDays
+    });
+  };
+  // 🧽 Ask client to clear the last-room cookie
+  const forgetLastRoom = () => {
+    if (!socket) return;
+    console.log(`[SOCKET COOKIE] forgetLastRoom`);
+    socket.emit(EV_COOKIE_CLEAR_LAST_ROOM, {
+      cookieName: COOKIE_LAST_ROOM
+    });
+  };
   // 📝 Ask client to remember last room (client will set document.cookie)
-  const emitRememberLastRoom = (public_conversation_id, maxAgeDays = 14) => {
+  /*   const emitRememberLastRoom = (public_conversation_id, maxAgeDays = 14) => {
     if (!currentSocket) return;
     currentSocket.emit(EV_COOKIE_SET_LAST_ROOM, {
       cookieName: COOKIE_LAST_ROOM,
@@ -99,14 +144,15 @@ export default function createCookieUtils({ cookieHeader, socket }) {
     currentSocket.emit(EV_COOKIE_CLEAR_LAST_ROOM, {
       cookieName: COOKIE_LAST_ROOM
     });
-  };
+  }; */
 
-  // 📦 Return a tiny toolkit (human-readable names)
+  // 📦 Toolkit
   return {
-    getCookie, // 🔎 read any cookie from header
-    getPublicIdentityId, // 🪪 resolve stable identity
-    getLastPublicRoomId, // 🧷 read last open room id
-    emitRememberLastRoom, // 📝 request client to set cookie
-    emitForgetLastRoom // 🧽 request client to clear cookie
+    getCookie, // 🔎 read any cookie
+    getPublicIdentityId, // 🪪 stable identity
+    getLastPublicRoomId, // 🧷 last room
+    getLocaleOrDefault, // 🌍 locale or default
+    rememberLastRoom, // 📝 set last-room (client)
+    forgetLastRoom // 🧽 clear last-room (client)
   };
 }
