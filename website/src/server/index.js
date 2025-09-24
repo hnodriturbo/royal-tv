@@ -42,7 +42,7 @@ const pickValue = (value) => {
 };
 
 const connectionHandler = (io, socket, globalState) => {
-  // 🗺️ Ensure Room Existance (ALL ARRAYS)
+  // 🗺️ Ensure Room Existance
   globalState.onlineUsers ||= []; // 👥 list of user snapshots
   globalState.publicLobby ||= []; // 🏠 list of lobby snapshots
   globalState.activeUsersInPublicRoom ||= {}; // 💬 { [convoId]: userData[] }
@@ -68,7 +68,17 @@ const connectionHandler = (io, socket, globalState) => {
     socket_id: socket.id, // 🔗 connection id
     connectedAt: new Date().toISOString() // ⏰ timestamp
   };
-
+  console.log(
+    '[state shapes]',
+    'onlineUsers:',
+    Array.isArray(globalState.onlineUsers),
+    'publicLobby:',
+    Array.isArray(globalState.publicLobby),
+    'publicRooms:',
+    typeof globalState.activeUsersInPublicRoom,
+    'liveRooms:',
+    typeof globalState.activeUsersInLiveRoom
+  );
   // 🌍 Keep live locale here for notifications/emails
   socket.data.currentLocale = socket.userData.locale;
 
