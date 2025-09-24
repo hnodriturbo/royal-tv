@@ -200,7 +200,7 @@ const connectionHandler = (io, socket, globalState) => {
   }
   // 🌍 Presence broadcast (everyone) + seed this socket (nice for first paint)
   io.emit('online_users_update', globalState.onlineUsers); // 🌍 broadcast
-  socket.emit('online_user_update', globalState.onlineUsers); // 🎯 direct seed
+  socket.emit('online_users_update', globalState.onlineUsers); // 🎯 direct seed
 
   // ✅ Connection log
   console.log(`✅ Connected: ${name} (${role}) uid:${user_id} sid:${socket.id} lang:${locale}`);
