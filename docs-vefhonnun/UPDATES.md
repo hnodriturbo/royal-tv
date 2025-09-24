@@ -15,6 +15,7 @@
 - Finished organizing and coding manually publicRoomEvents.js (maybe edit's will be needed later but I think I managed to take everything into account).
 - Thinking behind the rooms of public live chat is that so I can on user/guest refresh reload the chat that was already open and also on redirection by using the data and cookie in middleware.
 - Starting working on the publicMessageEvents.js
+- started working on cookieEvents.js to make sure user/guest holds the same chat even on refresh/redirection
 ---
 ## 23 sept 2025 - Tuesday
 - edited index.js for better flow of connection (added public_identity_id) and cookie persistancy for public live chat in middleware also and removed disconnection code from userEvents.js
