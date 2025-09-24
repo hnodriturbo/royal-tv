@@ -30,6 +30,10 @@ import registerLocaleEvents from './localeEvents.js'; // 🌍 locale handshake +
 // 🆕 Public live chat (multi-room) modules
 import registerPublicRoomEvents from './publicRoomEvents.js';
 import registerPublicMessageEvents from './publicMessageEvents.js';
+
+// 🧁 Cookie helpers
+import createCookieUtils, { COOKIE_PUBLIC_ID } from './cookieEvents.js';
+
 /* 
 // 🧩 Helper: stable presence key (guest ⇒ cookie id, user ⇒ user_id)
 const presenceKeyFor = (userData) =>
@@ -42,11 +46,36 @@ const pickValue = (value) => {
 };
 
 const connectionHandler = (io, socket, globalState) => {
-  // 🗺️ Ensure Room Existance
+  // 🛡️ Make sure globalState is an object
+  globalState ||= {}; // 🧱
+
+  // 🗺️ Ensure Room Existance (2 arrays + 2 object-of-arrays)
   globalState.onlineUsers ||= []; // 👥 list of user snapshots
   globalState.publicLobby ||= []; // 🏠 list of lobby snapshots
   globalState.activeUsersInPublicRoom ||= {}; // 💬 { [convoId]: userData[] }
-  globalState.activeUsersInLiveRoom ||= {}; // 🎈 { [convoId]: userData[] } (roomEvents.js uses arrays)
+  globalState.activeUsersInLiveRoom ||= {}; // 🎈 { [convoId]: userData[] }
+
+  // 🧯 Safety: Make sure array's are array's and object are objects
+  if (!Array.isArray(globalState.onlineUsers)) globalState.onlineUsers = []; // 🚑
+  if (!Array.isArray(globalState.publicLobby)) globalState.publicLobby = []; // 🚑
+  if (
+    typeof globalState.activeUsersInPublicRoom !== 'object' ||
+    Array.isArray(globalState.activeUsersInPublicRoom)
+  ) {
+    globalState.activeUsersInPublicRoom = {}; // 🚑
+  }
+  if (
+    typeof globalState.activeUsersInLiveRoom !== 'object' ||
+    Array.isArray(globalState.activeUsersInLiveRoom)
+  ) {
+    globalState.activeUsersInLiveRoom = {}; // 🚑
+  }
+
+  // 🍪 Bind helpers to this socket
+  const cookieUtils = createCookieUtils({
+    cookieHeader: socket.handshake?.headers?.cookie || '',
+    socket
+  });
 
   // 📥 Read handshake query (client forwards cookie public_identity_id here) 📩
   const query = socket.handshake?.query || {};
@@ -68,24 +97,21 @@ const connectionHandler = (io, socket, globalState) => {
     socket_id: socket.id, // 🔗 connection id
     connectedAt: new Date().toISOString() // ⏰ timestamp
   };
-  console.log(
-    '[state shapes]',
-    'onlineUsers:',
-    Array.isArray(globalState.onlineUsers),
-    'publicLobby:',
-    Array.isArray(globalState.publicLobby),
-    'publicRooms:',
-    typeof globalState.activeUsersInPublicRoom,
-    'liveRooms:',
-    typeof globalState.activeUsersInLiveRoom
-  );
+
   // 🌍 Keep live locale here for notifications/emails
   socket.data.currentLocale = socket.userData.locale;
 
+  /*   // 🔑 Stable identity key (guest ⇒ public_identity_id, user ⇒ user_id)
+  const identityKey = (u) => (u.role === 'guest' ? u.public_identity_id : u.user_id); */
+
   // 👥 Online list (ARRAY): de-dupe by user_id, then add
   // 🧽 remove old entry for same user_id (multi-tab / reconnect safe)
-  globalState.onlineUsers = globalState.onlineUsers.filter((user) => user.user_id !== user_id); // 🧹
+  globalState.onlineUsers = globalState.onlineUsers.filter(
+    (user) => user.user_id !== socket.userData.user_id
+  );
   globalState.onlineUsers.push({ ...socket.userData });
+
+  console.log(`All Online users: ${globalState.onlineUsers}`);
 
   // 🛎️ Join per-user room for targeted emits
   socket.join(user_id);
