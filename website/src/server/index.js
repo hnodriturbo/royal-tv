@@ -1,53 +1,77 @@
 /**
  * ========== src/server/index.js ==========
- * 🔌 Socket.IO connection entrypoint (clear & minimal)
- * ---------------------------------------------------
- * 🧠 Purpose:
- *   • Attach a stable "public identity" to each socket (public_identity_id) 🪪
- *   • Keep current presence keyed by user_id (no breaking change) 🌐
- *   • Register all event modules and clean up on disconnect 🧹
- *   • Initialize ALL shared registries here (single source of truth) 🗺️
- * ---------------------------------------------------
- * 📦 Shape on socket.userData:
- *   { user_id, public_identity_id, role, name, locale, socket_id, connectedAt }
- * ---------------------------------------------------
- * 🧭 Lifecycle:
- *   1) Read handshake (user_id/role/name/locale/public_identity_id)
- *   2) Stamp socket.userData + socket.data.currentLocale
- *   3) Join per-user room (and 'admins' if admin)
- *   4) Register modules → emit presence
- *   5) Cleanup on disconnect
+ * 🔌 Socket.IO connection entrypoint (clear & minimal, beginner-friendly)
+ * -----------------------------------------------------------------------------
+ * 📦 What this file does (big picture):
+ *   • Read identity + locale from the socket handshake (query + cookies) 🍪
+ *   • Create a stable "public identity" for guests (public_identity_id) 🪪
+ *   • Keep a single presence snapshot per person (guest → cookie id, user → user_id) 👥
+ *   • Auto-reopen the last public room after refresh/redirect (cookie) 🔁
+ *   • Register all event modules for private & public live chat 🧩
+ *   • Clean up presence lists on disconnect 🧹
+ *
+ * 🧭 Connection lifecycle (step-by-step):
+ *   1) Guard globalState shapes (arrays vs object-of-arrays) 🛡️
+ *   2) Bind cookie helpers to this socket (reads HttpOnly & normal cookies) 🍪
+ *   3) Build socket.userData from query + cookies (human-friendly defaults) 👤
+ *   4) De-dupe presence by a stable identity key, then add fresh snapshot 👥
+ *   5) Join personal room (and 'admins' if admin) 🔔
+ *   6) Register all event modules (locale, users, rooms, messages…) 🧩
+ *   7) If a “last room” cookie exists → auto-join and notify room users 🔁
+ *   8) Emit the online users to everyone + seed this socket 🌍
+ *   9) On disconnect: remove from all presence lists + broadcast updates 🌬️
  */
 
+// ---------------------------------------------------------
+// 👇  Events Registration For The Handshake
+// ---------------------------------------------------------
+// 🌍 locale handshake + live updates
+import registerLocaleEvents from './localeEvents.js';
+
+// 💬 Live Chat Event Modules
 import registerMessageEvents from './messageEvents.js';
 import registerRoomEvents from './roomEvents.js';
+
+// 👥 User & Account Events Modules
 import registerUserEvents from './userEvents.js';
-import registerNotificationEvents from './notificationEvents.js';
 import registerAccountEvents from './accountEvents.js';
-import registerLogEvents from './logEvents.js'; // 🪵 activity logging
-import registerLocaleEvents from './localeEvents.js'; // 🌍 locale handshake + live updates
+
+// 🏷️ Notification & Activity Logging Events Modules
+import registerNotificationEvents from './notificationEvents.js';
+import registerLogEvents from './logEvents.js';
 
 // 🆕 Public live chat (multi-room) modules
 import registerPublicRoomEvents from './publicRoomEvents.js';
 import registerPublicMessageEvents from './publicMessageEvents.js';
 
 // 🧁 Cookie helpers
-import createCookieUtils, { COOKIE_PUBLIC_ID } from './cookieEvents.js';
+import createCookieUtils from './cookieEvents.js';
 
-/* 
-// 🧩 Helper: stable presence key (guest ⇒ cookie id, user ⇒ user_id)
-const presenceKeyFor = (userData) =>
-  userData.role === 'guest' ? userData.public_identity_id : userData.user_id;
- */
-// 🧰 Coerce empty-like values to null for easier defaults 🧼
+// ---------------------------------------------------------
+// 🧩 Small helpers (keep it beginner-friendly)
+// ----------------------------------------------------------
+// 🧰 Coerce empty-like values to null for easier defaults
 const pickValue = (value) => {
   if (value == null || value === '' || value === 'null' || value === 'undefined') return null;
   return value;
 };
 
+// 🔑 Stable presence key (guest ⇒ cookie public_identity_id, user/admin ⇒ user_id)
+const getPresenceIdentityKey = (snapshot) =>
+  snapshot?.role === 'guest' ? snapshot.public_identity_id : snapshot.user_id;
+
+// 📝 Pretty presence log (count + ids only)
+const logOnlineUsers = (label, list) => {
+  const ids = (list || []).map((user) => getPresenceIdentityKey(user));
+  console.log(`👥 ${label} → count:${ids.length} ids:${ids.join(', ') || '—'}`);
+};
+
+// ---------------------------------------------------------
+// 👇  Official Connection Handler
+// ---------------------------------------------------------
 const connectionHandler = (io, socket, globalState) => {
-  // 🛡️ Make sure globalState is an object
-  globalState ||= {}; // 🧱
+  // 🛡️ Make sure globalState exists
+  globalState ||= {};
 
   // 🗺️ Ensure Room Existance (2 arrays + 2 object-of-arrays)
   globalState.onlineUsers ||= []; // 👥 list of user snapshots
@@ -76,16 +100,26 @@ const connectionHandler = (io, socket, globalState) => {
     cookieHeader: socket.handshake?.headers?.cookie || '',
     socket
   });
-
+  // ---------------------------------------------------------
+  // 👤  Read the handshake and create socket.userData
+  // ---------------------------------------------------------
   // 📥 Read handshake query (client forwards cookie public_identity_id here) 📩
-  const query = socket.handshake?.query || {};
+  const query = socket.handshake?.query || {}; // 📨 what you sent in `query: { … }`
+  const auth = socket.handshake?.auth || {}; // 🔐 what you sent in `auth:  { … }`
 
-  // 🧱 Basic, readable defaults (no typeof noise)
-  const user_id = pickValue(query.user_id) || `guest-${socket.id}`; // 🆔
-  const role = pickValue(query.role) || 'guest'; // 👤 User Role
-  const name = pickValue(query.name) || user_id; // 🏷️ User Name
-  const locale = pickValue(query.locale) || 'en'; // 🌍 initial locale
-  const public_identity_id = pickValue(query.public_identity_id) || user_id; // 🪪 Public Identity (for persistence)
+  // 🧱 Basic readable values (prefer auth > query for hints; cookies are the truth for identity)
+  const rawUserId = pickValue(auth.user_id) || pickValue(query.user_id);
+  const rawRole = pickValue(auth.role) || pickValue(query.role);
+  const rawName = pickValue(auth.name) || pickValue(query.name);
+  const rawLocale = pickValue(auth.locale) || pickValue(query.locale);
+  const rawPublicId = pickValue(auth.public_identity_id) || pickValue(query.public_identity_id);
+
+  // 🧠 Resolve final values (guest ids are socket-based; stable guest identity uses cookie)
+  const user_id = rawUserId || `guest-${socket.id}`; // 🆔 unique per socket when guest
+  const role = rawRole || 'guest'; // 👤 'guest' | 'user' | 'admin'
+  const name = rawName || user_id; // 🏷️ label for logs/UI
+  const locale = rawLocale || cookieUtils.getLocaleOrDefault('en'); // 🌍 use NEXT_LOCALE cookie or 'en'
+  const public_identity_id = cookieUtils.getPublicIdentityId(rawPublicId) || user_id; // 🪪 stable guest identity
 
   // 📦 Canonical per-connection user data (the source of truth on the socket)
   socket.userData = {
@@ -101,17 +135,17 @@ const connectionHandler = (io, socket, globalState) => {
   // 🌍 Keep live locale here for notifications/emails
   socket.data.currentLocale = socket.userData.locale;
 
-  /*   // 🔑 Stable identity key (guest ⇒ public_identity_id, user ⇒ user_id)
-  const identityKey = (u) => (u.role === 'guest' ? u.public_identity_id : u.user_id); */
-
-  // 👥 Online list (ARRAY): de-dupe by user_id, then add
-  // 🧽 remove old entry for same user_id (multi-tab / reconnect safe)
+  // ---------------------------------------------------------
+  // 👥 Add the guest/user/admin — de-dupe by identity key (guest cookie or user_id)
+  // ---------------------------------------------------------
   globalState.onlineUsers = globalState.onlineUsers.filter(
-    (user) => user.user_id !== socket.userData.user_id
+    (existing) => getPresenceIdentityKey(existing) !== getPresenceIdentityKey(socket.userData)
   );
-  globalState.onlineUsers.push({ ...socket.userData });
+  // 👥 Push the user into the onlineUsers array
+  globalState.onlineUsers.push({ ...socket.userData }); // ➕ last snapshot wins
 
-  console.log(`All Online users: ${globalState.onlineUsers}`);
+  // 📝 Log presence after add
+  logOnlineUsers('onlineUsers (after connect)', globalState.onlineUsers);
 
   // 🛎️ Join per-user room for targeted emits
   socket.join(user_id);
@@ -122,6 +156,9 @@ const connectionHandler = (io, socket, globalState) => {
     console.log(`👑 Admin joined 'admins': ${socket.userData.name} (${socket.userData.user_id})`);
   }
 
+  // ---------------------------------------------------------
+  // ✨ Register all events
+  // ---------------------------------------------------------
   // 🌍 Register locale events (seed from handshake auth/query + allow live updates)
   registerLocaleEvents(io, socket, globalState);
 
@@ -132,62 +169,86 @@ const connectionHandler = (io, socket, globalState) => {
   registerAccountEvents(io, socket); // 💳 account & billing
   registerMessageEvents(io, socket); // 💬 chat events
 
-  //👤 NEW - Public Live Chat Rooms and events
+  //👤 Public Live Chat Rooms and events
   registerPublicRoomEvents(io, socket, globalState); // 🏠 Public live chat rooms
   registerPublicMessageEvents(io, socket, globalState); // 💬 Public chat events
 
   registerLogEvents(io, socket); // 🪵 activity logging
 
-  // 📡 Broadcast full online list (array)
-  io.emit('online_users_update', globalState.onlineUsers);
+  // ---------------------------------------------------------
+  // ✅ Auto join last room, broa
+  // ---------------------------------------------------------
+  // 🔁 Auto-join last public room (cookie set by client on previous session)
+  const lastPublicRoomId = cookieUtils.getLastPublicRoomId();
+  if (lastPublicRoomId && typeof lastPublicRoomId === 'string') {
+    // 🗂️ ensure presence list exists & de-dupe by user_id inside that room
+    const currentList = (globalState.activeUsersInPublicRoom[lastPublicRoomId] ||= []);
+    const withoutMe = currentList.filter((user) => user.user_id !== user_id);
+    globalState.activeUsersInPublicRoom[lastPublicRoomId] = [...withoutMe, { ...socket.userData }];
+
+    // 🚪 join last public room id for this user
+    socket.join(lastPublicRoomId);
+
+    socket.emit('public_live_chat_room_ready', { public_conversation_id: lastPublicRoomId });
+    io.to(lastPublicRoomId).emit('public_room_users_update', {
+      public_conversation_id: lastPublicRoomId,
+      users: globalState.activeUsersInPublicRoom[lastPublicRoomId]
+    });
+
+    // ✅ Log the auto join of last public room id
+    console.log(`[SOCKET] 🔁 Auto-joined last public room: ${lastPublicRoomId} (cookie)`);
+  }
+  // 🌍 Presence broadcast (everyone) + seed this socket (nice for first paint)
+  io.emit('online_users_update', globalState.onlineUsers); // 🌍 broadcast
+  socket.emit('online_user_update', globalState.onlineUsers); // 🎯 direct seed
 
   // ✅ Connection log
-  console.log(
-    `✅ Connected: ${socket.userData.name} (${socket.userData.role}) ` +
-      `user_id/guest_id:${socket.userData.user_id} sid:${socket.userData.socket_id} ` +
-      `lang:${socket.userData.locale}`
-  );
+  console.log(`✅ Connected: ${name} (${role}) uid:${user_id} sid:${socket.id} lang:${locale}`);
 
-  // 🔌 Cleanup on disconnect (single handler — centralized) 🌬️
+  // ---------------------------------------------------------
+  // 🔌 Cleanup on disconnect (single handler — centralized)
+  // ---------------------------------------------------------
+
   // 🌬️ Disconnect → remove from ALL arrays
   socket.on('disconnect', (reason) => {
-    // 1) 👥 Remove from online List
-    globalState.onlineUsers = globalState.onlineUsers.filter((user) => user.user_id !== user_id); // 🧹
+    // 1) 👥 Remove from onlineUsers (by identity key) and broadcast
+    const identityToRemove = getPresenceIdentityKey(socket.userData);
+    globalState.onlineUsers = globalState.onlineUsers.filter(
+      (user) => getPresenceIdentityKey(user) !== identityToRemove
+    ); // 🧹
+
     // 📡 Broadcast new users updated presence
     io.emit('online_users_update', globalState.onlineUsers);
+    logOnlineUsers('onlineUsers (after disconnect)', globalState.onlineUsers);
 
-    // 2) 🏠 Remove from Public lobby
-    globalState.publicLobby = globalState.publicLobby.filter((user) => user.user_id !== user_id); // 🧹
+    // 2) 🏠 Remove from public lobby list (by user_id)
+    globalState.publicLobby = globalState.publicLobby.filter((u) => u.user_id !== user_id);
     io.to('public_live_chat_lobby').emit('public_room_users_update', {
       room_id: 'public_live_chat_lobby',
       users: globalState.publicLobby
     });
 
-    // 3) 💬 Public rooms (each value is a userData[]; filter by user_id)
-    for (const convoId of Object.keys(globalState.activeUsersInPublicRoom)) {
-      // ✨ Set the before list and after list
-      const before = globalState.activeUsersInPublicRoom[convoId] || [];
-      const after = before.filter((user) => user.user_id !== user_id);
-      // ⚙️ Check if the lenght of the list (room) has changed and broadcast
+    // 3) 💬 Remove from each PUBLIC room presence (by user_id)
+    for (const roomId of Object.keys(globalState.activeUsersInPublicRoom)) {
+      const before = globalState.activeUsersInPublicRoom[roomId] || [];
+      const after = before.filter((u) => u.user_id !== user_id);
       if (after.length !== before.length) {
-        globalState.activeUsersInPublicRoom[convoId] = after;
-        io.to(convoId).emit('public_room_users_update', {
-          public_conversation_id: convoId,
+        globalState.activeUsersInPublicRoom[roomId] = after;
+        io.to(roomId).emit('public_room_users_update', {
+          public_conversation_id: roomId,
           users: after
         });
       }
     }
 
-    // 4) 🎈 LiveChat rooms (each value is a userData[]; filter by user_id)
-    for (const convoId of Object.keys(globalState.activeUsersInLiveRoom)) {
-      // ✨ Set the before list and after list
-      const before = globalState.activeUsersInLiveRoom[convoId] || [];
-      const after = before.filter((user) => user.user_id !== user_id);
-      // ⚙️ Check if the lenght of the list (room) has changed and broadcast
+    // 4) 🎈 Remove from each PRIVATE LiveChat room presence (by user_id)
+    for (const roomId of Object.keys(globalState.activeUsersInLiveRoom)) {
+      const before = globalState.activeUsersInLiveRoom[roomId] || [];
+      const after = before.filter((u) => u.user_id !== user_id);
       if (after.length !== before.length) {
-        globalState.activeUsersInLiveRoom[convoId] = after;
-        io.to(convoId).emit('room_users_update', {
-          conversation_id: convoId,
+        globalState.activeUsersInLiveRoom[roomId] = after;
+        io.to(roomId).emit('room_users_update', {
+          conversation_id: roomId,
           users: after
         });
       }
@@ -195,9 +256,7 @@ const connectionHandler = (io, socket, globalState) => {
 
     // 🧾 Disconnect log
     console.log(
-      `🔻 Disconnected: ${socket.userData.name} (${socket.userData.role}) ` +
-        `uid:${socket.userData.user_id} sid:${socket.userData.socket_id} ` +
-        `reason:${reason}`
+      `🔻 Disconnected: ${name} (${role}) uid:${user_id} sid:${socket.id} reason:${reason}`
     );
   });
 };
