@@ -7,7 +7,14 @@
 ---
 
 ## Structure layout is oldest at the bottom and latest at the top.
-
+---
+## 24 sept 2025 - Wednesday
+- finished index, organizing room and lobby creations in the index. 
+- Added a log for the localeEvents.js. 
+- Changed the userEvents to use an array instead of object.
+- Finished organizing and coding manually publicRoomEvents.js (maybe edit's will be needed later but I think I managed to take everything into account).
+- Thinking behind the rooms of public live chat is that so I can on user/guest refresh reload the chat that was already open and also on redirection by using the data and cookie in middleware.
+- Starting working on the publicMessageEvents.js
 ---
 ## 23 sept 2025 - Tuesday
 - edited index.js for better flow of connection (added public_identity_id) and cookie persistancy for public live chat in middleware also and removed disconnection code from userEvents.js
