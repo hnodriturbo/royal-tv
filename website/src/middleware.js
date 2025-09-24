@@ -64,11 +64,11 @@ const attachPublicIdentityCookie = (req, res) => {
   res.cookies.set({
     name: 'public_identity_id',
     value: public_id,
-    httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: HALF_YEAR,
-    secure: process.env.NODE_ENV === 'production'
+    httpOnly: true, // ✅ server-only
+    sameSite: 'lax', // ✅ same-site
+    path: '/', // ✅ site-wide
+    maxAge: HALF_YEAR, // ✅ long-lived
+    secure: process.env.NODE_ENV === 'production' // ✅ HTTPS only in prod
   });
   return res;
 };
