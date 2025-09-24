@@ -32,5 +32,8 @@ export default function registerLocaleEvents(io, socket) {
 
     // ✅ Confirm back to client
     socket.emit('locale_changed', { locale: target });
+    console.log(
+      `Emitted Locale Change. New Locale: ${socket.userData.locale || socket.data.currentLocale}`
+    );
   });
 }

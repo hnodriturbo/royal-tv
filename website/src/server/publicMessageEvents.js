@@ -1,10 +1,22 @@
 /**
- *   ============= messageEvents.js =============
- * 💬
- * SOCKET.IO EVENT HANDLERS FOR CHAT MESSAGES (PUBLIC ONLY)
- * - Handles sending, editing, deleting, and marking messages as read.
- * - Uses Prisma PublicLiveChat models directly
- * ==============================================
+ * ================== publicMessageEvents.js ==================
+ * 💬 Public Live Chat — Message handlers (send/edit/delete/read/refresh/typing)
+ * ---------------------------------------------------------------------------
+ * Inbound events:
+ *   • public_send_message       { public_conversation_id, message }
+ *   • public_edit_message       { public_conversation_id, public_message_id, message }
+ *   • public_delete_message     { public_conversation_id, public_message_id }
+ *   • public_mark_read          { public_conversation_id }
+ *   • public_refresh_messages   { public_conversation_id }
+ *   • public_typing             { public_conversation_id, isTyping: boolean }
+ *
+ * Outbound emits:
+ *   • public_receive_message
+ *   • public_message_edited
+ *   • public_message_deleted
+ *   • public_unread_count_update
+ *   • public_messages_refreshed
+ *   • public_user_typing
  */
 
 import dayjs from 'dayjs'; // 🗓️ For consistent dates (optional)
