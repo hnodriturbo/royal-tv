@@ -30,51 +30,55 @@ import registerLocaleEvents from './localeEvents.js'; // 🌍 locale handshake +
 // 🆕 Public live chat (multi-room) modules
 import registerPublicRoomEvents from './publicRoomEvents.js';
 import registerPublicMessageEvents from './publicMessageEvents.js';
+/* 
+// 🧩 Helper: stable presence key (guest ⇒ cookie id, user ⇒ user_id)
+const presenceKeyFor = (userData) =>
+  userData.role === 'guest' ? userData.public_identity_id : userData.user_id;
+ */
+// 🧰 Coerce empty-like values to null for easier defaults 🧼
+const pickValue = (value) => {
+  if (value == null || value === '' || value === 'null' || value === 'undefined') return null;
+  return value;
+};
 
 const connectionHandler = (io, socket, globalState) => {
-  // 🧭 Ensure global state containers exist (maps, not arrays) 🗺️
-  globalState.onlineUsers ||= {}; // 🌐 presence by user_id (current session identity)
-  globalState.activeUsersInLiveRoom ||= {}; // 💬 legacy live room presence
-
-  // 🆕 Public live chat registries (SINGLE source of truth, initialized here)
-  globalState.publicLobby ||= []; // 🏠 lobby presence list (array of snapshots)
-  globalState.activeUsersInPublicRoom ||= {}; // 🗺️ { [public_conversation_id]: userData[] }
-
-  // 🧰 Coerce empty-like values to null for easier defaults 🧼
-  const pickValue = (value) => {
-    if (value == null || value === '' || value === 'null' || value === 'undefined') return null;
-    return value;
-  };
+  // 🗺️ Ensure Room Existance (ALL ARRAYS)
+  globalState.onlineUsers ||= []; // 👥 list of user snapshots
+  globalState.publicLobby ||= []; // 🏠 list of lobby snapshots
+  globalState.activeUsersInPublicRoom ||= {}; // 💬 { [convoId]: userData[] }
+  globalState.activeUsersInLiveRoom ||= {}; // 🎈 { [convoId]: userData[] } (roomEvents.js uses arrays)
 
   // 📥 Read handshake query (client forwards cookie public_identity_id here) 📩
   const query = socket.handshake?.query || {};
 
   // 🧱 Basic, readable defaults (no typeof noise)
-  const userId = pickValue(query.user_id) || `guest-${socket.id}`; // 🆔
-  const userRole = pickValue(query.role) || 'guest'; // 👤 User Role
-  const userName = pickValue(query.name) || userId; // 🏷️ User Name
-  const userLocale = pickValue(query.locale) || 'en'; // 🌍 initial locale
-  const publicIdentity = pickValue(query.public_identity_id) || userId; // 🪪 Public Identity (for persistence)
+  const user_id = pickValue(query.user_id) || `guest-${socket.id}`; // 🆔
+  const role = pickValue(query.role) || 'guest'; // 👤 User Role
+  const name = pickValue(query.name) || user_id; // 🏷️ User Name
+  const locale = pickValue(query.locale) || 'en'; // 🌍 initial locale
+  const public_identity_id = pickValue(query.public_identity_id) || user_id; // 🪪 Public Identity (for persistence)
 
   // 📦 Canonical per-connection user data (the source of truth on the socket)
   socket.userData = {
-    user_id: userId, // 🆔 session identity (changes when user logs in/out)
-    public_identity_id: publicIdentity, // 🪪 stable widget identity (should NOT change on auth)
-    role: userRole, // 👤 permissions & rooms
-    name: userName, // 🏷️ label for logs/UI
-    locale: userLocale, // 🌍 current UI language (client may update later)
+    user_id, // 🆔 session identity (changes when user logs in/out)
+    public_identity_id, // 🪪 stable widget identity (should NOT change on auth)
+    role, // 👤 permissions & rooms
+    name, // 🏷️ label for logs/UI
+    locale, // 🌍 current UI language (client may update later)
     socket_id: socket.id, // 🔗 connection id
     connectedAt: new Date().toISOString() // ⏰ timestamp
   };
 
   // 🌍 Keep live locale here for notifications/emails
-  socket.data.currentLocale = userLocale;
+  socket.data.currentLocale = socket.userData.locale;
 
-  // 🌐 Store presence snapshot keyed by user_id (exact shape wanted)
-  globalState.onlineUsers[userId] = socket.userData;
+  // 👥 Online list (ARRAY): de-dupe by user_id, then add
+  // 🧽 remove old entry for same user_id (multi-tab / reconnect safe)
+  globalState.onlineUsers = globalState.onlineUsers.filter((user) => user.user_id !== user_id); // 🧹
+  globalState.onlineUsers.push({ ...socket.userData });
 
   // 🛎️ Join per-user room for targeted emits
-  socket.join(userId);
+  socket.join(user_id);
 
   // 👑 Admins join a shared room for broadcasts
   if (socket.userData.role === 'admin') {
@@ -85,16 +89,6 @@ const connectionHandler = (io, socket, globalState) => {
   // 🌍 Register locale events (seed from handshake auth/query + allow live updates)
   registerLocaleEvents(io, socket, globalState);
 
-  // 📡 Tell everyone who’s online (array of userData objects)
-  io.emit('online_users_update', Object.values(globalState.onlineUsers));
-
-  // ✅ Connection log
-  console.log(
-    `✅ Connected: ${socket.userData.name} (${socket.userData.role}) ` +
-      `uid:${socket.userData.user_id} sid:${socket.userData.socket_id} ` +
-      `lang:${socket.userData.locale}`
-  );
-
   // 🧩 Register all event modules (once per socket)
   registerNotificationEvents(io, socket, globalState); // 🔔 notifications
   registerUserEvents(io, socket, globalState); // 👤 user profile / presence ops
@@ -102,64 +96,62 @@ const connectionHandler = (io, socket, globalState) => {
   registerAccountEvents(io, socket); // 💳 account & billing
   registerMessageEvents(io, socket); // 💬 chat events
 
+  //👤 NEW - Public Live Chat Rooms and events
   registerPublicRoomEvents(io, socket, globalState); // 🏠 Public live chat rooms
   registerPublicMessageEvents(io, socket, globalState); // 💬 Public chat events
 
   registerLogEvents(io, socket); // 🪵 activity logging
 
+  // 📡 Broadcast full online list (array)
+  io.emit('online_users_update', globalState.onlineUsers);
+
+  // ✅ Connection log
+  console.log(
+    `✅ Connected: ${socket.userData.name} (${socket.userData.role}) ` +
+      `user_id/guest_id:${socket.userData.user_id} sid:${socket.userData.socket_id} ` +
+      `lang:${socket.userData.locale}`
+  );
+
   // 🔌 Cleanup on disconnect (single handler — centralized) 🌬️
+  // 🌬️ Disconnect → remove from ALL arrays
   socket.on('disconnect', (reason) => {
-    const isGuest = socket.userData.role === 'guest';
-    const currentKey = isGuest ? socket.userData.public_identity_id : socket.userData.user_id;
+    // 1) 👥 Remove from online List
+    globalState.onlineUsers = globalState.onlineUsers.filter((user) => user.user_id !== user_id); // 🧹
+    // 📡 Broadcast new users updated presence
+    io.emit('online_users_update', globalState.onlineUsers);
 
-    // 1️⃣  Remove global online presence
-    if (globalState.onlineUsers[socket.userData.user_id]) {
-      delete globalState.onlineUsers[socket.userData.user_id];
-    }
+    // 2) 🏠 Remove from Public lobby
+    globalState.publicLobby = globalState.publicLobby.filter((user) => user.user_id !== user_id); // 🧹
+    io.to('public_live_chat_lobby').emit('public_room_users_update', {
+      room_id: 'public_live_chat_lobby',
+      users: globalState.publicLobby
+    });
 
-    // 📡 Broadcast updated presence
-    io.emit('online_users_update', Object.values(globalState.onlineUsers));
-
-    // 2️⃣  Remove from legacy live rooms
-    for (const roomId of Object.keys(globalState.activeUsersInLiveRoom)) {
-      const before = globalState.activeUsersInLiveRoom[roomId] || [];
-      const after = before.filter((u) =>
-        isGuest ? u.public_identity_id !== currentKey : u.user_id !== currentKey
-      );
-      if (after.length !== before.length) {
-        globalState.activeUsersInLiveRoom[roomId] = after;
-        io.to(roomId).emit('room_users_update', {
-          conversation_id: roomId,
-          users: after
-        });
-      }
-    }
-
-    // 3️⃣  Remove from public lobby
-    if (Array.isArray(globalState.publicLobby) && globalState.publicLobby.length) {
-      const before = globalState.publicLobby;
-      const after = before.filter((u) =>
-        isGuest ? u.public_identity_id !== currentKey : u.user_id !== currentKey
-      );
-      if (after.length !== before.length) {
-        globalState.publicLobby = after;
-        io.to('public_live_chat_lobby').emit('public_room_users_update', {
-          room_id: 'public_live_chat_lobby',
-          users: after
-        });
-      }
-    }
-
-    // 4️⃣  Remove from public conversation rooms
+    // 3) 💬 Public rooms (each value is a userData[]; filter by user_id)
     for (const convoId of Object.keys(globalState.activeUsersInPublicRoom)) {
+      // ✨ Set the before list and after list
       const before = globalState.activeUsersInPublicRoom[convoId] || [];
-      const after = before.filter((u) =>
-        isGuest ? u.public_identity_id !== currentKey : u.user_id !== currentKey
-      );
+      const after = before.filter((user) => user.user_id !== user_id);
+      // ⚙️ Check if the lenght of the list (room) has changed and broadcast
       if (after.length !== before.length) {
         globalState.activeUsersInPublicRoom[convoId] = after;
         io.to(convoId).emit('public_room_users_update', {
           public_conversation_id: convoId,
+          users: after
+        });
+      }
+    }
+
+    // 4) 🎈 LiveChat rooms (each value is a userData[]; filter by user_id)
+    for (const convoId of Object.keys(globalState.activeUsersInLiveRoom)) {
+      // ✨ Set the before list and after list
+      const before = globalState.activeUsersInLiveRoom[convoId] || [];
+      const after = before.filter((user) => user.user_id !== user_id);
+      // ⚙️ Check if the lenght of the list (room) has changed and broadcast
+      if (after.length !== before.length) {
+        globalState.activeUsersInLiveRoom[convoId] = after;
+        io.to(convoId).emit('room_users_update', {
+          conversation_id: convoId,
           users: after
         });
       }
