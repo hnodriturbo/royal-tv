@@ -156,6 +156,4 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
       socket.emit('public_room_error', { error: 'Failed to create public conversation.' });
     }
   });
-
-  // TO BE CONTINUED !!!!
 }
