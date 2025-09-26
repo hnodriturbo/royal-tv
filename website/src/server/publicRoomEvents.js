@@ -23,8 +23,7 @@
  *   • Admin-online gating will be handled later in UI/hooks (not here).
  */
 
-import { connect } from 'socket.io-client';
-import prisma from '../lib/core/prisma.js'; // 📦 Prisma
+import prisma from '../lib/core/prisma.js'; // 🧱 Prisma client
 
 // 🧪 UUID verification checker
 const isUuid = (value) => typeof value === 'string' && /^[0-9a-fA-F-]{36}$/.test(value);
@@ -60,7 +59,7 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
 
     // 📝 log the event
     console.log(
-      `🏠 [PublicRoom] Lobby join: ${socket.userData.user_id} Role: ${socket.userData.role}`
+      `🏠 [SOCKET PublicRoom] Lobby join: ${socket.userData.user_id} Role: ${socket.userData.role}`
     );
   });
 
@@ -82,7 +81,7 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
 
     // 📝 Log the event
     console.log(
-      `🏠 [PublicRoom] Lobby leave: ${socket.userData.name} (${socket.userData.role}) ` +
+      `🏠 [SOCKET PublicRoom] Lobby leave: ${socket.userData.name} (${socket.userData.role}) ` +
         `user_id/guest_id: ${socket.userData.user_id}`
     );
   });
@@ -150,7 +149,7 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
       });
 
       // 📝 log Creation of room
-      console.log(`➕ [PublicRoom] Created: ${public_conversation_id}`);
+      console.log(`➕ [SOCKET PublicRoom] Created: ${public_conversation_id}`);
     } catch (error) {
       console.error('[ERROR][PublicRoom] create failed:', error?.message || error);
       socket.emit('public_room_error', { error: 'Failed to create public conversation.' });
