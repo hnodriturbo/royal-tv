@@ -8,6 +8,13 @@
 
 ## Structure layout is oldest at the bottom and latest at the top.
 ---
+---
+## 26 sept 2025 - Friday
+- half way through publicMessageEvents which is rather a large file to create.
+- Only delete message & refresh messages & mark read & typing indicator left code.
+- When this files is finished the other parts will be easier to manage and create because the root files are that good coded and with everything in mind of what can happen and what I want to have in these event files. Very important that these files can manage all events so there is so much coding needed to be done. Also cookieEvents helps me to remember public_conversation_id and the guest public_identity_id.
+
+---
 ## 24 sept 2025 - Wednesday
 - finished index, organizing room and lobby creations in the index. 
 - Added a log for the localeEvents.js. 
