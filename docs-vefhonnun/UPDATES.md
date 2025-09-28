@@ -17,6 +17,15 @@
   - Outgoing emit events -> **public_message_deleted, public_messages_refreshed, public_marked_read, public_user_typing**
   - Maybe special public_admin_typing or have the typing event and emit merged for all (guest & user & admin).
 
+- New File: cookieEvents.js (created to use cookies for each user so the chat doesnt get lost on page refresh or page redirection. For example on login -> middlePage -> user/admin dashboard).
+- If guest changes into user, then his user_id should automaticly be linked to that conversation.
+- There will be a widget button for registered users only they will have a "Save Chat" button and then the chat get's automatacly moved to their normal liveChat tables.
+  - Process of that will be fetching all info of that PublicLiveChatConversation and the linked Messages to that conversation and it manually saved (probably via REST route instead of socket event).
+  - It is not copies. All info is fetched, put into a object, object mapped and we use only needed fields and then we delete the conversation from the PublicLiveChatConversation afterwards. 
+  - There will a modal that opens "Are you sure you would like to save your chat. It will be saved your Live Chat section and accessible through your dashboard. Only you and admin can edit it after that".
+  - onConfirm -> chat saved to new tables, old one deleted. User will also be able to save the bot chat if he wants. That way he can access it for helpful knowlegde related only to his chat with the bot.
+  - Bot integration will come last.
+
 
 ---
 ## 26 sept 2025 - Friday
