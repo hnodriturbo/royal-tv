@@ -9,7 +9,20 @@
 ## Structure layout is oldest at the bottom and latest at the top.
 ---
 ---
+## 28 sept 2025 - Sunday
+- Starting working finishing the publicMessageEvents.js file (quite large file for working on and also to make sure everything will align according to the work ahead).
+- Everything will go faster as soon as I'm finished on working on this file. These two event files are the core of the chat system and they need to be perfect and I need the vision to know what should be in these files beforehand.
+- Working today on finishing:
+  - Inbound events socket.on -> **public_delete_message, public_refresh_messages, public_mark_read, public_typing** (maybe special merged public_someone_writing)
+  - Outgoing emit events -> **public_message_deleted, public_messages_refreshed, public_marked_read, public_user_typing**
+  - Maybe special public_admin_typing or have the typing event and emit merged for all (guest & user & admin).
+
+
+---
 ## 26 sept 2025 - Friday
+- Finished with inbound events: 
+  - inbound socket.on -> public_send_message, public_edit_message 
+  - outgoing emit events: public_receive_message, public_message_edited, public_message_deleted.
 - half way through publicMessageEvents which is rather a large file to create.
 - Only delete message & refresh messages & mark read & typing indicator left code.
 - When this files is finished the other parts will be easier to manage and create because the root files are that good coded and with everything in mind of what can happen and what I want to have in these event files. Very important that these files can manage all events so there is so much coding needed to be done. Also cookieEvents helps me to remember public_conversation_id and the guest public_identity_id.
