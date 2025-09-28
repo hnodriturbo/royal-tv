@@ -197,9 +197,42 @@ export default function registerPublicMessageEvents(io, socket) {
         socket.emit('public_message_error', { error: 'Failed to edit message.' });
       }
     });
+
     /* =========================================================
      * 🗑️ DELETE
      * =======================================================*/
+    socket.on('public_delete_message', async ({ public_message_id } = {}) => {
+      try {
+        if (!isUuid(public_message_id)) {
+          socket.emit('public_message_error', { error: 'Invalid message id.' });
+          return;
+        }
+
+        // 🔎 Load to check permissions + grab convo id before delete
+        const existing = await prisma.publicLiveChatMessage.findUnique({
+          where: { public_message_id },
+          select: {
+            public_message_id: true,
+            public_conversation_id: true,
+            sender_user_id: true,
+            sender_guest_id: true
+          }
+        });
+        // ❌ If the message doesnt exist we emit the public_message_error
+        if (!existing) {
+          socket.emit('public_message_error', { error: 'Message not found.' });
+          return;
+        }
+
+        // 🔐 Permission rule (same as edit)
+        const isAdmin = socket.userData.role === 'admin';
+        const isAuthorUser =
+          existing.sender_user_id && existing.sender_user_id === socket.userData.user_id;
+      } catch (error) {
+        console.error('❌ [PublicMessage] delete failed', error);
+        socket.emit('public_message_error', { error: 'Failed to delete message.' });
+      }
+    });
 
     /* =========================================================
      * 🔄 REFRESH (fetch recent)
