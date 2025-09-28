@@ -228,6 +228,8 @@ export default function registerPublicMessageEvents(io, socket) {
         const isAdmin = socket.userData.role === 'admin';
         const isAuthorUser =
           existing.sender_user_id && existing.sender_user_id === socket.userData.user_id;
+
+        // TO BE CONTINUED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       } catch (error) {
         console.error('❌ [PublicMessage] delete failed', error);
         socket.emit('public_message_error', { error: 'Failed to delete message.' });
