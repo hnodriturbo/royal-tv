@@ -9,6 +9,12 @@
 ## Structure layout is oldest at the bottom and latest at the top.
 ---
 ---
+
+## 29 sept 2025 - Monday
+- Changed the public_message_error to be more precise and take in 3 different arguments for better error handling. Arguments are code, message and context.
+- Changed how the reading of authorization of admin/user/guest and the differentiates on the possible changes of behavior.
+- 
+---
 ## 28 sept 2025 - Sunday
 - Starting working finishing the publicMessageEvents.js file (quite large file for working on and also to make sure everything will align according to the work ahead).
 - Everything will go faster as soon as I'm finished on working on this file. These two event files are the core of the chat system and they need to be perfect and I need the vision to know what should be in these files beforehand.
