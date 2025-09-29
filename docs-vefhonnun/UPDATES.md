@@ -11,8 +11,12 @@
 ---
 
 ## 29 sept 2025 - Monday
-- Changed the public_message_error to be more precise and take in 3 different arguments for better error handling. Arguments are code, message and context.
+- Changed the public_message_error to be more precise and take in 3 different arguments for better error handling. Arguments are code, message.
+- All errors print to console for debugging and stop and return at the spot in publicMessageEvents.js.
+- Added function for checking authority -> see next line.
 - Changed how the reading of authorization of admin/user/guest and the differentiates on the possible changes of behavior.
+- Finished with publicMessageEvents.js and will merge the branch with master after a pull request.
+- 
 - 
 ---
 ## 28 sept 2025 - Sunday
