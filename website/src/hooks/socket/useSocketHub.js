@@ -354,6 +354,11 @@ const useSocketHub = () => {
     [guardedListen]
   );
 
+  /* =========================================================
+   * ✉️ Public room functions and Public message functions
+   * =======================================================*/
+  // TO BE CONTINUED !!!!
+
   // ======================= EXPORTS ========================
   return {
     socket,
