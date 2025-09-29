@@ -1,5 +1,5 @@
 # --- Defaults -------------------------------------------------
-*               text eol=lf     # normalize all text to LF in repo & checkout
+*               text eol=lf
 
 # --- Languages / text formats (explicit but optional) ----------
 *.yml           text
