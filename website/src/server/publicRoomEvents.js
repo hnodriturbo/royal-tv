@@ -108,7 +108,7 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
           createdData.owner = { connect: { user_id: owner_user_id } };
         } else {
           // 🚫 Provided id is guest or not found → ignore owner_user_id
-          console.warn(`[PublicRoom] Ignoring invalid owner_user_id: ${owner_user_id}`);
+          console.warn(`[SOCKET PublicRoom] Ignoring invalid owner_user_id: ${owner_user_id}`);
         }
       }
       // 👤 If the creator is a guest, optionally stamp guest ownership for auditing
@@ -151,7 +151,7 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
       // 📝 log Creation of room
       console.log(`➕ [SOCKET PublicRoom] Created: ${public_conversation_id}`);
     } catch (error) {
-      console.error('[ERROR][PublicRoom] create failed:', error?.message || error);
+      console.error('[SOCKET ERROR] [PublicRoom] create failed:', error?.message || error);
       socket.emit('public_room_error', { error: 'Failed to create public conversation.' });
     }
   });
