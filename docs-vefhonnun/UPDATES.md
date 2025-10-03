@@ -10,6 +10,11 @@
 ---
 ---
 
+## 3 okt 2025 - Friday
+- Finished creating functions for all useSocketHubFunctions
+
+---
+
 ## 29 sept 2025 - Monday
 - Changed the public_message_error to be more precise and take in 3 different arguments for better error handling. Arguments are code, message.
 - All errors print to console for debugging and stop and return at the spot in publicMessageEvents.js.
