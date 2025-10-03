@@ -11,7 +11,8 @@
 ---
 
 ## 3 okt 2025 - Friday
-- Finished creating functions for all useSocketHubFunctions
+- Finished creating functions for all useSocketHubFunctions.
+- Created useSocketHub.js with all Public Chat functions from event files (lobby/room, send/edit/delete/refresh, read + typing, listeners mirrored).
 
 ---
 
