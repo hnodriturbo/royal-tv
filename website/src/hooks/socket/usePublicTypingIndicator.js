@@ -1,4 +1,5 @@
 /**
+<<<<<<< HEAD
  * ========== usePublicTypingIndicator (client) ==========
  * ⌨️ Track local/remote typing state for a single room.
  */
@@ -40,3 +41,23 @@ export default function usePublicTypingIndicator(public_conversation_id) {
     [public_conversation_id, typingUser, sendPublicTypingStatus]
   );
 }
+=======
+ * ============== usePublicTypingIndicator (client) ==============
+ * ⌨️ Typing indicator for a public room (remote + local)
+ * --------------------------------------------------------------
+ * Args:
+ *   • public_conversation_id: string
+ *
+ * Returns:
+ *   • isSomeoneTyping: boolean
+ *   • typingUserInfo: { name, role, user_id?, public_identity_id? } | null
+ *   • isTypingLocal: boolean
+ *   • handleInputChange(e): string
+ *   • handleInputFocus()
+ *   • handleInputBlur()
+ */
+'use client';
+
+import { useCallback, useEffect, useRef, useState } from 'react';
+import useSocketHub from '@/hooks/socket/useSocketHub';
+>>>>>>> 0db5ae5 (finished usePublicMessageEvents.js & created usePublicRoomUsers.js & usePublicTypingIndicator.js & usePublicUnreadMessages.js)
