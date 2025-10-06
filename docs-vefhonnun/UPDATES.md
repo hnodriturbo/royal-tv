@@ -9,6 +9,10 @@
 ## Structure layout is oldest at the bottom and latest at the top.
 ---
 ---
+## 6 okt 2025 - Monday
+- Created and finished usePublicMessageEvents.js
+- Created usePublicRoomUsers.js & usePublicTypingIndicator.js & usePublicUnreadMessages.js
+---
 
 ## 3 okt 2025 - Friday
 - Finished creating functions for all useSocketHubFunctions.
