@@ -1015,6 +1015,16 @@
                 "online_admin": "Stjórnandi á netinu:",
                 "online_admins": "Stjórnendur á netinu:",
                 "admin_support": "Aðstoð stjórnanda"
+            },
+            "publicLiveChat": {
+                "errors": {
+                    "INVALID_ID": "Aðgerð tókst ekki (ógilt auðkenni).",
+                    "FORBIDDEN": "Ekki með heimild fyrir þessari aðgerð.",
+                    "NOT_FOUND": "Hluturinn er ekki lengur til.",
+                    "DB_FAILURE": "Eitthvað fór úrskeiðis hjá okkur.",
+                    "RATE_LIMIT": "Of hratt. Reyndu aftur eftir smástund.",
+                    "PAYLOAD_TOO_LARGE": "Skilaboðin eru of löng."
+                }
             }
         },
         "hooks": { "useRefreshNotifications": { "all_notifications_refreshed": "🔄 Allar tilkynningar endurhlaðnar!" }}
