@@ -315,7 +315,6 @@ export default function registerPublicMessageEvents(io, socket, globalState) {
   /* =========================================================
    * 🔄 REFRESH (fetch recent)
    * =======================================================*/
-
   socket.on('public_refresh_messages', async ({ public_conversation_id } = {}) => {
 >>>>>>> 5e5901d (small update to publicMessageEvents.js)
     try {
