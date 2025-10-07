@@ -13,10 +13,19 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
     socket
   });
 
+<<<<<<< HEAD
   const _usersFromSet = (set) =>
     Array.from(set || [])
       .map((sId) => io.sockets.sockets.get(sId)?.userData)
       .filter(Boolean);
+=======
+  // 🚪 Leave the public lobby (widget closed)
+  socket.on('public_leave_lobby', () => {
+    // 🧹 Remove user with filtering
+    globalState.publicLobby.filter(
+      (existingUser) => existingUser.user_id !== socket.userData.user_id
+    );
+>>>>>>> ee83db8 (Public Live Chat hooks updates and creations, update of publicRoomEvents.js and generic errors in i18n translations for the message error event and function to use. Also created the bone structure of the widget component.)
 
   const _ensureRoom = (roomId) => (globalState.activeUsersInPublicRoom[roomId] ||= new Set());
 

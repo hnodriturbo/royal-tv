@@ -1032,6 +1032,7 @@
                 "admin_support": "Admin Support"
             },
             "publicLiveChat": {
+<<<<<<< HEAD
                 "main": {
                     "main_title": "Public Live Chat",
                     "toggle_open": "Open chat",
@@ -1046,6 +1047,9 @@
                     "reconnecting": "Reconnecting…",
                     "loading_messages": "Loading messages…"
                 },
+=======
+                "main": { "main_title": "Public Live Chat" },
+>>>>>>> ee83db8 (Public Live Chat hooks updates and creations, update of publicRoomEvents.js and generic errors in i18n translations for the message error event and function to use. Also created the bone structure of the widget component.)
                 "errors": {
                     "INVALID_ID": "That action couldn’t run (invalid id).",
                     "FORBIDDEN": "You don’t have permission for that.",
