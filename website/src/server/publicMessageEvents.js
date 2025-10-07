@@ -363,7 +363,6 @@ export default function registerPublicMessageEvents(io, socket) {
   /* =========================================================
    * 🔄 REFRESH (fetch recent)
    * =======================================================*/
-
   socket.on('public_refresh_messages', async ({ public_conversation_id } = {}) => {
     try {
       // 🧠 Check UUID for invalid public_conversation_id
