@@ -307,9 +307,17 @@ export default function registerPublicMessageEvents(io, socket, globalState) {
     }
   });
 
+<<<<<<< HEAD
   /* ======================= 📜 LIST ======================== */
   socket.on('public_message:list', async ({ public_conversation_id, limit = 50 } = {}) => {
     console.log('📥 [public_message:list] room:%s limit:%s', public_conversation_id, limit);
+=======
+  /* =========================================================
+   * 🔄 REFRESH (fetch recent)
+   * =======================================================*/
+
+  socket.on('public_refresh_messages', async ({ public_conversation_id } = {}) => {
+>>>>>>> 5e5901d (small update to publicMessageEvents.js)
     try {
       if (!isUuid(public_conversation_id)) {
         console.warn('🛑 [public_message:list] invalid room');
