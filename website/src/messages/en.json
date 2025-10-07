@@ -1030,6 +1030,17 @@
                 "online_admin": "Online Admin:",
                 "online_admins": "Online Admins:",
                 "admin_support": "Admin Support"
+            },
+            "publicLiveChat": {
+                "main": { "main_title": "Public Live Chat" },
+                "errors": {
+                    "INVALID_ID": "That action couldn’t run (invalid id).",
+                    "FORBIDDEN": "You don’t have permission for that.",
+                    "NOT_FOUND": "That item no longer exists.",
+                    "DB_FAILURE": "Something went wrong on our side.",
+                    "RATE_LIMIT": "You’re going a bit fast. Try again shortly.",
+                    "PAYLOAD_TOO_LARGE": "Message is too large."
+                }
             }
         },
         "hooks": { "useRefreshNotifications": { "all_notifications_refreshed": "🔄 All notifications refreshed!" }}

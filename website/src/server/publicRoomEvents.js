@@ -66,7 +66,7 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
   // 🚪 Leave the public lobby (widget closed)
   socket.on('public_leave_lobby', () => {
     // 🧹 Remove user with filtering
-    globalState.publicLobby.filer(
+    globalState.publicLobby.filter(
       (existingUser) => existingUser.user_id !== socket.userData.user_id
     );
 
