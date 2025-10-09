@@ -42,7 +42,7 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
   // 🚪 Join the public lobby (widget opened)
   socket.on('public_join_lobby', () => {
     // 🧹 Remove any previous snapshot for this user_id (multi-tab/reconnect safe)
-    globalState.publicLobby.filter(
+    globalState.publicLobby = globalState.publicLobby.filter(
       (existingUser) => existingUser.user_id !== socket.userData.user_id
     );
     // ➕ Add fresh user to the lobby
@@ -66,7 +66,7 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
   // 🚪 Leave the public lobby (widget closed)
   socket.on('public_leave_lobby', () => {
     // 🧹 Remove user with filtering
-    globalState.publicLobby.filter(
+    globalState.publicLobby = globalState.publicLobby.filter(
       (existingUser) => existingUser.user_id !== socket.userData.user_id
     );
 
