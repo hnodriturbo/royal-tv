@@ -7,10 +7,37 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
   globalState.publicLobby ||= new Set();
   globalState.activeUsersInPublicRoom ||= {}; // { [roomId]: Set<socketId> }
 
+<<<<<<< HEAD
   // 🍪 cookie helpers bound to this socket
   const cookieUtils = createCookieUtils({
     cookieHeader: socket?.handshake?.headers?.cookie || '',
     socket
+=======
+  /* --------------------------------------------------------------------------------------- */
+
+  // 🚪 Join the public lobby (widget opened)
+  socket.on('public_join_lobby', () => {
+    // 🧹 Remove any previous snapshot for this user_id (multi-tab/reconnect safe)
+    globalState.publicLobby = globalState.publicLobby.filter(
+      (existingUser) => existingUser.user_id !== socket.userData.user_id
+    );
+    // ➕ Add fresh user to the lobby
+    globalState.publicLobby.push({ ...socket.userData });
+
+    // 🚪 Join lobby room
+    socket.join(PUBLIC_LOBBY_ROOM); // ✅ Join the publicLobby
+
+    // 📣 Broadcast current lobby
+    io.to(PUBLIC_LOBBY_ROOM).emit('public_room_users_update', {
+      room_id: PUBLIC_LOBBY_ROOM, // ✅ Use room_id for lobby
+      users: globalState.publicLobby
+    });
+
+    // 📝 log the event
+    console.log(
+      `🏠 [SOCKET PublicRoom] Lobby join: ${socket.userData.user_id} Role: ${socket.userData.role}`
+    );
+>>>>>>> a7fb2fd (updates and creation of usePublicLiveChat which will import into the main component)
   });
 
 <<<<<<< HEAD
@@ -22,7 +49,7 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
   // 🚪 Leave the public lobby (widget closed)
   socket.on('public_leave_lobby', () => {
     // 🧹 Remove user with filtering
-    globalState.publicLobby.filter(
+    globalState.publicLobby = globalState.publicLobby.filter(
       (existingUser) => existingUser.user_id !== socket.userData.user_id
     );
 >>>>>>> ee83db8 (Public Live Chat hooks updates and creations, update of publicRoomEvents.js and generic errors in i18n translations for the message error event and function to use. Also created the bone structure of the widget component.)
