@@ -40,7 +40,7 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
   /* --------------------------------------------------------------------------------------- */
 
   // 🚪 Join the public lobby (widget opened)
-  socket.on('public_join_lobby', () => {
+  socket.on('public:join_lobby', () => {
     // 🧹 Remove any previous snapshot for this user_id (multi-tab/reconnect safe)
     globalState.publicLobby = globalState.publicLobby.filter(
       (existingUser) => existingUser.user_id !== socket.userData.user_id
@@ -52,7 +52,7 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
     socket.join(PUBLIC_LOBBY_ROOM); // ✅ Join the publicLobby
 
     // 📣 Broadcast current lobby
-    io.to(PUBLIC_LOBBY_ROOM).emit('public_room_users_update', {
+    io.to(PUBLIC_LOBBY_ROOM).emit('public:room_users_update', {
       room_id: PUBLIC_LOBBY_ROOM, // ✅ Use room_id for lobby
       users: globalState.publicLobby
     });
@@ -64,7 +64,7 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
   });
 
   // 🚪 Leave the public lobby (widget closed)
-  socket.on('public_leave_lobby', () => {
+  socket.on('public:leave_lobby', () => {
     // 🧹 Remove user with filtering
     globalState.publicLobby = globalState.publicLobby.filter(
       (existingUser) => existingUser.user_id !== socket.userData.user_id
@@ -74,7 +74,7 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
     socket.leave(PUBLIC_LOBBY_ROOM);
 
     // 📣 Broadcast current lobby roster (LOBBY PAYLOAD)
-    io.to(PUBLIC_LOBBY_ROOM).emit('public_room_users_update', {
+    io.to(PUBLIC_LOBBY_ROOM).emit('public:room_users_update', {
       room_id: PUBLIC_LOBBY_ROOM,
       users: globalState.publicLobby
     });
@@ -89,7 +89,7 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
   /* --------------------------------------------------------------------------------------- */
 
   // ➕ Create a new public conversation (owner optional for logged-in user
-  socket.on('public_create_chat_room', async ({ subject, owner_user_id } = {}) => {
+  socket.on('public:create_chat_room', async ({ subject, owner_user_id } = {}) => {
     try {
       // 📝 Prepare conversation data (owner connect only when provided)
       const createdData = {
@@ -137,13 +137,13 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
       socket.join(public_conversation_id);
 
       // 📣 Broadvast and notify creator
-      io.emit('public_live_chat_room_created', {
+      io.emit('public:live_chat_room_created', {
         public_conversation_id,
         owner_id: conversation.owner_id || null
       });
       socket.emit('public_live_chat_room_ready', { public_conversation_id });
 
-      io.to(public_conversation_id).emit('public_room_users_update', {
+      io.to(public_conversation_id).emit('public:room_users_update', {
         public_conversation_id,
         users: globalState.activeUsersInPublicRoom[public_conversation_id]
       });

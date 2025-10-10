@@ -3,21 +3,21 @@
  * 💬 Public Live Chat — Message lifecycle (send/edit/delete/refresh/typing)
  * -----------------------------------------------------------
  * Inbound events:
- *   • public_send_message        { public_conversation_id: string, message: string }
- *   • public_edit_message        { public_message_id: string, message: string }
- *   • public_delete_message      { public_message_id: string }
- *   • public_refresh_messages    { public_conversation_id: string, limit?: number }
- *   • public_mark_read           { public_conversation_id: string }
- *   • public_typing              { public_conversation_id: string, isTyping?: boolean }
+ *   • public:send_message        { public_conversation_id: string, message: string }
+ *   • public:edit_message        { public_message_id: string, message: string }
+ *   • public:delete_message      { public_message_id: string }
+ *   • public:refresh_messages    { public_conversation_id: string, limit?: number }
+ *   • public:mark_read           { public_conversation_id: string }
+ *   • public:typing              { public_conversation_id: string, isTyping?: boolean }
  *
  * Outbound emits:
- *   • public_receive_message     { public_conversation_id, message }
- *   • public_message_edited      { public_conversation_id, public_message_id, message }
- *   • public_message_deleted     { public_conversation_id, public_message_id }
- *   • public_messages_refreshed  { public_conversation_id, messages }
- *   • public_marked_read         { public_conversation_id, ok: true }
- *   • public_user_typing         { public_conversation_id, user: { user_id, name }, isTyping }
- *   • public_message_error       { error: string }
+ *   • public:receive_message     { public_conversation_id, message }
+ *   • public:message_edited      { public_conversation_id, public_message_id, message }
+ *   • public:message_deleted     { public_conversation_id, public_message_id }
+ *   • public:messages_refreshed  { public_conversation_id, messages }
+ *   • public:marked_read         { public_conversation_id, ok: true }
+ *   • public:user_typing         { public_conversation_id, user: { user_id, name }, isTyping }
+ *   • public:error               { code, error: string }
  *
  * Notes:
  *   • Uses cookie utils to remember the last open public room for nicer UX 🍪
@@ -62,6 +62,25 @@ const makeCanModifyChecker = (socket) => {
     (existing.sender_guest_id != null && existing.sender_guest_id === public_identity_id);
 };
 
+// Count unread for a specific conversation for a user/guest (admin-authored, unread)
+async function computeUserUnread(prisma, public_conversation_id) {
+  return prisma.publicLiveChatMessage.count({
+    where: { public_conversation_id, sender_is_admin: true, readAt: null }
+  });
+}
+// Count admin's global unread (all non-admin authored, unread)
+async function computeAdminGlobalUnread(prisma) {
+  return prisma.publicLiveChatMessage.count({
+    where: { sender_is_admin: false, readAt: null }
+  });
+}
+// Role-aware where for marking readAt
+function whereForMarkReadByRole(role) {
+  return role === 'admin'
+    ? { sender_is_admin: false, readAt: null }
+    : { sender_is_admin: true, readAt: null };
+}
+
 export default function registerPublicMessageEvents(io, socket) {
   // 🍪 Bind cookie helpers to this socket
   const cookieUtils = createCookieUtils({
@@ -74,7 +93,7 @@ export default function registerPublicMessageEvents(io, socket) {
    * =======================================================*/
 
   // 📨 Send a messaqe from client
-  socket.on('public_send_message', async ({ public_conversation_id, message } = {}) => {
+  socket.on('public:send_message', async ({ public_conversation_id, message } = {}) => {
     try {
       // ✨ Normalize the input text
       const cleanText = normalizeText(message);
@@ -85,7 +104,7 @@ export default function registerPublicMessageEvents(io, socket) {
           public_conversation_id,
           user: socket.userData?.user_id
         });
-        socket.emit('public_message_error', {
+        socket.emit('public:error', {
           code: 'INVALID_ID',
           message: '[SOCKET INVALID_ID] Invalid conversation id.'
         });
@@ -98,7 +117,7 @@ export default function registerPublicMessageEvents(io, socket) {
           public_conversation_id,
           user: socket.userData?.user_id
         });
-        socket.emit('public_message_error', {
+        socket.emit('public:error', {
           code: 'VALIDATION_EMPTY',
           message: '[SOCKET VALIDATION_EMPTY] Message cannot be empty.'
         });
@@ -117,7 +136,7 @@ export default function registerPublicMessageEvents(io, socket) {
           public_conversation_id,
           user: socket.userData?.user_id
         });
-        socket.emit('public_message_error', {
+        socket.emit('public:error', {
           code: 'NOT_FOUND',
           message: '[SOCKET NOT_FOUND] Conversation not found.'
         });
@@ -135,7 +154,9 @@ export default function registerPublicMessageEvents(io, socket) {
         data: {
           public_conversation_id,
           message: cleanText,
-          ...authorFields
+          ...authorFields,
+          sender_is_admin: socket.userData?.role === 'admin',
+          sender_is_bot: false
         },
         select: {
           public_message_id: true,
@@ -143,16 +164,30 @@ export default function registerPublicMessageEvents(io, socket) {
           message: true,
           sender_user_id: true,
           sender_guest_id: true,
+          sender_is_admin: true,
           createdAt: true,
           updatedAt: true
         }
       });
 
       // 📣 Broadcast to the room (everyone currently in the room)
-      io.to(public_conversation_id).emit('public_receive_message', {
+      io.to(public_conversation_id).emit('public:receive_message', {
         public_conversation_id,
         message: displayMessage(created)
       });
+
+      try {
+        if (socket.userData?.role === 'admin') {
+          const total = await computeUserUnread(prisma, public_conversation_id);
+          io.to(public_conversation_id).emit('public:unread_user', {
+            public_conversation_id,
+            total
+          });
+        } else {
+          const total = await computeAdminGlobalUnread(prisma);
+          io.to('admins').emit('public:unread_admin', { total });
+        }
+      } catch {}
 
       // 🍪 Remember last room for smooth reload UX
       cookieUtils.rememberLastRoom(public_conversation_id);
@@ -164,7 +199,7 @@ export default function registerPublicMessageEvents(io, socket) {
     } catch (error) {
       // ❌ Catch (DB or unknown)
       console.error('[SOCKET DB_FAILURE][PublicMessage] send failed:', error);
-      socket.emit('public_message_error', {
+      socket.emit('public:error', {
         code: 'DB_FAILURE',
         message: '[SOCKET DB_FAILURE] Failed to send message.'
       });
@@ -175,7 +210,7 @@ export default function registerPublicMessageEvents(io, socket) {
   /* =========================================================
    * ✏️ EDIT
    * =======================================================*/
-  socket.on('public_edit_message', async ({ public_message_id, message } = {}) => {
+  socket.on('public:edit_message', async ({ public_message_id, message } = {}) => {
     try {
       // ✨ Normalize the input text
       const cleanText = normalizeText(message);
@@ -186,7 +221,7 @@ export default function registerPublicMessageEvents(io, socket) {
           public_message_id,
           user: socket.userData?.user_id
         });
-        socket.emit('public_message_error', {
+        socket.emit('public:error', {
           code: 'INVALID_ID',
           message: '[SOCKET INVALID_ID] Invalid message id.'
         });
@@ -199,7 +234,7 @@ export default function registerPublicMessageEvents(io, socket) {
           public_message_id,
           user: socket.userData?.user_id
         });
-        socket.emit('public_message_error', {
+        socket.emit('public:error', {
           code: 'VALIDATION_EMPTY',
           message: '[SOCKET VALIDATION_EMPTY] Message cannot be empty.'
         });
@@ -223,7 +258,7 @@ export default function registerPublicMessageEvents(io, socket) {
           public_message_id,
           user: socket.userData?.user_id
         });
-        socket.emit('public_message_error', {
+        socket.emit('public:error', {
           code: 'NOT_FOUND',
           message: '[SOCKET NOT_FOUND] Message not found.'
         });
@@ -238,7 +273,7 @@ export default function registerPublicMessageEvents(io, socket) {
           public_message_id,
           user: socket.userData?.user_id
         });
-        socket.emit('public_message_error', {
+        socket.emit('public:error', {
           code: 'FORBIDDEN',
           message: '[SOCKET FORBIDDEN] Forbidden to edit this message.'
         });
@@ -261,7 +296,7 @@ export default function registerPublicMessageEvents(io, socket) {
       });
 
       // 📣 Broadcast edit to the room
-      io.to(updated.public_conversation_id).emit('public_message_edited', {
+      io.to(updated.public_conversation_id).emit('public:message_edited', {
         public_conversation_id: updated.public_conversation_id,
         public_message_id: updated.public_message_id,
         message: displayMessage(updated)
@@ -272,7 +307,7 @@ export default function registerPublicMessageEvents(io, socket) {
     } catch (error) {
       // ❌ Catch (DB or unknown)
       console.error('[SOCKET DB_FAILURE][PublicMessage] edit failed:', error);
-      socket.emit('public_message_error', {
+      socket.emit('public:error', {
         code: 'DB_FAILURE',
         message: '[SOCKET DB_FAILURE] Failed to edit message.'
       });
@@ -283,7 +318,7 @@ export default function registerPublicMessageEvents(io, socket) {
   /* =========================================================
    * 🗑️ DELETE
    * =======================================================*/
-  socket.on('public_delete_message', async ({ public_message_id } = {}) => {
+  socket.on('public:delete_message', async ({ public_message_id } = {}) => {
     try {
       // 🧠 Check UUID of the public_message_id
       if (!isUuid(public_message_id)) {
@@ -291,7 +326,7 @@ export default function registerPublicMessageEvents(io, socket) {
           public_message_id,
           user: socket.userData?.user_id
         });
-        socket.emit('public_message_error', {
+        socket.emit('public:error', {
           code: 'INVALID_ID',
           message: '[SOCKET INVALID_ID] Invalid message id.'
         });
@@ -315,7 +350,7 @@ export default function registerPublicMessageEvents(io, socket) {
           public_message_id,
           user: socket.userData?.user_id
         });
-        socket.emit('public_message_error', {
+        socket.emit('public:error', {
           code: 'NOT_FOUND',
           message: '[SOCKET NOT_FOUND] Message not found.'
         });
@@ -332,7 +367,7 @@ export default function registerPublicMessageEvents(io, socket) {
           public_message_id,
           user: socket.userData?.user_id
         });
-        socket.emit('public_message_error', {
+        socket.emit('public:error', {
           code: 'FORBIDDEN',
           message: '[SOCKET FORBIDDEN] Not allowed to delete this message.'
         });
@@ -342,7 +377,7 @@ export default function registerPublicMessageEvents(io, socket) {
       await prisma.publicLiveChatMessage.delete({ where: { public_message_id } });
 
       // 📣 Broadcast deletion to the room
-      io.to(existing.public_conversation_id).emit('public_message_deleted', {
+      io.to(existing.public_conversation_id).emit('public:message_deleted', {
         public_conversation_id: existing.public_conversation_id,
         public_message_id
       });
@@ -352,7 +387,7 @@ export default function registerPublicMessageEvents(io, socket) {
     } catch (error) {
       // ❌ Catch (DB or unknown)
       console.error('[SOCKET DB_FAILURE][PublicMessage] delete failed:', error);
-      socket.emit('public_message_error', {
+      socket.emit('public:error', {
         code: 'DB_FAILURE',
         message: '[SOCKET DB_FAILURE] Failed to delete message.'
       });
@@ -363,7 +398,7 @@ export default function registerPublicMessageEvents(io, socket) {
   /* =========================================================
    * 🔄 REFRESH (fetch recent)
    * =======================================================*/
-  socket.on('public_refresh_messages', async ({ public_conversation_id } = {}) => {
+  socket.on('public:refresh_messages', async ({ public_conversation_id } = {}) => {
     try {
       // 🧠 Check UUID for invalid public_conversation_id
       if (!isUuid(public_conversation_id)) {
@@ -371,7 +406,7 @@ export default function registerPublicMessageEvents(io, socket) {
           public_conversation_id,
           user: socket.userData?.user_id
         });
-        socket.emit('public_message_error', {
+        socket.emit('public:error', {
           code: 'INVALID_ID',
           message: '[SOCKET INVALID_ID] Invalid conversation id.'
         });
@@ -388,7 +423,7 @@ export default function registerPublicMessageEvents(io, socket) {
       const messages = rows.map(displayMessage);
 
       // 🎯 Direct reply to requester only
-      socket.emit('public_messages_refreshed', { public_conversation_id, messages });
+      socket.emit('public:messages_refreshed', { public_conversation_id, messages });
 
       // 📝 Log the refresh event
       console.log(
@@ -397,7 +432,7 @@ export default function registerPublicMessageEvents(io, socket) {
     } catch (error) {
       // ❌ Catch (DB or unknown)
       console.error('[SOCKET DB_FAILURE][PublicMessage] refresh failed:', error);
-      socket.emit('public_message_error', {
+      socket.emit('public:error', {
         code: 'DB_FAILURE',
         message: '[SOCKET DB_FAILURE] Failed to refresh messages.'
       });
@@ -408,7 +443,7 @@ export default function registerPublicMessageEvents(io, socket) {
   /* =========================================================
    * ✅ MARK READ (conversation)
    * =======================================================*/
-  socket.on('public_mark_read', async ({ public_conversation_id } = {}) => {
+  socket.on('public:mark_read', async ({ public_conversation_id } = {}) => {
     try {
       // ❌ Invalid conversation id
       if (!isUuid(public_conversation_id)) {
@@ -416,10 +451,28 @@ export default function registerPublicMessageEvents(io, socket) {
           public_conversation_id,
           user: socket.userData?.user_id
         });
-        socket.emit('public_message_error', {
+        socket.emit('public:error', {
           code: 'INVALID_ID',
           message: '[SOCKET INVALID_ID] Invalid conversation id.'
         });
+      }
+
+      const role = socket.userData?.role || 'guest';
+      await prisma.publicLiveChatMessage.updateMany({
+        where: { public_conversation_id, ...whereForMarkReadByRole(role) },
+        data: { readAt: new Date() }
+      });
+
+      // 🎯 Ack only to caller
+      socket.emit('public:marked_read', { public_conversation_id, ok: true });
+
+      // ⚡ Compute unread messages for admin & user
+      if (role === 'admin') {
+        const total = await computeAdminGlobalUnread(prisma);
+        io.to('admins').emit('public:unread_admin', { total });
+      } else {
+        const total = await computeUserUnread(prisma, public_conversation_id);
+        socket.emit('public:unread_user', { public_conversation_id, total });
       }
 
       // 🏷️ Simple boolean on conversation (public side)
@@ -428,19 +481,35 @@ export default function registerPublicMessageEvents(io, socket) {
         data: { read: true }
       });
 
-      // 🎯 Ack only to caller
-      socket.emit('public_marked_read', { public_conversation_id, ok: true });
-
       // 📝 Log
       console.log(`✅ [PublicMessage] Marked read: ${public_conversation_id}`);
     } catch (error) {
       // ❌ Catch (DB or unknown)
       console.error('[SOCKET DB_FAILURE][PublicMessage] mark_read failed:', error);
-      socket.emit('public_message_error', {
+      socket.emit('public:error', {
         code: 'DB_FAILURE',
         message: '[SOCKET DB_FAILURE] Failed to mark conversation as read.'
       });
       return; // ⛔
+    }
+  });
+
+  /* =========================================================
+   * ⌨️ Request initial unread counters
+   * =======================================================*/
+  socket.on('public:count_unread', async ({ public_conversation_id, adminGlobal = false } = {}) => {
+    try {
+      const role = socket.userData?.role || 'guest';
+      if (adminGlobal && role === 'admin') {
+        const total = await computeAdminGlobalUnread(prisma);
+        socket.emit('public:unread_admin', { total });
+      }
+      if (public_conversation_id) {
+        const total = await computeUserUnread(prisma, public_conversation_id);
+        socket.emit('public:unread_user', { public_conversation_id, total });
+      }
+    } catch (e) {
+      socket.emit('public:error', { code: 'DB_FAILURE' });
     }
   });
 
