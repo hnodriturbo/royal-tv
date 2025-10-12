@@ -73,5 +73,9 @@ export default function usePublicRoomUsers(public_conversation_id) {
     joinPublicRoom: () => joinPublicRoom(public_conversation_id), // 🔘 Manual rejoin
     leavePublicRoom: () => leavePublicRoom(public_conversation_id) // 🔘 Manual leave
   };
+<<<<<<< HEAD
 >>>>>>> 0db5ae5 (finished usePublicMessageEvents.js & created usePublicRoomUsers.js & usePublicTypingIndicator.js & usePublicUnreadMessages.js)
+=======
+>>>>>>> 87a68ee8a521616354a6b882422fede0d0c041ef
+>>>>>>> bc2f6b48e4f33acee4e379eb2af0f051da5bc534
 }

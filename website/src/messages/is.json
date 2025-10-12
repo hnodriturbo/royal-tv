@@ -1033,7 +1033,11 @@
                     "loading_messages": "Hleð skilaboðum…"
                 },
 =======
+<<<<<<< HEAD
 >>>>>>> ee83db8 (Public Live Chat hooks updates and creations, update of publicRoomEvents.js and generic errors in i18n translations for the message error event and function to use. Also created the bone structure of the widget component.)
+=======
+>>>>>>> 87a68ee8a521616354a6b882422fede0d0c041ef
+>>>>>>> bc2f6b48e4f33acee4e379eb2af0f051da5bc534
                 "errors": {
                     "INVALID_ID": "Aðgerð tókst ekki (ógilt auðkenni).",
                     "FORBIDDEN": "Ekki með heimild fyrir þessari aðgerð.",

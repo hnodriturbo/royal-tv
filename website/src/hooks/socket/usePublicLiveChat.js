@@ -299,5 +299,9 @@ export default function usePublicLiveChat() {
   } = useSocketHub();
 
   // 🧱 Compose specialized domains (kept separate for clarity)
+<<<<<<< HEAD
 >>>>>>> a7fb2fd (updates and creation of usePublicLiveChat which will import into the main component)
+=======
+>>>>>>> 87a68ee8a521616354a6b882422fede0d0c041ef
+>>>>>>> bc2f6b48e4f33acee4e379eb2af0f051da5bc534
 }
