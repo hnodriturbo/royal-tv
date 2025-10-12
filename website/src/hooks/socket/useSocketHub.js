@@ -354,220 +354,147 @@ const useSocketHub = () => {
     [guardedListen]
   );
 
-  /* =========================================================
-   * 🏠 Public lobby & room controls
-   * =======================================================*/
-  const joinPublicLobby = useCallback(
-    () => guardedEmit('public_join_lobby'), // 🛎️ enter the public lobby
-    [guardedEmit]
-  );
-
-  const leavePublicLobby = useCallback(
-    () => guardedEmit('public_leave_lobby'), // 🚪 leave the public lobby
-    [guardedEmit]
-  );
-
-  const createPublicChatRoom = useCallback(
-    (subject, owner_user_id = null) =>
-      guardedEmit('public_create_chat_room', { subject, owner_user_id }), // ➕ create a new public conversation
-    [guardedEmit]
-  );
+  /* =============== 🏢 LOBBY / ROOMS =============== */
+  /* =============== 🏢 LOBBY / ROOMS =============== */
+  const joinPublicLobby = useCallback(() => emit('public_lobby:join'), [emit]);
+  const leavePublicLobby = useCallback(() => emit('public_lobby:leave'), [emit]);
 
   const joinPublicRoom = useCallback(
-    (public_conversation_id) => guardedEmit('public_join_room', { public_conversation_id }), // 🚪 join a specific public conversation
-    [guardedEmit]
+    (public_conversation_id) => emit('public_room:join', { public_conversation_id }),
+    [emit]
   );
-
   const leavePublicRoom = useCallback(
-    (public_conversation_id) => guardedEmit('public_leave_room', { public_conversation_id }), // 🚪 leave a specific public conversation
-    [guardedEmit]
+    (public_conversation_id) => emit('public_room:leave', { public_conversation_id }),
+    [emit]
   );
 
-  const onPublicRoomUsersUpdate = useCallback(
-    (handler) => guardedListen('public_room_users_update', handler), // 👥 live roster (lobby or per-conversation)
-    [guardedListen]
+  const onPublicPresenceUpdate = useCallback(
+    (handler) => listen('public_presence:update', handler),
+    [listen]
   );
 
-  const onPublicLiveChatRoomCreated = useCallback(
-    (handler) => guardedListen('public_live_chat_room_created', handler), // 🆕 notify about a brand-new room
-    [guardedListen]
-  );
-
-  const onPublicLiveChatRoomReady = useCallback(
-    (handler) => guardedListen('public_live_chat_room_ready', handler), // ✅ creator ack with the new room id
-    [guardedListen]
-  );
-
-  /* =========================================================
-   * 💬 Public messages (send / edit / delete / refresh / read / typing)
-   * =======================================================*/
+  /* ================= 💬 MESSAGES ================== */
   const sendPublicMessage = useCallback(
     (public_conversation_id, message) =>
-      guardedEmit('public_send_message', {
-        public_conversation_id,
-        message: (message ?? '').trim()
-      }), // ✉️ send a message
-    [guardedEmit]
+      emit('public_message:create', { public_conversation_id, message: (message ?? '').trim() }),
+    [emit]
   );
 
   const editPublicMessage = useCallback(
-    (public_message_id, message) =>
-      guardedEmit('public_edit_message', {
+    (_roomId, public_message_id, message) =>
+      emit('public_message:update', {
+        action: 'edit',
         public_message_id,
         message: (message ?? '').trim()
-      }), // ✏️ edit an existing message
-    [guardedEmit]
-  );
-
-  const deletePublicMessage = useCallback(
-    (public_message_id) => guardedEmit('public_delete_message', { public_message_id }), // 🗑️ delete a message
-    [guardedEmit]
-  );
-
-  const refreshPublicMessages = useCallback(
-    (public_conversation_id) => guardedEmit('public_refresh_messages', { public_conversation_id }), // 🔄 fetch recent messages
-    [guardedEmit]
-  );
-
-  const onPublicMessagesRefreshed = useCallback(
-    (handler) => guardedListen('public_messages_refreshed', handler), // 📥 receive refreshed list
-    [guardedListen]
+      }),
+    [emit]
   );
 
   const markPublicConversationRead = useCallback(
-    (public_conversation_id) => guardedEmit('public_mark_read', { public_conversation_id }), // ✅ mark conversation read
-    [guardedEmit]
+    (public_conversation_id) =>
+      emit('public_message:update', { action: 'mark_read', public_conversation_id }),
+    [emit]
   );
 
-  const onPublicMarkedRead = useCallback(
-    (handler) => guardedListen('public_marked_read', handler), // 📨 ack for mark_read
-    [guardedListen]
+  const deletePublicMessage = useCallback(
+    (_roomId, public_message_id) => emit('public_message:delete', { public_message_id }),
+    [emit]
   );
 
-  const onPublicReceiveMessage = useCallback(
-    (handler) => guardedListen('public_receive_message', handler), // 📩 realtime: message received
-    [guardedListen]
+  const refreshPublicMessages = useCallback(
+    (public_conversation_id, limit) =>
+      emit('public_message:list', { public_conversation_id, limit }),
+    [emit]
   );
 
+  const onPublicMessageReceived = useCallback(
+    (handler) => listen('public_message:created', handler),
+    [listen]
+  );
   const onPublicMessageEdited = useCallback(
-    (handler) => guardedListen('public_message_edited', handler), // 🪄 realtime: message edited
-    [guardedListen]
+    (handler) => listen('public_message:updated', handler),
+    [listen]
   );
-
   const onPublicMessageDeleted = useCallback(
-    (handler) => guardedListen('public_message_deleted', handler), // 🧽 realtime: message deleted
-    [guardedListen]
+    (handler) => listen('public_message:deleted', handler),
+    [listen]
+  );
+  const onPublicMessagesRefreshed = useCallback(
+    (handler) => listen('public_message:list', handler),
+    [listen]
   );
 
+  /* ================== ⌨️ TYPING =================== */
   const sendPublicTypingStatus = useCallback(
     (public_conversation_id, isTyping = true) =>
-      guardedEmit('public_typing', { public_conversation_id, isTyping }), // ⌨️ typing on/off
-    [guardedEmit]
+      emit('public_message:typing', { public_conversation_id, isTyping }),
+    [emit]
+  );
+  const onPublicTyping = useCallback(
+    (handler) => listen('public_message:typing', handler),
+    [listen]
   );
 
-  const onPublicUserTyping = useCallback(
-    (handler) => guardedListen('public_user_typing', handler), // 👀 see others typing
-    [guardedListen]
+  /* ================== 🔔 UNREAD =================== */
+  const requestPublicUnreadBootstrap = useCallback(
+    ({ scope, public_conversation_id } = {}) =>
+      emit('public_unread:count', { scope, public_conversation_id }),
+    [emit]
+  );
+  const onPublicUnreadUpdated = useCallback(
+    (handler) => listen('public_unread:updated', handler),
+    [listen]
   );
 
-  const onPublicMessageError = useCallback(
-    (handler) => guardedListen('public_message_error', handler), // 🚨 catch validation/DB errors
-    [guardedListen]
-  );
+  /* ================== 🚨 ERRORS =================== */
+  const onPublicMessageError = useCallback((handler) => listen('public_error', handler), [listen]);
 
-  /* =========================================================
-   * 🍪 Cookie helpers (client-side) — optional but convenient
-   * =======================================================*/
-  // 🔎 tiny cookie reader
-  const readBrowserCookie = useCallback((cookieName) => {
-    if (typeof document === 'undefined' || !cookieName) return null; // 🛡️ SSR guard
-    const pairs = document.cookie.split(';');
-    for (const raw of pairs) {
-      const trimmed = raw.trim();
-      if (!trimmed) continue;
-      const eq = trimmed.indexOf('=');
-      if (eq === -1) continue;
-      const key = trimmed.slice(0, eq);
-      const value = trimmed.slice(eq + 1);
-      if (key === cookieName) {
-        try {
-          return decodeURIComponent(value);
-        } catch {
-          return value;
-        }
-      }
-    }
-    return null; // ❌ not found
-  }, []);
-
-  // 📝 set last-room cookie manually (if needed from UI)
-  const setLastPublicRoomCookie = useCallback(
-    (
-      public_conversation_id,
-      { cookieName = 'public_last_conversation_id', maxAgeDays = 14 } = {}
-    ) => {
-      if (typeof document === 'undefined') return; // 🛡️ SSR guard
-      const maxAgeSeconds = 60 * 60 * 24 * Number(maxAgeDays);
-      document.cookie = `${cookieName}=${encodeURIComponent(
-        public_conversation_id || ''
-      )}; Path=/; Max-Age=${maxAgeSeconds}; SameSite=Lax`; // 📌 persist room id
-    },
-    []
-  );
-
-  // 🧽 clear last-room cookie manually
-  const clearLastPublicRoomCookie = useCallback((cookieName = 'public_last_conversation_id') => {
-    if (typeof document === 'undefined') return; // 🛡️ SSR guard
-    document.cookie = `${cookieName}=; Path=/; Max-Age=0; SameSite=Lax`; // 🧼 nuke cookie
-  }, []);
-
-  // 🔎 read last-room cookie for restoring UI
-  const getLastPublicRoomFromCookie = useCallback(
-    (cookieName = 'public_last_conversation_id') => readBrowserCookie(cookieName), // 🔎 read only
-    [readBrowserCookie]
-  );
-
-  // 🔁 enable server→client cookie sync (registers the two tiny handlers)
+  /* ================== 🍪 COOKIES ================== */
   const enablePublicCookieSync = useCallback(
     (cookieName = 'public_last_conversation_id') => {
-      // 🧷 server asks client to write non-HttpOnly cookie
-      const offSet = guardedListen(
+      const offSet = listen(
         'public_cookie:set_last_room',
-        ({ cookieName: serverCookieName, public_conversation_id, maxAgeDays = 14 } = {}) => {
-          const name = serverCookieName || cookieName;
-          const maxAgeSeconds = 60 * 60 * 24 * Number(maxAgeDays);
+        ({ cookieName: n, public_conversation_id, maxAgeDays = 14 } = {}) => {
           try {
-            if (typeof document !== 'undefined') {
-              document.cookie = `${name}=${encodeURIComponent(
-                public_conversation_id || ''
-              )}; Path=/; Max-Age=${maxAgeSeconds}; SameSite=Lax`; // 🍪 write cookie
-            }
-          } catch {}
+            const key = n || cookieName;
+            const d = new Date();
+            d.setTime(d.getTime() + Math.max(1, Number(maxAgeDays) || 14) * 864e5);
+            document.cookie = `${key}=${public_conversation_id}; expires=${d.toUTCString()}; path=/; samesite=lax`;
+          } catch (e) {
+            console.warn('cookie:set failed', e);
+          }
         }
       );
-
-      // 🧷 server asks client to clear it
-      const offClear = guardedListen(
-        'public_cookie:clear_last_room',
-        ({ cookieName: serverCookieName } = {}) => {
-          const name = serverCookieName || cookieName;
-          try {
-            if (typeof document !== 'undefined') {
-              document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax`; // 🍪 clear cookie
-            }
-          } catch {}
+      const offClear = listen('public_cookie:clear_last_room', ({ cookieName: n } = {}) => {
+        try {
+          const key = n || cookieName;
+          document.cookie = `${key}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; samesite=lax`;
+        } catch (e) {
+          console.warn('cookie:clear failed', e);
         }
-      );
-
-      // 🔚 return unsubscriber
+      });
       return () => {
-        if (typeof offSet === 'function') offSet();
-        if (typeof offClear === 'function') offClear();
+        offSet && offSet();
+        offClear && offClear();
       };
     },
-    [guardedListen]
+    [listen]
   );
 
+  const getLastPublicRoomFromCookie = useCallback((cookieName = 'public_last_conversation_id') => {
+    const m = document.cookie.match(new RegExp(`(?:^|; )${cookieName}=([^;]*)`));
+    return m ? decodeURIComponent(m[1]) : null;
+  }, []);
+
+  const setLastPublicRoomCookie = useCallback((id, cookieName = 'public_last_conversation_id') => {
+    const d = new Date();
+    d.setTime(d.getTime() + 14 * 864e5);
+    document.cookie = `${cookieName}=${id}; expires=${d.toUTCString()}; path=/; samesite=lax`;
+  }, []);
+
+  const clearLastPublicRoomCookie = useCallback((cookieName = 'public_last_conversation_id') => {
+    document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; samesite=lax`;
+  }, []);
   // ======================= EXPORTS ========================
   return {
     socket,
@@ -655,32 +582,36 @@ const useSocketHub = () => {
     setLocale,
     onLocaleChanged,
 
-    // 🏠 Public lobby & room controls
+    // 🏢 Lobby / rooms
     joinPublicLobby,
     leavePublicLobby,
-    createPublicChatRoom,
     joinPublicRoom,
     leavePublicRoom,
-    onPublicRoomUsersUpdate,
-    onPublicLiveChatRoomCreated,
-    onPublicLiveChatRoomReady,
+    onPublicPresenceUpdate,
 
-    // 💬 Public messages
+    // 💬 Messages
     sendPublicMessage,
     editPublicMessage,
     deletePublicMessage,
     refreshPublicMessages,
-    onPublicMessagesRefreshed,
     markPublicConversationRead,
-    onPublicMarkedRead,
-    onPublicReceiveMessage,
+    onPublicMessageReceived,
     onPublicMessageEdited,
     onPublicMessageDeleted,
+    onPublicMessagesRefreshed,
+
+    // ⌨️ Typing
     sendPublicTypingStatus,
-    onPublicUserTyping,
+    onPublicTyping,
+
+    // 🔔 Unread
+    requestPublicUnreadBootstrap,
+    onPublicUnreadUpdated,
+
+    // 🚨 Errors
     onPublicMessageError,
 
-    // 🍪 Cookie convenience
+    // 🍪 Cookies
     enablePublicCookieSync,
     getLastPublicRoomFromCookie,
     setLastPublicRoomCookie,

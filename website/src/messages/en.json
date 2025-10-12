@@ -1032,7 +1032,20 @@
                 "admin_support": "Admin Support"
             },
             "publicLiveChat": {
-                "main": { "main_title": "Public Live Chat" },
+                "main": {
+                    "main_title": "Public Live Chat",
+                    "toggle_open": "Open chat",
+                    "toggle_close": "Close",
+                    "admin_online": "admin online",
+                    "bot_standby": "bot standby",
+                    "users_label": "users",
+                    "empty_state": "No messages yet. Say hi 👋",
+                    "input_placeholder": "Write a message…",
+                    "send_button": "Send",
+                    "unread_badge_sr": "unread messages",
+                    "reconnecting": "Reconnecting…",
+                    "loading_messages": "Loading messages…"
+                },
                 "errors": {
                     "INVALID_ID": "That action couldn’t run (invalid id).",
                     "FORBIDDEN": "You don’t have permission for that.",

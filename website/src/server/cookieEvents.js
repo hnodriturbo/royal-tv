@@ -16,14 +16,12 @@
  */
 
 // 🧷 Cookie names used across the app
-export const COOKIE_PUBLIC_ID = 'public_identity_id'; // 🪪 HttpOnly (set by Next middleware)
-export const COOKIE_LAST_ROOM = 'public_last_conversation_id'; // 🧷 non-HttpOnly (set by client)
-export const COOKIE_LOCALE = 'NEXT_LOCALE'; // 🌍 user/guest locale
+export const COOKIE_PUBLIC_ID = 'public_identity_id'; // 🪪 HttpOnly (set by middleware)
+export const COOKIE_LAST_ROOM = 'public_last_conversation_id'; // 🧷 Non-HttpOnly (client writes)
+export const COOKIE_LOCALE = 'NEXT_LOCALE'; // 🌍 UI language
 
-// 📡 Event names for client cookie writes
-export const EV_COOKIE_SET_LAST_ROOM = 'public_cookie:set_last_room';
-export const EV_COOKIE_CLEAR_LAST_ROOM = 'public_cookie:clear_last_room';
-
+export const EV_COOKIE_SET_LAST_ROOM = 'public_cookie:set_last_room'; // ✍️ Ask client to write last-room
+export const EV_COOKIE_CLEAR_LAST_ROOM = 'public_cookie:clear_last_room'; // 🧽 Ask client to clear last-room
 // 🧁 Tiny cookie reader
 function readCookie(cookieHeader, cookieName) {
   // 🚪 Handle empty inputs early

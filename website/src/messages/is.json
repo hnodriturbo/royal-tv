@@ -1017,6 +1017,20 @@
                 "admin_support": "Aðstoð stjórnanda"
             },
             "publicLiveChat": {
+                "main": {
+                    "main_title": "Opið spjall",
+                    "toggle_open": "Opna spjall",
+                    "toggle_close": "Loka",
+                    "admin_online": "stjórnandi á netinu",
+                    "bot_standby": "vélmenni tilbúið",
+                    "users_label": "notendur",
+                    "empty_state": "Engin skilaboð enn. Segðu hæ 👋",
+                    "input_placeholder": "Skrifaðu skilaboð…",
+                    "send_button": "Senda",
+                    "unread_badge_sr": "ólesin skilaboð",
+                    "reconnecting": "Tengist aftur…",
+                    "loading_messages": "Hleð skilaboðum…"
+                },
                 "errors": {
                     "INVALID_ID": "Aðgerð tókst ekki (ógilt auðkenni).",
                     "FORBIDDEN": "Ekki með heimild fyrir þessari aðgerð.",

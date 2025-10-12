@@ -25,7 +25,8 @@ import LogPageView from '@/components/reusableUI/socket/LogPageView';
 import WhatsAppLogo from '@/components/ui/whatsapp/WhatsAppBS';
 import ShowMessages from '@/components/ui/showErrorAndMessages/ShowMessages';
 import LanguageSwitcher from '@/components/languageSwitcher/LanguageSwitcher';
-
+// 💬 Public live chat widget (small floating window)
+import PublicLiveChatWidget from '@/components/reusableUI/socket/PublicLiveChatWidget';
 // ❌ Error Debugger Helper
 import ErrorBoundary from '@/lib/debug/ErrorBoundary';
 
@@ -52,6 +53,7 @@ function AppContent({ children }) {
               </div>
 
               <WhatsAppLogo />
+              <PublicLiveChatWidget />
               <ShowMessages />
             </div>
           </ModalProvider>
