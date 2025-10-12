@@ -1017,6 +1017,7 @@
                 "admin_support": "Aðstoð stjórnanda"
             },
             "publicLiveChat": {
+<<<<<<< HEAD
                 "main": {
                     "main_title": "Opið spjall",
                     "toggle_open": "Opna spjall",
@@ -1031,6 +1032,8 @@
                     "reconnecting": "Tengist aftur…",
                     "loading_messages": "Hleð skilaboðum…"
                 },
+=======
+>>>>>>> 87a68ee8a521616354a6b882422fede0d0c041ef
                 "errors": {
                     "INVALID_ID": "Aðgerð tókst ekki (ógilt auðkenni).",
                     "FORBIDDEN": "Ekki með heimild fyrir þessari aðgerð.",
