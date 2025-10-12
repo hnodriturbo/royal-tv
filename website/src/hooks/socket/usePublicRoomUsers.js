@@ -1,8 +1,15 @@
 /**
-<<<<<<< HEAD
- * ========== usePublicRoomUsers (client) ==========
- * 🧑‍🤝‍🧑 Presence list for a single room.
- * 🚫 No auto-join here — let usePublicLiveChat control joins.
+ * ================= usePublicRoomUsers (client) =================
+ * 👥 Live presence list for a single public room
+ * ---------------------------------------------------------------
+ * Args:
+ *   • public_conversation_id: string
+ *
+ * Returns:
+ *   • usersInRoom: Array<{ user_id?, public_identity_id?, role, name }>
+ *
+ * Note:
+ *   • Joins/leaves are orchestrated by usePublicLiveChat; this hook only listens.
  */
 'use client';
 
@@ -10,72 +17,24 @@ import { useEffect, useMemo, useState } from 'react';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 
 export default function usePublicRoomUsers(public_conversation_id) {
+  // 🧭 Socket hub bridge (typed events)
   const { onPublicPresenceUpdate } = useSocketHub();
+
+  // 🧑‍🤝‍🧑 Reactive roster for the current room
   const [users, setUsers] = useState([]);
 
-  // 👂 Presence updates (filter by this room)
+  // 👂 Presence updates scoped to this room
   useEffect(() => {
-    const off = onPublicPresenceUpdate(({ room_id, users }) => {
-      if (!public_conversation_id || room_id !== public_conversation_id) return;
-      setUsers(Array.isArray(users) ? users : []);
+    if (!onPublicPresenceUpdate) return;
+    const off = onPublicPresenceUpdate(({ room_id, public_conversation_id: id, users }) => {
+      // 🔎 Some hubs send {room_id}, others {public_conversation_id}; allow both
+      const target = id || room_id;
+      if (!public_conversation_id || target !== public_conversation_id) return;
+      setUsers(Array.isArray(users) ? users : []); // ✅ Safe fallback
     });
-    return off;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [public_conversation_id]); // keep deps minimal to avoid resub loops
+    return () => off && off();
+  }, [public_conversation_id, onPublicPresenceUpdate]);
 
+  // 📦 Stable shape for consumers
   return useMemo(() => ({ usersInRoom: users }), [users]);
-=======
- * ================= usePublicRoomUsers (client) =================
- * 👥 Track live presence for a single public room
- * --------------------------------------------------------------
- * Args:
- *   • public_conversation_id: string
- *
- * Returns:
- *   • usersInPublicRoom: Array<{ user_id?, public_identity_id?, role, name }>
- *   • joinPublicRoom()
- *   • leavePublicRoom()
- */
-'use client';
-
-import { useEffect, useState } from 'react';
-import useSocketHub from '@/hooks/socket/useSocketHub';
-
-export default function usePublicRoomUsers(public_conversation_id) {
-  // 📌 Reactive list of people currently in the room
-  const [usersInPublicRoom, setUsersInPublicRoom] = useState([]);
-
-  // 🛰️ Public room helpers from the hub
-  const { joinPublicRoom, leavePublicRoom, onPublicRoomUsersUpdate } = useSocketHub();
-
-  useEffect(() => {
-    if (!public_conversation_id) return; // 🛡️ Guard
-
-    // 👂 Live updates (server emits when someone joins/leaves)
-    const stop = onPublicRoomUsersUpdate((payload) => {
-      if (payload.public_conversation_id === public_conversation_id) {
-        setUsersInPublicRoom(Array.isArray(payload.users) ? payload.users : []);
-      }
-    });
-
-    // 🚪 Enter the room now
-    joinPublicRoom(public_conversation_id);
-
-    // 🧹 Leave + unbind on unmount
-    return () => {
-      leavePublicRoom(public_conversation_id);
-      stop && stop();
-    };
-  }, [public_conversation_id, joinPublicRoom, leavePublicRoom, onPublicRoomUsersUpdate]);
-
-  return {
-    usersInPublicRoom,
-    joinPublicRoom: () => joinPublicRoom(public_conversation_id), // 🔘 Manual rejoin
-    leavePublicRoom: () => leavePublicRoom(public_conversation_id) // 🔘 Manual leave
-  };
-<<<<<<< HEAD
->>>>>>> 0db5ae5 (finished usePublicMessageEvents.js & created usePublicRoomUsers.js & usePublicTypingIndicator.js & usePublicUnreadMessages.js)
-=======
->>>>>>> 87a68ee8a521616354a6b882422fede0d0c041ef
->>>>>>> bc2f6b48e4f33acee4e379eb2af0f051da5bc534
 }

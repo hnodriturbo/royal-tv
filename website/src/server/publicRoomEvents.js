@@ -1,273 +1,160 @@
 /**
  * ================== publicRoomEvents.js ==================
- * 🏠 Public Live Chat — Room management (lobby + per-conversation)
- * --------------------------------------------------------------
- * Inbound events:
- *   • public_join_lobby
- *   • public_leave_lobby
- *   • public_create_chat_room  { subject?: string, owner_user_id?: string | null }
- *   • public_join_room         { public_conversation_id: string }
- *   • public_leave_room        { public_conversation_id: string }
+ * 🏠 Public Live Chat — Lobby + per-room presence (Set-based, socket.id)
+ * ---------------------------------------------------------
+ * Inbound:
+ *   • public_lobby:join
+ *   • public_lobby:leave
+ *   • public_room:create     { subject?: string, owner_user_id?: string | null }
+ *   • public_room:join       { public_conversation_id: string }
+ *   • public_room:leave      { public_conversation_id: string }
  *
- * Outbound emits:
- *   • public_room_users_update
- *       - LOBBY: { room_id, users }
- *       - CONVERSATION: { public_conversation_id, users }
- *   • public_live_chat_room_created { public_conversation_id, owner_id }
- *   • public_live_chat_room_ready   { public_conversation_id }
- *
- * Notes:
- *   • Presence registry lives in globalState.activeUsersInPublicRoom (shared room).
- *   • Lobby presence lives in globalState.publicLobby (shared room array).
- *   • Per-user room already exists from the connection handler (join(user_id)).
- *   • Admin-online gating will be handled later in UI/hooks (not here).
+ * Outbound (compat):
+ *   • public_presence:update { room_id, users }            ← ✅ what your Hub listens to
+ *   • public_lobby:users_update / public_room:users_update ← (kept for fallback)
+ *   • public_room:created, public_room:ready, public_room:error
  */
+import prisma from '../lib/core/prisma.js'; // 🧱 Prisma
 
-import prisma from '../lib/core/prisma.js'; // 🧱 Prisma client
+const isUuid = (v) => typeof v === 'string' && /^[0-9a-fA-F-]{36}$/.test(v);
+const PUBLIC_LOBBY_ROOM = 'public_live_chat_lobby'; // 🛋️ room name used for lobby
 
-// 🧪 UUID verification checker
-const isUuid = (value) => typeof value === 'string' && /^[0-9a-fA-F-]{36}$/.test(value);
+// 🧰 Ensure value is a Set
+const ensureSet = (maybe) =>
+  maybe instanceof Set ? maybe : new Set(Array.isArray(maybe) ? maybe : []);
 
-// 🏠 Consistent lobby room name
-const PUBLIC_LOBBY_ROOM = 'public_live_chat_lobby';
+// 👥 Convert Set<socketId> → Array<userData> (current snapshots)
+const usersFromSet = (io, set) =>
+  Array.from(ensureSet(set))
+    .map((sid) => io.sockets.sockets.get(sid)?.userData)
+    .filter(Boolean);
 
 export default function registerPublicRoomEvents(io, socket, globalState) {
-  /* --------------------------------------------------------------------------------------- */
-  // 🗂️ Helper: 🗺️ Ensure shared rooms exist (arrays for lists; object-of-arrays for rooms)
-  globalState.publicLobby ||= []; // 🏠 array of user snapshots
-  globalState.activeUsersInPublicRoom ||= {}; // 💬 { [convoId]: userData[] }
+  // 🗃️ Shared registries (Set-based)
+  globalState.publicLobby = ensureSet(globalState.publicLobby); // 👥 Set<socketId> in lobby
+  globalState.activeUsersInPublicRoom ||= Object.create(null); // { [roomId]: Set<socketId> }
 
-<<<<<<< HEAD
-  /* --------------------------------------------------------------------------------------- */
-
-=======
-<<<<<<< HEAD
-  // 🍪 cookie helpers bound to this socket
-  const cookieUtils = createCookieUtils({
-    cookieHeader: socket?.handshake?.headers?.cookie || '',
-    socket
-  });
-
-  const _usersFromSet = (set) =>
-    Array.from(set || [])
-      .map((sId) => io.sockets.sockets.get(sId)?.userData)
-      .filter(Boolean);
-=======
-  /* --------------------------------------------------------------------------------------- */
-
->>>>>>> bc2f6b48e4f33acee4e379eb2af0f051da5bc534
-  // 🚪 Join the public lobby (widget opened)
-  socket.on('public:join_lobby', () => {
-    // 🧹 Remove any previous snapshot for this user_id (multi-tab/reconnect safe)
-    globalState.publicLobby = globalState.publicLobby.filter(
-      (existingUser) => existingUser.user_id !== socket.userData.user_id
-<<<<<<< HEAD
-    );
-    // ➕ Add fresh user to the lobby
-    globalState.publicLobby.push({ ...socket.userData });
-=======
-    );
-    // ➕ Add fresh user to the lobby
-    globalState.publicLobby.push({ ...socket.userData });
-
-    // 🚪 Join lobby room
-    socket.join(PUBLIC_LOBBY_ROOM); // ✅ Join the publicLobby
-
-    // 📣 Broadcast current lobby
-    io.to(PUBLIC_LOBBY_ROOM).emit('public:room_users_update', {
-      room_id: PUBLIC_LOBBY_ROOM, // ✅ Use room_id for lobby
-      users: globalState.publicLobby
+  // 🔁 emit lobby roster (both the new canonical + legacy topic)
+  const emitLobby = () => {
+    const users = usersFromSet(io, globalState.publicLobby);
+    io.to(PUBLIC_LOBBY_ROOM).emit('public_presence:update', { room_id: PUBLIC_LOBBY_ROOM, users });
+    io.to(PUBLIC_LOBBY_ROOM).emit('public_lobby:users_update', {
+      room_id: PUBLIC_LOBBY_ROOM,
+      users
     });
-
-    // 📝 log the event
-    console.log(
-      `🏠 [SOCKET PublicRoom] Lobby join: ${socket.userData.user_id} Role: ${socket.userData.role}`
-    );
-  });
-
-  // 🚪 Leave the public lobby (widget closed)
-  socket.on('public:leave_lobby', () => {
-    // 🧹 Remove user with filtering
-    globalState.publicLobby = globalState.publicLobby.filter(
-      (existingUser) => existingUser.user_id !== socket.userData.user_id
-    );
->>>>>>> 87a68ee8a521616354a6b882422fede0d0c041ef
-
-  const _ensureRoom = (roomId) => (globalState.activeUsersInPublicRoom[roomId] ||= new Set());
-
-<<<<<<< HEAD
-  const _emitPresence = (room_id) => {
-    const users =
-      room_id === 'PUBLIC_LOBBY'
-        ? _usersFromSet(globalState.publicLobby)
-        : _usersFromSet(globalState.activeUsersInPublicRoom[room_id]);
-    console.log('📣 [public_presence:update] room:%s users:%d', room_id, users.length);
-    io.to(room_id).emit('public_presence:update', { room_id, users });
+    // Also broadcast to 'PUBLIC_LOBBY' for older code paths (index.js uses it in disconnect)
+    io.to('PUBLIC_LOBBY').emit('public_presence:update', { room_id: PUBLIC_LOBBY_ROOM, users });
   };
-=======
-    // 📣 Broadcast current lobby roster (LOBBY PAYLOAD)
-    io.to(PUBLIC_LOBBY_ROOM).emit('public:room_users_update', {
-      room_id: PUBLIC_LOBBY_ROOM,
-      users: globalState.publicLobby
-    });
->>>>>>> 87a68ee8a521616354a6b882422fede0d0c041ef
 
-  // 🏢 LOBBY: join
+  // 🔁 emit room roster (both canonical + legacy)
+  const emitRoom = (public_conversation_id) => {
+    const set = ensureSet(globalState.activeUsersInPublicRoom[public_conversation_id]);
+    const users = usersFromSet(io, set);
+    io.to(public_conversation_id).emit('public_presence:update', {
+      room_id: public_conversation_id,
+      users
+    });
+    io.to(public_conversation_id).emit('public_room:users_update', {
+      public_conversation_id,
+      users
+    });
+  };
+
+  /* ----------------------- LOBBY ------------------------ */
   socket.on('public_lobby:join', () => {
-    console.log('🏠 [public_lobby:join] user:%s', socket.userData?.user_id);
-    socket.join('PUBLIC_LOBBY');
+    console.log('[Public] 🛋️ Lobby joined:', socket.id);
+    // ➕ add this socket to the lobby Set
     globalState.publicLobby.add(socket.id);
-    _emitPresence('PUBLIC_LOBBY');
+    socket.join(PUBLIC_LOBBY_ROOM);
+    emitLobby(); // 📣 broadcast
   });
 
-  // 🏢 LOBBY: leave
   socket.on('public_lobby:leave', () => {
-    console.log('🏠 [public_lobby:leave] user:%s', socket.userData?.user_id);
-    socket.leave('PUBLIC_LOBBY');
+    console.log('[Public] 🛋️ Lobby left:', socket.id);
+    // ➖ remove this socket from the lobby Set
     globalState.publicLobby.delete(socket.id);
-    _emitPresence('PUBLIC_LOBBY');
-  });
-
-<<<<<<< HEAD
-  // 🚪 ROOM: join
-  socket.on('public_room:join', async ({ public_conversation_id } = {}) => {
-    console.log(
-      '🚪 [public_room:join] user:%s room:%s',
-      socket.userData?.user_id,
-      public_conversation_id
-    );
-    if (typeof public_conversation_id !== 'string')
-      return socket.emit('public_error', { code: 'INVALID_ID' });
-=======
-  // ➕ Create a new public conversation (owner optional for logged-in user
-  socket.on('public:create_chat_room', async ({ subject, owner_user_id } = {}) => {
-    try {
-      // 📝 Prepare conversation data (owner connect only when provided)
-      const createdData = {
-        subject: subject || 'Public Live Chat' // 📌 Subject of the conversation fallbacks to english
-      };
->>>>>>> 87a68ee8a521616354a6b882422fede0d0c041ef
->>>>>>> bc2f6b48e4f33acee4e379eb2af0f051da5bc534
-
-    // 🚪 Join lobby room
-    socket.join(PUBLIC_LOBBY_ROOM); // ✅ Join the publicLobby
-
-    // 📣 Broadcast current lobby
-    io.to(PUBLIC_LOBBY_ROOM).emit('public:room_users_update', {
-      room_id: PUBLIC_LOBBY_ROOM, // ✅ Use room_id for lobby
-      users: globalState.publicLobby
-    });
-
-    // 📝 log the event
-    console.log(
-      `🏠 [SOCKET PublicRoom] Lobby join: ${socket.userData.user_id} Role: ${socket.userData.role}`
-    );
-  });
-
-<<<<<<< HEAD
-  // 🚪 Leave the public lobby (widget closed)
-  socket.on('public:leave_lobby', () => {
-    // 🧹 Remove user with filtering
-    globalState.publicLobby = globalState.publicLobby.filter(
-      (existingUser) => existingUser.user_id !== socket.userData.user_id
-    );
-
-    // 🚪 Leave lobby room
     socket.leave(PUBLIC_LOBBY_ROOM);
-
-    // 📣 Broadcast current lobby roster (LOBBY PAYLOAD)
-    io.to(PUBLIC_LOBBY_ROOM).emit('public:room_users_update', {
-      room_id: PUBLIC_LOBBY_ROOM,
-      users: globalState.publicLobby
-    });
-
-    // 📝 Log the event
-    console.log(
-      `🏠 [SOCKET PublicRoom] Lobby leave: ${socket.userData.name} (${socket.userData.role}) ` +
-        `user_id/guest_id: ${socket.userData.user_id}`
-    );
+    emitLobby();
   });
 
-  /* --------------------------------------------------------------------------------------- */
+  /* ----------------------- CREATE ----------------------- */
+  socket.on('public_room:create', async ({ subject, owner_user_id } = {}) => {
+    console.log('[Public] 🏠 Room create requested:', { subject, owner_user_id });
 
-  // ➕ Create a new public conversation (owner optional for logged-in user
-  socket.on('public:create_chat_room', async ({ subject, owner_user_id } = {}) => {
     try {
-      // 📝 Prepare conversation data (owner connect only when provided)
-      const createdData = {
-        subject: subject || 'Public Live Chat' // 📌 Subject of the conversation fallbacks to english
-      };
-
-      // 🔐 If owner_user_id is provided, ensure it's a real User (not a guest)
+      const data = { subject: subject || 'Public Live Chat' };
       if (owner_user_id && isUuid(owner_user_id)) {
         const owner = await prisma.user.findUnique({
           where: { user_id: owner_user_id },
           select: { user_id: true, role: true }
         });
-
-        // ✅ If Real user: connect relation
-        if (owner && owner.role !== 'guest') {
-          createdData.owner = { connect: { user_id: owner_user_id } };
-        } else {
-          // 🚫 Provided id is guest or not found → ignore owner_user_id
-          console.warn(`[SOCKET PublicRoom] Ignoring invalid owner_user_id: ${owner_user_id}`);
-        }
+        if (owner && owner.role !== 'guest') data.owner = { connect: { user_id: owner_user_id } };
       }
-      // 👤 If the creator is a guest, optionally stamp guest ownership for auditing
-      //    (owner is optional — keep or remove this block based on your needs)
-      if (!createdData.owner && socket.userData.role === 'guest') {
-        // 🪪 Use stable cookie identity (better than socket-scoped guest-uid)
-        createdData.owner_guest_id = socket.userData.public_identity_id;
+      if (!data.owner && socket.userData.role === 'guest') {
+        data.owner_guest_id = socket.userData.public_identity_id;
       }
-
-      // 💾 Create conversation (DB generates public_conversation_id)
       const conversation = await prisma.publicLiveChatConversation.create({
-        createdData,
+        data,
         select: { public_conversation_id: true, owner_id: true }
       });
-
-=======
-<<<<<<< HEAD
-  // 🧹 disconnect
-  socket.on('disconnect', (reason) => {
-    globalState.publicLobby.delete(socket.id);
-    for (const set of Object.values(globalState.activeUsersInPublicRoom)) set.delete(socket.id);
-    console.log('🔻 [disconnect] user:%s reason:%s', socket.userData?.user_id, reason);
-=======
->>>>>>> bc2f6b48e4f33acee4e379eb2af0f051da5bc534
-      // 🧠 Extract the public_conversation_id from created conversation
       const public_conversation_id = conversation.public_conversation_id;
 
-      // 🗂️ Ensure room list exists & add this user (de-duped)
-      const list = (globalState.activeUsersInPublicRoom[public_conversation_id] ||= []);
-      const filteredList = list.filter((user) => user.user_id !== socket.userData.user_id);
-      filteredList.push({ ...socket.userData });
-      globalState.activeUsersInPublicRoom[public_conversation_id] = filteredList;
+      // 🧾 Ensure Set exists and add self (socket.id)
+      const set = ensureSet(globalState.activeUsersInPublicRoom[public_conversation_id]);
+      set.add(socket.id);
+      globalState.activeUsersInPublicRoom[public_conversation_id] = set;
 
-      // 🚪 Join the new room
       socket.join(public_conversation_id);
 
-      // 📣 Broadvast and notify creator
-      io.emit('public:live_chat_room_created', {
+      console.log('[Public] 🏠 Room created:', public_conversation_id);
+
+      io.emit('public_room:created', {
         public_conversation_id,
         owner_id: conversation.owner_id || null
       });
-      socket.emit('public_live_chat_room_ready', { public_conversation_id });
 
-      io.to(public_conversation_id).emit('public:room_users_update', {
-        public_conversation_id,
-        users: globalState.activeUsersInPublicRoom[public_conversation_id]
-      });
+      socket.emit('public_room:ready', { public_conversation_id });
 
-      // 📝 log Creation of room
-      console.log(`➕ [SOCKET PublicRoom] Created: ${public_conversation_id}`);
-    } catch (error) {
-      console.error('[SOCKET ERROR] [PublicRoom] create failed:', error?.message || error);
-      socket.emit('public_room_error', { error: 'Failed to create public conversation.' });
+      emitRoom(public_conversation_id);
+    } catch (e) {
+      socket.emit('public_room:error', { error: 'Failed to create public conversation.' });
     }
-<<<<<<< HEAD
-=======
->>>>>>> 87a68ee8a521616354a6b882422fede0d0c041ef
->>>>>>> bc2f6b48e4f33acee4e379eb2af0f051da5bc534
+  });
+
+  /* ----------------------- JOIN/LEAVE ROOM -------------- */
+  socket.on('public_room:join', ({ public_conversation_id } = {}) => {
+    console.log('[Public] 🚪 Room joined:', public_conversation_id, 'socket:', socket.id);
+    if (!isUuid(public_conversation_id)) return;
+    const set = ensureSet(globalState.activeUsersInPublicRoom[public_conversation_id]);
+    set.add(socket.id);
+    globalState.activeUsersInPublicRoom[public_conversation_id] = set;
+    socket.join(public_conversation_id);
+    emitRoom(public_conversation_id);
+  });
+
+  socket.on('public_room:leave', ({ public_conversation_id } = {}) => {
+    console.log('[Public] 🚪 Room left:', public_conversation_id, 'socket:', socket.id);
+    if (!isUuid(public_conversation_id)) return;
+    const set = ensureSet(globalState.activeUsersInPublicRoom[public_conversation_id]);
+    set.delete(socket.id);
+    globalState.activeUsersInPublicRoom[public_conversation_id] = set;
+    socket.leave(public_conversation_id);
+    emitRoom(public_conversation_id);
+  });
+
+  /* ----------------------- DISCONNECT ------------------- */
+  socket.on('disconnect', () => {
+    console.log('[Public] 🔌 Disconnected:', socket.id);
+    // 🚪 lobby
+    globalState.publicLobby.delete(socket.id);
+    emitLobby();
+
+    // 🚪 every room
+    for (const roomId of Object.keys(globalState.activeUsersInPublicRoom)) {
+      const set = ensureSet(globalState.activeUsersInPublicRoom[roomId]);
+      set.delete(socket.id);
+      globalState.activeUsersInPublicRoom[roomId] = set;
+      emitRoom(roomId);
+    }
   });
 }

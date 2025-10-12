@@ -355,146 +355,204 @@ const useSocketHub = () => {
   );
 
   /* =============== 🏢 LOBBY / ROOMS =============== */
-  /* =============== 🏢 LOBBY / ROOMS =============== */
-  const joinPublicLobby = useCallback(() => emit('public_lobby:join'), [emit]);
-  const leavePublicLobby = useCallback(() => emit('public_lobby:leave'), [emit]);
+  // 🛋️ Enter lobby
+  const joinPublicLobby = useCallback(() => guardedEmit('public_lobby:join'), [guardedEmit]);
 
+  // 🛋️ Exit lobby
+  const leavePublicLobby = useCallback(() => guardedEmit('public_lobby:leave'), [guardedEmit]);
+
+  // 🏠 Enter specific room
   const joinPublicRoom = useCallback(
-    (public_conversation_id) => emit('public_room:join', { public_conversation_id }),
-    [emit]
-  );
-  const leavePublicRoom = useCallback(
-    (public_conversation_id) => emit('public_room:leave', { public_conversation_id }),
-    [emit]
+    (public_conversation_id) => guardedEmit('public_room:join', { public_conversation_id }),
+    [guardedEmit]
   );
 
+  // 🏠 Exit specific room
+  const leavePublicRoom = useCallback(
+    (public_conversation_id) => guardedEmit('public_room:leave', { public_conversation_id }),
+    [guardedEmit]
+  );
+
+  // 👥 Presence updates (lobby or room) — unified topic
   const onPublicPresenceUpdate = useCallback(
-    (handler) => listen('public_presence:update', handler),
-    [listen]
+    (handler) => guardedListen('public_presence:update', handler), // 👂 { room_id, users }
+    [guardedListen]
   );
 
   /* ================= 💬 MESSAGES ================== */
+  // ✉️ Create new message
   const sendPublicMessage = useCallback(
     (public_conversation_id, message) =>
-      emit('public_message:create', { public_conversation_id, message: (message ?? '').trim() }),
-    [emit]
+      guardedEmit('public_message:create', {
+        public_conversation_id,
+        message: (message ?? '').trim()
+      }),
+    [guardedEmit]
   );
 
+  // ✏️ Edit message
   const editPublicMessage = useCallback(
     (_roomId, public_message_id, message) =>
-      emit('public_message:update', {
-        action: 'edit',
+      guardedEmit('public_message:edit', {
         public_message_id,
         message: (message ?? '').trim()
       }),
-    [emit]
+    [guardedEmit]
   );
 
+  // ✅ Mark conversation read
   const markPublicConversationRead = useCallback(
-    (public_conversation_id) =>
-      emit('public_message:update', { action: 'mark_read', public_conversation_id }),
-    [emit]
+    (public_conversation_id) => guardedEmit('public_message:mark_read', { public_conversation_id }),
+    [guardedEmit]
   );
 
+  // 🧹 Delete message
   const deletePublicMessage = useCallback(
-    (_roomId, public_message_id) => emit('public_message:delete', { public_message_id }),
-    [emit]
+    (_roomId, public_message_id) => guardedEmit('public_message:delete', { public_message_id }),
+    [guardedEmit]
   );
 
+  // 🔁 Refresh message list
   const refreshPublicMessages = useCallback(
     (public_conversation_id, limit) =>
-      emit('public_message:list', { public_conversation_id, limit }),
-    [emit]
+      guardedEmit('public_message:refresh', { public_conversation_id, limit }),
+    [guardedEmit]
   );
 
+  // 📥 Stream: created
   const onPublicMessageReceived = useCallback(
-    (handler) => listen('public_message:created', handler),
-    [listen]
+    (handler) => guardedListen('public_message:created', handler),
+    [guardedListen]
   );
+
+  // 🛠️ Stream: edited
   const onPublicMessageEdited = useCallback(
-    (handler) => listen('public_message:updated', handler),
-    [listen]
+    (handler) => guardedListen('public_message:edited', handler),
+    [guardedListen]
   );
+
+  // 🧽 Stream: deleted
   const onPublicMessageDeleted = useCallback(
-    (handler) => listen('public_message:deleted', handler),
-    [listen]
+    (handler) => guardedListen('public_message:deleted', handler),
+    [guardedListen]
   );
+
+  // 📃 Stream: refreshed
   const onPublicMessagesRefreshed = useCallback(
-    (handler) => listen('public_message:list', handler),
-    [listen]
+    (handler) => guardedListen('public_message:refreshed', handler),
+    [guardedListen]
   );
 
   /* ================== ⌨️ TYPING =================== */
+  // ⌨️ Send typing on/off
   const sendPublicTypingStatus = useCallback(
     (public_conversation_id, isTyping = true) =>
-      emit('public_message:typing', { public_conversation_id, isTyping }),
-    [emit]
+      guardedEmit('public_message:typing', { public_conversation_id, isTyping }),
+    [guardedEmit]
   );
+
+  // 👤 Remote typing updates
   const onPublicTyping = useCallback(
-    (handler) => listen('public_message:typing', handler),
-    [listen]
+    (handler) => guardedListen('public_message:user_typing', handler),
+    [guardedListen]
   );
 
   /* ================== 🔔 UNREAD =================== */
+  // 🧮 Bootstrap unread counts (supports legacy + new)
   const requestPublicUnreadBootstrap = useCallback(
-    ({ scope, public_conversation_id } = {}) =>
-      emit('public_unread:count', { scope, public_conversation_id }),
-    [emit]
+    ({ scope, public_conversation_id } = {}) => {
+      // 🧩 Legacy/optional RPC (safe no-op if server ignores)
+      guardedEmit('public_unread:count', { scope, public_conversation_id });
+      // 🚿 Fallback kick: refresh to start unread flow
+      if (scope === 'user' && public_conversation_id) {
+        guardedEmit('public_message:refresh', { public_conversation_id });
+      }
+    },
+    [guardedEmit]
   );
+
+  // 🔔 Normalize unread updates into single handler API
   const onPublicUnreadUpdated = useCallback(
-    (handler) => listen('public_unread:updated', handler),
-    [listen]
+    (handler) => {
+      const offUser = guardedListen(
+        'public_message:unread_user',
+        ({ public_conversation_id, total }) =>
+          handler({ scope: 'user', public_conversation_id, total })
+      );
+      const offAdmin = guardedListen('public_message:unread_admin', ({ total }) =>
+        handler({ scope: 'admin', total })
+      );
+      const offLegacy = guardedListen('public_unread:updated', (payload) => handler(payload));
+      return () => {
+        offUser && offUser();
+        offAdmin && offAdmin();
+        offLegacy && offLegacy();
+      };
+    },
+    [guardedListen]
   );
 
   /* ================== 🚨 ERRORS =================== */
-  const onPublicMessageError = useCallback((handler) => listen('public_error', handler), [listen]);
+  // ⚠️ Message-layer errors
+  const onPublicMessageError = useCallback(
+    (handler) => guardedListen('public_message:error', handler),
+    [guardedListen]
+  );
 
   /* ================== 🍪 COOKIES ================== */
+  // 🔄 Server-driven cookie sync helpers
   const enablePublicCookieSync = useCallback(
     (cookieName = 'public_last_conversation_id') => {
-      const offSet = listen(
+      const offSet = guardedListen(
         'public_cookie:set_last_room',
-        ({ cookieName: n, public_conversation_id, maxAgeDays = 14 } = {}) => {
+        ({ cookieName: nameOverride, public_conversation_id, maxAgeDays = 14 } = {}) => {
           try {
-            const key = n || cookieName;
-            const d = new Date();
-            d.setTime(d.getTime() + Math.max(1, Number(maxAgeDays) || 14) * 864e5);
-            document.cookie = `${key}=${public_conversation_id}; expires=${d.toUTCString()}; path=/; samesite=lax`;
-          } catch (e) {
-            console.warn('cookie:set failed', e);
+            const key = nameOverride || cookieName;
+            const date = new Date();
+            date.setTime(date.getTime() + Math.max(1, Number(maxAgeDays) || 14) * 864e5);
+            document.cookie = `${key}=${public_conversation_id}; expires=${date.toUTCString()}; path=/; samesite=lax`; // 🍪 set
+          } catch (error) {
+            console.warn('cookie:set failed', error); // 🧯 safe warn
           }
         }
       );
-      const offClear = listen('public_cookie:clear_last_room', ({ cookieName: n } = {}) => {
-        try {
-          const key = n || cookieName;
-          document.cookie = `${key}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; samesite=lax`;
-        } catch (e) {
-          console.warn('cookie:clear failed', e);
+      const offClear = guardedListen(
+        'public_cookie:clear_last_room',
+        ({ cookieName: nameOverride } = {}) => {
+          try {
+            const key = nameOverride || cookieName;
+            document.cookie = `${key}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; samesite=lax`; // 🧽 clear
+          } catch (error) {
+            console.warn('cookie:clear failed', error); // 🧯 safe warn
+          }
         }
-      });
+      );
       return () => {
         offSet && offSet();
         offClear && offClear();
       };
     },
-    [listen]
+    [guardedListen]
   );
 
+  // 🍪 Read last room
   const getLastPublicRoomFromCookie = useCallback((cookieName = 'public_last_conversation_id') => {
-    const m = document.cookie.match(new RegExp(`(?:^|; )${cookieName}=([^;]*)`));
-    return m ? decodeURIComponent(m[1]) : null;
+    const match = document.cookie.match(new RegExp(`(?:^|; )${cookieName}=([^;]*)`)); // 🔎 parse
+    return match ? decodeURIComponent(match[1]) : null; // 📤 value or null
   }, []);
 
+  // 🍪 Write last room (14 days)
   const setLastPublicRoomCookie = useCallback((id, cookieName = 'public_last_conversation_id') => {
-    const d = new Date();
-    d.setTime(d.getTime() + 14 * 864e5);
-    document.cookie = `${cookieName}=${id}; expires=${d.toUTCString()}; path=/; samesite=lax`;
+    const date = new Date();
+    date.setTime(date.getTime() + 14 * 864e5);
+    document.cookie = `${cookieName}=${id}; expires=${date.toUTCString()}; path=/; samesite=lax`; // ✍️ write
   }, []);
 
+  // 🍪 Clear last room
   const clearLastPublicRoomCookie = useCallback((cookieName = 'public_last_conversation_id') => {
-    document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; samesite=lax`;
+    document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; samesite=lax`; // 🧹 clear
   }, []);
+
   // ======================= EXPORTS ========================
   return {
     socket,
