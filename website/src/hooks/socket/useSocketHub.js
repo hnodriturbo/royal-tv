@@ -361,6 +361,19 @@ const useSocketHub = () => {
   // 🛋️ Exit lobby
   const leavePublicLobby = useCallback(() => guardedEmit('public_lobby:leave'), [guardedEmit]);
 
+  // 🏠 Create a public room (no args = default subject)
+  const createPublicRoom = useCallback(
+    ({ subject, owner_user_id } = {}) =>
+      guardedEmit('public_room:create', { subject, owner_user_id }),
+    [guardedEmit]
+  );
+
+  // 🟢 Room ready event (returns { public_conversation_id })
+  const onPublicRoomReady = useCallback(
+    (handler) => guardedListen('public_room:ready', handler),
+    [guardedListen]
+  );
+
   // 🏠 Enter specific room
   const joinPublicRoom = useCallback(
     (public_conversation_id) => guardedEmit('public_room:join', { public_conversation_id }),
@@ -643,6 +656,8 @@ const useSocketHub = () => {
     // 🏢 Lobby / rooms
     joinPublicLobby,
     leavePublicLobby,
+    createPublicRoom,
+    onPublicRoomReady,
     joinPublicRoom,
     leavePublicRoom,
     onPublicPresenceUpdate,
