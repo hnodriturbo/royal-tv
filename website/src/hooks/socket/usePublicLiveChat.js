@@ -1,13 +1,18 @@
 /**
- * usePublicLiveChat (client hook)
- * ===============================
- * 🎯 Orchestrates public chat UX: room, messages, typing, unread, presence, cookies.
- * 🛠️ Fixes:
- *   • First-message global listener unsubscribes after first run
- *   • Dedupes messages by public_message_id to avoid duplicate React keys
- *   • Stable subscriptions to prevent update-depth loops
+ * ============== usePublicLiveChat (REFACTORED) ==============
+ * 🎯 Single source of truth for public chat state & actions
+ * -----------------------------------------------------------
+ * WHAT IT DOES:
+ *   • Auto-reopens last room from cookie on mount
+ *   • Manages message list with deduplication
+ *   • Aggregates presence, typing, unread from sub-hooks
+ *   • Exposes clean API for widget to consume
+ *
+ * WHY THIS DESIGN:
+ *   • Single useEffect per concern (room, messages, cookies)
+ *   • Stable refs prevent infinite loops
+ *   • Clear separation: state management vs. UI rendering
  */
-
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -17,18 +22,20 @@ import usePublicTypingIndicator from '@/hooks/socket/usePublicTypingIndicator';
 import usePublicUnreadMessages from '@/hooks/socket/usePublicUnreadMessages';
 import usePublicRoomUsers from '@/hooks/socket/usePublicRoomUsers';
 
-// 🔎 helper: unique by message id, keep order
+// 🔎 Deduplicate messages by ID
 const dedupeById = (arr) => {
   const seen = new Set();
-  const out = [];
-  for (const m of arr) {
-    if (!m || !m.public_message_id) continue;
-    if (!seen.has(m.public_message_id)) {
-      seen.add(m.public_message_id);
-      out.push(m);
-    }
-  }
-  return out;
+  return arr.filter((m) => {
+    if (!m?.public_message_id || seen.has(m.public_message_id)) return false;
+    seen.add(m.public_message_id);
+    return true;
+  });
+};
+
+// 🍪 Read cookie helper (client-side)
+const getCookie = (name) => {
+  const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
+  return match ? match[2] : null;
 };
 
 export default function usePublicLiveChat() {
@@ -37,211 +44,212 @@ export default function usePublicLiveChat() {
     leavePublicRoom,
     joinPublicLobby,
     leavePublicLobby,
-    enablePublicCookieSync,
-    getLastPublicRoomFromCookie,
-    requestPublicUnreadBootstrap,
-    // hub-level listeners (any room)
-    onPublicMessageReceived,
+    refreshPublicMessages,
+    sendPublicMessage,
+    markPublicMessagesRead,
+    sendPublicTyping,
+    onPublicMessageCreated,
     onPublicMessagesRefreshed,
-    // raw send/list (works with null → server auto-creates)
-    sendPublicMessage: sendViaHub,
-    refreshPublicMessages
+    onSetLastRoomCookie,
+    onClearLastRoomCookie
   } = useSocketHub();
 
+  // 📦 Core state
   const [activeRoomId, setActiveRoomId] = useState(null);
+  const [messages, setMessages] = useState([]);
   const activeRoomIdRef = useRef(null);
   const bootstrappedRef = useRef(false);
 
-  // 🧳 local message list; UI will render this
-  const [messageList, setMessageList] = useState([]);
-
-  // domain hooks scoped to active room
-  const messages = usePublicMessageEvents(activeRoomId);
+  // 🎣 Sub-hooks (scoped to active room)
+  const messageEvents = usePublicMessageEvents(activeRoomId);
   const typing = usePublicTypingIndicator(activeRoomId);
   const unread = usePublicUnreadMessages({ public_conversation_id: activeRoomId });
   const roomUsers = usePublicRoomUsers(activeRoomId);
 
-  // keep ref in sync for stable callbacks
+  // 🔄 Keep ref in sync
   useEffect(() => {
     activeRoomIdRef.current = activeRoomId;
   }, [activeRoomId]);
 
-  // enable cookie sync once
-  useEffect(() => enablePublicCookieSync(), [enablePublicCookieSync]);
+  /* ========================================
+   * 🍪 COOKIE SYNC (Client-Side)
+   * ======================================*/
+  useEffect(() => {
+    const unsubSet = onSetLastRoomCookie?.(({ cookieName, public_conversation_id, maxAgeDays }) => {
+      const expires = new Date();
+      expires.setDate(expires.getDate() + (maxAgeDays || 14));
+      document.cookie = `${cookieName}=${public_conversation_id}; path=/; expires=${expires.toUTCString()}; SameSite=Lax`;
+      console.log(`🍪 Set: ${cookieName}=${public_conversation_id}`);
+    });
 
-  // mount boot: reopen last room or lobby
+    const unsubClear = onClearLastRoomCookie?.(({ cookieName }) => {
+      document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+      console.log(`🍪 Cleared: ${cookieName}`);
+    });
+
+    return () => {
+      unsubSet?.();
+      unsubClear?.();
+    };
+  }, [onSetLastRoomCookie, onClearLastRoomCookie]);
+
+  /* ========================================
+   * 🚀 MOUNT BOOTSTRAP
+   * ======================================*/
   useEffect(() => {
     if (bootstrappedRef.current) return;
     bootstrappedRef.current = true;
 
-    const lastId = getLastPublicRoomFromCookie();
-    if (lastId) {
-      console.debug('🔁 reopen last room', lastId);
-      setActiveRoomId(lastId);
-      joinPublicRoom(lastId);
-      requestPublicUnreadBootstrap({ scope: 'user', public_conversation_id: lastId });
-      try {
-        refreshPublicMessages?.(lastId);
-      } catch {}
+    // 🍪 Try to reopen last room
+    const lastRoomId = getCookie('public_last_conversation_id');
+
+    if (lastRoomId) {
+      console.log('🔁 Reopening last room:', lastRoomId);
+      setActiveRoomId(lastRoomId);
+      joinPublicRoom(lastRoomId);
+      refreshPublicMessages(lastRoomId, 50);
     } else {
-      console.debug('🛋️ join lobby (no last room)');
+      console.log('🛋️ Joining lobby (no last room)');
       joinPublicLobby();
     }
 
     return () => {
       leavePublicLobby();
-      if (activeRoomIdRef.current) leavePublicRoom(activeRoomIdRef.current);
+      if (activeRoomIdRef.current) {
+        leavePublicRoom(activeRoomIdRef.current);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // reset list whenever the room changes (before bootstrap/list arrives)
+  /* ========================================
+   * 📨 MESSAGE LISTENERS
+   * ======================================*/
   useEffect(() => {
-    setMessageList([]);
-  }, [activeRoomId]);
-
-  // room-scoped listeners → update local messageList (deduped)
-  useEffect(() => {
-    const offCreated = messages.onPublicMessageReceived?.(({ public_conversation_id, message }) => {
+    // 📥 New message
+    const offCreated = onPublicMessageCreated?.(({ public_conversation_id, message }) => {
       if (public_conversation_id !== activeRoomIdRef.current) return;
-      console.debug('🧩 room-created', message?.public_message_id);
-      setMessageList((prev) => dedupeById([...prev, message]));
+      setMessages((prev) => dedupeById([...prev, message]));
     });
 
-    const offEdited = messages.onPublicMessageEdited?.((payload) => {
-      if (payload.public_conversation_id !== activeRoomIdRef.current) return;
-      if (payload.action === 'edit' && payload.message) {
-        setMessageList((prev) =>
-          prev.map((m) => (m.public_message_id === payload.public_message_id ? payload.message : m))
-        );
-      }
-    });
-
-    const offDeleted = messages.onPublicMessageDeleted?.((payload) => {
-      if (payload.public_conversation_id !== activeRoomIdRef.current) return;
-      setMessageList((prev) =>
-        prev.filter((m) => m.public_message_id !== payload.public_message_id)
+    // ✏️ Edited message
+    const offEdited = messageEvents.onPublicMessageEdited?.(({ message }) => {
+      setMessages((prev) =>
+        prev.map((m) => (m.public_message_id === message.public_message_id ? message : m))
       );
     });
 
-    const offList = onPublicMessagesRefreshed?.(({ public_conversation_id, messages }) => {
-      if (public_conversation_id !== activeRoomIdRef.current) return;
-      console.debug('📦 list bootstrap', messages?.length || 0);
-      setMessageList(dedupeById(Array.isArray(messages) ? messages : []));
+    // 🗑️ Deleted message
+    const offDeleted = messageEvents.onPublicMessageDeleted?.(({ public_message_id }) => {
+      setMessages((prev) => prev.filter((m) => m.public_message_id !== public_message_id));
     });
 
-    return () => {
-      offCreated && offCreated();
-      offEdited && offEdited();
-      offDeleted && offDeleted();
-      offList && offList();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages]); // ⚖️ stable via hub.useCallback
+    // 🔄 Refreshed list
+    const offRefreshed = onPublicMessagesRefreshed?.(
+      ({ public_conversation_id, messages: list }) => {
+        if (public_conversation_id !== activeRoomIdRef.current) return;
+        setMessages(dedupeById(Array.isArray(list) ? list : []));
+      }
+    );
 
-  // global first-message bootstrap when no room yet → unsubscribe after first hit
+    return () => {
+      offCreated?.();
+      offEdited?.();
+      offDeleted?.();
+      offRefreshed?.();
+    };
+  }, [activeRoomIdRef, onPublicMessageCreated, onPublicMessagesRefreshed, messageEvents]);
+
+  /* ========================================
+   * 🔄 RESET ON ROOM CHANGE
+   * ======================================*/
   useEffect(() => {
-    if (activeRoomIdRef.current) return;
-    let off = null;
-    off = onPublicMessageReceived?.(({ public_conversation_id, message }) => {
-      if (activeRoomIdRef.current) return; // ⛔ already in a room, ignore
-      if (!public_conversation_id) return;
-      console.debug('🆕 captured new room from first message', public_conversation_id);
-      setActiveRoomId(public_conversation_id);
-      joinPublicRoom(public_conversation_id);
-      requestPublicUnreadBootstrap({ scope: 'user', public_conversation_id });
-      setMessageList((prev) => dedupeById([...prev, message])); // keep +1, deduped
-      // 🔌 unsubscribe this global listener so it never fires again
-      try {
-        off && off();
-      } catch {}
-    });
-    return () => {
-      off && off();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // once
+    setMessages([]);
+  }, [activeRoomId]);
 
-  // API
+  /* ========================================
+   * 📤 PUBLIC API
+   * ======================================*/
   const openRoom = useCallback(
     (public_conversation_id) => {
       if (!public_conversation_id) return;
+
+      // Leave current room
       if (activeRoomIdRef.current && activeRoomIdRef.current !== public_conversation_id) {
         leavePublicRoom(activeRoomIdRef.current);
       }
+
+      // Join new room
       setActiveRoomId(public_conversation_id);
       joinPublicRoom(public_conversation_id);
-      requestPublicUnreadBootstrap({ scope: 'user', public_conversation_id });
-      try {
-        refreshPublicMessages?.(public_conversation_id);
-      } catch {}
+      refreshPublicMessages(public_conversation_id, 50);
     },
-    [joinPublicRoom, leavePublicRoom, requestPublicUnreadBootstrap, refreshPublicMessages]
+    [joinPublicRoom, leavePublicRoom, refreshPublicMessages]
   );
 
   const closeRoom = useCallback(() => {
     if (!activeRoomIdRef.current) return;
     leavePublicRoom(activeRoomIdRef.current);
     setActiveRoomId(null);
-    setMessageList([]);
+    setMessages([]);
     joinPublicLobby();
   }, [leavePublicRoom, joinPublicLobby]);
 
   const send = useCallback(
     (text) => {
-      const value = (text || '').trim();
-      if (!value) return;
+      const cleanText = (text || '').trim();
+      if (!cleanText) return;
+
       if (activeRoomIdRef.current) {
-        console.debug('✉️ send → room', activeRoomIdRef.current);
-        messages.sendPublicMessage(value);
+        sendPublicMessage(activeRoomIdRef.current, cleanText);
       } else {
-        console.debug('✉️ send (no room) → server will auto-create');
-        sendViaHub(null, value);
+        // Auto-create room by sending to null (server handles)
+        sendPublicMessage(null, cleanText);
       }
     },
-    [messages, sendViaHub]
+    [sendPublicMessage]
   );
 
   const markRead = useCallback(() => {
     if (!activeRoomIdRef.current) return;
-    console.debug('✅ markRead → room', activeRoomIdRef.current);
-    messages.markRead?.(activeRoomIdRef.current);
-  }, [messages]);
+    markPublicMessagesRead(activeRoomIdRef.current);
+  }, [markPublicMessagesRead]);
 
-  const sendTyping = useCallback(
+  const setTyping = useCallback(
     (isTyping = true) => {
       if (!activeRoomIdRef.current) return;
-      isTyping ? typing.handleInputFocus?.() : typing.handleInputBlur?.();
+      sendPublicTyping(activeRoomIdRef.current, isTyping);
     },
-    [typing]
+    [sendPublicTyping]
   );
 
   return useMemo(
     () => ({
+      // State
       activeRoomId,
-      openRoom,
-      closeRoom,
-      messages: { ...messages, list: messageList }, // UI reads from here
+      messages,
       typing,
       unread,
       roomUsers,
+
+      // Actions
+      openRoom,
+      closeRoom,
       send,
       markRead,
-      sendTyping
+      setTyping
     }),
     [
       activeRoomId,
-      openRoom,
-      closeRoom,
       messages,
-      messageList,
       typing,
       unread,
       roomUsers,
+      openRoom,
+      closeRoom,
       send,
       markRead,
-      sendTyping
+      setTyping
     ]
   );
 }
-

@@ -1033,18 +1033,20 @@
             },
             "publicLiveChat": {
                 "main": {
-                    "main_title": "Public Live Chat",
+                    "main_title": "Live Chat",
                     "toggle_open": "Open chat",
-                    "toggle_close": "Close",
-                    "admin_online": "admin online",
+                    "toggle_close": "Close chat",
+                    "admin_online": "Admin Online",
                     "bot_standby": "bot standby",
                     "users_label": "users",
-                    "empty_state": "No messages yet. Say hi 👋",
-                    "input_placeholder": "Write a message…",
+                    "empty_state": "No messages yet. Start a conversation!",
+                    "input_placeholder": "Type your message...",
                     "send_button": "Send",
                     "unread_badge_sr": "unread messages",
                     "reconnecting": "Reconnecting…",
-                    "loading_messages": "Loading messages…"
+                    "loading_messages": "Loading messages…",
+                    "minimize": "Minimize chat",
+                    "close": "Close chat"
                 },
                 "errors": {
                     "INVALID_ID": "That action couldn’t run (invalid id).",

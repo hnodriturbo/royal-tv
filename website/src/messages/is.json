@@ -390,7 +390,7 @@
         "home": {
             "page": {
                 "hero": {
-                    "title": "Velkomin á Royal TV, æðsta IPTV upplifunin! 🌟👑",
+                    "title": "Velkomin á Royal TV, æðsta IPTV upplifingin! 🌟👑",
                     "subtitle": "Horfðu á yfir 20.000 úrvals sjónvarpsstöðvar hvaðanæva að úr heiminum — beint á skjáinn þinn, hvar sem þú ert!",
                     "blurb_line1": "(Allar helstu íþrótta-, kvikmynda- og afþreyingarrásir — og fullt meira sem þú vissir ekki að þig vantaði.)",
                     "blurb_line2": "Allur umferð er dulkóðuð fyrir fullkomið öryggi.",
@@ -1018,26 +1018,16 @@
             },
             "publicLiveChat": {
                 "main": {
-                    "main_title": "Opið spjall",
-                    "toggle_open": "Opna spjall",
-                    "toggle_close": "Loka",
-                    "admin_online": "stjórnandi á netinu",
-                    "bot_standby": "vélmenni tilbúið",
-                    "users_label": "notendur",
-                    "empty_state": "Engin skilaboð enn. Segðu hæ 👋",
-                    "input_placeholder": "Skrifaðu skilaboð…",
+                    "main_title": "Spjall",
+                    "admin_online": "Stjórnandi á netinu",
+                    "empty_state": "Engin skilaboð ennþá. Byrjaðu samtal!",
+                    "input_placeholder": "Skrifaðu skilaboðin þín...",
                     "send_button": "Senda",
-                    "unread_badge_sr": "ólesin skilaboð",
-                    "reconnecting": "Tengist aftur…",
-                    "loading_messages": "Hleð skilaboðum…"
-                },
-                "errors": {
-                    "INVALID_ID": "Aðgerð tókst ekki (ógilt auðkenni).",
-                    "FORBIDDEN": "Ekki með heimild fyrir þessari aðgerð.",
-                    "NOT_FOUND": "Hluturinn er ekki lengur til.",
-                    "DB_FAILURE": "Eitthvað fór úrskeiðis hjá okkur.",
-                    "RATE_LIMIT": "Of hratt. Reyndu aftur eftir smástund.",
-                    "PAYLOAD_TOO_LARGE": "Skilaboðin eru of löng."
+                    "toggle_open": "Opna spjall",
+                    "toggle_close": "Loka spjalli",
+                    "minimize": "Minnka spjall",
+                    "close": "Loka spjalli",
+                    "unread_badge_sr": "ólesin skilaboð"
                 }
             }
         },

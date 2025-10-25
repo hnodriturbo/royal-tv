@@ -354,105 +354,169 @@ const useSocketHub = () => {
     [guardedListen]
   );
 
-  /* =============== 🏢 LOBBY / ROOMS =============== */
-  // 🛋️ Enter lobby
+  /* =============== 🏢 PUBLIC LOBBY & ROOMS (COMPLETE) =============== */
+
+  // 🛋️ Join the public lobby
   const joinPublicLobby = useCallback(() => guardedEmit('public_lobby:join'), [guardedEmit]);
 
-  // 🛋️ Exit lobby
+  // 🛋️ Leave the public lobby
   const leavePublicLobby = useCallback(() => guardedEmit('public_lobby:leave'), [guardedEmit]);
 
-  // 🏠 Create a public room (no args = default subject)
+  // 🏠 Create a new public room
   const createPublicRoom = useCallback(
     ({ subject, owner_user_id } = {}) =>
       guardedEmit('public_room:create', { subject, owner_user_id }),
     [guardedEmit]
   );
 
-  // 🟢 Room ready event (returns { public_conversation_id })
-  const onPublicRoomReady = useCallback(
-    (handler) => guardedListen('public_room:ready', handler),
-    [guardedListen]
-  );
-
-  // 🏠 Enter specific room
+  // 🏠 Join a specific public room
   const joinPublicRoom = useCallback(
     (public_conversation_id) => guardedEmit('public_room:join', { public_conversation_id }),
     [guardedEmit]
   );
 
-  // 🏠 Exit specific room
+  // 🏠 Leave a specific public room
   const leavePublicRoom = useCallback(
     (public_conversation_id) => guardedEmit('public_room:leave', { public_conversation_id }),
     [guardedEmit]
   );
 
-  // 👥 Presence updates (lobby or room) — unified topic
-  const onPublicPresenceUpdate = useCallback(
-    (handler) => guardedListen('public_presence:update', handler), // 👂 { room_id, users }
+  // 🟢 Listen for room ready event
+  const onPublicRoomReady = useCallback(
+    (handler) => guardedListen('public_room:ready', handler),
     [guardedListen]
   );
 
-  /* ================= 💬 MESSAGES ================== */
-  // ✉️ Create new message
+  // 📣 Listen for room created event (global broadcast)
+  const onPublicRoomCreated = useCallback(
+    (handler) => guardedListen('public_room:created', handler),
+    [guardedListen]
+  );
+
+  // 👥 Listen for presence updates (unified)
+  const onPublicPresenceUpdate = useCallback(
+    (handler) => guardedListen('public_presence:update', handler),
+    [guardedListen]
+  );
+
+  /* ================= 💬 PUBLIC MESSAGES (COMPLETE) ================== */
+
+  // ✉️ Send a message
   const sendPublicMessage = useCallback(
     (public_conversation_id, message) =>
       guardedEmit('public_message:create', {
         public_conversation_id,
-        message: (message ?? '').trim()
+        message: (message || '').trim()
       }),
     [guardedEmit]
   );
 
-  // ✏️ Edit message
+  // ✏️ Edit a message
   const editPublicMessage = useCallback(
-    (_roomId, public_message_id, message) =>
+    (public_message_id, message) =>
       guardedEmit('public_message:edit', {
         public_message_id,
-        message: (message ?? '').trim()
+        message: (message || '').trim()
       }),
     [guardedEmit]
   );
 
-  // ✅ Mark conversation read
-  const markPublicConversationRead = useCallback(
-    (public_conversation_id) => guardedEmit('public_message:mark_read', { public_conversation_id }),
-    [guardedEmit]
-  );
-
-  // 🧹 Delete message
+  // 🗑️ Delete a message
   const deletePublicMessage = useCallback(
-    (_roomId, public_message_id) => guardedEmit('public_message:delete', { public_message_id }),
+    (public_message_id) => guardedEmit('public_message:delete', { public_message_id }),
     [guardedEmit]
   );
 
-  // 🔁 Refresh message list
+  // 🔄 Refresh messages in a room
   const refreshPublicMessages = useCallback(
-    (public_conversation_id, limit) =>
+    (public_conversation_id, limit = 50) =>
       guardedEmit('public_message:refresh', { public_conversation_id, limit }),
     [guardedEmit]
   );
 
-  // 📥 Stream: created
-  const onPublicMessageReceived = useCallback(
+  // ✅ Mark messages as read
+  const markPublicMessagesRead = useCallback(
+    (public_conversation_id) => guardedEmit('public_message:mark_read', { public_conversation_id }),
+    [guardedEmit]
+  );
+
+  // ⌨️ Send typing indicator
+  const sendPublicTyping = useCallback(
+    (public_conversation_id, isTyping = true) =>
+      guardedEmit('public_message:typing', { public_conversation_id, isTyping }),
+    [guardedEmit]
+  );
+
+  // 📨 Listen for new messages
+  const onPublicMessageCreated = useCallback(
     (handler) => guardedListen('public_message:created', handler),
     [guardedListen]
   );
 
-  // 🛠️ Stream: edited
+  // ✏️ Listen for edited messages
   const onPublicMessageEdited = useCallback(
     (handler) => guardedListen('public_message:edited', handler),
     [guardedListen]
   );
 
-  // 🧽 Stream: deleted
+  // 🗑️ Listen for deleted messages
   const onPublicMessageDeleted = useCallback(
     (handler) => guardedListen('public_message:deleted', handler),
     [guardedListen]
   );
 
-  // 📃 Stream: refreshed
+  // 📥 Listen for refreshed message list
   const onPublicMessagesRefreshed = useCallback(
     (handler) => guardedListen('public_message:refreshed', handler),
+    [guardedListen]
+  );
+
+  // ✅ Listen for marked as read confirmation
+  const onPublicMessagesMarkedRead = useCallback(
+    (handler) => guardedListen('public_message:marked_read', handler),
+    [guardedListen]
+  );
+
+  // ⌨️ Listen for typing indicators
+  const onPublicUserTyping = useCallback(
+    (handler) => guardedListen('public_message:user_typing', handler),
+    [guardedListen]
+  );
+
+  // 🔔 Listen for unread counts (user)
+  const onPublicUnreadUser = useCallback(
+    (handler) => guardedListen('public_message:unread_user', handler),
+    [guardedListen]
+  );
+
+  // 🔔 Listen for unread counts (admin)
+  const onPublicUnreadAdmin = useCallback(
+    (handler) => guardedListen('public_message:unread_admin', handler),
+    [guardedListen]
+  );
+
+  // ❌ Listen for errors
+  const onPublicMessageError = useCallback(
+    (handler) => guardedListen('public_message:error', handler),
+    [guardedListen]
+  );
+
+  const onPublicRoomError = useCallback(
+    (handler) => guardedListen('public_room:error', handler),
+    [guardedListen]
+  );
+
+  /* ================= 🍪 COOKIE EVENTS ================== */
+
+  // 📝 Listen for server asking to set last room cookie
+  const onSetLastRoomCookie = useCallback(
+    (handler) => guardedListen('public_cookie:set_last_room', handler),
+    [guardedListen]
+  );
+
+  // 🧽 Listen for server asking to clear last room cookie
+  const onClearLastRoomCookie = useCallback(
+    (handler) => guardedListen('public_cookie:clear_last_room', handler),
     [guardedListen]
   );
 
@@ -471,48 +535,46 @@ const useSocketHub = () => {
   );
 
   /* ================== 🔔 UNREAD =================== */
-  // 🧮 Bootstrap unread counts (supports legacy + new)
+  // 🔔 Request initial unread count (bootstrap)
   const requestPublicUnreadBootstrap = useCallback(
     ({ scope, public_conversation_id } = {}) => {
-      // 🧩 Legacy/optional RPC (safe no-op if server ignores)
-      guardedEmit('public_unread:count', { scope, public_conversation_id });
-      // 🚿 Fallback kick: refresh to start unread flow
-      if (scope === 'user' && public_conversation_id) {
+      if (scope === 'admin') {
+        // Admin wants global unread count - just trigger a refresh
+        // The server will send back via 'public_message:unread_admin'
+        guardedEmit('public_message:request_unread_admin');
+      } else if (scope === 'user' && public_conversation_id) {
+        // User wants unread count for specific room
+        // Trigger refresh which will send back unread count
         guardedEmit('public_message:refresh', { public_conversation_id });
       }
     },
     [guardedEmit]
   );
 
-  // 🔔 Normalize unread updates into single handler API
+  // 🔔 Listen for unread updates (unified handler)
   const onPublicUnreadUpdated = useCallback(
     (handler) => {
-      const offUser = guardedListen(
-        'public_message:unread_user',
-        ({ public_conversation_id, total }) =>
-          handler({ scope: 'user', public_conversation_id, total })
+      if (typeof handler !== 'function') return () => {};
+
+      // Listen to both user and admin unread events
+      const offUser = guardedListen('public_message:unread_user', (payload) =>
+        handler({ scope: 'user', ...payload })
       );
-      const offAdmin = guardedListen('public_message:unread_admin', ({ total }) =>
-        handler({ scope: 'admin', total })
+      const offAdmin = guardedListen('public_message:unread_admin', (payload) =>
+        handler({ scope: 'admin', ...payload })
       );
-      const offLegacy = guardedListen('public_unread:updated', (payload) => handler(payload));
+
+      // Return cleanup function that calls both unsubscribers
       return () => {
-        offUser && offUser();
-        offAdmin && offAdmin();
-        offLegacy && offLegacy();
+        offUser?.();
+        offAdmin?.();
       };
     },
     [guardedListen]
   );
 
-  /* ================== 🚨 ERRORS =================== */
-  // ⚠️ Message-layer errors
-  const onPublicMessageError = useCallback(
-    (handler) => guardedListen('public_message:error', handler),
-    [guardedListen]
-  );
-
   /* ================== 🍪 COOKIES ================== */
+  /* 
   // 🔄 Server-driven cookie sync helpers
   const enablePublicCookieSync = useCallback(
     (cookieName = 'public_last_conversation_id') => {
@@ -565,7 +627,7 @@ const useSocketHub = () => {
   const clearLastPublicRoomCookie = useCallback((cookieName = 'public_last_conversation_id') => {
     document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; samesite=lax`; // 🧹 clear
   }, []);
-
+ */
   // ======================= EXPORTS ========================
   return {
     socket,
@@ -652,43 +714,46 @@ const useSocketHub = () => {
     // 🌍 Locale setLocale emit and onLocaleChanged Listen
     setLocale,
     onLocaleChanged,
-
-    // 🏢 Lobby / rooms
+    // Public Lobby & Rooms
     joinPublicLobby,
     leavePublicLobby,
     createPublicRoom,
-    onPublicRoomReady,
     joinPublicRoom,
     leavePublicRoom,
+    onPublicRoomReady,
+    onPublicRoomCreated,
     onPublicPresenceUpdate,
+    onPublicRoomError,
 
-    // 💬 Messages
+    // Public Messages
     sendPublicMessage,
     editPublicMessage,
     deletePublicMessage,
     refreshPublicMessages,
-    markPublicConversationRead,
-    onPublicMessageReceived,
+    markPublicMessagesRead,
+    sendPublicTyping,
+    onPublicMessageCreated,
     onPublicMessageEdited,
     onPublicMessageDeleted,
     onPublicMessagesRefreshed,
-
-    // ⌨️ Typing
-    sendPublicTypingStatus,
-    onPublicTyping,
-
-    // 🔔 Unread
-    requestPublicUnreadBootstrap,
+    onPublicMessagesMarkedRead,
+    onPublicUserTyping,
+    onPublicUnreadUser,
+    onPublicUnreadAdmin,
     onPublicUnreadUpdated,
-
-    // 🚨 Errors
+    requestPublicUnreadBootstrap,
     onPublicMessageError,
 
+    // Cookie Management
+    onSetLastRoomCookie,
+    onClearLastRoomCookie
+    /* 
     // 🍪 Cookies
     enablePublicCookieSync,
     getLastPublicRoomFromCookie,
     setLastPublicRoomCookie,
     clearLastPublicRoomCookie
+     */
   };
 };
 

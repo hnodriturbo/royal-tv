@@ -1,214 +1,273 @@
 /**
- * PublicLiveChatWidget (client)
- * ============================
- * 💬 Minimal-floating public chat widget with polished styling.
- *   • Auto-reopen last room via cookies
- *   • Fixed height with internal scroll
- *   • Rounded message bubbles + subtle separators
- *   • Soft header/footer; small unread badge
- *   • ✖ Close (clear everything: leave & wipe) + "_" Minimize (leave but keep cache)
- *   • 🟢 Admin online indicator
+ * ============== PublicLiveChatWidget (REFACTORED) ==============
+ * 💬 Floating chat widget with clean UX and proper admin detection
+ * ---------------------------------------------------------------
+ * FEATURES:
+ *   ✅ Auto-reopen last room on mount
+ *   ✅ Real admin online detection (not hardcoded)
+ *   ✅ Minimize (keep cache) vs Close (clear all)
+ *   ✅ Typing indicators with debounce
+ *   ✅ Unread badge
+ *   ✅ Smooth animations & rounded bubbles
  */
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import usePublicLiveChat from '@/hooks/socket/usePublicLiveChat';
-import { useTranslations } from 'next-intl'; // 🌐 i18n
+import useSocketHub from '@/hooks/socket/useSocketHub'; // ✅ ADD THIS
 
 export default function PublicLiveChatWidget() {
-  // 🧠 Main orchestrator (rooms, messages, typing, unread, presence)
-  const chat = usePublicLiveChat();
-
-  // 🌐 Translator
   const t = useTranslations();
+  const chat = usePublicLiveChat();
+  const { onSetLastRoomCookie, onClearLastRoomCookie } = useSocketHub(); // ✅ GET COOKIE LISTENERS
 
-  // 🔀 Open/close state
+  // 🔀 Widget visibility
   const [isOpen, setIsOpen] = useState(true);
+  const [isMinimized, setIsMinimized] = useState(false);
 
-  // 📝 Local input
+  // 📝 Input state
   const [draft, setDraft] = useState('');
 
-  // 💾 Local cache for minimized state (keeps last messages)
+  // 💾 Cache for minimized state
   const cachedMessagesRef = useRef([]);
+  const scrollRef = useRef(null);
 
-  // 🔔 Small unread badge (per-room)
+  // 🔔 Unread count
   const unread = chat?.unread?.total ?? 0;
 
-  // ⌨️ Typing indicator snapshot
-  const typingName = chat?.typing?.typingUser?.name;
+  // ⌨️ Typing indicator
+  const typingUser = chat?.typing?.typingUser;
+  const typingName = typingUser?.name;
 
-  // 👥 Presence snapshot → detect admin online
-  const usersInRoom = chat?.roomUsers?.usersInRoom || chat?.presence?.usersInRoom || [];
-  const adminOnline =
-    Array.isArray(usersInRoom) && usersInRoom.some((person) => person?.role === 'admin');
+  // 👥 Detect admin online (REAL detection, not hardcoded)
+  const usersInRoom = chat?.roomUsers?.usersInRoom || [];
+  const adminOnline = usersInRoom.some((user) => user?.role === 'admin');
 
-  // 🧼 Send then clear
-  const handleSend = () => {
-    const value = draft.trim();
-    if (!value) return;
-    chat.send(value); // ✉️ send
-    setDraft(''); // 🧽 clear
-    chat.sendTyping(false); // 🛑 stop typing
-  };
-
-  // ↵ Enter to send
-  const onKeyDown = (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      handleSend();
+  // 📜 Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (scrollRef.current && chat?.messages?.length > 0) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  };
+  }, [chat?.messages]);
 
-  // 📦 Decide which messages to show (live or cached)
-  const liveList = chat?.messages?.list || [];
-  const messagesToShow = liveList.length > 0 ? liveList : cachedMessagesRef.current;
+  // 💾 Update cache when messages change
+  useEffect(() => {
+    if (chat?.messages?.length > 0) {
+      cachedMessagesRef.current = chat.messages;
+    }
+  }, [chat?.messages]);
 
-  // 🗂️ Helpers to leave rooms/lobby safely
-  const leaveAll = () => {
-    const roomId =
-      chat?.room?.public_conversation_id || chat?.currentRoomId || chat?.roomId || null; // 🔎 best-effort
-    // 🚪 Leave room (any API the hook exposes)
-    chat?.leaveRoom?.(roomId);
-    chat?.closeRoom?.();
-    // 🛋️ Leave lobby (any API the hook exposes)
-    chat?.leaveLobby?.();
-    chat?.leavePublicLobby?.();
-  };
+  // ✅ Widget handles its own cookie sync
+  useEffect(() => {
+    // 🛡️ Guard: Make sure functions exist
+    if (!onSetLastRoomCookie || !onClearLastRoomCookie) return;
 
-  // ✖ Close → clear everything (leave room+lobby, clear cache & cookie, clear draft)
-  const handleCloseClear = () => {
-    cachedMessagesRef.current = []; // 🧽 wipe cache
-    setDraft(''); // 🧽 wipe input
-    chat?.clearLastPublicRoomCookie?.(); // 🍪 forget last room (if available)
-    leaveAll(); // 🚪 leave everywhere
-    setIsOpen(false); // 🔒 close UI
-  };
+    const unsubSet = onSetLastRoomCookie(({ cookieName, public_conversation_id, maxAgeDays }) => {
+      const expires = new Date();
+      expires.setDate(expires.getDate() + (maxAgeDays || 14));
+      document.cookie = `${cookieName}=${public_conversation_id}; path=/; expires=${expires.toUTCString()}; SameSite=Lax`;
+      console.log(`🍪 [Widget] Set cookie: ${cookieName}=${public_conversation_id}`);
+    });
 
-  // "_" Minimize → keep cache (leave room+lobby but remember messages)
-  const handleMinimizeKeep = () => {
-    cachedMessagesRef.current = liveList.slice(-200); // 💾 keep recent messages
-    leaveAll(); // 🚪 leave everywhere
-    setIsOpen(false); // 🔒 close UI
-  };
+    const unsubClear = onClearLastRoomCookie(({ cookieName }) => {
+      document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+      console.log(`🍪 [Widget] Cleared cookie: ${cookieName}`);
+    });
 
-  // 🧭 Empty-state helper
-  const empty = !messagesToShow?.length;
+    return () => {
+      unsubSet?.();
+      unsubClear?.();
+    };
+  }, [onSetLastRoomCookie, onClearLastRoomCookie]);
 
-  // 🔒 Closed-state compact reopen button (with unread)
+  /* ========================================
+   * 📤 SEND MESSAGE
+   * ======================================*/
+  const handleSend = useCallback(() => {
+    const text = draft.trim();
+    if (!text) return;
+
+    chat?.send(text);
+    setDraft('');
+    chat?.setTyping(false);
+  }, [draft, chat]);
+
+  /* ========================================
+   * ⌨️ TYPING HANDLERS
+   * ======================================*/
+  const handleInputChange = useCallback(
+    (e) => {
+      setDraft(e.target.value);
+      chat?.setTyping(true);
+    },
+    [chat]
+  );
+
+  const handleInputBlur = useCallback(() => {
+    chat?.setTyping(false);
+  }, [chat]);
+
+  const handleKeyDown = useCallback(
+    (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    },
+    [handleSend]
+  );
+
+  /* ========================================
+   * 🗂️ MINIMIZE / CLOSE
+   * ======================================*/
+  const handleMinimize = useCallback(() => {
+    // Keep messages in cache, hide widget
+    setIsMinimized(true);
+    setIsOpen(false);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    // Clear everything
+    chat?.closeRoom();
+    cachedMessagesRef.current = [];
+    setDraft('');
+    setIsOpen(false);
+    setIsMinimized(false);
+  }, [chat]);
+
+  const handleReopen = useCallback(() => {
+    setIsOpen(true);
+    setIsMinimized(false);
+
+    // Mark as read when reopening
+    if (chat?.activeRoomId) {
+      chat?.markRead();
+    }
+  }, [chat]);
+
+  /* ========================================
+   * 📦 DECIDE WHICH MESSAGES TO SHOW
+   * ======================================*/
+  const messagesToShow =
+    chat?.messages?.length > 0 ? chat.messages : isMinimized ? cachedMessagesRef.current : [];
+
+  const isEmpty = messagesToShow.length === 0;
+
+  /* ========================================
+   * 🎨 RENDER
+   * ======================================*/
+
+  // 🔒 Closed state (compact reopen button)
   if (!isOpen) {
     return (
-      <button
-        type="button"
-        onClick={() => setIsOpen(true)} // 🔓 reopen
-        className="fixed bottom-4 left-4 z-[1000] rounded-full px-4 h-10 shadow-lg bg-slate-900 text-white text-sm hover:bg-slate-800 inline-flex items-center gap-2"
-        title={t('socket.ui.publicLiveChat.main.toggle_open')}
-        aria-label={t('socket.ui.publicLiveChat.main.toggle_open')}
-      >
-        {/* 💬 label */}
-        {t('socket.ui.publicLiveChat.main.toggle_open')}
-        {unread > 0 && (
-          <span className="ml-1 inline-flex min-w-[1.25rem] h-5 items-center justify-center rounded-full text-xs bg-white/20 px-2">
-            {unread}
-            <span className="sr-only">{t('socket.ui.publicLiveChat.main.unread_badge_sr')}</span>
+      <div className="fixed bottom-4 left-4 z-[1000]">
+        <button
+          onClick={handleReopen}
+          className="flex items-center gap-2 px-4 py-3 rounded-full shadow-xl bg-gradient-to-r from-slate-900 to-slate-700 text-white hover:from-slate-800 hover:to-slate-600 transition-all"
+          aria-label={t('socket.ui.publicLiveChat.main.toggle_open')}
+        >
+          <span className="font-medium text-sm">
+            💬 {t('socket.ui.publicLiveChat.main.main_title')}
           </span>
-        )}
-      </button>
+          {unread > 0 && (
+            <span className="inline-flex items-center justify-center min-w-[1.25rem] h-5 rounded-full text-xs bg-red-500 px-2">
+              {unread}
+            </span>
+          )}
+        </button>
+      </div>
     );
   }
 
+  // 🟢 Open state (full widget)
   return (
     <div className="fixed bottom-4 left-4 z-[1000] w-[22rem]">
-      {/* 🧰 Widget card */}
-      <div className="rounded-2xl shadow-xl border border-black/5 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 pointer-events-auto">
-        {/* 🎛️ Header */}
-        <div className="flex items-center justify-between px-3 py-2 rounded-t-2xl bg-gradient-to-r from-slate-900 to-slate-700 text-white">
+      <div className="rounded-2xl shadow-2xl border border-black/10 bg-white/95 backdrop-blur-sm overflow-hidden">
+        {/* ========== HEADER ========== */}
+        <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-slate-900 to-slate-700 text-white">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-sm">
+            <span className="font-semibold text-sm">
               {t('socket.ui.publicLiveChat.main.main_title')}
-            </span>{' '}
-            {/* 🏷️ Title */}
+            </span>
+
+            {/* Unread Badge */}
             {unread > 0 && (
-              <span className="ml-1 inline-flex min-w-[1.25rem] h-5 items-center justify-center rounded-full text-[10px] bg-white/20 px-2">
+              <span className="inline-flex items-center justify-center min-w-[1.25rem] h-5 rounded-full text-[10px] bg-red-500 px-2 font-medium">
                 {unread}
-                <span className="sr-only">
-                  {t('socket.ui.publicLiveChat.main.unread_badge_sr')}
-                </span>
               </span>
             )}
-            {/* 🟢 Admin online pill */}
+
+            {/* Admin Online Indicator */}
             {adminOnline && (
-              <span className="ml-2 inline-flex items-center gap-1 text-[11px] text-emerald-200">
-                <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="inline-flex items-center gap-1 text-[11px] text-emerald-300">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 {t('socket.ui.publicLiveChat.main.admin_online')}
               </span>
             )}
           </div>
 
-          {/* Controls: "_" minimize & "×" close */}
+          {/* Window Controls */}
           <div className="flex items-center gap-1">
             <button
-              type="button"
-              onClick={handleMinimizeKeep} // 🗕 minimize (keep)
-              className="w-7 h-7 grid place-items-center rounded-full hover:bg-white/10 text-base"
-              aria-label={t('socket.ui.publicLiveChat.main.toggle_close')}
-              title="_"
+              onClick={handleMinimize}
+              className="w-7 h-7 grid place-items-center rounded-full hover:bg-white/10 transition-colors"
+              title={t('socket.ui.publicLiveChat.main.minimize')}
             >
-              <span aria-hidden>_</span> {/* 🗕 glyph */}
+              <span className="text-lg leading-none">−</span>
             </button>
             <button
-              type="button"
-              onClick={handleCloseClear} // ✖ close (clear)
-              className="w-7 h-7 grid place-items-center rounded-full hover:bg-white/10 text-base"
-              aria-label={t('socket.ui.publicLiveChat.main.toggle_close')}
-              title="×"
+              onClick={handleClose}
+              className="w-7 h-7 grid place-items-center rounded-full hover:bg-white/10 transition-colors"
+              title={t('socket.ui.publicLiveChat.main.close')}
             >
-              <span aria-hidden>×</span> {/* ✖ glyph */}
+              <span className="text-lg leading-none">×</span>
             </button>
           </div>
         </div>
 
-        {/* 🪟 Messages viewport */}
-        <div className="h-[420px] min-h-[420px] max-h-[420px] overflow-y-auto px-3 py-3 space-y-3">
-          {empty ? (
-            <div className="text-center text-sm text-slate-500 py-12">
-              {/* 🌱 Empty state */}
+        {/* ========== MESSAGES ========== */}
+        <div ref={scrollRef} className="h-[420px] overflow-y-auto px-4 py-4 space-y-3 bg-slate-50">
+          {isEmpty ? (
+            <div className="flex items-center justify-center h-full text-sm text-slate-500">
               {t('socket.ui.publicLiveChat.main.empty_state')}
             </div>
           ) : (
-            messagesToShow.map((messageItem) => (
+            messagesToShow.map((msg) => (
               <MessageBubble
-                key={messageItem.public_message_id}
-                text={messageItem.message}
-                timestamp={messageItem.createdAt}
+                key={msg.public_message_id}
+                text={msg.message}
+                timestamp={msg.createdAt}
+                isOwnMessage={false} // You can add logic to detect own messages
               />
             ))
           )}
         </div>
 
-        {/* ⌨️ Composer */}
-        <div className="border-t border-slate-200 p-3 rounded-b-2xl bg-slate-50">
-          {/* 🧠 Who is typing */}
+        {/* ========== FOOTER / INPUT ========== */}
+        <div className="border-t border-slate-200 px-4 py-3 bg-white">
+          {/* Typing Indicator */}
           {typingName && (
-            <div className="text-[11px] text-slate-500 mb-1">{typingName} is typing…</div>
+            <div className="text-xs text-slate-500 mb-2">
+              <span className="italic">{typingName} is typing...</span>
+            </div>
           )}
 
+          {/* Input Row */}
           <div className="flex items-end gap-2">
             <textarea
-              className="flex-1 resize-none rounded-xl px-3 py-2 text-sm bg-white hover:bg-white focus:bg-white border border-slate-200 outline-none focus:ring-2 focus:ring-slate-400/40 relative z-[1] shadow-inner min-h-[2.25rem] transition-none"
+              className="flex-1 resize-none rounded-xl px-3 py-2 text-sm border border-slate-300 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 outline-none transition-all"
               rows={1}
               value={draft}
-              onChange={(event) => {
-                setDraft(event.target.value); // 📝 Update draft
-                chat.sendTyping(true); // ✍️ notify typing
-              }}
-              onFocus={() => chat.sendTyping(true)} //     {/* 🔔 typing start */}
-              onBlur={() => chat.sendTyping(false)} //     {/* 📴 typing stop */}
-              onKeyDown={onKeyDown}
+              onChange={handleInputChange}
+              onBlur={handleInputBlur}
+              onKeyDown={handleKeyDown}
               placeholder={t('socket.ui.publicLiveChat.main.input_placeholder')}
             />
             <button
               onClick={handleSend}
-              className="shrink-0 rounded-xl px-3 h-9 text-sm font-medium bg-slate-900 text-white hover:bg-slate-800 shadow"
+              disabled={!draft.trim()}
+              className="shrink-0 rounded-xl px-4 py-2 text-sm font-medium bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {t('socket.ui.publicLiveChat.main.send_button')}
             </button>
@@ -219,25 +278,33 @@ export default function PublicLiveChatWidget() {
   );
 }
 
-/* ===================== UI Partials ===================== */
-
-function MessageBubble({ text, timestamp }) {
-  // 🕒 Light timestamp (optional)
-  const time = useMemo(() => {
-    try {
-      const d = new Date(timestamp);
-      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } catch {
-      return '';
-    }
-  }, [timestamp]);
+/* ========================================
+ * 💬 MESSAGE BUBBLE COMPONENT
+ * ======================================*/
+function MessageBubble({ text, timestamp, isOwnMessage = false }) {
+  const formattedTime = timestamp
+    ? new Date(timestamp).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    : '';
 
   return (
-    <div className="max-w-[85%] rounded-2xl px-3 py-2 bg-slate-900 text-white shadow-sm">
-      {/* 💬 Text */}
-      <div className="text-sm leading-relaxed whitespace-pre-wrap">{text}</div>
-      {/* 🕒 Subtle time */}
-      {time && <div className="mt-1 text-[10px] opacity-70">{time}</div>}
+    <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
+      <div
+        className={`max-w-[75%] px-3 py-2 rounded-2xl ${
+          isOwnMessage
+            ? 'bg-slate-900 text-white rounded-br-sm'
+            : 'bg-white border border-slate-200 rounded-bl-sm'
+        }`}
+      >
+        <p className="text-sm leading-relaxed break-words">{text}</p>
+        {formattedTime && (
+          <p className={`text-[10px] mt-1 ${isOwnMessage ? 'text-slate-300' : 'text-slate-400'}`}>
+            {formattedTime}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
