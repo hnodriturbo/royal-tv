@@ -141,6 +141,16 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
       // 🚪 Join Socket.IO room
       socket.join(roomId);
 
+      // 👑 AUTO-JOIN ALL ONLINE ADMINS to the new room
+      const adminSockets = await io.in('admins').fetchSockets();
+      for (const adminSocket of adminSockets) {
+        adminSocket.join(roomId);
+        globalState.activeUsersInPublicRoom[roomId].add(adminSocket.id);
+        console.log(
+          `[Public Room] 👑 Auto-joined admin ${adminSocket.userData.name} to room ${roomId}`
+        );
+      }
+
       // 🍪 Remember this room (survives refresh/redirect)
       cookieUtils.rememberLastRoom(roomId);
 
@@ -152,15 +162,24 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
         subject: conversation.subject
       });
 
-      // 📣 Tell everyone a new room was created
-      io.emit('public_room:created', {
+      // 📣 Tell everyone in the room it was created
+      io.to(roomId).emit('public_room:created', {
         public_conversation_id: roomId,
         owner_id: conversation.owner_id,
         owner_guest_id: conversation.owner_guest_id,
         subject: conversation.subject
       });
 
-      // 📣 Broadcast presence in new room
+      // 🔔 Notify all admins specifically about new conversation
+      io.to('admins').emit('public_room:new_conversation', {
+        public_conversation_id: roomId,
+        subject: conversation.subject,
+        owner_name: socket.userData.name,
+        owner_role: socket.userData.role,
+        createdAt: new Date().toISOString()
+      });
+
+      // 📣 Broadcast presence in new room (now includes admins)
       broadcastRoomPresence(roomId);
     } catch (error) {
       console.error('[Public Room] ❌ Create failed:', error.message);

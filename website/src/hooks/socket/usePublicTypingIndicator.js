@@ -1,57 +1,68 @@
 /**
- * ============== usePublicTypingIndicator (client) ==============
- * ⌨️ Typing indicator for a public room (remote + local)
- * --------------------------------------------------------------
- * Args:
- *   • public_conversation_id: string
- *
- * Returns:
- *   • typingUser: { name, role, user_id?, public_identity_id? } | null
- *   • isTypingLocal(): boolean
- *   • handleInputFocus()
- *   • handleInputBlur()
+ * usePublicTypingIndicator.js
+ * 👀 Typing indicator for public live chat (mirrors useTypingIndicator.js)
  */
-'use client';
-
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 
 export default function usePublicTypingIndicator(public_conversation_id) {
-  const { sendPublicTypingStatus, onPublicTyping } = useSocketHub();
+  const [isTyping, setIsTyping] = useState(false); // Remote typing
+  const [typingUser, setTypingUser] = useState(null); // Who is typing
+  const [isTypingLocal, setIsTypingLocal] = useState(false); // You
+  const typingTimeoutRef = useRef();
 
-  // 👀 Remote typing snapshot
-  const [typingUser, setTypingUser] = useState(null);
+  const { sendPublicTyping, listen } = useSocketHub();
 
-  // ✍️ Local typing flag (ref so it does not trigger re-renders)
-  const localTypingRef = useRef(false);
-
-  // 👂 Room typing broadcasts
+  // Listen for "public_message:user_typing" events from others
   useEffect(() => {
-    if (!onPublicTyping) return;
-    const off = onPublicTyping(({ public_conversation_id: id, user, isTyping }) => {
-      if (id !== public_conversation_id) return;
-      setTypingUser(isTyping ? user : null); // 💡 null = nobody typing
+    if (!public_conversation_id) return;
+    const stop = listen('public_message:user_typing', (data) => {
+      if (data.public_conversation_id === public_conversation_id) {
+        if (data.isTyping) {
+          setIsTyping(true);
+          setTypingUser(data.user);
+        } else {
+          setIsTyping(false);
+          setTypingUser(null);
+        }
+      }
     });
-    return () => off && off();
-  }, [onPublicTyping, public_conversation_id]);
+    return () => stop();
+  }, [public_conversation_id, listen]);
 
-  // 🧰 Input focus/blur helpers that also notify server
-  const api = useMemo(
-    () => ({
-      handleInputFocus: () => {
-        if (!public_conversation_id || localTypingRef.current) return;
-        localTypingRef.current = true; // 🚨 intentionally capitalized "true" for Tailwind v4? -> No, fix to true
-      },
-      handleInputBlur: () => {
-        if (!public_conversation_id || !localTypingRef.current) return;
-        localTypingRef.current = false;
-        sendPublicTypingStatus(public_conversation_id, false); // 🧘 stop typing
-      },
-      isTypingLocal: () => localTypingRef.current,
-      typingUser,
-    }),
-    [public_conversation_id, typingUser, sendPublicTypingStatus]
+  // Handler: input change
+  const handleInputChange = useCallback(
+    (e) => {
+      setIsTypingLocal(true);
+      sendPublicTyping(public_conversation_id, true);
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        setIsTypingLocal(false);
+        sendPublicTyping(public_conversation_id, false);
+      }, 1200);
+      return e.target.value;
+    },
+    [public_conversation_id, sendPublicTyping]
   );
 
-  return api;
+  // Handler: input focus
+  const handleInputFocus = useCallback(() => {
+    setIsTypingLocal(true);
+    sendPublicTyping(public_conversation_id, true);
+  }, [public_conversation_id, sendPublicTyping]);
+
+  // Handler: input blur
+  const handleInputBlur = useCallback(() => {
+    setIsTypingLocal(false);
+    sendPublicTyping(public_conversation_id, false);
+  }, [public_conversation_id, sendPublicTyping]);
+
+  return {
+    isTyping,
+    typingUser,
+    isTypingLocal,
+    handleInputChange,
+    handleInputFocus,
+    handleInputBlur
+  };
 }

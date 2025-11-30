@@ -1,97 +1,94 @@
 /**
- * ================= usePublicMessageEvents (client) =================
- * 💬 Public chat: send / edit / delete / receive messages for ONE room
- * -------------------------------------------------------------------
- * Args:
- *   • public_conversation_id: string
- *
- * Returns:
- *   • sendPublicMessage(message_text)
- *   • editPublicMessage(message_id, new_text)
- *   • deletePublicMessage(message_id)
- *   • onPublicMessageReceived(handler)
- *   • onPublicMessageEdited(handler)
- *   • onPublicMessageDeleted(handler)
- *
- * Notes:
- *   • Cookie + server already keep last-room sticky; hook focuses on events.
- *   • Locale is handled higher up; no translations needed here.
+ *   ================= usePublicMessageEvents.js =================
+ * 💬
+ * Unified send/edit/delete/receive for public live chat messages.
+ * - Uses Socket.IO events to communicate with the server.
+ * - Mirrors useMessageEvents.js exactly for consistency!
+ * =========================================================
+ * PROPS:
+ *   public_conversation_id: string
+ * =========================================================
+ * USAGE:
+ *   const {
+ *     sendMessage, editMessage, deleteMessage,
+ *     onReceiveMessage, onMessageEdited, onMessageDeleted
+ *   } = usePublicMessageEvents(public_conversation_id);
+ * =========================================================
  */
-'use client';
-
 import { useCallback } from 'react';
-import useSocketHub from '@/hooks/socket/useSocketHub'; // 🧠 Central socket glue
+import useSocketHub from '@/hooks/socket/useSocketHub';
 
 export default function usePublicMessageEvents(public_conversation_id) {
-  // 🛰️ Grab explicit public-* methods from the hub (see patch below)
-  const {
-    sendPublicMessage,
-    editPublicMessage,
-    deletePublicMessage,
-    onPublicMessageReceived,
-    onPublicMessageEdited,
-    onPublicMessageDeleted
-  } = useSocketHub();
+  // 🛰️ Get core socket actions and event listener from your hub
+  const { sendPublicMessage, editPublicMessage, deletePublicMessage, listen } = useSocketHub();
 
-  // 🚀 Send text message into this public room
+  // 📤 Send message (now sends ONLY UUID + message)
   const send = useCallback(
-    (message_text) => {
-      if (!public_conversation_id || !message_text) return; // 🛡️ Guard
-      sendPublicMessage(public_conversation_id, message_text);
+    (message) => {
+      sendPublicMessage(public_conversation_id, message);
+      console.log(`📤 [Public] Sent message: ${message}`);
     },
     [public_conversation_id, sendPublicMessage]
   );
 
-  // ✏️ Edit a message by id
+  // ✏️ Edit message (no chatType—just pass IDs and text)
   const edit = useCallback(
-    (message_id, new_text) => {
-      if (!public_conversation_id || !message_id) return; // 🛡️ Guard
-      editPublicMessage(public_conversation_id, message_id, new_text);
+    (public_message_id, newMessage) => {
+      editPublicMessage(public_message_id, newMessage);
+      console.log(`✏️ [Public] Edit message: ${public_message_id}`);
     },
-    [public_conversation_id, editPublicMessage]
+    [editPublicMessage]
   );
 
-  // 🗑️ Delete a message by id
-  const remove = useCallback(
-    (message_id) => {
-      if (!public_conversation_id || !message_id) return; // 🛡️ Guard
-      deletePublicMessage(public_conversation_id, message_id);
+  // 🗑️ Delete message (no chatType, just the IDs)
+  const del = useCallback(
+    (public_message_id) => {
+      deletePublicMessage(public_message_id);
+      console.log(`🗑️ [Public] Delete message: ${public_message_id}`);
     },
-    [public_conversation_id, deletePublicMessage]
+    [deletePublicMessage]
   );
 
-  // 👂 Filtered listeners that only fire for THIS room
-  const onReceive = useCallback(
+  // 👂 Listen for new incoming messages in this conversation/room
+  const onReceiveMessage = useCallback(
     (handler) =>
-      onPublicMessageReceived((payload) => {
-        if (payload.public_conversation_id === public_conversation_id) handler(payload);
+      listen('public_message:created', (data) => {
+        if (data.public_conversation_id === public_conversation_id) {
+          handler(data);
+        }
       }),
-    [public_conversation_id, onPublicMessageReceived]
+    [public_conversation_id, listen]
   );
 
-  const onEdited = useCallback(
+  // 👂 Listen for messages being edited in this conversation/room
+  const onMessageEdited = useCallback(
     (handler) =>
-      onPublicMessageEdited((payload) => {
-        if (payload.public_conversation_id === public_conversation_id) handler(payload);
+      listen('public_message:edited', (data) => {
+        if (data.public_conversation_id === public_conversation_id) {
+          handler(data);
+        }
       }),
-    [public_conversation_id, onPublicMessageEdited]
+    [public_conversation_id, listen]
   );
 
-  const onDeleted = useCallback(
+  // 👂 Listen for messages being deleted in this conversation/room
+  const onMessageDeleted = useCallback(
     (handler) =>
-      onPublicMessageDeleted((payload) => {
-        if (payload.public_conversation_id === public_conversation_id) handler(payload);
+      listen('public_message:deleted', (data) => {
+        if (data.public_conversation_id === public_conversation_id) {
+          handler(data);
+        }
       }),
-    [public_conversation_id, onPublicMessageDeleted]
+    [public_conversation_id, listen]
   );
 
-  // 📦 Export the clean surface
+  // ✅ Export all actions & listeners for easy chat use
   return {
-    sendPublicMessage: send,
-    editPublicMessage: edit,
-    deletePublicMessage: remove,
-    onPublicMessageReceived: onReceive,
-    onPublicMessageEdited: onEdited,
-    onPublicMessageDeleted: onDeleted
+    sendMessage: send, // 🚀 Send a message
+    editMessage: edit, // ✏️ Edit a message
+    deleteMessage: del, // 🗑️ Delete a message
+    onReceiveMessage, // 👂 Listen for new messages
+    onMessageEdited, // 👂 Listen for message edits
+    onMessageDeleted // 👂 Listen for message deletions
   };
 }

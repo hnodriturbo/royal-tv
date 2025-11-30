@@ -47,6 +47,9 @@ import registerPublicMessageEvents from './publicMessageEvents.js';
 // 🧁 Cookie helpers
 import createCookieUtils from './cookieEvents.js';
 
+// 💾 Prisma for database queries
+import prisma from '../lib/core/prisma.js';
+
 // ---------------------------------------------------------
 // 🧩 Small helpers (keep it beginner-friendly)
 // ----------------------------------------------------------
@@ -162,6 +165,72 @@ const connectionHandler = (io, socket, globalState) => {
   if (socket.userData.role === 'admin') {
     socket.join('admins');
     console.log(`👑 Admin joined 'admins': ${socket.userData.name} (${socket.userData.user_id})`);
+
+    // 🔄 AUTO-JOIN ALL EXISTING PUBLIC ROOMS (critical for admin to see conversations)
+    (async () => {
+      try {
+        const activeRooms = await prisma.publicLiveChatConversation.findMany({
+          where: { read: false },
+          select: {
+            public_conversation_id: true,
+            subject: true,
+            owner_id: true,
+            owner_guest_id: true,
+            createdAt: true
+          },
+          orderBy: { createdAt: 'desc' }
+        });
+
+        for (const room of activeRooms) {
+          const roomId = room.public_conversation_id;
+
+          // Join Socket.IO room
+          socket.join(roomId);
+
+          // Add to tracking
+          if (!globalState.activeUsersInPublicRoom[roomId]) {
+            globalState.activeUsersInPublicRoom[roomId] = new Set();
+          }
+          globalState.activeUsersInPublicRoom[roomId].add(socket.id);
+
+          // Fetch recent messages for this room (last 50)
+          const messages = await prisma.publicLiveChatMessage.findMany({
+            where: { public_conversation_id: roomId },
+            orderBy: { createdAt: 'asc' },
+            take: 50,
+            include: {
+              user: {
+                select: { name: true, username: true }
+              }
+            }
+          });
+
+          // Notify admin about this existing conversation WITH messages
+          socket.emit('public_room:new_conversation', {
+            public_conversation_id: roomId,
+            subject: room.subject || 'Public Chat',
+            owner_name: 'User', // Will be enriched by client
+            owner_role: room.owner_id ? 'user' : 'guest',
+            createdAt: room.createdAt,
+            messages: messages.map((msg) => ({
+              public_message_id: msg.public_message_id,
+              public_conversation_id: msg.public_conversation_id,
+              message: msg.message,
+              sender_user_id: msg.sender_user_id || null,
+              sender_guest_id: msg.sender_guest_id || null,
+              sender_is_admin: !!msg.sender_is_admin,
+              sender_is_bot: !!msg.sender_is_bot,
+              createdAt: msg.createdAt,
+              updatedAt: msg.updatedAt
+            }))
+          });
+        }
+
+        console.log(`👑 Admin auto-joined ${activeRooms.length} existing rooms with messages`);
+      } catch (error) {
+        console.error('❌ Failed to auto-join admin to existing rooms:', error.message);
+      }
+    })();
   }
 
   // ---------------------------------------------------------

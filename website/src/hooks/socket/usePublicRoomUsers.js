@@ -1,40 +1,37 @@
 /**
- * ================= usePublicRoomUsers (client) =================
- * 👥 Live presence list for a single public room
- * ---------------------------------------------------------------
- * Args:
- *   • public_conversation_id: string
- *
- * Returns:
- *   • usersInRoom: Array<{ user_id?, public_identity_id?, role, name }>
- *
- * Note:
- *   • Joins/leaves are orchestrated by usePublicLiveChat; this hook only listens.
+ *   ==================== usePublicRoomUsers.js ====================
+ * 👥 Real-time tracker for users in a public chat room
  */
-'use client';
-
-import { useEffect, useMemo, useState } from 'react';
+import { useState, useEffect } from 'react';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 
 export default function usePublicRoomUsers(public_conversation_id) {
-  // 🧭 Socket hub bridge (typed events)
-  const { onPublicPresenceUpdate } = useSocketHub();
+  const [usersInRoom, setUsersInRoom] = useState([]);
+  const { joinPublicRoom, leavePublicRoom, listen } = useSocketHub();
 
-  // 🧑‍🤝‍🧑 Reactive roster for the current room
-  const [users, setUsers] = useState([]);
-
-  // 👂 Presence updates scoped to this room
   useEffect(() => {
-    if (!onPublicPresenceUpdate) return;
-    const off = onPublicPresenceUpdate(({ room_id, public_conversation_id: id, users }) => {
-      // 🔎 Some hubs send {room_id}, others {public_conversation_id}; allow both
-      const target = id || room_id;
-      if (!public_conversation_id || target !== public_conversation_id) return;
-      setUsers(Array.isArray(users) ? users : []); // ✅ Safe fallback
-    });
-    return () => off && off();
-  }, [public_conversation_id, onPublicPresenceUpdate]);
+    if (!public_conversation_id) return;
 
-  // 📦 Stable shape for consumers
-  return useMemo(() => ({ usersInRoom: users }), [users]);
+    // Listen for presence updates
+    const stop = listen('public_presence:update', (data) => {
+      if (data.room_id === public_conversation_id) {
+        setUsersInRoom(data.users || []);
+      }
+    });
+
+    // Join the room
+    joinPublicRoom(public_conversation_id);
+
+    return () => {
+      // Leave the room
+      leavePublicRoom(public_conversation_id);
+      stop && stop();
+    };
+  }, [public_conversation_id, joinPublicRoom, leavePublicRoom, listen]);
+
+  return {
+    usersInRoom,
+    joinRoom: () => joinPublicRoom(public_conversation_id),
+    leaveRoom: () => leavePublicRoom(public_conversation_id)
+  };
 }

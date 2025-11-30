@@ -1,41 +1,55 @@
 /**
- * ========== usePublicUnreadMessages (client) ==========
- * 🔔 Live unread counters — per-room (user scope) or global (admin scope)
+ *   ================== usePublicUnreadMessages.js ==================
+ * 🔔 Real-time unread message count for public live chat
+ * ===============================================================
+ * PROPS:
+ *   public_conversation_id?: string   // For per-convo count
+ *   adminGlobal?: boolean             // True = admin global count
+ * ===============================================================
+ * USAGE:
+ *   const { unreadCount, markAllRead } = usePublicUnreadMessages({
+ *     public_conversation_id, adminGlobal: false
+ *   });
+ * ===============================================================
  */
-'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 
 export default function usePublicUnreadMessages({
-  public_conversation_id = null,
+  public_conversation_id,
   adminGlobal = false
 } = {}) {
-  const { requestPublicUnreadBootstrap, onPublicUnreadUpdated } = useSocketHub();
-  const [total, setTotal] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const { markPublicMessagesRead, listen } = useSocketHub();
 
+  // Listen for updates
   useEffect(() => {
-    // 🧮 Initial value
     if (adminGlobal) {
-      requestPublicUnreadBootstrap({ scope: 'admin' });
+      // Admin wants global unread count (all users)
+      const stop = listen('public_message:unread_admin', (data) => {
+        setUnreadCount(data.total || 0);
+      });
+      return () => stop();
     } else if (public_conversation_id) {
-      requestPublicUnreadBootstrap({ scope: 'user', public_conversation_id });
+      // User wants unread in this conversation
+      const stop = listen('public_message:unread_user', (data) => {
+        if (data.public_conversation_id === public_conversation_id) {
+          setUnreadCount(data.total || 0);
+        }
+      });
+      // Mark as read when mounting
+      markPublicMessagesRead(public_conversation_id);
+      return () => stop();
     }
+  }, [adminGlobal, public_conversation_id, markPublicMessagesRead, listen]);
 
-    // 👂 Push updates
-    const off = onPublicUnreadUpdated((payload) => {
-      if (payload.scope === 'admin' && adminGlobal) {
-        setTotal(Number(payload.total) || 0);
-      } else if (
-        payload.scope === 'user' &&
-        public_conversation_id &&
-        payload.public_conversation_id === public_conversation_id
-      ) {
-        setTotal(Number(payload.total) || 0);
-      }
-    });
-    return () => off && off();
-  }, [adminGlobal, public_conversation_id, requestPublicUnreadBootstrap, onPublicUnreadUpdated]);
+  // Manual mark-all-read function
+  const markAllRead = useCallback(() => {
+    if (public_conversation_id) {
+      markPublicMessagesRead(public_conversation_id);
+    }
+  }, [public_conversation_id, markPublicMessagesRead]);
 
-  return useMemo(() => ({ total }), [total]);
+  return { unreadCount, markAllRead };
 }

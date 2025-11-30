@@ -506,6 +506,30 @@ const useSocketHub = () => {
     [guardedListen]
   );
 
+  // 🆕 Listen for new conversation notifications (admin only)
+  const onNewConversation = useCallback(
+    (handler) => guardedListen('public_room:new_conversation', handler),
+    [guardedListen]
+  );
+
+  // 🔔 Listen for new unread message notifications (admin only)
+  const onNewUnreadNotification = useCallback(
+    (handler) => guardedListen('public_message:new_unread_notification', handler),
+    [guardedListen]
+  );
+
+  // 🧹 Mark all messages as read (admin only)
+  const markAllPublicMessagesRead = useCallback(
+    () => guardedEmit('public_message:mark_all_read'),
+    [guardedEmit]
+  );
+
+  // ✅ Listen for mark all read confirmation
+  const onAllPublicMessagesMarkedRead = useCallback(
+    (handler) => guardedListen('public_message:all_marked_read', handler),
+    [guardedListen]
+  );
+
   /* ================= 🍪 COOKIE EVENTS ================== */
 
   // 📝 Listen for server asking to set last room cookie
@@ -724,6 +748,7 @@ const useSocketHub = () => {
     onPublicRoomCreated,
     onPublicPresenceUpdate,
     onPublicRoomError,
+    onNewConversation,
 
     // Public Messages
     sendPublicMessage,
@@ -731,18 +756,21 @@ const useSocketHub = () => {
     deletePublicMessage,
     refreshPublicMessages,
     markPublicMessagesRead,
+    markAllPublicMessagesRead,
     sendPublicTyping,
     onPublicMessageCreated,
     onPublicMessageEdited,
     onPublicMessageDeleted,
     onPublicMessagesRefreshed,
     onPublicMessagesMarkedRead,
+    onAllPublicMessagesMarkedRead,
+    onPublicMessageError,
+    onNewUnreadNotification,
     onPublicUserTyping,
     onPublicUnreadUser,
     onPublicUnreadAdmin,
     onPublicUnreadUpdated,
     requestPublicUnreadBootstrap,
-    onPublicMessageError,
 
     // Cookie Management
     onSetLastRoomCookie,

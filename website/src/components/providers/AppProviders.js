@@ -9,6 +9,7 @@
 
 import { useContext } from 'react';
 import { useLocale } from 'next-intl';
+import { useSession } from 'next-auth/react';
 
 // 🔌 sockets
 import { SocketProvider, SocketContext } from '@/context/SocketContext';
@@ -25,14 +26,19 @@ import LogPageView from '@/components/reusableUI/socket/LogPageView';
 import WhatsAppLogo from '@/components/ui/whatsapp/WhatsAppBS';
 import ShowMessages from '@/components/ui/showErrorAndMessages/ShowMessages';
 import LanguageSwitcher from '@/components/languageSwitcher/LanguageSwitcher';
-// 💬 Public live chat widget (small floating window)
+// 💬 Public live chat widgets (role-based)
 import PublicLiveChatWidget from '@/components/reusableUI/socket/PublicLiveChatWidget';
+import AdminPublicChatWidget from '@/components/reusableUI/socket/AdminPublicChatWidget';
 // ❌ Error Debugger Helper
 import ErrorBoundary from '@/lib/debug/ErrorBoundary';
 
 function AppContent({ children }) {
   // live socket state for LogPageView
   const { socketConnected } = useContext(SocketContext) ?? {};
+
+  // 👤 Get user role to determine which chat widget to show
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === 'admin';
 
   return (
     <>
@@ -53,7 +59,8 @@ function AppContent({ children }) {
               </div>
 
               <WhatsAppLogo />
-              <PublicLiveChatWidget />
+              {/* 💬 Conditional chat widget based on role */}
+              {isAdmin ? <AdminPublicChatWidget /> : <PublicLiveChatWidget />}
               <ShowMessages />
             </div>
           </ModalProvider>

@@ -1,255 +1,264 @@
 /**
- * ============== usePublicLiveChat (REFACTORED) ==============
- * 🎯 Single source of truth for public chat state & actions
+ * ============== usePublicLiveChat (AGGREGATOR + LISTENERS) ==============
+ * 🎯 Aggregates all dedicated public chat hooks into one clean API
+ * 🎧 Provides callback-based listener setup functions (NOT raw useEffects)
  * -----------------------------------------------------------
- * WHAT IT DOES:
- *   • Auto-reopens last room from cookie on mount
- *   • Manages message list with deduplication
- *   • Aggregates presence, typing, unread from sub-hooks
- *   • Exposes clean API for widget to consume
+ * ARCHITECTURE:
+ *   • Imports ONLY from dedicated hooks (NOT useSocketHub directly)
+ *   • Each dedicated hook imports from useSocketHub
+ *   • Exports listener setup functions that return cleanup functions
+ *   • Component calls these in its own useEffects
  *
- * WHY THIS DESIGN:
- *   • Single useEffect per concern (room, messages, cookies)
- *   • Stable refs prevent infinite loops
- *   • Clear separation: state management vs. UI rendering
+ * USAGE IN COMPONENT:
+ *   const { setupRoomReadyListener, setupMessageListeners, ... } = usePublicLiveChat();
+ *   useEffect(() => setupRoomReadyListener(callbacks), [deps]);
  */
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import useSocketHub from '@/hooks/socket/useSocketHub';
+import { useCallback } from 'react';
 import usePublicMessageEvents from '@/hooks/socket/usePublicMessageEvents';
 import usePublicTypingIndicator from '@/hooks/socket/usePublicTypingIndicator';
 import usePublicUnreadMessages from '@/hooks/socket/usePublicUnreadMessages';
 import usePublicRoomUsers from '@/hooks/socket/usePublicRoomUsers';
 
-// 🔎 Deduplicate messages by ID
-const dedupeById = (arr) => {
-  const seen = new Set();
-  return arr.filter((m) => {
-    if (!m?.public_message_id || seen.has(m.public_message_id)) return false;
-    seen.add(m.public_message_id);
-    return true;
-  });
-};
+/* ============================================================
+ * 🏠 ROOM MANAGEMENT FUNCTIONS
+ * ==========================================================*/
+export function useRoomManagement() {
+  const roomFunctions = usePublicRoomUsers();
+  return roomFunctions;
+}
 
-// 🍪 Read cookie helper (client-side)
-const getCookie = (name) => {
+/* ============================================================
+ * 💬 MESSAGE FUNCTIONS
+ * ==========================================================*/
+export function useMessages() {
+  const messageFunctions = usePublicMessageEvents();
+  return messageFunctions;
+}
+
+/* ============================================================
+ * ⌨️ TYPING INDICATOR FUNCTIONS
+ * ==========================================================*/
+export function useTyping() {
+  const typingFunctions = usePublicTypingIndicator();
+  return typingFunctions;
+}
+
+/* ============================================================
+ * 🔔 UNREAD MESSAGE FUNCTIONS
+ * ==========================================================*/
+export function useUnread() {
+  const unreadFunctions = usePublicUnreadMessages();
+  return unreadFunctions;
+}
+
+/* ============================================================
+ * 👥 PRESENCE FUNCTIONS (alias for room users)
+ * ==========================================================*/
+export function usePresence() {
+  return useRoomManagement(); // Same as room management
+}
+
+/* ============================================================
+ * 🍪 COOKIE HELPER (client-side)
+ * ==========================================================*/
+export function getCookie(name) {
+  if (typeof document === 'undefined') return null;
   const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
   return match ? match[2] : null;
-};
+}
 
+/* ============================================================
+ * 🎁 ALL-IN-ONE HOOK (for convenience - combines all hooks)
+ * ==========================================================*/
 export default function usePublicLiveChat() {
-  const {
-    joinPublicRoom,
-    leavePublicRoom,
-    joinPublicLobby,
-    leavePublicLobby,
-    refreshPublicMessages,
-    sendPublicMessage,
-    markPublicMessagesRead,
-    sendPublicTyping,
-    onPublicMessageCreated,
-    onPublicMessagesRefreshed,
-    onSetLastRoomCookie,
-    onClearLastRoomCookie
-  } = useSocketHub();
-
-  // 📦 Core state
-  const [activeRoomId, setActiveRoomId] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const activeRoomIdRef = useRef(null);
-  const bootstrappedRef = useRef(false);
-
-  // 🎣 Sub-hooks (scoped to active room)
-  const messageEvents = usePublicMessageEvents(activeRoomId);
-  const typing = usePublicTypingIndicator(activeRoomId);
-  const unread = usePublicUnreadMessages({ public_conversation_id: activeRoomId });
-  const roomUsers = usePublicRoomUsers(activeRoomId);
-
-  // 🔄 Keep ref in sync
-  useEffect(() => {
-    activeRoomIdRef.current = activeRoomId;
-  }, [activeRoomId]);
+  // 🧩 Import all dedicated hooks
+  const room = useRoomManagement();
+  const messages = useMessages();
+  const typing = useTyping();
+  const unread = useUnread();
+  const presence = usePresence();
 
   /* ========================================
-   * 🍪 COOKIE SYNC (Client-Side)
+   * 🏠 SETUP ROOM READY LISTENER
    * ======================================*/
-  useEffect(() => {
-    const unsubSet = onSetLastRoomCookie?.(({ cookieName, public_conversation_id, maxAgeDays }) => {
-      const expires = new Date();
-      expires.setDate(expires.getDate() + (maxAgeDays || 14));
-      document.cookie = `${cookieName}=${public_conversation_id}; path=/; expires=${expires.toUTCString()}; SameSite=Lax`;
-      console.log(`🍪 Set: ${cookieName}=${public_conversation_id}`);
-    });
+  const setupRoomReadyListener = useCallback(
+    ({ onRoomReady }) => {
+      if (!room?.onPublicRoomReady) return () => {};
 
-    const unsubClear = onClearLastRoomCookie?.(({ cookieName }) => {
-      document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-      console.log(`🍪 Cleared: ${cookieName}`);
-    });
+      const off = room.onPublicRoomReady(({ public_conversation_id }) => {
+        console.log('🟢 Room ready:', public_conversation_id);
+        onRoomReady?.(public_conversation_id);
+      });
 
-    return () => {
-      unsubSet?.();
-      unsubClear?.();
-    };
-  }, [onSetLastRoomCookie, onClearLastRoomCookie]);
+      return () => off?.();
+    },
+    [room]
+  );
 
   /* ========================================
-   * 🚀 MOUNT BOOTSTRAP
+   * 📨 SETUP MESSAGE LISTENERS
    * ======================================*/
-  useEffect(() => {
-    if (bootstrappedRef.current) return;
-    bootstrappedRef.current = true;
+  const setupMessageListeners = useCallback(
+    ({
+      activeRoomId,
+      onMessageCreated,
+      onMessageEdited,
+      onMessageDeleted,
+      onMessagesRefreshed
+    }) => {
+      if (
+        !messages?.onPublicMessageCreated ||
+        !messages?.onPublicMessageEdited ||
+        !messages?.onPublicMessageDeleted ||
+        !messages?.onPublicMessagesRefreshed
+      )
+        return () => {};
 
-    // 🍪 Try to reopen last room
-    const lastRoomId = getCookie('public_last_conversation_id');
+      // 📥 New message
+      const offCreated = messages.onPublicMessageCreated(({ public_conversation_id, message }) => {
+        if (public_conversation_id !== activeRoomId) return;
+        onMessageCreated?.(message);
+      });
 
-    if (lastRoomId) {
-      console.log('🔁 Reopening last room:', lastRoomId);
-      setActiveRoomId(lastRoomId);
-      joinPublicRoom(lastRoomId);
-      refreshPublicMessages(lastRoomId, 50);
-    } else {
-      console.log('🛋️ Joining lobby (no last room)');
-      joinPublicLobby();
-    }
+      // ✏️ Edited message
+      const offEdited = messages.onPublicMessageEdited(({ message }) => {
+        onMessageEdited?.(message);
+      });
 
-    return () => {
-      leavePublicLobby();
-      if (activeRoomIdRef.current) {
-        leavePublicRoom(activeRoomIdRef.current);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      // 🗑️ Deleted message
+      const offDeleted = messages.onPublicMessageDeleted(({ public_message_id }) => {
+        onMessageDeleted?.(public_message_id);
+      });
+
+      // 🔄 Refreshed list
+      const offRefreshed = messages.onPublicMessagesRefreshed(
+        ({ public_conversation_id, messages: list }) => {
+          if (public_conversation_id !== activeRoomId) return;
+          onMessagesRefreshed?.(list);
+        }
+      );
+
+      return () => {
+        offCreated?.();
+        offEdited?.();
+        offDeleted?.();
+        offRefreshed?.();
+      };
+    },
+    [messages]
+  );
+
+  /* ========================================
+   * 👥 SETUP PRESENCE LISTENER
+   * ======================================*/
+  const setupPresenceListener = useCallback(
+    ({ activeRoomId, onPresenceUpdate }) => {
+      if (!presence?.onPublicPresenceUpdate) return () => {};
+
+      const off = presence.onPublicPresenceUpdate(({ room_id, public_conversation_id, users }) => {
+        const targetRoom = public_conversation_id || room_id;
+        if (targetRoom !== activeRoomId) return;
+        console.log('👥 Presence update for room:', targetRoom, users);
+        onPresenceUpdate?.(users);
+      });
+
+      return () => off?.();
+    },
+    [presence]
+  );
+
+  /* ========================================
+   * ⌨️ SETUP TYPING LISTENER
+   * ======================================*/
+  const setupTypingListener = useCallback(
+    ({ activeRoomId, onTypingUpdate }) => {
+      if (!typing?.onPublicUserTyping) return () => {};
+
+      const off = typing.onPublicUserTyping(({ public_conversation_id, user, isTyping }) => {
+        if (public_conversation_id !== activeRoomId) return;
+        onTypingUpdate?.(isTyping ? user : null);
+      });
+
+      return () => off?.();
+    },
+    [typing]
+  );
+
+  /* ========================================
+   * 🔔 SETUP UNREAD LISTENER
+   * ======================================*/
+  const setupUnreadListener = useCallback(
+    ({ activeRoomId, onUnreadUpdate }) => {
+      if (!unread?.onPublicUnreadUpdated) return () => {};
+
+      const off = unread.onPublicUnreadUpdated((payload) => {
+        if (payload.scope === 'user' && payload.public_conversation_id === activeRoomId) {
+          onUnreadUpdate?.(Number(payload.total) || 0);
+        }
+      });
+
+      return () => off?.();
+    },
+    [unread]
+  );
+
+  /* ========================================
+   * 🆕 NEW CONVERSATION LISTENER (ADMIN ONLY)
+   * ======================================*/
+  const onNewConversation = useCallback((handler) => {
+    if (typeof window === 'undefined' || !window.__socketHub) return () => {};
+    const hub = window.__socketHub();
+    return hub.onNewConversation?.(handler) || (() => {});
   }, []);
 
   /* ========================================
-   * 📨 MESSAGE LISTENERS
+   * 🔔 ADMIN GLOBAL UNREAD LISTENER
    * ======================================*/
-  useEffect(() => {
-    // 📥 New message
-    const offCreated = onPublicMessageCreated?.(({ public_conversation_id, message }) => {
-      if (public_conversation_id !== activeRoomIdRef.current) return;
-      setMessages((prev) => dedupeById([...prev, message]));
-    });
-
-    // ✏️ Edited message
-    const offEdited = messageEvents.onPublicMessageEdited?.(({ message }) => {
-      setMessages((prev) =>
-        prev.map((m) => (m.public_message_id === message.public_message_id ? message : m))
-      );
-    });
-
-    // 🗑️ Deleted message
-    const offDeleted = messageEvents.onPublicMessageDeleted?.(({ public_message_id }) => {
-      setMessages((prev) => prev.filter((m) => m.public_message_id !== public_message_id));
-    });
-
-    // 🔄 Refreshed list
-    const offRefreshed = onPublicMessagesRefreshed?.(
-      ({ public_conversation_id, messages: list }) => {
-        if (public_conversation_id !== activeRoomIdRef.current) return;
-        setMessages(dedupeById(Array.isArray(list) ? list : []));
-      }
-    );
-
-    return () => {
-      offCreated?.();
-      offEdited?.();
-      offDeleted?.();
-      offRefreshed?.();
-    };
-  }, [activeRoomIdRef, onPublicMessageCreated, onPublicMessagesRefreshed, messageEvents]);
+  const onPublicUnreadAdmin = useCallback(
+    (handler) => {
+      return unread?.onPublicUnreadAdmin?.(handler) || (() => {});
+    },
+    [unread]
+  );
 
   /* ========================================
-   * 🔄 RESET ON ROOM CHANGE
+   * 🧹 MARK ALL READ (ADMIN ONLY)
    * ======================================*/
-  useEffect(() => {
-    setMessages([]);
-  }, [activeRoomId]);
+  const markAllPublicMessagesRead = useCallback(() => {
+    if (typeof window === 'undefined' || !window.__socketHub) return;
+    const hub = window.__socketHub();
+    return hub.markAllPublicMessagesRead?.();
+  }, []);
 
-  /* ========================================
-   * 📤 PUBLIC API
-   * ======================================*/
-  const openRoom = useCallback(
-    (public_conversation_id) => {
-      if (!public_conversation_id) return;
+  // 📦 Return combined API
+  return {
+    // 🏠 Room functions
+    ...room,
 
-      // Leave current room
-      if (activeRoomIdRef.current && activeRoomIdRef.current !== public_conversation_id) {
-        leavePublicRoom(activeRoomIdRef.current);
-      }
+    // 💬 Message functions
+    ...messages,
 
-      // Join new room
-      setActiveRoomId(public_conversation_id);
-      joinPublicRoom(public_conversation_id);
-      refreshPublicMessages(public_conversation_id, 50);
-    },
-    [joinPublicRoom, leavePublicRoom, refreshPublicMessages]
-  );
+    // ⌨️ Typing functions
+    ...typing,
 
-  const closeRoom = useCallback(() => {
-    if (!activeRoomIdRef.current) return;
-    leavePublicRoom(activeRoomIdRef.current);
-    setActiveRoomId(null);
-    setMessages([]);
-    joinPublicLobby();
-  }, [leavePublicRoom, joinPublicLobby]);
+    // 🔔 Unread functions
+    ...unread,
 
-  const send = useCallback(
-    (text) => {
-      const cleanText = (text || '').trim();
-      if (!cleanText) return;
+    // 👥 Presence functions
+    ...presence,
 
-      if (activeRoomIdRef.current) {
-        sendPublicMessage(activeRoomIdRef.current, cleanText);
-      } else {
-        // Auto-create room by sending to null (server handles)
-        sendPublicMessage(null, cleanText);
-      }
-    },
-    [sendPublicMessage]
-  );
+    // 🎧 Listener setup functions
+    setupRoomReadyListener,
+    setupMessageListeners,
+    setupPresenceListener,
+    setupTypingListener,
+    setupUnreadListener,
 
-  const markRead = useCallback(() => {
-    if (!activeRoomIdRef.current) return;
-    markPublicMessagesRead(activeRoomIdRef.current);
-  }, [markPublicMessagesRead]);
-
-  const setTyping = useCallback(
-    (isTyping = true) => {
-      if (!activeRoomIdRef.current) return;
-      sendPublicTyping(activeRoomIdRef.current, isTyping);
-    },
-    [sendPublicTyping]
-  );
-
-  return useMemo(
-    () => ({
-      // State
-      activeRoomId,
-      messages,
-      typing,
-      unread,
-      roomUsers,
-
-      // Actions
-      openRoom,
-      closeRoom,
-      send,
-      markRead,
-      setTyping
-    }),
-    [
-      activeRoomId,
-      messages,
-      typing,
-      unread,
-      roomUsers,
-      openRoom,
-      closeRoom,
-      send,
-      markRead,
-      setTyping
-    ]
-  );
+    // 👑 Admin-specific functions
+    onNewConversation,
+    onPublicUnreadAdmin,
+    markAllPublicMessagesRead
+  };
 }

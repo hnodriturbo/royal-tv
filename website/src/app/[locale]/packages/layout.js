@@ -1,4 +1,8 @@
-// app/[locale]/packages/layout.js
+/**
+ * Packages layout.js
+ * app/[locale]/packages/layout.js
+ */
+
 // Server file (no 'use client')
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;

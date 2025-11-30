@@ -6,8 +6,14 @@ const withNextIntl = createNextIntlPlugin();
 const nextConfig = {
   reactStrictMode: false,
   productionBrowserSourceMaps: true,
-  eslint: { ignoreDuringBuilds: false }
-  // no webpack aliasing needed anymore
+  eslint: { ignoreDuringBuilds: false },
+
+  // 🛡️ Remove ALL console.* calls in production builds (keeps console.error)
+  compiler: {
+    removeConsole: {
+      exclude: ['error'] // Keep console.error for critical issues
+    }
+  }
 };
 
 export default withNextIntl(nextConfig);

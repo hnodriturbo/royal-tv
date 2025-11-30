@@ -1,1119 +1,1215 @@
 {
-    "common": {
-        "time": {
-            "less_than_one_day": "innan við 1 dagur",
-            "month_singular": "mánuður",
-            "month_plural": "mánuðir",
-            "day_singular": "dagur",
-            "day_plural": "dagar",
-            "separator": ", ",
-            "left": "eftir"
-        },
-        "loader": { "loading": "Hleð inn..." },
-        "buttons": { "confirm": "Staðfesta", "cancel": "Hætta við" },
-        "auth": {
-            "checking": "Athuga auðkenningu...",
-            "redirect_logged_in": "Velkomin(n) ! Fer með þig á stjórnborðið þitt..."
-        },
-        "errors": {
-            "generic": "Eitthvað fór úrskeiðis.",
-            "network": "Netvilla. Reyndu aftur.",
-            "AUTH/SESSION_EXPIRED": "Innskráningin þín rann út. Vinsamlegast skráðu þig inn aftur.",
-            "NETWORK/TIMEOUT": "Síðan svaraði of seint. Reyndu aftur."
-        }
+  "common": {
+    "time": {
+      "less_than_one_day": "innan við 1 dagur",
+      "month_singular": "mánuður",
+      "month_plural": "mánuðir",
+      "day_singular": "dagur",
+      "day_plural": "dagar",
+      "separator": ", ",
+      "left": "eftir"
     },
-    "app": {
-        "languageSwitcher": {
-            "english_label": "Skipta yfir á ensku",
-            "icelandic_label": "Skipta yfir á íslensku",
-            "english_tooltip": "Enska",
-            "icelandic_tooltip": "Íslenska",
-            "disabled_tooltip": "Ekki er hægt að skipta um tungumál á greiðslusíðu"
-        },
-        "admin": {
-            "dashboard": { "title": "Stjórnborð stjórnanda" },
-            "freeTrials": {
-                "status": { "active": "Virk", "pending": "Í bið", "disabled": "Óvirk" },
-                "main": {
-                    "no_data": "Engin Free Trial Fundust!",
-                    "title": "Allar prufubeiðnir",
-                    "loading": "Hleð prufum...",
-                    "loadSuccess": "Prufur hlaðnar!",
-                    "loadFailed": "Tókst ekki að hlaða prufum{error}",
-                    "deleting": "Eyði prufu...",
-                    "deletedSuccess": "Prufa var eytt!",
-                    "deleteFailed": "Ekki tókst að eyða.",
-                    "deletionCancelled": "Hætt við eyðingu.",
-                    "deleteModal": {
-                        "title": "Eyða prufu",
-                        "description": "Ertu viss um að þú viljir eyða þessari prufu? Ekki er hægt að afturkalla.",
-                        "confirm": "Eyða",
-                        "cancel": "Hætta við"
-                    },
-                    "table": {
-                        "user": "Notandi",
-                        "username": "Notandanafn",
-                        "email": "Netfang",
-                        "status": "Staða",
-                        "created": "Stofnað",
-                        "startDate": "Upphafstími",
-                        "endDate": "Loktími",
-                        "actions": "Aðgerðir"
-                    },
-                    "action": { "viewEdit": "Skoða/Breyta", "delete": "Eyða" }
-                },
-                "edit": {
-                    "title": "Breyta prufu fyrir {name}",
-                    "unknownUser": "óþekktur notandi",
-                    "userInfo": "Upplýsingar um notanda",
-                    "field": {
-                        "name": "Nafn",
-                        "email": "Netfang",
-                        "whatsapp": "WhatsApp",
-                        "telegram": "Telegram",
-                        "userId": "Auðkenni notanda",
-                        "currentStatus": "Núverandi staða",
-                        "freeTrialUsername": "Notandanafn prufu",
-                        "freeTrialPassword": "Lykilorð prufu",
-                        "portalUrl": "Vefslóð (portal)",
-                        "otherShortInfo": "Önnur stutt lýsing",
-                        "additionalDetails": "Nánari upplýsingar",
-                        "status": "Staða",
-                        "startDate": "Upphafstími",
-                        "endDateAuto": "Loktími (sjálfvirkt)"
-                    },
-                    "placeholder": {
-                        "username": "Notandanafn",
-                        "password": "Lykilorð",
-                        "portalUrl": "Vefslóð (portal)",
-                        "otherShortInfo": "Önnur stutt lýsing",
-                        "additionalDetails": "Nánari upplýsingar"
-                    },
-                    "selectStatus": "Veldu stöðu",
-                    "deleteTrial": "Eyða prufu",
-                    "saveChanges": "Vista breytingar",
-                    "saving": "Vista...",
-                    "returnToList": "Til baka í prufur",
-                    "loadingTrial": "Hleð prufu...",
-                    "loadFailed": "Tókst ekki að hlaða prufu",
-                    "updatingTrial": "Uppfæri prufu...",
-                    "updateSuccess": "Prufa uppfærð",
-                    "updateFailed": "Tókst ekki að uppfæra prufu",
-                    "deletingTrial": "Eyði prufu...",
-                    "deletedSuccess": "Prufu var eytt!",
-                    "deleteFailed": "Ekki tókst að eyða.",
-                    "deletionCancelled": "Hætt við eyðingu.",
-                    "deleteModal": {
-                        "title": "Eyða prufu",
-                        "description": "Ertu viss um að þú viljir eyða þessari prufu? Ekki er hægt að afturkalla.",
-                        "confirm": "Eyða",
-                        "cancel": "Hætta við"
-                    }
-                }
-            },
-            "notifications": { "title": "Tilkynningar stjórnanda" },
-            "logs": {
-                "main": {
-                    "title": "Allar atferlisskrár notenda (eftir IP)",
-                    "loading": "Hleð atferlisskrám...",
-                    "loadSuccess": "Atferlisskrár hlaðnar!",
-                    "loadFailed": "Tókst ekki að hlaða atferlisskrám {error}",
-                    "deleting": "Eyði skráningum...",
-                    "deletedSuccess": "Skráningum var eytt!",
-                    "deleteFailed": "Tókst ekki að eyða.",
-                    "deletionCancelled": "Hætt við eyðingu.",
-                    "deleteModal": {
-                        "title": "Eyða öllum skráningum fyrir þetta IP",
-                        "description": "Ertu viss um að þú viljir eyða ÖLLUM skráningum fyrir IP: {ip}? Ekki er hægt að afturkalla.",
-                        "confirm": "Eyða",
-                        "cancel": "Hætta við"
-                    },
-                    "table": {
-                        "ip": "IP vistfang",
-                        "logs": "Fjöldi skráninga",
-                        "latestPage": "Síðasta síða",
-                        "latestUser": "Síðasti notandi",
-                        "latestTime": "Síðasti tími",
-                        "actions": "Aðgerðir"
-                    },
-                    "action": { "view": "Skoða", "delete": "Eyða" },
-                    "card": {
-                        "ip": "IP vistfang",
-                        "logs": "Fjöldi skráninga",
-                        "latestEvent": "Síðasta atburður",
-                        "latestUser": "Síðasti notandi",
-                        "latestTime": "Síðasti tími"
-                    }
-                },
-                "byIp": {
-                    "title": "Atferlisskrár fyrir IP: {ip}",
-                    "loading": "Hleð skráningum fyrir IP...",
-                    "loadSuccess": "Skráningar hlaðnar!",
-                    "loadFailed": "Tókst ekki að hlaða skráningum{error}",
-                    "deleting": "Eyði skráningum...",
-                    "deletedSuccess": "Skráningum var eytt!",
-                    "deleteFailed": "Tókst ekki að eyða.",
-                    "deletionCancelled": "Hætt við eyðingu.",
-                    "deleteModal": {
-                        "title": "Eyða öllum skráningum fyrir þetta IP",
-                        "description": "Ertu viss um að þú viljir eyða ÖLLUM skráningum fyrir IP: {ip}? Ekki er hægt að afturkalla.",
-                        "confirm": "Eyða",
-                        "cancel": "Hætta við"
-                    },
-                    "table": {
-                        "time": "Tími",
-                        "user": "Notandi",
-                        "event": "Atburður",
-                        "page": "Síða",
-                        "description": "Lýsing",
-                        "userAgent": "Vafri/Búnaður"
-                    },
-                    "guest": "Gestur",
-                    "card": { "event": "Atburður", "pageVisited": "Heimsótt síða" },
-                    "dangerZone": {
-                        "title": "Hættusvæði",
-                        "description": "Eyðing allra skráninga fyrir þetta IP er varanleg og ekki hægt að afturkalla.",
-                        "button": "Eyða öllum skráningum fyrir þetta IP"
-                    },
-                    "backToAll": "← Til baka í allar skráningar"
-                }
-            },
-            "liveChat": {
-                "page": {
-                    "loading": "Hleð inn samtali…",
-                    "load_failed": "Tókst ekki að hlaða samtali",
-                    "edit_title": "Breyta skilaboði",
-                    "edit_confirm": "Vista",
-                    "cancel": "Hætta við",
-                    "delete_title": "Eyða skilaboði",
-                    "delete_description": "Ertu viss um að þú viljir eyða þessu skilaboði?",
-                    "delete_confirm": "Eyða",
-                    "msg_updated": "Skilaboð uppfærð!",
-                    "msg_edit_error": "Villa kom upp við breytingu á skilaboði",
-                    "msg_deleted": "Skilaboði eytt!",
-                    "msg_delete_error": "Villa kom upp við eyðingu skilaboðs. Reyndu aftur síðar.",
-                    "user_info": "Upplýsingar um notanda",
-                    "name": "Nafn",
-                    "email": "Netfang",
-                    "username": "Notandanafn",
-                    "other_conversations": "Önnur samtöl",
-                    "unread_tooltip": "Ólesin skilaboð í þessu samtali",
-                    "all_read_tooltip": "Öll skilaboð lesin",
-                    "no_subject": "Enginn titill",
-                    "unread_badge_one": "1 ólesið skilaboð",
-                    "unread_badge_other": "{count} ólesin skilaboð",
-                    "danger_zone": "Hættusvæði",
-                    "danger_warning": "Eyðing fjarlægir öll skilaboð varanlega.",
-                    "delete_success": "Samtali var eytt!"
-                },
-                "users": {
-                    "no_data": "Engar Samtöl Fundust!",
-                    "title": "Notendur með samtöl",
-                    "fetching": "Sæki samtöl…",
-                    "loaded": "Samtöl notenda hlaðin!",
-                    "fetch_failed": "Tókst ekki að sækja samtöl",
-                    "table_user": "Notandi",
-                    "table_email": "Netfang",
-                    "table_count": "# Samtöl",
-                    "table_unread": "# Ólesin samtöl",
-                    "table_last": "Síðustu skilaboð",
-                    "table_action": "Aðgerð",
-                    "no_messages": "Engin skilaboð",
-                    "view": "Skoða",
-                    "start_new": "Hefja nýtt samtal"
-                },
-                "userConversations": {
-                    "title": "Samtöl fyrir {username}",
-                    "loading": "Hleð inn samtölum…",
-                    "load_failed": "Tókst ekki að hlaða samtölum notanda",
-                    "create_new": "Hefja nýtt samtal",
-                    "table_id": "Auðkenni samtals",
-                    "table_subject": "Titill",
-                    "table_updated": "Síðast uppfært",
-                    "table_unread": "Ólesin skilaboð",
-                    "table_action": "Aðgerð",
-                    "empty": "Engin samtöl fundust.",
-                    "view_messages": "Skoða skilaboð",
-                    "no_subject": "Enginn titill",
-                    "last_updated": "Síðast uppfært",
-                    "unread": "Ólesin skilaboð",
-                    "email_label": "Netfang",
-                    "subject_label": "Titill"
-                }
-            },
-            "profile": {
-                "title": "Stjórnanda prófíll",
-                "loading": "Sæki stjórnanda prófílinn...",
-                "fetch_error": "Villa við að sækja prófíl",
-                "updating": "Uppfæri prófíl...",
-                "updated": "Prófíl uppfærður",
-                "update_error": "Villa við uppfærslu prófíls",
-                "password_mismatch": "Nýja lykilorðið og staðfesting passa ekki",
-                "updating_password": "Uppfæri lykilorð...",
-                "password_updated": "Lykilorð uppfært",
-                "password_update_error": "Villa við uppfærslu lykilorðs",
-                "change_password": "Breyta lykilorði",
-                "profile_of": "Prófíll {name}",
-                "field_name": "Nafn",
-                "field_email": "Netfang",
-                "field_username": "Notandanafn",
-                "field_whatsapp": "WhatsApp",
-                "field_telegram": "Telegram",
-                "field_oldPassword": "Gamalt lykilorð",
-                "field_newPassword": "Nýtt lykilorð",
-                "field_confirmPassword": "Staðfesta lykilorð",
-                "preferred_contact": "Kjörin samskiptaleið",
-                "receive_emails": "Ég vil fá mikilvæg tölvupóstskilaboð um aðganginn minn",
-                "update_profile": "Uppfæra prófíl",
-                "back_to_profile": "Til baka í prófíl",
-                "update_password": "Uppfæra lykilorð",
-                "return_dashboard": "Til baka í stjórnborð"
-            },
-            "subscriptions": {
-                "no_data": "Engar áskriftir fundust!",
-                "title": "Allar áskriftir",
-                "loading": "Hleð áskriftum...",
-                "loaded": "Allar áskriftir hlaðnar!",
-                "load_failed": "Tókst ekki að hlaða áskriftum",
-                "table_user": "Notandi",
-                "table_product": "Vara",
-                "table_username": "Notandanafn",
-                "table_status": "Staða",
-                "table_created": "Búið til",
-                "table_expiring": "Rennur út",
-                "table_actions": "Aðgerðir",
-                "view": "Skoða"
-            },
-            "userSubscriptions": {
-                "title": "Áskriftir notanda",
-                "loading": "Hleð áskriftum...",
-                "loaded": "Allar áskriftir hlaðnar!",
-                "load_failed": "Tókst ekki að hlaða áskriftum",
-                "user_info": "Upplýsingar um notanda",
-                "name": "Nafn",
-                "email": "Netfang",
-                "untitled": "Áskrift",
-                "status": "Staða",
-                "expires": "Rennur út",
-                "no_expiry": "Engin gildistími",
-                "time_left": "{time} eftir",
-                "delete_btn": "Eyða áskrift",
-                "delete_title": "Eyða áskrift",
-                "delete_description": "Ertu viss um að þú viljir eyða þessari áskrift?",
-                "delete_confirm": "Eyða",
-                "delete_failed": "Tókst ekki að eyða",
-                "deleted": "Áskrift eytt",
-                "cancel": "Hætta við",
-                "payments": "Greiðslur",
-                "payment_details": "Greiðsluupplýsingar",
-                "no_payment": "Engar greiðsluupplýsingar",
-                "close": "Loka",
-                "deleting": "Eyði áskrift..."
-            },
-            "users": {
-                "main": {
-                    "no_data": "Engir notendur fundust!",
-                    "title": "Allir notendur (kortasýn)",
-                    "loading": "Hleð notendum...",
-                    "loadSuccess": "Notendur hlaðnir!",
-                    "loadFailed": "Tókst ekki að hlaða notendum {error}",
-                    "noUsers": "Engir notendur fundust.",
-                    "email": "Netfang",
-                    "joined": "Skráður {date}",
-                    "whatsapp": "WhatsApp",
-                    "telegram": "Telegram",
-                    "preferredContact": "Kjörinn samskiptamáti",
-                    "freeTrials": "Prufur",
-                    "liveChats": "Lifandi spjall",
-                    "subscriptions": "Áskriftir",
-                    "profile": "Prófíll",
-                    "total": "Samtals",
-                    "unread": "Ólesið",
-                    "startConversation": "Hefja samtal"
-                }
-            },
-            "userId": {
-                "title": "Stjórnandi • Notandaprófíll",
-                "back": "Til baka",
-                "openLiveChat": "Opna spjall",
-                "loading": "Sæki notanda…",
-                "loadSuccess": "Notandi sóttur",
-                "loadFailed": "Tókst ekki að sækja notanda{error}",
-                "saving": "Vista breytingar…",
-                "saveSuccess": "Breytingar vistaðar",
-                "saveFailed": "Tókst ekki að vista breytingar{error}",
-                "deleting": "Eyði notanda…",
-                "deleteSuccess": "Notanda var eytt",
-                "deleteFailed": "Tókst ekki að eyða notanda{error}",
-                "confirmDelete": "Eyða þessum notanda? Þetta er óafturkræft.",
-                "username": "Notandanafn",
-                "username_placeholder": "Sláðu inn notandanafn",
-                "name": "Nafn",
-                "name_placeholder": "Sláðu inn fullt nafn",
-                "email": "Tölvupóstur",
-                "email_placeholder": "nafn@dæmi.is",
-                "role": "Hlutverk",
-                "role_user": "Notandi",
-                "role_admin": "Stjórnandi",
-                "whatsapp": "WhatsApp",
-                "telegram": "Telegram",
-                "created": "Stofnað",
-                "save": "Vista",
-                "delete": "Eyða"
-            }
-        },
-        "footer": {
-            "more_info_buy_now": "Nánar & Kaupa núna",
-            "telegram": "Telegram",
-            "rights": "Öll réttindi áskilin."
-        },
-        "navigation": {
-            "home": "Heim",
-            "more_info": "Meiri upplýsingar",
-            "faq": "Algengar spurningar",
-            "register": "Nýskráning",
-            "login": "Innskráning",
-            "dashboard": "Stjórnborð",
-            "buy_package": "Kaupa pakka",
-            "subscriptions": "Áskriftir",
-            "notifications": "Tilkynningar",
-            "live_chats": "Live Spjöll",
-            "free_trial": "Trial áskrift",
-            "free_trials": "Trial áskriftir",
-            "profile": "Prófíll",
-            "logs": "Síðu Skrár",
-            "users": "Sjá Notendur",
-            "logout": "Skrá út",
-            "rights": "Royal IPTV 2025",
-            "telegram": "Telegram"
-        },
-        "home": {
-            "page": {
-                "hero": {
-                    "title": "Velkomin á Royal TV, æðsta IPTV upplifingin! 🌟👑",
-                    "subtitle": "Horfðu á yfir 20.000 úrvals sjónvarpsstöðvar hvaðanæva að úr heiminum — beint á skjáinn þinn, hvar sem þú ert!",
-                    "blurb_line1": "(Allar helstu íþrótta-, kvikmynda- og afþreyingarrásir — og fullt meira sem þú vissir ekki að þig vantaði.)",
-                    "blurb_line2": "Allur umferð er dulkóðuð fyrir fullkomið öryggi.",
-                    "blurb_line3": "Njóttu öruggs streymis Royal TV allan sólarhringinn, alla daga!"
-                },
-                "body": {
-                    "line1": "Upplifðu nýja tíma í streymi með Royal TV!",
-                    "line2": "Skoðaðu gæðaþætti, metsölumyndir, stöðugt barnaefni og bestu alþjóðlegu rásirnar.",
-                    "line3": "Með sveigjanlegum pökkum færðu óviðjafnanlegt úrval,",
-                    "fast_support": "leifturhraðan",
-                    "body_tail": "stuðning og tilboð sem þú finnur hvergi annars staðar — aðeins hjá Royal TV!",
-                    "cta": "Skráðu þig núna og opnaðu heilan heim af afþreyingu. Tvöföld gæði, tvöfaldur skemmtun, tvöföld ánægja — tryggt!"
-                },
-                "thank_you": "Takk fyrir að hafa samband! Við svörum eins fljótt og auðið er. ({countdown})",
-                "cta_button": "Skráðu þig núna og fáðu ÓKEYPIS 1 dags prufu!"
-            }
-        },
-        "more-info": { "packages_heading": "Áskriftarpakkarnir okkar 👇" },
-        "faq": {
-            "heading": "Algengar spurningar ❓❓❓",
-            "items": {
-                "what_is_iptv_q": "Hvað er IPTV og hvernig er það notað?",
-                "what_is_iptv_a": "IPTV er þjónusta sem leyfir að horfa á beina sjónvarpsdagskrá í gegnum öpp sem eru sett upp á tækinu. Hún virkar á flestum nútímatækjum eins og snjallsjónvörpum, símum og tölvum.",
-                "getting_started_q": "Hvernig byrja ég?",
-                "getting_started_a": "Mjög einfalt! Hafðu samband og leiðbeiningar fylgja — þar með talið uppsetning á prufuaðgangi.",
-                "icelandic_channels_q": "Eru íslensku rásirnar í boði?",
-                "icelandic_channels_a": "Já, allar helstu íslenskar rásir eru í boði — þar með talið íþróttarásir — svo hægt er að horfa hvenær sem er.",
-                "free_trial_q": "Get ég fengið ókeypis prufu?",
-                "free_trial_a": "Já, við bjóðum oftast upp á prufu. Aðgengi getur ráðist af álaginu á þjónustunni hverju sinni.",
-                "simultaneous_streams_q": "Hversu margir geta horft á sama tíma?",
-                "simultaneous_streams_a": "Það fer eftir áskriftinni, en yfirleitt er eitt tæki leyft á hvern aðgang nema fjölstreymi sé virkt.",
-                "requirements_q": "Hvað þarf til að byrja að horfa?",
-                "requirements_a": "Stöðugan internettengingu og samhæft tæki. Við aðstoðum við uppsetningu á hinu.",
-                "special_equipment_q": "Þarf sérstakan búnað?",
-                "special_equipment_a": "Nei, ekki þarf sérstakan búnað. Hvert það tæki sem styður IPTV-öpp — s.s. snjallsjónvörp, Android-box eða símar — virkar.",
-                "works_everywhere_q": "Virkar Royal TV alls staðar?",
-                "works_everywhere_a": "Já, þjónustan virkar hvar sem er í heiminum svo lengi sem internettenging er til staðar.",
-                "channel_issue_q": "Hvað gerist ef rás virkar ekki?",
-                "channel_issue_a": "Við fylgjumst reglulega með streymum og uppfærum þau. Láttu þjónustuver vita ef eitthvað bilar og við kíkjum á það strax.",
-                "refunds_q": "Bjóðið þið endurgreiðslur?",
-                "refunds_a": "Vegna eðlis stafrænnar þjónustu bjóðum við ekki endurgreiðslur. Best er að byrja á prufu áður en keypt er.",
-                "renew_q": "Hvernig framlengi ég áskrift?",
-                "renew_a": "Mjög einfalt — farðu á vefinn okkar eða hafðu samband og við leiðbeinum þér í gegnum ferlið.",
-                "multi_device_q": "Get ég notað sama aðgang á mörgum tækjum?",
-                "multi_device_a": "Aðgangar eru yfirleitt takmarkaðir við eitt tæki nema áætlunin þín innihaldi fjöl-tækja aðgang. Hafðu samband til að uppfæra.",
-                "stability_q": "Er þjónustan stöðug og áreiðanleg?",
-                "stability_a": "Já! Lögð er áhersla á slétt og stöðugt streymi með lágmarks hikst og niðritíma.",
-                "channels_count_q": "Hversu margar rásir eru í boði?",
-                "channels_count_a": "Um það bil 12–14.000 rásir frá mörgum löndum, þar á meðal úrval greiddra rása.",
-                "apple_android_tv_q": "Get ég notað Apple TV eða Android TV?",
-                "apple_android_tv_a": "Algjörlega! Royal TV styður helstu kerfi eins og Apple TV, Android TV, Fire Stick og fleira.",
-                "support_q": "Er þjónustuver í boði?",
-                "support_a": "Já, þjónustuver er í boði í gegnum netspjall, tölvupóst og fleiri miðla þegar þín þarfnast.",
-                "commitment_q": "Er langtímasamningur?",
-                "commitment_a": "Stysta tímabil er 6 mánuðir og lengsta 1 ár. Greitt er eitt skipti fyrir valið tímabil.",
-                "content_types_q": "Hvaða efni er í boði?",
-                "content_types_a": "Royal TV býður upp á beinar sjónvarpsrásir, kvikmyndir, þætti, íþróttir og fleira — allt á einum stað.",
-                "hd_4k_q": "Get ég horft í HD eða 4K?",
-                "hd_4k_a": "Já, margar rásir og efni styðja HD og jafnvel 4K fyrir besta gæði.",
-                "slow_internet_q": "Virkar þetta á hægari neti?",
-                "slow_internet_a": "Mælt er með a.m.k. 10 Mbps tengingu fyrir bestu upplifun, en aðlögun gæðanna hjálpar einnig á hægari tengingum.",
-                "legal_q": "Er löglegt að nota IPTV?",
-                "legal_a": "Þjónustan er veitt í samræmi við gildandi lög. Gakktu úr skugga um að notkun IPTV sé í samræmi við reglur á þínu svæði."
-            }
-        },
-        "user": {
-            "dashboard": { "page": { "welcome": "Velkomin", "user": "Notandi" }},
-            "freeTrials": {
-                "page": {
-                    "checking_status": "Athuga stöðu prufuáskriftar...",
-                    "load_failed": "Ekki tókst að sækja stöðu prufuáskriftar.",
-                    "details_heading": "🎁 Nánar um prufuáskrift",
-                    "ready_title": "Prufuáskriftin þín er tilbúin!",
-                    "username": "Notandanafn:",
-                    "password": "Lykilorð:",
-                    "portal_link": "Vefslóð:",
-                    "dns_link": "DNS slóð:",
-                    "dns_link_samsung_lg": "DNS slóð (Samsung/LG):",
-                    "package": "Pakkinn:",
-                    "mac_address": "MAC vistfang:",
-                    "note": "Athugasemd:",
-                    "whatsapp_telegram": "WhatsApp/Telegram:",
-                    "expiring_at": "Rennur út:",
-                    "expiring_on_login": "Byrjar að telja við fyrstu innskráningu",
-                    "claimed_at": "Virkt:",
-                    "updated_at": "Uppfært:",
-                    "expired_title": "Prufuáskriftin þín er útrunnin.",
-                    "used_trial": "Þú hefur þegar notað prufuáskriftina.",
-                    "purchase_prompt": "💼 Vinsamlegast kaupa áskrift til að halda áfram að njóta þjónustunnar!",
-                    "no_trial_title": "Engin beiðni um prufuáskrift fannst.",
-                    "no_trial_message": "🤔 Ef þú telur þetta vera mistök, vinsamlegast hafðu samband við þjónustu."
-                }
-            },
-            "liveChat": {
-                "main": {
-                    "loading": "Hleð inn samtölunum þínum…",
-                    "fetch_failed": "Tókst ekki að hlaða samtölum",
-                    "fetch_success": "Samtöl hlaðin inn",
-                    "header": "Samtölin þín",
-                    "start_new": "Byrja nýtt samtal",
-                    "no_conversations": "Engin samtöl fundust.",
-                    "id": "Auðkenni",
-                    "subject": "Viðfangsefni",
-                    "unread": "Ólesið",
-                    "last_message": "Síðasta skilaboð",
-                    "action": "Aðgerð",
-                    "read": "✅ Lesið",
-                    "view": "Skoða",
-                    "delete": "Eyða",
-                    "none": "Ekkert",
-                    "unread_badge_one": "1 ólesið",
-                    "unread_badge_other": "{count} ólesin",
-                    "tooltip_unread": "Þú ert með ólesin skilaboð",
-                    "tooltip_all_read": "Öll skilaboð eru lesin",
-                    "other_conversations": "Önnur samtöl",
-                    "no_subject": "Ekkert viðfangsefni"
-                },
-                "conversation": {
-                    "cancel": "Hætta við",
-                    "conversation_deleted": "Samtali eytt.",
-                    "danger_message": "Ef samtali er eytt er það endanlegt og ekki hægt að endurheimta.",
-                    "danger_zone": "Hættusvæði",
-                    "delete": "Eyða",
-                    "delete_message": "Eyða skilaboði",
-                    "delete_prompt": "Ertu viss um að þú viljir eyða þessu skilaboði?",
-                    "email": "Netfang:",
-                    "edit_message": "Breyta skilaboði",
-                    "error_delete": "Ekki tókst að eyða skilaboði.",
-                    "error_edit": "Ekki tókst að uppfæra skilaboð.",
-                    "fail": "Tókst ekki að hlaða samtali.",
-                    "loading": "Hleð inn samtali...",
-                    "message_deleted": "Skilaboði eytt.",
-                    "message_updated": "Skilaboð uppfærð.",
-                    "name": "Nafn:",
-                    "no_subject": "Ekkert efni",
-                    "other_conversations": "Önnur samtöl",
-                    "save": "Vista",
-                    "tooltip_all_read": "Öllum skilaboðum hefur verið lesið",
-                    "tooltip_unread": "Ólesin skilaboð í þessu samtali",
-                    "unread_badge_one": "1 nýtt",
-                    "unread_badge_other": "{count} ný",
-                    "user_info": "Upplýsingar um notanda",
-                    "username": "Notandanafn:",
-                    "list_title": "Samtölin Þín:"
-                }
-            },
-            "profile": {
-                "page": {
-                    "fetching": "Sæki prófílinn þinn...",
-                    "error_fetching": "Villa við að sækja prófíl",
-                    "updating": "Uppfæri prófíl...",
-                    "update_success": "Prófíl uppfærður",
-                    "error_updating": "Villa við uppfærslu prófíls",
-                    "password_mismatch": "Nýtt lykilorð og staðfesting passa ekki",
-                    "password_updating": "Uppfæri lykilorð...",
-                    "password_update_success": "Lykilorð uppfært",
-                    "error_password_update": "Villa við uppfærslu lykilorðs",
-                    "change_password": "Breyta lykilorði",
-                    "update_profile": "Uppfæra prófíl",
-                    "profile": "Prófíll",
-                    "user_profile": "Notandaprófíll",
-                    "old_password": "Gamalt lykilorð:",
-                    "new_password": "Nýtt lykilorð:",
-                    "confirm_password": "Staðfesta lykilorð:",
-                    "back_to_profile": "Til baka í prófíl",
-                    "update_password": "Uppfæra lykilorð",
-                    "return_dashboard": "Til baka á stjórnborð",
-                    "preferred_contact": "Óskandi samskiptaleið:",
-                    "send_emails": "Ég vil fá mikilvægan tölvupóst um aðgerðir innan síðunnar.",
-                    "field": {
-                        "name": "Nafn:",
-                        "email": "Netfang:",
-                        "username": "Notandanafn:",
-                        "whatsapp": "WhatsApp:",
-                        "telegram": "Telegram:"
-                    }
-                }
-            },
-            "subscriptions": {
-                "page": {
-                    "title": "Áskriftirnar þínar",
-                    "pageTitle": "Áskrift",
-                    "loading": "Hleð áskriftum...",
-                    "loaded": "Áskriftir sóttar!",
-                    "load_failed": "Tókst ekki að hlaða áskriftum",
-                    "payment_success_title": "Greiðsla tókst!",
-                    "payment_success_message": "Greiðsla þín barst og áskriftin bíður samþykkis stjórnanda.\nÞessi síða endurhleðst sjálfkrafa á klukkutíma fresti! Þú færð tilkynningu um allar breytingar.",
-                    "disappear_notice": "Þetta hverfur eftir 30 sekúndur."
-                },
-                "status": {
-                    "active": "✅ Áskriftin Er Virk",
-                    "pending": "🕒 Áskrift Í bið",
-                    "expired": "❌ Áskriftin þín er útrunnin",
-                    "disabled": "🚫 Áskriftin þín er óvirk",
-                    "unknown": "❔ Óþekkt Staða Áskriftar"
-                },
-                "fields": {
-                    "username_label": "Notandanafn:",
-                    "password_label": "Lykilorð:",
-                    "portal_link_label": "Portal Linkur:",
-                    "dns_link_label": "DNS Linkur:",
-                    "samsung_lg_dns_label": "Samsung/LG DNS Linkur:",
-                    "mac_address_label": "MAC Linkur:",
-                    "template_label": "Tegund:",
-                    "connections_label": "Tæki:",
-                    "adult_label": "Fullorðinsefni:",
-                    "vpn_label": "VPN Verndun:",
-                    "country_label": "Land:",
-                    "whatsapp_telegram_label": "WhatsApp/Telegram:",
-                    "paid_label": "Greitt:",
-                    "note_label": "Auka Nóta:",
-                    "expires_at_label": "Rennur Út:",
-                    "created_at_label": "Búið til og virkjað:",
-                    "yes": "✅ Já",
-                    "no": "❌ Nei",
-                    "paid_yes": "💸 Já",
-                    "paid_no": "⏳ Ógreitt",
-                    "country_all": "Öll Lönd",
-                    "payment_title": "💳 Greiðsla:",
-                    "payment_none": "Engar greiðslur ennþá.",
-                    "payment_status_label": "Staða:",
-                    "payment_invoice_label": "Reikn.:",
-                    "payment_amount_label": "Upphæð:",
-                    "payment_created_label": "Greitt:"
-                }
-            }
-        },
-        "buyNow": {
-            "creatingInvoice": "Bý til öruggan BTC reikning...",
-            "invoiceReady": "Öruggi BTC reikningurinn þinn er tilbúinn.",
-            "widgetError": "Ekki tókst að hlaða inn greiðsluglugga.",
-            "initError": "Ekki tókst að frumstilla greiðslu. Vinsamlegast endurhlaðið síðuna.",
-            "paymentComplete": "✅ Greiðslu lokið! Áskriftin verður nú stofnuð og stjórnandi virkjar hana eins fljótt og auðið er.",
-            "title": "Kaupa {package} áskrift",
-            "price": "Aðeins ${price}",
-            "iframeTitle": "Kaupa {package} - Stafræn greiðsla",
-            "widgetFallback": "Ekki tókst að hlaða inn greiðsluglugga",
-            "loadingWidget": "Hleð BTC greiðsluglugga...",
-            "note": "Athugið:",
-            "policy": "Heildarupphæðin sem þú greiðir inniheldur bæði áskriftarverðið og öll nauðsynleg gjöld Bitcoin netsins.",
-            "network": "Stafrænar greiðslur geta tekið nokkrar mínútur að staðfestast, eftir álagi á netinu.",
-            "patienceTitle": "Þolinmæði er lykillinn!",
-            "patienceText": "Þessi gluggi uppfærir sig sjálfkrafa þegar greiðslan þín hefur borist.",
-            "important": "Mikilvægt:",
-            "doNotClose": "Vinsamlegast ekki loka eða fara frá þessari síðu meðan greiðsla er í vinnslu.",
-            "instructions": "Leiðbeiningar hér fyrir neðan!",
-            "loginRequiredTitle": "Innskráning nauðsynleg",
-            "loginRequiredText": "Skráðu þig inn eða stofnaðu aðgang til að halda áfram með greiðslu.",
-            "loginButton": "Innskrá",
-            "registerButton": "Nýskrá",
-            "loadingSession": "Athuga innskráningarstöðu..."
-        },
-        "packages": {
-            "main": {
-                "title": "Veldu Royal TV áskrift 👑",
-                "subtitle": "Veldu pakka sem hentar þér best. Þú getur bætt við fullorðins-efni og VPN í pakkanum."
-            },
-            "guide": {
-                "title": "Svona byrjar þú með Royal TV 🚀",
-                "steps": {
-                    "register": {
-                        "title": "Nýskráðu þig fyrir Royal TV aðgang",
-                        "detail": "Fljótlegt, öruggt og með ÓKEYPIS 1 dags prufu!"
-                    },
-                    "request_trial": {
-                        "title": "Biðja um prufuáskrift",
-                        "detail": "Skráðu þig inn á stjórnborðið og smelltu á „Biðja um prufuáskrift“."
-                    },
-                    "already_had": {
-                        "title": "Þegar prófað?",
-                        "detail": "Farðu beint í að velja og kaupa uppáhalds áskriftarpakkann þinn!"
-                    },
-                    "pay_btc": {
-                        "title": "Greiddu með Bitcoin",
-                        "detail": "Notaðu örugga greiðslueininguna okkar (á Kaupa núna síðunni, allt dulkóðað)."
-                    },
-                    "instant_activation": "SJÁLFVIRK VIRKJUN áskriftar.",
-                    "setup": {
-                        "title": "Settu upp IPTV forritið þitt",
-                        "detail": "Opnaðu spilarann, bættu við spilunarlista og settu inn notendaupplýsingar og slóð sem við sendum. Byrjaðu svo að streyma!"
-                    },
-                    "done": "Tilbúið! Njóttu ótakmarkaðra rása og úrvals efnis með Royal TV. 🎬"
-                },
-                "apps": {
-                    "title": "Bestu IPTV forritin fyrir hvert tæki 📲📺💻",
-                    "android": {
-                        "title": "Android forrit 🤖",
-                        "maxplayer": "MaxPlayer (mælum mest með!)",
-                        "tivimate": "TiviMate (Android, Firestick, Android TV)",
-                        "smarters": "Smarters Player Lite (iOS, Android, Windows, Mac)",
-                        "any_app": "Royal TV virkar með flestum IPTV forritum — streymdu eins og þér hentar!"
-                    },
-                    "smarttv": {
-                        "title": "Snjallsjónvörp 📺",
-                        "maxplayer": "MaxPlayer (mælum mest með!)",
-                        "smarters": "IPTV Smarters Player",
-                        "any_app": "Leitaðu í smáforritaverslun sjónvarpsins — Royal TV styður flestar Smart TV lausnir!"
-                    },
-                    "cross": {
-                        "title": "Margar gerðir tækja 🌐",
-                        "maxplayer": "MaxPlayer (öll tæki)",
-                        "smarters": "IPTV Smarters Player (iOS, Android, Windows, Mac, Smart TV)",
-                        "any_app": "Fjöldi annarra forrita — Royal TV virkar nánast alls staðar!"
-                    }
-                }
-            },
-            "grid": {
-                "single_device": "Eitt tæki",
-                "two_devices": "2 tæki",
-                "only": "AÐEINS",
-                "usd": "USD",
-                "feature_full_hd": "Full HD rásir",
-                "feature_premium": "Úrvals kvikmyndir og íþróttir",
-                "feature_20000": "20.000 rásir hvaðanæva að úr heiminum",
-                "feature_icelandic": "Allar íslenskar rásir innifaldar!",
-                "feature_vpn_addon": "VPN á tenginguna fyrir aukalega $10",
-                "feature_adult_addon": "Fullorðinsefni fyrir aukalega $10",
-                "watch_two_devices": "Horfðu á 2 tækjum samtímis",
-                "adult_addon_label": "Fullorðinsefni (+$10)",
-                "adult_addon_details": "Opnar 200+ fullorðinsrásir í beinni og ótakmarkaðar kvikmyndir.",
-                "vpn_addon_label": "VPN vörn (+$10)",
-                "buy_now": "Kaupa núna",
-                "register_to_buy": "Nýskráning til að kaupa",
-                "more_info": "Nánar",
-                "watch_single_device": "Streyma á 1 tæki í einu",
-                "not_found_title": "Pakki Fannst ekki !",
-                "not_found_desc": "Pakki fannst ekki. Vinasamlegast farðu til baka",
-                "back_to_packages": "Til baka í pakka"
-            },
-            "products": {
-                "6m": { "order_description": "6 mánuðir", "duration": "6 mánuðir (60$)" },
-                "6m_extra": { "order_description": "6 mánuðir + aukatæki", "duration": "6 mánuðir + aukatæki (100$)" },
-                "12m": { "order_description": "1 ár (Vinsælast)", "duration": "1 ár (Vinsælast) (100$)" },
-                "12m_extra": { "order_description": "1 ár + aukatæki", "duration": "1 ár + aukatæki (160$)" },
-                "24m": { "order_description": "2 ár", "duration": "2 ár (160$)" },
-                "24m_extra": { "order_description": "2 ár + aukatæki", "duration": "2 ár + aukatæki (240$)" }
-            }
-        },
-        "payments": {
-            "instructions": {
-                "title": "Hvernig greiði ég með Bitcoin",
-                "steps": {
-                    "open_wallet": "Opnaðu Bitcoin veskið þitt (sími eða tölva).",
-                    "tap_send": "Smelltu á „Send“ eða „Transfer“.",
-                    "copy_paste": "Afritaðu og límdu slóðina og nákvæma Bitcoin upphæð sem birtist hér fyrir neðan.",
-                    "double_check": "Farðu yfir allar upplýsingar og smelltu síðan á Send."
-                },
-                "wait_here": "Vinsamlegast vertu áfram á þessari síðu og ekki loka henni fyrr en greiðsla er 100% lokið.",
-                "youll_get_confirmation": "Þú færð tilkynningu og tölvupóst um leið og greiðslu er lokið.",
-                "done": "BÚIÐ!",
-                "activated_when_complete": "Áskriftin þín virkjast um leið og greiðslu er fulllokið.",
-                "qr_tip": "Ábending: Þú getur líka skannað QR-kóðann hér að neðan — þá fyllist allt út sjálfkrafa!",
-                "beginner_title": "Nýr í Bitcoin?",
-                "link_coinbase": "Hvernig sendi ég Bitcoin (leiðarvísir Coinbase)",
-                "link_bitcoincom": "Skref fyrir skref: Hvernig á að senda Bitcoin (bitcoin.com)",
-                "link_wasabi": "Sækja Wasabi Wallet (gagnvænt skrifborðsveski)",
-                "link_atomic": "Sækja Atomic Wallet (fjölmynt, tölva/sími)",
-                "link_trust": "Sækja Trust Wallet (einfalt farsímav eski)",
-                "need_help": "Vantar þig aðstoð? Sendu skilaboð í gegnum WhatsApp eða Live Chat á stjórnborðinu hvenær sem er!"
-            },
-            "status": {
-                "waiting": {
-                    "title": "Beðið er eftir að greiðsla hefjist...",
-                    "desc": "Skannaðu QR-kóðann eða afritaðu slóðina til að senda Bitcoin greiðsluna. Mundu að þú þarft greiða nákvæmlega það sem stendur við hliðina á QR kóðanum.",
-                    "label": "Bíður"
-                },
-                "pending": {
-                    "title": "Greiðsla í bið...",
-                    "desc": "Greiðslan er í vinnslu. Þú þarft ekki að gera neitt — þetta tekur venjulega stutta stund.",
-                    "label": "Í bið"
-                },
-                "sending": { "title": "Greiðslan hefur verið send úr veskinu þínu...", "label": "Sendist" },
-                "confirming": {
-                    "title": "Greiðsla er að staðfestast...",
-                    "desc": "Hún hefur borist og bíður nægjanlegra staðfesta. Þetta tekur oftast nokkrar mínútur.",
-                    "label": "Staðfestist"
-                },
-                "completed": {
-                    "title": "Greiðsla staðfest / lokið",
-                    "desc": "Áskriftin hefur verið stofnuð og er nú orðin virkjuð. Velkomin(n) til Royal TV!",
-                    "label": "Lokið"
-                },
-                "failed": {
-                    "title": "Greiðsla brást eða rann út.",
-                    "desc": "Ef birtist „expired“ eða „failed“, bíddu eftir næstu staðfestingu. Þetta getur tekið allt að 1 klst. og reynir aftur sjálfkrafa.",
-                    "label": "Mistókst"
-                },
-                "unknown": "Óþekkt staða"
-            }
-        },
-        "signin": {
-            "title": "Innskráning",
-            "signupWelcomeMessage": "Velkomin(n), {username}! Vinsamlegast sláðu inn lykilorð til að ljúka skráningu.",
-            "fillBothFields": "Vinsamlegast fylltu út bæði notendanafn og lykilorð.",
-            "loggingIn": "Skrái inn...",
-            "loginSuccess": "Innskráning tókst! Áframsendi...",
-            "wrongCredentials": "Rangt notendanafn eða lykilorð",
-            "loginError": "Villa við innskráningu: {error}",
-            "usernamePlaceholder": "Sláðu inn notendanafn",
-            "passwordPlaceholder": "Sláðu inn lykilorð",
-            "rememberMe": "Muna eftir mér",
-            "submitButton": "Skrá inn",
-            "noAccountPrompt": "Ertu ekki með aðgang?",
-            "signUpLink": "Skráðu þig"
-        },
-        "signup": {
-            "title": "Stofnaðu aðgang og fáðu ókeypis prufu",
-            "labels": {
-                "name": "Nafn",
-                "username": "Notendanafn",
-                "email": "Netfang",
-                "whatsapp": "WhatsApp",
-                "telegram": "Telegram",
-                "preferredContact": "Samskiptaleið",
-                "password": "Lykilorð",
-                "confirmPassword": "Staðfesta lykilorð",
-                "receiveEmails": "Fá tölvupósta?"
-            },
-            "placeholders": {
-                "fullName": "Fullt nafn",
-                "username": "Notendanafn",
-                "email": "Netfang",
-                "whatsapp": "WhatsApp (valkvætt)",
-                "telegram": "Telegram (valkvætt)",
-                "preferredContact": "Vinsælast samskiptaleið",
-                "password": "Lykilorð",
-                "confirmPassword": "Staðfesta lykilorð"
-            },
-            "contact": { "email": "Netfang", "whatsapp": "WhatsApp", "telegram": "Telegram", "website": "Af vefnum" },
-            "selectPreferred": "Vinsamlegast veldu þína samskiptaleið.",
-            "passwordsDontMatch": "Lykilorð passa ekki.",
-            "creatingAccount": "Stofna aðgang...",
-            "accountCreated": "Aðgangur stofnaður! Athugaðu tölvupóstinn þinn.",
-            "failedCreate": "Tókst ekki að stofna aðgang",
-            "submitButton": "Nýskrá",
-            "haveAccountPrompt": "Ertu með aðgang?",
-            "signInLink": "Skráðu þig inn"
-        },
-        "middlePage": {
-            "messages": {
-                "welcome": "Velkomin(n) {name}! Áframsendi...",
-                "logoutSuccess": "Útskráning tókst. Áframsendi á forsíðu...",
-                "profileUpdated": "Prófíll uppfærður! Áframsendi...",
-                "passwordUpdated": "Lykilorð uppfært! Áframsendi...",
-                "paymentComplete": "✅ Greiðsla móttekin! Áskrift er að verða stofnuð og bíður samþykkis stjórnanda.",
-                "accessDenied": "Aðgangur óheimill að þessum hluta.",
-                "accessDeniedLogin": "Aðgangur óheimill! Áframsendi á innskráningu...",
-                "notAuthorized": "Ekki með heimild! Áframsendi á innskráningu...",
-                "badCredentials": "Rangt notendanafn eða lykilorð.",
-                "unexpectedError": "Óvænt villa. Reyndu aftur.",
-                "pageMissing": "Síðan finnst ekki. Áframsendi á forsíðu..."
-            }
-        }
+    "loader": {
+      "loading": "Hleð inn..."
     },
-    "socket": {
-        "connected": "Tengt",
-        "disconnected": "Aftengt",
-        "reconnecting": "Reyni að tengjast aftur…",
-        "connect_error": "Tókst ekki að tengjast þjóninum.",
-        "timeout": "Tenging við socket rann út.",
-        "ui": {
-            "common": {
-                "refresh": "Uppfæra",
-                "refreshing": "Uppfæri…",
-                "edit": "Breyta",
-                "delete": "Eyða",
-                "someone": "Someone is writing"
-            },
-            "chat": {
-                "subject_label": "Efni:",
-                "online_count_label": "Tengdir: {count}",
-                "unread_count_label": "Ólesið: {count}",
-                "edited": "(breytt)",
-                "input_placeholder": "Skrifaðu skilaboð…",
-                "send": "Senda",
-                "refreshed": "Skilaboð uppfærð"
-            },
-            "logPageView": {
-                "description": "Heimsótti \"{                       page                       }\" síðu"
-            },
-            "online_users": { "title": "Notendur á netinu" },
-            "roles": { "admin": "stjórnandi", "user": "notandi", "guest": "gestur" },
-            "refresh_messages": { "button_title": "Uppfæra skilaboð", "button_text": "🔃 Uppfæra skilaboð" },
-            "see_all_notifications": {
-                "title": "Allar tilkynningar",
-                "no_notifications": "Engar tilkynningar ennþá.",
-                "delete_title": "Eyða tilkynningu",
-                "delete_description": "Ertu viss um að þú viljir eyða þessari tilkynningu? Þetta er ekki hægt að afturkalla.",
-                "delete_all_title": "Eyða ÖLLUM tilkynningum",
-                "delete_all_description": "Ertu viss um að þú viljir eyða öllum tilkynningum varanlega? Þetta er ekki hægt að afturkalla!",
-                "delete_button": "Eyða",
-                "cancel_button": "Hætta við",
-                "delete_all_button": "Eyða öllu",
-                "open_content": "Opna efni",
-                "delete_notification": "Eyða tilkynningu",
-                "danger_zone": "Hættusvæði",
-                "clear_all_notifications": "Hreinsa allar tilkynningar"
-            },
-            "liveChatRoom": { "default_subject": "Lifandi spjall" },
-            "notifications": {
-                "title": "Tilkynningar",
-                "empty": "Engar tilkynningar enn.",
-                "empty_more": "Engar fleiri tilkynningar.",
-                "see_more": "Sjá meira",
-                "see_less": "Sjá minna",
-                "see_all": "Sjá allar tilkynningar",
-                "total": "Heildarfjöldi tilkynninga: {count}",
-                "showing_range": "Sýni {start}–{end} af {total} tilkynningum",
-                "type_label": "Tegund",
-                "danger_zone": "Hættusvæði",
-                "actions": { "delete": "Eyða", "open": "Opna efni", "clear_all": "Eyða öllum tilkynningum" },
-                "modals": {
-                    "common": { "cancel": "Hætta við" },
-                    "delete": {
-                        "title": "Eyða tilkynningu",
-                        "description": "Ertu viss um að þú viljir eyða þessari tilkynningu? Ekki er hægt að afturkalla.",
-                        "confirm": "Eyða"
-                    },
-                    "clear_all": {
-                        "title": "Eyða ÖLLUM tilkynningum",
-                        "description": "Ertu viss um að þú viljir varanlega eyða ÖLLUM tilkynningum? Ekki er hægt að afturkalla!",
-                        "confirm": "Eyða öllu"
-                    }
-                },
-                "user": {
-                    "newUserRegistration": {
-                        "title": "🎉 Velkomin í Royal IPTV !",
-                        "body": "Hæ {name}, og takk fyrir að skrá þig hjá Royal IPTV! 🎊\nAðgangurinn þinn ({email}) var stofnaður {createdAt}.\n• Notandanafn: {username}\n• Samskiptaleið: {preferredContactWay}\n• Tölvupósttilkynningar virkar: {sendEmails}\n👉 Biddu um ókeypis prufu með því að smella á hnappinn!\nÞarftu aðstoð? Hafðu samband á WhatsApp eða notaðu Live Chat!"
-                    },
-                    "freeTrial": {
-                        "created": {
-                            "title": "🎁 Ókeypis prufa búin til !",
-                            "body": "Hæ {name}!\n\nÓkeypis prufan þín virkist sjálfkrafa við fyrstu innskráningu.\n• Pakki: {package_name}\n• Rennur út nákvæmlega 1 degi eftir fyrstu innskráningu.\n\n🎬 Notaðu aðgangsupplýsingarnar í IPTV forritinu þínu og byrjaðu strax!\n• Þú finnur upplýsingarnar með því að smella á „Open“ í þessari tilkynningu.\nÞarftu aðstoð? WhatsApp eða Live Chat!"
-                        }
-                    },
-                    "subscription": {
-                        "created": {
-                            "title": "📺 Áskrift Búin Til !",
-                            "body": "Hæ {name}!\n\nÁskriftin þín var búin til {createdAt}.\n• Pakki: {package_name}\n• Pöntun: {order_description}\n• Rennur út: {expiring_at}\n🚀 Bættu spilunarlista í IPTV forritinu og byrjaðu strax!\nÞarftu aðstoð? WhatsApp eða Live Chat!"
-                        }
-                    },
-                    "payment": {
-                        "title": "💳 Greiðsla móttekin !",
-                        "body": "Takk! Greiðsla fyrir pöntun #{order_id} hefur borist.\n\n• Greitt: {amount_paid} {price_currency}\n• Reikningsnúmer: {invoice_id}\n• Móttekið: {received_at}\n• Staða: {status}\nÞarftu aðstoð? WhatsApp eða Live Chat!"
-                    },
-                    "liveChatMessage": {
-                        "title": "💬 Ný skilaboð í Live Chat !",
-                        "body": "Þú átt ný skilaboð frá þjónustu Royal TV {createdAt}.\nEfni: {subject}\nSkilaboð: {message}\nÞarftu aðstoð? WhatsApp eða Live Chat!"
-                    },
-                    "error": {
-                        "title": "⚠️ Villa í kerfinu !",
-                        "body": "• Titill villu: {errorTitle}\n• Lýsing: {errorMessage}\n• Nánar: {errorDetails}"
-                    }
-                },
-                "admin": {
-                    "newUserRegistration": {
-                        "title": "👤 Nýr notandi skráður",
-                        "body": "Nýr notandi var að skrá sig:\n\n• Nafn: {name}\n• Netfang: {email}\n• Notandanafn: {username}\n• Notandaauðkenni: {user_id}\n• Skráð: {createdAt}\n• Samskiptaleið: {preferredContactWay}\n• WhatsApp: {whatsapp}\n• Telegram: {telegram}\n👉 Opnaðu til að skoða prófíl og stillingar."
-                    },
-                    "freeTrial": {
-                        "created": {
-                            "title": "🎁 Ókeypis prufa búin til",
-                            "body": "Ókeypis prufa var búin til og virkjuð:\n\n• Nafn: {name}\n• Netfang: {email}\n• Notandanafn: {username}\n• Notandaauðkenni: {user_id}\n• Prufuauðkenni: {trial_id}\n• Pakki: {package_name}\n• Fullorðinsrásir: {adult}\n👉 Opnaðu til að skoða nánari upplýsingar."
-                        }
-                    },
-                    "subscription": {
-                        "created": {
-                            "title": "📺 Ný áskrift búin til",
-                            "body": "Ný áskrift var búin til og virkjuð:\n\n• Nafn: {name}\n• Netfang: {email}\n• Notandanafn: {username}\n• Notandaauðkenni: {user_id}\n• Áskriftarauðkenni: {subscription_id}\n• Pöntunarnúmer: {order_id}\n• Pakki: {package_name}\n• Rennur út: {expiring_at}\n• Leyfð tæki: {max_connections}\n• Fullorðinsrásir: {adult}\n• VPN: {enable_vpn}\n👉 Opnaðu til að sjá allt um áskrift þína."
-                        }
-                    },
-                    "payment": {
-                        "title": "💳 Greiðsla móttekin",
-                        "body": "Greiðsla barst:\n\n• Nafn: {name}\n• Netfang: {email}\n• Notandanafn: {username}\n• Notandaauðkenni: {user_id}\n• Greitt (fiat): {amount_paid} {price_currency}\n• Móttekið (crypto): {actually_paid} {pay_currency}\n• Gjaldmiðill: {pay_currency}\n• Net: {network}\n• Greiðsluheimilisfang: {pay_address}\n• Reikningur: {invoice_id}\n• Payment ID: {payment_id}\n• Móttekið: {received_at}\n• Áskriftar ID: {subscription_id}\n• Pöntun: {order_id}\n• Staða: {status}\n\n👉 Opnaðu til að sjá áskriftina þína og greiðslu upplýsingar."
-                    },
-                    "liveChatMessage": {
-                        "title": "💬 Ný skilaboð í Live Chat",
-                        "body": "Þú átt ný skilaboð frá {name} {createdAt}.\nEfni: {subject}\nSkilaboð: {message}\n👉 Opnaðu til að svara."
-                    },
-                    "error": {
-                        "title": "⚠️ Villa í kerfinu",
-                        "body": "Villa kom upp!\n• user_id: {user_id}\n• Nafn notanda: {name}\n• Titill villu: {errorTitle}\n• Skilaboð: {errorMessage}\n• Nánar: {errorDetails}"
-                    }
-                }
-            },
-            "typing": { "you": "Þú ert að skrifa…", "other": "{name} er að skrifa…" },
-            "subscriptions": {
-                "loading": "Hleð inn áskriftum…",
-                "have_one": "Þú ert með áskrift!",
-                "status_label": "Staða:",
-                "status": {
-                    "active": "VIRK",
-                    "pending": "Í BIÐ",
-                    "expired": "ÚTRUNNIN",
-                    "disabled": "ÓVIRKT",
-                    "unknown": "ÓÞEKKT"
-                },
-                "view_yours": "Skoða áskriftina þína",
-                "buy_additional": "Kaupa viðbótar áskrift",
-                "none_title": "Engin áskrift fannst",
-                "none_blurb": "Kauptu áskrift til að njóta alls sem er í boði !",
-                "select_package": "-- Veldu áskriftarpakka --",
-                "buy_now": "Kaupa núna",
-                "select_first": "Veldu pakka fyrst.",
-                "checkout_failed": "Greiðsluferli mistókst"
-            },
-            "freeTrialPanel": {
-                "your_free_trial_is": "Prufuáskriftin þín er",
-                "active_caps": "VIRK",
-                "click_to_view_credentials": "Smelltu hér til að sjá innskráningarupplýsingarnar þínar!",
-                "your_free_trial_has": "Prufuáskriftin þín er",
-                "expired_caps": "ÚTRUNNIN",
-                "or_is_unavailable": "eða ekki tiltæk.",
-                "request_btn": "Biðja um prufuáskrift"
-            },
-            "isAdminOnline": {
-                "admin_info": "Upplýsingar um stjórnanda",
-                "is_admin_online_label": "Er stjórnandi á netinu:",
-                "online": "Á netinu",
-                "offline": "Ekki á netinu",
-                "no_admin_online": "Enginn stjórnandi er á netinu í augnablikinu.",
-                "online_admin": "Stjórnandi á netinu:",
-                "online_admins": "Stjórnendur á netinu:",
-                "admin_support": "Aðstoð stjórnanda"
-            },
-            "publicLiveChat": {
-                "main": {
-                    "main_title": "Spjall",
-                    "admin_online": "Stjórnandi á netinu",
-                    "empty_state": "Engin skilaboð ennþá. Byrjaðu samtal!",
-                    "input_placeholder": "Skrifaðu skilaboðin þín...",
-                    "send_button": "Senda",
-                    "toggle_open": "Opna spjall",
-                    "toggle_close": "Loka spjalli",
-                    "minimize": "Minnka spjall",
-                    "close": "Loka spjalli",
-                    "unread_badge_sr": "ólesin skilaboð"
-                }
-            }
-        },
-        "hooks": { "useRefreshNotifications": { "all_notifications_refreshed": "🔄 Allar tilkynningar endurhlaðnar!" }}
+    "buttons": {
+      "confirm": "Staðfesta",
+      "cancel": "Hætta við"
     },
-    "components": {
-        "countdown": {
-            "seconds_remaining_singular": "{seconds} sekúnda eftir…",
-            "seconds_remaining_plural": "{seconds} sekúndur eftir…"
+    "auth": {
+      "checking": "Athuga auðkenningu...",
+      "redirect_logged_in": "Velkomin(n) ! Fer með þig á stjórnborðið þitt..."
+    },
+    "errors": {
+      "generic": "Eitthvað fór úrskeiðis.",
+      "network": "Netvilla. Reyndu aftur.",
+      "AUTH/SESSION_EXPIRED": "Innskráningin þín rann út. Vinsamlegast skráðu þig inn aftur.",
+      "NETWORK/TIMEOUT": "Síðan svaraði of seint. Reyndu aftur."
+    }
+  },
+  "app": {
+    "languageSwitcher": {
+      "english_label": "Skipta yfir á ensku",
+      "icelandic_label": "Skipta yfir á íslensku",
+      "english_tooltip": "Enska",
+      "icelandic_tooltip": "Íslenska",
+      "disabled_tooltip": "Ekki er hægt að skipta um tungumál á greiðslusíðu"
+    },
+    "admin": {
+      "dashboard": {
+        "title": "Stjórnborð stjórnanda"
+      },
+      "freeTrials": {
+        "status": {
+          "active": "Virk",
+          "pending": "Í bið",
+          "disabled": "Óvirk"
         },
-        "countdownBanner": { "default_thank_you": "Takk fyrir!" },
-        "countdownRedirect": {
-            "redirecting_in_singular": "Á leið á næstu síðu eftir {seconds} sekúndu…",
-            "redirecting_in_plural": "Á leið á næstu síðu eftir {seconds} sekúndur…"
+        "main": {
+          "no_data": "Engin Free Trial Fundust!",
+          "title": "Allar prufubeiðnir",
+          "loading": "Hleð prufum...",
+          "loadSuccess": "Prufur hlaðnar!",
+          "loadFailed": "Tókst ekki að hlaða prufum{error}",
+          "deleting": "Eyði prufu...",
+          "deletedSuccess": "Prufa var eytt!",
+          "deleteFailed": "Ekki tókst að eyða.",
+          "deletionCancelled": "Hætt við eyðingu.",
+          "deleteModal": {
+            "title": "Eyða prufu",
+            "description": "Ertu viss um að þú viljir eyða þessari prufu? Ekki er hægt að afturkalla.",
+            "confirm": "Eyða",
+            "cancel": "Hætta við"
+          },
+          "table": {
+            "user": "Notandi",
+            "username": "Notandanafn",
+            "email": "Netfang",
+            "status": "Staða",
+            "created": "Stofnað",
+            "startDate": "Upphafstími",
+            "endDate": "Loktími",
+            "actions": "Aðgerðir"
+          },
+          "action": {
+            "viewEdit": "Skoða/Breyta",
+            "delete": "Eyða"
+          }
         },
-        "ringLoader": { "loading_tooltip": "Hleð inn" },
-        "showMessages": { "toast_title": "Tilkynning" },
-        "whatsAppBS": { "open_whatsapp": "Opna WhatsApp", "chat_with_us": "Spjallaðu við okkur á WhatsApp" },
-        "common": { "cancel": "Hætta við" },
-        "freeTrialButton": {
-            "confirm_title": "Staðfesta ósk um ókeypis prufu",
-            "confirm_description": "Ertu viss um að þú viljir óska eftir ókeypis prufu? Hver aðili fær aðeins eina prufu. Þú færð tilkynningu um leið og hún er tilbúin! 🎉",
-            "confirm_yes": "Já, óska eftir ókeypis prufu!",
-            "loader_requesting": "Sæki um ókeypis prufu…",
-            "success_requested": "✅ Ókeypis prufa skráð! Þú getur byrjað að horfa strax!",
-            "error_generic": "Tókst ekki að sækja prufu. Reyndu aftur síðar.",
-            "loading_label": "Sæki…",
-            "button_label": "Sækja ókeypis prufu"
-        },
-        "pagination": {
-            "aria_pagination": "Síðuskipting",
-            "previous": "Fyrri síða",
-            "next": "Næsta síða",
-            "aria_go_to_page": "Fara á síðu {page}"
-        },
-        "refreshCountdownTimer": {
-            "auto_refresh_in": "sjálfvirk uppfærsla eftir",
-            "refresh_now": "Uppfæra núna",
-            "pause": "Setja á pásu",
-            "resume": "Halda áfram",
-            "paused": "í pásu"
-        },
-        "reusableTable": { "actions": "Aðgerðir" },
-        "sampleReusableTable": {
-            "user_list": "Notendalisti",
+        "edit": {
+          "title": "Breyta prufu fyrir {name}",
+          "unknownUser": "óþekktur notandi",
+          "userInfo": "Upplýsingar um notanda",
+          "field": {
             "name": "Nafn",
             "email": "Netfang",
-            "view": "Skoða",
-            "loader_loading_users": "Hleð notendum...",
-            "error_could_not_load": "Gat ekki hlaðið notendum."
-        },
-        "sortDropdown": { "sort_label": "Röðun:", "sort_aria": "Röðunarval" },
-        "useConversationsList": {
-            "loader_fetching": "Sæki gögn...",
-            "loader_refreshing": "Uppfæri...",
-            "success_loaded": "Gögn hlaðin ✔️",
-            "error_failed_load": "Tókst ekki að hlaða gögnum ❌"
-        },
-        "conversationActionButton": {
-            "validation_subject_message_required": "Efni og skilaboð mega ekki vera tóm",
-            "loader_creating": "Bý til samtal...",
-            "error_timeout": "Tími rann út: Gat ekki búið til samtal",
-            "error_missing_user_for_notification": "Tilkynningavilla: vantar upplýsingar um notanda",
-            "success_created": "Samtal búið til!",
-            "error_generic_create": "Villa: Gat ekki búið til samtal",
-            "loader_deleting_one": "Eyði samtali…",
-            "success_deleted_one": "Samtali eytt",
-            "error_delete_failed": "Tókst ekki að eyða",
-            "loader_deleting_all": "Eyði öllum samtölum…",
-            "success_deleted_all": "Öllum samtölum eytt",
-            "error_delete_all_failed": "Tókst ekki að eyða öllum",
-            "btn_start_new": "Hefja nýtt samtal",
-            "btn_delete_one": "Eyða samtali",
-            "btn_delete_all": "Eyða öllum samtölum",
-            "modal_create_title": "Hefja nýtt samtal",
-            "modal_create_description": "Sláðu inn efni og skilaboð hér fyrir neðan:",
-            "modal_create_confirm": "Búa til samtal",
-            "placeholder_subject": "Skráðu efni",
-            "placeholder_message": "Skrifaðu skilaboðin þín hér...",
-            "modal_delete_title": "Eyða samtali",
-            "modal_delete_description": "Þetta mun eyða samtalinu og öllum skilaboðum þess til frambúðar.",
-            "modal_delete_confirm": "Eyða",
-            "modal_delete_all_title": "Eyða ÖLLUM samtölum notanda",
-            "modal_delete_all_description": "Þetta mun eyða ÖLLUM samtölum og skilaboðum þessa notanda til frambúðar.",
-            "modal_delete_all_confirm": "Eyða öllu",
-            "modal_cancel": "Hætta"
+            "whatsapp": "WhatsApp",
+            "telegram": "Telegram",
+            "userId": "Auðkenni notanda",
+            "currentStatus": "Núverandi staða",
+            "freeTrialUsername": "Notandanafn prufu",
+            "freeTrialPassword": "Lykilorð prufu",
+            "portalUrl": "Vefslóð (portal)",
+            "otherShortInfo": "Önnur stutt lýsing",
+            "additionalDetails": "Nánari upplýsingar",
+            "status": "Staða",
+            "startDate": "Upphafstími",
+            "endDateAuto": "Loktími (sjálfvirkt)"
+          },
+          "placeholder": {
+            "username": "Notandanafn",
+            "password": "Lykilorð",
+            "portalUrl": "Vefslóð (portal)",
+            "otherShortInfo": "Önnur stutt lýsing",
+            "additionalDetails": "Nánari upplýsingar"
+          },
+          "selectStatus": "Veldu stöðu",
+          "deleteTrial": "Eyða prufu",
+          "saveChanges": "Vista breytingar",
+          "saving": "Vista...",
+          "returnToList": "Til baka í prufur",
+          "loadingTrial": "Hleð prufu...",
+          "loadFailed": "Tókst ekki að hlaða prufu",
+          "updatingTrial": "Uppfæri prufu...",
+          "updateSuccess": "Prufa uppfærð",
+          "updateFailed": "Tókst ekki að uppfæra prufu",
+          "deletingTrial": "Eyði prufu...",
+          "deletedSuccess": "Prufu var eytt!",
+          "deleteFailed": "Ekki tókst að eyða.",
+          "deletionCancelled": "Hætt við eyðingu.",
+          "deleteModal": {
+            "title": "Eyða prufu",
+            "description": "Ertu viss um að þú viljir eyða þessari prufu? Ekki er hægt að afturkalla.",
+            "confirm": "Eyða",
+            "cancel": "Hætta við"
+          }
         }
+      },
+      "notifications": {
+        "title": "Tilkynningar stjórnanda"
+      },
+      "logs": {
+        "main": {
+          "title": "Allar atferlisskrár notenda (eftir IP)",
+          "loading": "Hleð atferlisskrám...",
+          "loadSuccess": "Atferlisskrár hlaðnar!",
+          "loadFailed": "Tókst ekki að hlaða atferlisskrám {error}",
+          "deleting": "Eyði skráningum...",
+          "deletedSuccess": "Skráningum var eytt!",
+          "deleteFailed": "Tókst ekki að eyða.",
+          "deletionCancelled": "Hætt við eyðingu.",
+          "deleteModal": {
+            "title": "Eyða öllum skráningum fyrir þetta IP",
+            "description": "Ertu viss um að þú viljir eyða ÖLLUM skráningum fyrir IP: {ip}? Ekki er hægt að afturkalla.",
+            "confirm": "Eyða",
+            "cancel": "Hætta við"
+          },
+          "table": {
+            "ip": "IP vistfang",
+            "logs": "Fjöldi skráninga",
+            "latestPage": "Síðasta síða",
+            "latestUser": "Síðasti notandi",
+            "latestTime": "Síðasti tími",
+            "actions": "Aðgerðir"
+          },
+          "action": {
+            "view": "Skoða",
+            "delete": "Eyða"
+          },
+          "card": {
+            "ip": "IP vistfang",
+            "logs": "Fjöldi skráninga",
+            "latestEvent": "Síðasta atburður",
+            "latestUser": "Síðasti notandi",
+            "latestTime": "Síðasti tími"
+          }
+        },
+        "byIp": {
+          "title": "Atferlisskrár fyrir IP: {ip}",
+          "loading": "Hleð skráningum fyrir IP...",
+          "loadSuccess": "Skráningar hlaðnar!",
+          "loadFailed": "Tókst ekki að hlaða skráningum{error}",
+          "deleting": "Eyði skráningum...",
+          "deletedSuccess": "Skráningum var eytt!",
+          "deleteFailed": "Tókst ekki að eyða.",
+          "deletionCancelled": "Hætt við eyðingu.",
+          "deleteModal": {
+            "title": "Eyða öllum skráningum fyrir þetta IP",
+            "description": "Ertu viss um að þú viljir eyða ÖLLUM skráningum fyrir IP: {ip}? Ekki er hægt að afturkalla.",
+            "confirm": "Eyða",
+            "cancel": "Hætta við"
+          },
+          "table": {
+            "time": "Tími",
+            "user": "Notandi",
+            "event": "Atburður",
+            "page": "Síða",
+            "description": "Lýsing",
+            "userAgent": "Vafri/Búnaður"
+          },
+          "guest": "Gestur",
+          "card": {
+            "event": "Atburður",
+            "pageVisited": "Heimsótt síða"
+          },
+          "dangerZone": {
+            "title": "Hættusvæði",
+            "description": "Eyðing allra skráninga fyrir þetta IP er varanleg og ekki hægt að afturkalla.",
+            "button": "Eyða öllum skráningum fyrir þetta IP"
+          },
+          "backToAll": "← Til baka í allar skráningar"
+        }
+      },
+      "liveChat": {
+        "page": {
+          "loading": "Hleð inn samtali…",
+          "load_failed": "Tókst ekki að hlaða samtali",
+          "edit_title": "Breyta skilaboði",
+          "edit_confirm": "Vista",
+          "cancel": "Hætta við",
+          "delete_title": "Eyða skilaboði",
+          "delete_description": "Ertu viss um að þú viljir eyða þessu skilaboði?",
+          "delete_confirm": "Eyða",
+          "msg_updated": "Skilaboð uppfærð!",
+          "msg_edit_error": "Villa kom upp við breytingu á skilaboði",
+          "msg_deleted": "Skilaboði eytt!",
+          "msg_delete_error": "Villa kom upp við eyðingu skilaboðs. Reyndu aftur síðar.",
+          "user_info": "Upplýsingar um notanda",
+          "name": "Nafn",
+          "email": "Netfang",
+          "username": "Notandanafn",
+          "other_conversations": "Önnur samtöl",
+          "unread_tooltip": "Ólesin skilaboð í þessu samtali",
+          "all_read_tooltip": "Öll skilaboð lesin",
+          "no_subject": "Enginn titill",
+          "unread_badge_one": "1 ólesið skilaboð",
+          "unread_badge_other": "{count} ólesin skilaboð",
+          "danger_zone": "Hættusvæði",
+          "danger_warning": "Eyðing fjarlægir öll skilaboð varanlega.",
+          "delete_success": "Samtali var eytt!"
+        },
+        "users": {
+          "no_data": "Engar Samtöl Fundust!",
+          "title": "Notendur með samtöl",
+          "fetching": "Sæki samtöl…",
+          "loaded": "Samtöl notenda hlaðin!",
+          "fetch_failed": "Tókst ekki að sækja samtöl",
+          "table_user": "Notandi",
+          "table_email": "Netfang",
+          "table_count": "# Samtöl",
+          "table_unread": "# Ólesin samtöl",
+          "table_last": "Síðustu skilaboð",
+          "table_action": "Aðgerð",
+          "no_messages": "Engin skilaboð",
+          "view": "Skoða",
+          "start_new": "Hefja nýtt samtal"
+        },
+        "userConversations": {
+          "title": "Samtöl fyrir {username}",
+          "loading": "Hleð inn samtölum…",
+          "load_failed": "Tókst ekki að hlaða samtölum notanda",
+          "create_new": "Hefja nýtt samtal",
+          "table_id": "Auðkenni samtals",
+          "table_subject": "Titill",
+          "table_updated": "Síðast uppfært",
+          "table_unread": "Ólesin skilaboð",
+          "table_action": "Aðgerð",
+          "empty": "Engin samtöl fundust.",
+          "view_messages": "Skoða skilaboð",
+          "no_subject": "Enginn titill",
+          "last_updated": "Síðast uppfært",
+          "unread": "Ólesin skilaboð",
+          "email_label": "Netfang",
+          "subject_label": "Titill"
+        }
+      },
+      "profile": {
+        "title": "Stjórnanda prófíll",
+        "loading": "Sæki stjórnanda prófílinn...",
+        "fetch_error": "Villa við að sækja prófíl",
+        "updating": "Uppfæri prófíl...",
+        "updated": "Prófíl uppfærður",
+        "update_error": "Villa við uppfærslu prófíls",
+        "password_mismatch": "Nýja lykilorðið og staðfesting passa ekki",
+        "updating_password": "Uppfæri lykilorð...",
+        "password_updated": "Lykilorð uppfært",
+        "password_update_error": "Villa við uppfærslu lykilorðs",
+        "change_password": "Breyta lykilorði",
+        "profile_of": "Prófíll {name}",
+        "field_name": "Nafn",
+        "field_email": "Netfang",
+        "field_username": "Notandanafn",
+        "field_whatsapp": "WhatsApp",
+        "field_telegram": "Telegram",
+        "field_oldPassword": "Gamalt lykilorð",
+        "field_newPassword": "Nýtt lykilorð",
+        "field_confirmPassword": "Staðfesta lykilorð",
+        "preferred_contact": "Kjörin samskiptaleið",
+        "receive_emails": "Ég vil fá mikilvæg tölvupóstskilaboð um aðganginn minn",
+        "update_profile": "Uppfæra prófíl",
+        "back_to_profile": "Til baka í prófíl",
+        "update_password": "Uppfæra lykilorð",
+        "return_dashboard": "Til baka í stjórnborð"
+      },
+      "subscriptions": {
+        "no_data": "Engar áskriftir fundust!",
+        "title": "Allar áskriftir",
+        "loading": "Hleð áskriftum...",
+        "loaded": "Allar áskriftir hlaðnar!",
+        "load_failed": "Tókst ekki að hlaða áskriftum",
+        "table_user": "Notandi",
+        "table_product": "Vara",
+        "table_username": "Notandanafn",
+        "table_status": "Staða",
+        "table_created": "Búið til",
+        "table_expiring": "Rennur út",
+        "table_actions": "Aðgerðir",
+        "view": "Skoða"
+      },
+      "userSubscriptions": {
+        "title": "Áskriftir notanda",
+        "loading": "Hleð áskriftum...",
+        "loaded": "Allar áskriftir hlaðnar!",
+        "load_failed": "Tókst ekki að hlaða áskriftum",
+        "user_info": "Upplýsingar um notanda",
+        "name": "Nafn",
+        "email": "Netfang",
+        "untitled": "Áskrift",
+        "status": "Staða",
+        "expires": "Rennur út",
+        "no_expiry": "Engin gildistími",
+        "time_left": "{time} eftir",
+        "delete_btn": "Eyða áskrift",
+        "delete_title": "Eyða áskrift",
+        "delete_description": "Ertu viss um að þú viljir eyða þessari áskrift?",
+        "delete_confirm": "Eyða",
+        "delete_failed": "Tókst ekki að eyða",
+        "deleted": "Áskrift eytt",
+        "cancel": "Hætta við",
+        "payments": "Greiðslur",
+        "payment_details": "Greiðsluupplýsingar",
+        "no_payment": "Engar greiðsluupplýsingar",
+        "close": "Loka",
+        "deleting": "Eyði áskrift..."
+      },
+      "users": {
+        "main": {
+          "no_data": "Engir notendur fundust!",
+          "title": "Allir notendur (kortasýn)",
+          "loading": "Hleð notendum...",
+          "loadSuccess": "Notendur hlaðnir!",
+          "loadFailed": "Tókst ekki að hlaða notendum {error}",
+          "noUsers": "Engir notendur fundust.",
+          "email": "Netfang",
+          "joined": "Skráður {date}",
+          "whatsapp": "WhatsApp",
+          "telegram": "Telegram",
+          "preferredContact": "Kjörinn samskiptamáti",
+          "freeTrials": "Prufur",
+          "liveChats": "Lifandi spjall",
+          "subscriptions": "Áskriftir",
+          "profile": "Prófíll",
+          "total": "Samtals",
+          "unread": "Ólesið",
+          "startConversation": "Hefja samtal"
+        }
+      },
+      "userId": {
+        "title": "Stjórnandi • Notandaprófíll",
+        "back": "Til baka",
+        "openLiveChat": "Opna spjall",
+        "loading": "Sæki notanda…",
+        "loadSuccess": "Notandi sóttur",
+        "loadFailed": "Tókst ekki að sækja notanda{error}",
+        "saving": "Vista breytingar…",
+        "saveSuccess": "Breytingar vistaðar",
+        "saveFailed": "Tókst ekki að vista breytingar{error}",
+        "deleting": "Eyði notanda…",
+        "deleteSuccess": "Notanda var eytt",
+        "deleteFailed": "Tókst ekki að eyða notanda{error}",
+        "confirmDelete": "Eyða þessum notanda? Þetta er óafturkræft.",
+        "username": "Notandanafn",
+        "username_placeholder": "Sláðu inn notandanafn",
+        "name": "Nafn",
+        "name_placeholder": "Sláðu inn fullt nafn",
+        "email": "Tölvupóstur",
+        "email_placeholder": "nafn@dæmi.is",
+        "role": "Hlutverk",
+        "role_user": "Notandi",
+        "role_admin": "Stjórnandi",
+        "whatsapp": "WhatsApp",
+        "telegram": "Telegram",
+        "created": "Stofnað",
+        "save": "Vista",
+        "delete": "Eyða"
+      }
+    },
+    "footer": {
+      "more_info_buy_now": "Nánar & Kaupa núna",
+      "telegram": "Telegram",
+      "rights": "Öll réttindi áskilin."
+    },
+    "navigation": {
+      "home": "Heim",
+      "more_info": "Meiri upplýsingar",
+      "faq": "Algengar spurningar",
+      "register": "Nýskráning",
+      "login": "Innskráning",
+      "dashboard": "Stjórnborð",
+      "buy_package": "Kaupa pakka",
+      "subscriptions": "Áskriftir",
+      "notifications": "Tilkynningar",
+      "live_chats": "Live Spjöll",
+      "free_trial": "Trial áskrift",
+      "free_trials": "Trial áskriftir",
+      "profile": "Prófíll",
+      "logs": "Síðu Skrár",
+      "users": "Sjá Notendur",
+      "logout": "Skrá út",
+      "rights": "Royal IPTV 2025",
+      "telegram": "Telegram"
+    },
+    "home": {
+      "page": {
+        "hero": {
+          "title": "Velkomin á Royal TV, æðsta IPTV upplifingin! 🌟👑",
+          "subtitle": "Horfðu á yfir 20.000 úrvals sjónvarpsstöðvar hvaðanæva að úr heiminum — beint á skjáinn þinn, hvar sem þú ert!",
+          "blurb_line1": "(Allar helstu íþrótta-, kvikmynda- og afþreyingarrásir — og fullt meira sem þú vissir ekki að þig vantaði.)",
+          "blurb_line2": "Allur umferð er dulkóðuð fyrir fullkomið öryggi.",
+          "blurb_line3": "Njóttu öruggs streymis Royal TV allan sólarhringinn, alla daga!"
+        },
+        "body": {
+          "line1": "Upplifðu nýja tíma í streymi með Royal TV!",
+          "line2": "Skoðaðu gæðaþætti, metsölumyndir, stöðugt barnaefni og bestu alþjóðlegu rásirnar.",
+          "line3": "Með sveigjanlegum pökkum færðu óviðjafnanlegt úrval,",
+          "fast_support": "leifturhraðan",
+          "body_tail": "stuðning og tilboð sem þú finnur hvergi annars staðar — aðeins hjá Royal TV!",
+          "cta": "Skráðu þig núna og opnaðu heilan heim af afþreyingu. Tvöföld gæði, tvöfaldur skemmtun, tvöföld ánægja — tryggt!"
+        },
+        "thank_you": "Takk fyrir að hafa samband! Við svörum eins fljótt og auðið er. ({countdown})",
+        "cta_button": "Skráðu þig núna og fáðu ÓKEYPIS 1 dags prufu!"
+      }
+    },
+    "more-info": {
+      "packages_heading": "Áskriftarpakkarnir okkar 👇"
+    },
+    "faq": {
+      "heading": "Algengar spurningar ❓❓❓",
+      "items": {
+        "what_is_iptv_q": "Hvað er IPTV og hvernig er það notað?",
+        "what_is_iptv_a": "IPTV er þjónusta sem leyfir að horfa á beina sjónvarpsdagskrá í gegnum öpp sem eru sett upp á tækinu. Hún virkar á flestum nútímatækjum eins og snjallsjónvörpum, símum og tölvum.",
+        "getting_started_q": "Hvernig byrja ég?",
+        "getting_started_a": "Mjög einfalt! Hafðu samband og leiðbeiningar fylgja — þar með talið uppsetning á prufuaðgangi.",
+        "icelandic_channels_q": "Eru íslensku rásirnar í boði?",
+        "icelandic_channels_a": "Já, allar helstu íslenskar rásir eru í boði — þar með talið íþróttarásir — svo hægt er að horfa hvenær sem er.",
+        "free_trial_q": "Get ég fengið ókeypis prufu?",
+        "free_trial_a": "Já, við bjóðum oftast upp á prufu. Aðgengi getur ráðist af álaginu á þjónustunni hverju sinni.",
+        "simultaneous_streams_q": "Hversu margir geta horft á sama tíma?",
+        "simultaneous_streams_a": "Það fer eftir áskriftinni, en yfirleitt er eitt tæki leyft á hvern aðgang nema fjölstreymi sé virkt.",
+        "requirements_q": "Hvað þarf til að byrja að horfa?",
+        "requirements_a": "Stöðugan internettengingu og samhæft tæki. Við aðstoðum við uppsetningu á hinu.",
+        "special_equipment_q": "Þarf sérstakan búnað?",
+        "special_equipment_a": "Nei, ekki þarf sérstakan búnað. Hvert það tæki sem styður IPTV-öpp — s.s. snjallsjónvörp, Android-box eða símar — virkar.",
+        "works_everywhere_q": "Virkar Royal TV alls staðar?",
+        "works_everywhere_a": "Já, þjónustan virkar hvar sem er í heiminum svo lengi sem internettenging er til staðar.",
+        "channel_issue_q": "Hvað gerist ef rás virkar ekki?",
+        "channel_issue_a": "Við fylgjumst reglulega með streymum og uppfærum þau. Láttu þjónustuver vita ef eitthvað bilar og við kíkjum á það strax.",
+        "refunds_q": "Bjóðið þið endurgreiðslur?",
+        "refunds_a": "Vegna eðlis stafrænnar þjónustu bjóðum við ekki endurgreiðslur. Best er að byrja á prufu áður en keypt er.",
+        "renew_q": "Hvernig framlengi ég áskrift?",
+        "renew_a": "Mjög einfalt — farðu á vefinn okkar eða hafðu samband og við leiðbeinum þér í gegnum ferlið.",
+        "multi_device_q": "Get ég notað sama aðgang á mörgum tækjum?",
+        "multi_device_a": "Aðgangar eru yfirleitt takmarkaðir við eitt tæki nema áætlunin þín innihaldi fjöl-tækja aðgang. Hafðu samband til að uppfæra.",
+        "stability_q": "Er þjónustan stöðug og áreiðanleg?",
+        "stability_a": "Já! Lögð er áhersla á slétt og stöðugt streymi með lágmarks hikst og niðritíma.",
+        "channels_count_q": "Hversu margar rásir eru í boði?",
+        "channels_count_a": "Um það bil 12–14.000 rásir frá mörgum löndum, þar á meðal úrval greiddra rása.",
+        "apple_android_tv_q": "Get ég notað Apple TV eða Android TV?",
+        "apple_android_tv_a": "Algjörlega! Royal TV styður helstu kerfi eins og Apple TV, Android TV, Fire Stick og fleira.",
+        "support_q": "Er þjónustuver í boði?",
+        "support_a": "Já, þjónustuver er í boði í gegnum netspjall, tölvupóst og fleiri miðla þegar þín þarfnast.",
+        "commitment_q": "Er langtímasamningur?",
+        "commitment_a": "Stysta tímabil er 6 mánuðir og lengsta 1 ár. Greitt er eitt skipti fyrir valið tímabil.",
+        "content_types_q": "Hvaða efni er í boði?",
+        "content_types_a": "Royal TV býður upp á beinar sjónvarpsrásir, kvikmyndir, þætti, íþróttir og fleira — allt á einum stað.",
+        "hd_4k_q": "Get ég horft í HD eða 4K?",
+        "hd_4k_a": "Já, margar rásir og efni styðja HD og jafnvel 4K fyrir besta gæði.",
+        "slow_internet_q": "Virkar þetta á hægari neti?",
+        "slow_internet_a": "Mælt er með a.m.k. 10 Mbps tengingu fyrir bestu upplifun, en aðlögun gæðanna hjálpar einnig á hægari tengingum.",
+        "legal_q": "Er löglegt að nota IPTV?",
+        "legal_a": "Þjónustan er veitt í samræmi við gildandi lög. Gakktu úr skugga um að notkun IPTV sé í samræmi við reglur á þínu svæði."
+      }
+    },
+    "user": {
+      "dashboard": {
+        "page": {
+          "welcome": "Velkomin",
+          "user": "Notandi"
+        }
+      },
+      "freeTrials": {
+        "page": {
+          "checking_status": "Athuga stöðu prufuáskriftar...",
+          "load_failed": "Ekki tókst að sækja stöðu prufuáskriftar.",
+          "details_heading": "🎁 Nánar um prufuáskrift",
+          "ready_title": "Prufuáskriftin þín er tilbúin!",
+          "username": "Notandanafn:",
+          "password": "Lykilorð:",
+          "portal_link": "Vefslóð:",
+          "dns_link": "DNS slóð:",
+          "dns_link_samsung_lg": "DNS slóð (Samsung/LG):",
+          "package": "Pakkinn:",
+          "mac_address": "MAC vistfang:",
+          "note": "Athugasemd:",
+          "whatsapp_telegram": "WhatsApp/Telegram:",
+          "expiring_at": "Rennur út:",
+          "expiring_on_login": "Byrjar að telja við fyrstu innskráningu",
+          "claimed_at": "Virkt:",
+          "updated_at": "Uppfært:",
+          "expired_title": "Prufuáskriftin þín er útrunnin.",
+          "used_trial": "Þú hefur þegar notað prufuáskriftina.",
+          "purchase_prompt": "💼 Vinsamlegast kaupa áskrift til að halda áfram að njóta þjónustunnar!",
+          "no_trial_title": "Engin beiðni um prufuáskrift fannst.",
+          "no_trial_message": "🤔 Ef þú telur þetta vera mistök, vinsamlegast hafðu samband við þjónustu."
+        }
+      },
+      "liveChat": {
+        "main": {
+          "loading": "Hleð inn samtölunum þínum…",
+          "fetch_failed": "Tókst ekki að hlaða samtölum",
+          "fetch_success": "Samtöl hlaðin inn",
+          "header": "Samtölin þín",
+          "start_new": "Byrja nýtt samtal",
+          "no_conversations": "Engin samtöl fundust.",
+          "id": "Auðkenni",
+          "subject": "Viðfangsefni",
+          "unread": "Ólesið",
+          "last_message": "Síðasta skilaboð",
+          "action": "Aðgerð",
+          "read": "✅ Lesið",
+          "view": "Skoða",
+          "delete": "Eyða",
+          "none": "Ekkert",
+          "unread_badge_one": "1 ólesið",
+          "unread_badge_other": "{count} ólesin",
+          "tooltip_unread": "Þú ert með ólesin skilaboð",
+          "tooltip_all_read": "Öll skilaboð eru lesin",
+          "other_conversations": "Önnur samtöl",
+          "no_subject": "Ekkert viðfangsefni"
+        },
+        "conversation": {
+          "cancel": "Hætta við",
+          "conversation_deleted": "Samtali eytt.",
+          "danger_message": "Ef samtali er eytt er það endanlegt og ekki hægt að endurheimta.",
+          "danger_zone": "Hættusvæði",
+          "delete": "Eyða",
+          "delete_message": "Eyða skilaboði",
+          "delete_prompt": "Ertu viss um að þú viljir eyða þessu skilaboði?",
+          "email": "Netfang:",
+          "edit_message": "Breyta skilaboði",
+          "error_delete": "Ekki tókst að eyða skilaboði.",
+          "error_edit": "Ekki tókst að uppfæra skilaboð.",
+          "fail": "Tókst ekki að hlaða samtali.",
+          "loading": "Hleð inn samtali...",
+          "message_deleted": "Skilaboði eytt.",
+          "message_updated": "Skilaboð uppfærð.",
+          "name": "Nafn:",
+          "no_subject": "Ekkert efni",
+          "other_conversations": "Önnur samtöl",
+          "save": "Vista",
+          "tooltip_all_read": "Öllum skilaboðum hefur verið lesið",
+          "tooltip_unread": "Ólesin skilaboð í þessu samtali",
+          "unread_badge_one": "1 nýtt",
+          "unread_badge_other": "{count} ný",
+          "user_info": "Upplýsingar um notanda",
+          "username": "Notandanafn:",
+          "list_title": "Samtölin Þín:"
+        }
+      },
+      "profile": {
+        "page": {
+          "fetching": "Sæki prófílinn þinn...",
+          "error_fetching": "Villa við að sækja prófíl",
+          "updating": "Uppfæri prófíl...",
+          "update_success": "Prófíl uppfærður",
+          "error_updating": "Villa við uppfærslu prófíls",
+          "password_mismatch": "Nýtt lykilorð og staðfesting passa ekki",
+          "password_updating": "Uppfæri lykilorð...",
+          "password_update_success": "Lykilorð uppfært",
+          "error_password_update": "Villa við uppfærslu lykilorðs",
+          "change_password": "Breyta lykilorði",
+          "update_profile": "Uppfæra prófíl",
+          "profile": "Prófíll",
+          "user_profile": "Notandaprófíll",
+          "old_password": "Gamalt lykilorð:",
+          "new_password": "Nýtt lykilorð:",
+          "confirm_password": "Staðfesta lykilorð:",
+          "back_to_profile": "Til baka í prófíl",
+          "update_password": "Uppfæra lykilorð",
+          "return_dashboard": "Til baka á stjórnborð",
+          "preferred_contact": "Óskandi samskiptaleið:",
+          "send_emails": "Ég vil fá mikilvægan tölvupóst um aðgerðir innan síðunnar.",
+          "field": {
+            "name": "Nafn:",
+            "email": "Netfang:",
+            "username": "Notandanafn:",
+            "whatsapp": "WhatsApp:",
+            "telegram": "Telegram:"
+          }
+        }
+      },
+      "subscriptions": {
+        "page": {
+          "title": "Áskriftirnar þínar",
+          "pageTitle": "Áskrift",
+          "loading": "Hleð áskriftum...",
+          "loaded": "Áskriftir sóttar!",
+          "load_failed": "Tókst ekki að hlaða áskriftum",
+          "payment_success_title": "Greiðsla tókst!",
+          "payment_success_message": "Greiðsla þín barst og áskriftin bíður samþykkis stjórnanda.\nÞessi síða endurhleðst sjálfkrafa á klukkutíma fresti! Þú færð tilkynningu um allar breytingar.",
+          "disappear_notice": "Þetta hverfur eftir 30 sekúndur."
+        },
+        "status": {
+          "active": "✅ Áskriftin Er Virk",
+          "pending": "🕒 Áskrift Í bið",
+          "expired": "❌ Áskriftin þín er útrunnin",
+          "disabled": "🚫 Áskriftin þín er óvirk",
+          "unknown": "❔ Óþekkt Staða Áskriftar"
+        },
+        "fields": {
+          "username_label": "Notandanafn:",
+          "password_label": "Lykilorð:",
+          "portal_link_label": "Portal Linkur:",
+          "dns_link_label": "DNS Linkur:",
+          "samsung_lg_dns_label": "Samsung/LG DNS Linkur:",
+          "mac_address_label": "MAC Linkur:",
+          "template_label": "Tegund:",
+          "connections_label": "Tæki:",
+          "adult_label": "Fullorðinsefni:",
+          "vpn_label": "VPN Verndun:",
+          "country_label": "Land:",
+          "whatsapp_telegram_label": "WhatsApp/Telegram:",
+          "paid_label": "Greitt:",
+          "note_label": "Auka Nóta:",
+          "expires_at_label": "Rennur Út:",
+          "created_at_label": "Búið til og virkjað:",
+          "yes": "✅ Já",
+          "no": "❌ Nei",
+          "paid_yes": "💸 Já",
+          "paid_no": "⏳ Ógreitt",
+          "country_all": "Öll Lönd",
+          "payment_title": "💳 Greiðsla:",
+          "payment_none": "Engar greiðslur ennþá.",
+          "payment_status_label": "Staða:",
+          "payment_invoice_label": "Reikn.:",
+          "payment_amount_label": "Upphæð:",
+          "payment_created_label": "Greitt:"
+        }
+      }
+    },
+    "buyNow": {
+      "creatingInvoice": "Bý til öruggan BTC reikning...",
+      "invoiceReady": "Öruggi BTC reikningurinn þinn er tilbúinn.",
+      "widgetError": "Ekki tókst að hlaða inn greiðsluglugga.",
+      "initError": "Ekki tókst að frumstilla greiðslu. Vinsamlegast endurhlaðið síðuna.",
+      "paymentComplete": "✅ Greiðslu lokið! Áskriftin verður nú stofnuð og stjórnandi virkjar hana eins fljótt og auðið er.",
+      "title": "Kaupa {package} áskrift",
+      "price": "Aðeins ${price}",
+      "iframeTitle": "Kaupa {package} - Stafræn greiðsla",
+      "widgetFallback": "Ekki tókst að hlaða inn greiðsluglugga",
+      "loadingWidget": "Hleð BTC greiðsluglugga...",
+      "note": "Athugið:",
+      "policy": "Heildarupphæðin sem þú greiðir inniheldur bæði áskriftarverðið og öll nauðsynleg gjöld Bitcoin netsins.",
+      "network": "Stafrænar greiðslur geta tekið nokkrar mínútur að staðfestast, eftir álagi á netinu.",
+      "patienceTitle": "Þolinmæði er lykillinn!",
+      "patienceText": "Þessi gluggi uppfærir sig sjálfkrafa þegar greiðslan þín hefur borist.",
+      "important": "Mikilvægt:",
+      "doNotClose": "Vinsamlegast ekki loka eða fara frá þessari síðu meðan greiðsla er í vinnslu.",
+      "instructions": "Leiðbeiningar hér fyrir neðan!",
+      "loginRequiredTitle": "Innskráning nauðsynleg",
+      "loginRequiredText": "Skráðu þig inn eða stofnaðu aðgang til að halda áfram með greiðslu.",
+      "loginButton": "Innskrá",
+      "registerButton": "Nýskrá",
+      "loadingSession": "Athuga innskráningarstöðu..."
+    },
+    "packages": {
+      "main": {
+        "title": "Veldu Royal TV áskrift 👑",
+        "subtitle": "Veldu pakka sem hentar þér best. Þú getur bætt við fullorðins-efni og VPN í pakkanum."
+      },
+      "guide": {
+        "title": "Svona byrjar þú með Royal TV 🚀",
+        "steps": {
+          "register": {
+            "title": "Nýskráðu þig fyrir Royal TV aðgang",
+            "detail": "Fljótlegt, öruggt og með ÓKEYPIS 1 dags prufu!"
+          },
+          "request_trial": {
+            "title": "Biðja um prufuáskrift",
+            "detail": "Skráðu þig inn á stjórnborðið og smelltu á „Biðja um prufuáskrift“."
+          },
+          "already_had": {
+            "title": "Þegar prófað?",
+            "detail": "Farðu beint í að velja og kaupa uppáhalds áskriftarpakkann þinn!"
+          },
+          "pay_btc": {
+            "title": "Greiddu með Bitcoin",
+            "detail": "Notaðu örugga greiðslueininguna okkar (á Kaupa núna síðunni, allt dulkóðað)."
+          },
+          "instant_activation": "SJÁLFVIRK VIRKJUN áskriftar.",
+          "setup": {
+            "title": "Settu upp IPTV forritið þitt",
+            "detail": "Opnaðu spilarann, bættu við spilunarlista og settu inn notendaupplýsingar og slóð sem við sendum. Byrjaðu svo að streyma!"
+          },
+          "done": "Tilbúið! Njóttu ótakmarkaðra rása og úrvals efnis með Royal TV. 🎬"
+        },
+        "apps": {
+          "title": "Bestu IPTV forritin fyrir hvert tæki 📲📺💻",
+          "android": {
+            "title": "Android forrit 🤖",
+            "maxplayer": "MaxPlayer (mælum mest með!)",
+            "tivimate": "TiviMate (Android, Firestick, Android TV)",
+            "smarters": "Smarters Player Lite (iOS, Android, Windows, Mac)",
+            "any_app": "Royal TV virkar með flestum IPTV forritum — streymdu eins og þér hentar!"
+          },
+          "smarttv": {
+            "title": "Snjallsjónvörp 📺",
+            "maxplayer": "MaxPlayer (mælum mest með!)",
+            "smarters": "IPTV Smarters Player",
+            "any_app": "Leitaðu í smáforritaverslun sjónvarpsins — Royal TV styður flestar Smart TV lausnir!"
+          },
+          "cross": {
+            "title": "Margar gerðir tækja 🌐",
+            "maxplayer": "MaxPlayer (öll tæki)",
+            "smarters": "IPTV Smarters Player (iOS, Android, Windows, Mac, Smart TV)",
+            "any_app": "Fjöldi annarra forrita — Royal TV virkar nánast alls staðar!"
+          }
+        }
+      },
+      "grid": {
+        "single_device": "Eitt tæki",
+        "two_devices": "2 tæki",
+        "only": "AÐEINS",
+        "usd": "USD",
+        "feature_full_hd": "Full HD rásir",
+        "feature_premium": "Úrvals kvikmyndir og íþróttir",
+        "feature_20000": "20.000 rásir hvaðanæva að úr heiminum",
+        "feature_icelandic": "Allar íslenskar rásir innifaldar!",
+        "feature_vpn_addon": "VPN á tenginguna fyrir aukalega $10",
+        "feature_adult_addon": "Fullorðinsefni fyrir aukalega $10",
+        "watch_two_devices": "Horfðu á 2 tækjum samtímis",
+        "adult_addon_label": "Fullorðinsefni (+$10)",
+        "adult_addon_details": "Opnar 200+ fullorðinsrásir í beinni og ótakmarkaðar kvikmyndir.",
+        "vpn_addon_label": "VPN vörn (+$10)",
+        "buy_now": "Kaupa núna",
+        "register_to_buy": "Nýskráning til að kaupa",
+        "more_info": "Nánar",
+        "watch_single_device": "Streyma á 1 tæki í einu",
+        "not_found_title": "Pakki Fannst ekki !",
+        "not_found_desc": "Pakki fannst ekki. Vinasamlegast farðu til baka",
+        "back_to_packages": "Til baka í pakka"
+      },
+      "products": {
+        "6m": {
+          "order_description": "6 mánuðir",
+          "duration": "6 mánuðir (60$)"
+        },
+        "6m_extra": {
+          "order_description": "6 mánuðir + aukatæki",
+          "duration": "6 mánuðir + aukatæki (100$)"
+        },
+        "12m": {
+          "order_description": "1 ár (Vinsælast)",
+          "duration": "1 ár (Vinsælast) (100$)"
+        },
+        "12m_extra": {
+          "order_description": "1 ár + aukatæki",
+          "duration": "1 ár + aukatæki (160$)"
+        },
+        "24m": {
+          "order_description": "2 ár",
+          "duration": "2 ár (160$)"
+        },
+        "24m_extra": {
+          "order_description": "2 ár + aukatæki",
+          "duration": "2 ár + aukatæki (240$)"
+        }
+      }
+    },
+    "payments": {
+      "instructions": {
+        "title": "Hvernig greiði ég með Bitcoin",
+        "steps": {
+          "open_wallet": "Opnaðu Bitcoin veskið þitt (sími eða tölva).",
+          "tap_send": "Smelltu á „Send“ eða „Transfer“.",
+          "copy_paste": "Afritaðu og límdu slóðina og nákvæma Bitcoin upphæð sem birtist hér fyrir neðan.",
+          "double_check": "Farðu yfir allar upplýsingar og smelltu síðan á Send."
+        },
+        "wait_here": "Vinsamlegast vertu áfram á þessari síðu og ekki loka henni fyrr en greiðsla er 100% lokið.",
+        "youll_get_confirmation": "Þú færð tilkynningu og tölvupóst um leið og greiðslu er lokið.",
+        "done": "BÚIÐ!",
+        "activated_when_complete": "Áskriftin þín virkjast um leið og greiðslu er fulllokið.",
+        "qr_tip": "Ábending: Þú getur líka skannað QR-kóðann hér að neðan — þá fyllist allt út sjálfkrafa!",
+        "beginner_title": "Nýr í Bitcoin?",
+        "link_coinbase": "Hvernig sendi ég Bitcoin (leiðarvísir Coinbase)",
+        "link_bitcoincom": "Skref fyrir skref: Hvernig á að senda Bitcoin (bitcoin.com)",
+        "link_wasabi": "Sækja Wasabi Wallet (gagnvænt skrifborðsveski)",
+        "link_atomic": "Sækja Atomic Wallet (fjölmynt, tölva/sími)",
+        "link_trust": "Sækja Trust Wallet (einfalt farsímav eski)",
+        "need_help": "Vantar þig aðstoð? Sendu skilaboð í gegnum WhatsApp eða Live Chat á stjórnborðinu hvenær sem er!"
+      },
+      "status": {
+        "waiting": {
+          "title": "Beðið er eftir að greiðsla hefjist...",
+          "desc": "Skannaðu QR-kóðann eða afritaðu slóðina til að senda Bitcoin greiðsluna. Mundu að þú þarft greiða nákvæmlega það sem stendur við hliðina á QR kóðanum.",
+          "label": "Bíður"
+        },
+        "pending": {
+          "title": "Greiðsla í bið...",
+          "desc": "Greiðslan er í vinnslu. Þú þarft ekki að gera neitt — þetta tekur venjulega stutta stund.",
+          "label": "Í bið"
+        },
+        "sending": {
+          "title": "Greiðslan hefur verið send úr veskinu þínu...",
+          "label": "Sendist"
+        },
+        "confirming": {
+          "title": "Greiðsla er að staðfestast...",
+          "desc": "Hún hefur borist og bíður nægjanlegra staðfesta. Þetta tekur oftast nokkrar mínútur.",
+          "label": "Staðfestist"
+        },
+        "completed": {
+          "title": "Greiðsla staðfest / lokið",
+          "desc": "Áskriftin hefur verið stofnuð og er nú orðin virkjuð. Velkomin(n) til Royal TV!",
+          "label": "Lokið"
+        },
+        "failed": {
+          "title": "Greiðsla brást eða rann út.",
+          "desc": "Ef birtist „expired“ eða „failed“, bíddu eftir næstu staðfestingu. Þetta getur tekið allt að 1 klst. og reynir aftur sjálfkrafa.",
+          "label": "Mistókst"
+        },
+        "unknown": "Óþekkt staða"
+      }
+    },
+    "signin": {
+      "title": "Innskráning",
+      "signupWelcomeMessage": "Velkomin(n), {username}! Vinsamlegast sláðu inn lykilorð til að ljúka skráningu.",
+      "fillBothFields": "Vinsamlegast fylltu út bæði notendanafn og lykilorð.",
+      "loggingIn": "Skrái inn...",
+      "loginSuccess": "Innskráning tókst! Áframsendi...",
+      "wrongCredentials": "Rangt notendanafn eða lykilorð",
+      "loginError": "Villa við innskráningu: {error}",
+      "usernamePlaceholder": "Sláðu inn notendanafn",
+      "passwordPlaceholder": "Sláðu inn lykilorð",
+      "rememberMe": "Muna eftir mér",
+      "submitButton": "Skrá inn",
+      "noAccountPrompt": "Ertu ekki með aðgang?",
+      "signUpLink": "Skráðu þig"
+    },
+    "signup": {
+      "title": "Stofnaðu aðgang og fáðu ókeypis prufu",
+      "labels": {
+        "name": "Nafn",
+        "username": "Notendanafn",
+        "email": "Netfang",
+        "whatsapp": "WhatsApp",
+        "telegram": "Telegram",
+        "preferredContact": "Samskiptaleið",
+        "password": "Lykilorð",
+        "confirmPassword": "Staðfesta lykilorð",
+        "receiveEmails": "Fá tölvupósta?"
+      },
+      "placeholders": {
+        "fullName": "Fullt nafn",
+        "username": "Notendanafn",
+        "email": "Netfang",
+        "whatsapp": "WhatsApp (valkvætt)",
+        "telegram": "Telegram (valkvætt)",
+        "preferredContact": "Vinsælast samskiptaleið",
+        "password": "Lykilorð",
+        "confirmPassword": "Staðfesta lykilorð"
+      },
+      "contact": {
+        "email": "Netfang",
+        "whatsapp": "WhatsApp",
+        "telegram": "Telegram",
+        "website": "Af vefnum"
+      },
+      "selectPreferred": "Vinsamlegast veldu þína samskiptaleið.",
+      "passwordsDontMatch": "Lykilorð passa ekki.",
+      "creatingAccount": "Stofna aðgang...",
+      "accountCreated": "Aðgangur stofnaður! Athugaðu tölvupóstinn þinn.",
+      "failedCreate": "Tókst ekki að stofna aðgang",
+      "submitButton": "Nýskrá",
+      "haveAccountPrompt": "Ertu með aðgang?",
+      "signInLink": "Skráðu þig inn"
+    },
+    "middlePage": {
+      "messages": {
+        "welcome": "Velkomin(n) {name}! Áframsendi...",
+        "logoutSuccess": "Útskráning tókst. Áframsendi á forsíðu...",
+        "profileUpdated": "Prófíll uppfærður! Áframsendi...",
+        "passwordUpdated": "Lykilorð uppfært! Áframsendi...",
+        "paymentComplete": "✅ Greiðsla móttekin! Áskrift er að verða stofnuð og bíður samþykkis stjórnanda.",
+        "accessDenied": "Aðgangur óheimill að þessum hluta.",
+        "accessDeniedLogin": "Aðgangur óheimill! Áframsendi á innskráningu...",
+        "notAuthorized": "Ekki með heimild! Áframsendi á innskráningu...",
+        "badCredentials": "Rangt notendanafn eða lykilorð.",
+        "unexpectedError": "Óvænt villa. Reyndu aftur.",
+        "pageMissing": "Síðan finnst ekki. Áframsendi á forsíðu..."
+      }
     }
+  },
+  "socket": {
+    "connected": "Tengt",
+    "disconnected": "Aftengt",
+    "reconnecting": "Reyni að tengjast aftur…",
+    "connect_error": "Tókst ekki að tengjast þjóninum.",
+    "timeout": "Tenging við socket rann út.",
+    "ui": {
+      "common": {
+        "refresh": "Uppfæra",
+        "refreshing": "Uppfæri…",
+        "edit": "Breyta",
+        "delete": "Eyða",
+        "someone": "Someone is writing"
+      },
+      "chat": {
+        "subject_label": "Efni:",
+        "online_count_label": "Tengdir: {count}",
+        "unread_count_label": "Ólesið: {count}",
+        "edited": "(breytt)",
+        "input_placeholder": "Skrifaðu skilaboð…",
+        "send": "Senda",
+        "refreshed": "Skilaboð uppfærð"
+      },
+      "logPageView": {
+        "description": "Heimsótti \"{                       page                       }\" síðu"
+      },
+      "online_users": {
+        "title": "Notendur á netinu"
+      },
+      "roles": {
+        "admin": "stjórnandi",
+        "user": "notandi",
+        "guest": "gestur"
+      },
+      "refresh_messages": {
+        "button_title": "Uppfæra skilaboð",
+        "button_text": "🔃 Uppfæra skilaboð"
+      },
+      "see_all_notifications": {
+        "title": "Allar tilkynningar",
+        "no_notifications": "Engar tilkynningar ennþá.",
+        "delete_title": "Eyða tilkynningu",
+        "delete_description": "Ertu viss um að þú viljir eyða þessari tilkynningu? Þetta er ekki hægt að afturkalla.",
+        "delete_all_title": "Eyða ÖLLUM tilkynningum",
+        "delete_all_description": "Ertu viss um að þú viljir eyða öllum tilkynningum varanlega? Þetta er ekki hægt að afturkalla!",
+        "delete_button": "Eyða",
+        "cancel_button": "Hætta við",
+        "delete_all_button": "Eyða öllu",
+        "open_content": "Opna efni",
+        "delete_notification": "Eyða tilkynningu",
+        "danger_zone": "Hættusvæði",
+        "clear_all_notifications": "Hreinsa allar tilkynningar"
+      },
+      "liveChatRoom": {
+        "default_subject": "Lifandi spjall"
+      },
+      "notifications": {
+        "title": "Tilkynningar",
+        "empty": "Engar tilkynningar enn.",
+        "empty_more": "Engar fleiri tilkynningar.",
+        "see_more": "Sjá meira",
+        "see_less": "Sjá minna",
+        "see_all": "Sjá allar tilkynningar",
+        "total": "Heildarfjöldi tilkynninga: {count}",
+        "showing_range": "Sýni {start}–{end} af {total} tilkynningum",
+        "type_label": "Tegund",
+        "danger_zone": "Hættusvæði",
+        "actions": {
+          "delete": "Eyða",
+          "open": "Opna efni",
+          "clear_all": "Eyða öllum tilkynningum"
+        },
+        "modals": {
+          "common": {
+            "cancel": "Hætta við"
+          },
+          "delete": {
+            "title": "Eyða tilkynningu",
+            "description": "Ertu viss um að þú viljir eyða þessari tilkynningu? Ekki er hægt að afturkalla.",
+            "confirm": "Eyða"
+          },
+          "clear_all": {
+            "title": "Eyða ÖLLUM tilkynningum",
+            "description": "Ertu viss um að þú viljir varanlega eyða ÖLLUM tilkynningum? Ekki er hægt að afturkalla!",
+            "confirm": "Eyða öllu"
+          }
+        },
+        "user": {
+          "newUserRegistration": {
+            "title": "🎉 Velkomin í Royal IPTV !",
+            "body": "Hæ {name}, og takk fyrir að skrá þig hjá Royal IPTV! 🎊\nAðgangurinn þinn ({email}) var stofnaður {createdAt}.\n• Notandanafn: {username}\n• Samskiptaleið: {preferredContactWay}\n• Tölvupósttilkynningar virkar: {sendEmails}\n👉 Biddu um ókeypis prufu með því að smella á hnappinn!\nÞarftu aðstoð? Hafðu samband á WhatsApp eða notaðu Live Chat!"
+          },
+          "freeTrial": {
+            "created": {
+              "title": "🎁 Ókeypis prufa búin til !",
+              "body": "Hæ {name}!\n\nÓkeypis prufan þín virkist sjálfkrafa við fyrstu innskráningu.\n• Pakki: {package_name}\n• Rennur út nákvæmlega 1 degi eftir fyrstu innskráningu.\n\n🎬 Notaðu aðgangsupplýsingarnar í IPTV forritinu þínu og byrjaðu strax!\n• Þú finnur upplýsingarnar með því að smella á „Open“ í þessari tilkynningu.\nÞarftu aðstoð? WhatsApp eða Live Chat!"
+            }
+          },
+          "subscription": {
+            "created": {
+              "title": "📺 Áskrift Búin Til !",
+              "body": "Hæ {name}!\n\nÁskriftin þín var búin til {createdAt}.\n• Pakki: {package_name}\n• Pöntun: {order_description}\n• Rennur út: {expiring_at}\n🚀 Bættu spilunarlista í IPTV forritinu og byrjaðu strax!\nÞarftu aðstoð? WhatsApp eða Live Chat!"
+            }
+          },
+          "payment": {
+            "title": "💳 Greiðsla móttekin !",
+            "body": "Takk! Greiðsla fyrir pöntun #{order_id} hefur borist.\n\n• Greitt: {amount_paid} {price_currency}\n• Reikningsnúmer: {invoice_id}\n• Móttekið: {received_at}\n• Staða: {status}\nÞarftu aðstoð? WhatsApp eða Live Chat!"
+          },
+          "liveChatMessage": {
+            "title": "💬 Ný skilaboð í Live Chat !",
+            "body": "Þú átt ný skilaboð frá þjónustu Royal TV {createdAt}.\nEfni: {subject}\nSkilaboð: {message}\nÞarftu aðstoð? WhatsApp eða Live Chat!"
+          },
+          "error": {
+            "title": "⚠️ Villa í kerfinu !",
+            "body": "• Titill villu: {errorTitle}\n• Lýsing: {errorMessage}\n• Nánar: {errorDetails}"
+          }
+        },
+        "admin": {
+          "newUserRegistration": {
+            "title": "👤 Nýr notandi skráður",
+            "body": "Nýr notandi var að skrá sig:\n\n• Nafn: {name}\n• Netfang: {email}\n• Notandanafn: {username}\n• Notandaauðkenni: {user_id}\n• Skráð: {createdAt}\n• Samskiptaleið: {preferredContactWay}\n• WhatsApp: {whatsapp}\n• Telegram: {telegram}\n👉 Opnaðu til að skoða prófíl og stillingar."
+          },
+          "freeTrial": {
+            "created": {
+              "title": "🎁 Ókeypis prufa búin til",
+              "body": "Ókeypis prufa var búin til og virkjuð:\n\n• Nafn: {name}\n• Netfang: {email}\n• Notandanafn: {username}\n• Notandaauðkenni: {user_id}\n• Prufuauðkenni: {trial_id}\n• Pakki: {package_name}\n• Fullorðinsrásir: {adult}\n👉 Opnaðu til að skoða nánari upplýsingar."
+            }
+          },
+          "subscription": {
+            "created": {
+              "title": "📺 Ný áskrift búin til",
+              "body": "Ný áskrift var búin til og virkjuð:\n\n• Nafn: {name}\n• Netfang: {email}\n• Notandanafn: {username}\n• Notandaauðkenni: {user_id}\n• Áskriftarauðkenni: {subscription_id}\n• Pöntunarnúmer: {order_id}\n• Pakki: {package_name}\n• Rennur út: {expiring_at}\n• Leyfð tæki: {max_connections}\n• Fullorðinsrásir: {adult}\n• VPN: {enable_vpn}\n👉 Opnaðu til að sjá allt um áskrift þína."
+            }
+          },
+          "payment": {
+            "title": "💳 Greiðsla móttekin",
+            "body": "Greiðsla barst:\n\n• Nafn: {name}\n• Netfang: {email}\n• Notandanafn: {username}\n• Notandaauðkenni: {user_id}\n• Greitt (fiat): {amount_paid} {price_currency}\n• Móttekið (crypto): {actually_paid} {pay_currency}\n• Gjaldmiðill: {pay_currency}\n• Net: {network}\n• Greiðsluheimilisfang: {pay_address}\n• Reikningur: {invoice_id}\n• Payment ID: {payment_id}\n• Móttekið: {received_at}\n• Áskriftar ID: {subscription_id}\n• Pöntun: {order_id}\n• Staða: {status}\n\n👉 Opnaðu til að sjá áskriftina þína og greiðslu upplýsingar."
+          },
+          "liveChatMessage": {
+            "title": "💬 Ný skilaboð í Live Chat",
+            "body": "Þú átt ný skilaboð frá {name} {createdAt}.\nEfni: {subject}\nSkilaboð: {message}\n👉 Opnaðu til að svara."
+          },
+          "error": {
+            "title": "⚠️ Villa í kerfinu",
+            "body": "Villa kom upp!\n• user_id: {user_id}\n• Nafn notanda: {name}\n• Titill villu: {errorTitle}\n• Skilaboð: {errorMessage}\n• Nánar: {errorDetails}"
+          }
+        }
+      },
+      "typing": {
+        "you": "Þú ert að skrifa…",
+        "other": "{name} er að skrifa…"
+      },
+      "subscriptions": {
+        "loading": "Hleð inn áskriftum…",
+        "have_one": "Þú ert með áskrift!",
+        "status_label": "Staða:",
+        "status": {
+          "active": "VIRK",
+          "pending": "Í BIÐ",
+          "expired": "ÚTRUNNIN",
+          "disabled": "ÓVIRKT",
+          "unknown": "ÓÞEKKT"
+        },
+        "view_yours": "Skoða áskriftina þína",
+        "buy_additional": "Kaupa viðbótar áskrift",
+        "none_title": "Engin áskrift fannst",
+        "none_blurb": "Kauptu áskrift til að njóta alls sem er í boði !",
+        "select_package": "-- Veldu áskriftarpakka --",
+        "buy_now": "Kaupa núna",
+        "select_first": "Veldu pakka fyrst.",
+        "checkout_failed": "Greiðsluferli mistókst"
+      },
+      "freeTrialPanel": {
+        "your_free_trial_is": "Prufuáskriftin þín er",
+        "active_caps": "VIRK",
+        "click_to_view_credentials": "Smelltu hér til að sjá innskráningarupplýsingarnar þínar!",
+        "your_free_trial_has": "Prufuáskriftin þín er",
+        "expired_caps": "ÚTRUNNIN",
+        "or_is_unavailable": "eða ekki tiltæk.",
+        "request_btn": "Biðja um prufuáskrift"
+      },
+      "isAdminOnline": {
+        "admin_info": "Upplýsingar um stjórnanda",
+        "is_admin_online_label": "Er stjórnandi á netinu:",
+        "online": "Á netinu",
+        "offline": "Ekki á netinu",
+        "no_admin_online": "Enginn stjórnandi er á netinu í augnablikinu.",
+        "online_admin": "Stjórnandi á netinu:",
+        "online_admins": "Stjórnendur á netinu:",
+        "admin_support": "Aðstoð stjórnanda"
+      },
+      "publicLiveChat": {
+        "main": {
+          "main_title": "Spjall",
+          "admin_online": "Stjórnandi á netinu",
+          "admin_offline": "Stjórnandi Óvirkur",
+          "empty_state": "Engin skilaboð ennþá. Byrjaðu samtal!",
+          "input_placeholder": "Skrifaðu skilaboðin þín...",
+          "send_button": "Senda",
+          "toggle_open": "Opna spjall",
+          "toggle_close": "Loka spjalli",
+          "minimize": "Minnka spjall",
+          "close": "Loka spjalli",
+          "unread_badge_sr": "ólesin skilaboð"
+        }
+      }
+    },
+    "hooks": {
+      "useRefreshNotifications": {
+        "all_notifications_refreshed": "🔄 Allar tilkynningar endurhlaðnar!"
+      }
+    }
+  },
+  "components": {
+    "countdown": {
+      "seconds_remaining_singular": "{seconds} sekúnda eftir…",
+      "seconds_remaining_plural": "{seconds} sekúndur eftir…"
+    },
+    "countdownBanner": {
+      "default_thank_you": "Takk fyrir!"
+    },
+    "countdownRedirect": {
+      "redirecting_in_singular": "Á leið á næstu síðu eftir {seconds} sekúndu…",
+      "redirecting_in_plural": "Á leið á næstu síðu eftir {seconds} sekúndur…"
+    },
+    "ringLoader": {
+      "loading_tooltip": "Hleð inn"
+    },
+    "showMessages": {
+      "toast_title": "Tilkynning"
+    },
+    "whatsAppBS": {
+      "open_whatsapp": "Opna WhatsApp",
+      "chat_with_us": "Spjallaðu við okkur á WhatsApp"
+    },
+    "common": {
+      "cancel": "Hætta við"
+    },
+    "freeTrialButton": {
+      "confirm_title": "Staðfesta ósk um ókeypis prufu",
+      "confirm_description": "Ertu viss um að þú viljir óska eftir ókeypis prufu? Hver aðili fær aðeins eina prufu. Þú færð tilkynningu um leið og hún er tilbúin! 🎉",
+      "confirm_yes": "Já, óska eftir ókeypis prufu!",
+      "loader_requesting": "Sæki um ókeypis prufu…",
+      "success_requested": "✅ Ókeypis prufa skráð! Þú getur byrjað að horfa strax!",
+      "error_generic": "Tókst ekki að sækja prufu. Reyndu aftur síðar.",
+      "loading_label": "Sæki…",
+      "button_label": "Sækja ókeypis prufu"
+    },
+    "pagination": {
+      "aria_pagination": "Síðuskipting",
+      "previous": "Fyrri síða",
+      "next": "Næsta síða",
+      "aria_go_to_page": "Fara á síðu {page}"
+    },
+    "refreshCountdownTimer": {
+      "auto_refresh_in": "sjálfvirk uppfærsla eftir",
+      "refresh_now": "Uppfæra núna",
+      "pause": "Setja á pásu",
+      "resume": "Halda áfram",
+      "paused": "í pásu"
+    },
+    "reusableTable": {
+      "actions": "Aðgerðir"
+    },
+    "sampleReusableTable": {
+      "user_list": "Notendalisti",
+      "name": "Nafn",
+      "email": "Netfang",
+      "view": "Skoða",
+      "loader_loading_users": "Hleð notendum...",
+      "error_could_not_load": "Gat ekki hlaðið notendum."
+    },
+    "sortDropdown": {
+      "sort_label": "Röðun:",
+      "sort_aria": "Röðunarval"
+    },
+    "useConversationsList": {
+      "loader_fetching": "Sæki gögn...",
+      "loader_refreshing": "Uppfæri...",
+      "success_loaded": "Gögn hlaðin ✔️",
+      "error_failed_load": "Tókst ekki að hlaða gögnum ❌"
+    },
+    "conversationActionButton": {
+      "validation_subject_message_required": "Efni og skilaboð mega ekki vera tóm",
+      "loader_creating": "Bý til samtal...",
+      "error_timeout": "Tími rann út: Gat ekki búið til samtal",
+      "error_missing_user_for_notification": "Tilkynningavilla: vantar upplýsingar um notanda",
+      "success_created": "Samtal búið til!",
+      "error_generic_create": "Villa: Gat ekki búið til samtal",
+      "loader_deleting_one": "Eyði samtali…",
+      "success_deleted_one": "Samtali eytt",
+      "error_delete_failed": "Tókst ekki að eyða",
+      "loader_deleting_all": "Eyði öllum samtölum…",
+      "success_deleted_all": "Öllum samtölum eytt",
+      "error_delete_all_failed": "Tókst ekki að eyða öllum",
+      "btn_start_new": "Hefja nýtt samtal",
+      "btn_delete_one": "Eyða samtali",
+      "btn_delete_all": "Eyða öllum samtölum",
+      "modal_create_title": "Hefja nýtt samtal",
+      "modal_create_description": "Sláðu inn efni og skilaboð hér fyrir neðan:",
+      "modal_create_confirm": "Búa til samtal",
+      "placeholder_subject": "Skráðu efni",
+      "placeholder_message": "Skrifaðu skilaboðin þín hér...",
+      "modal_delete_title": "Eyða samtali",
+      "modal_delete_description": "Þetta mun eyða samtalinu og öllum skilaboðum þess til frambúðar.",
+      "modal_delete_confirm": "Eyða",
+      "modal_delete_all_title": "Eyða ÖLLUM samtölum notanda",
+      "modal_delete_all_description": "Þetta mun eyða ÖLLUM samtölum og skilaboðum þessa notanda til frambúðar.",
+      "modal_delete_all_confirm": "Eyða öllu",
+      "modal_cancel": "Hætta"
+    }
+  }
 }

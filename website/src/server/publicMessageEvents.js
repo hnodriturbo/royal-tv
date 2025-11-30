@@ -160,8 +160,18 @@ export default function registerPublicMessageEvents(io, socket) {
         message: formatMessage(created)
       });
 
-      // 🔔 Update unread counts
+      // 🔔 Update unread counts immediately (CRITICAL: Admin needs this)
       await broadcastUnreadCounts(public_conversation_id);
+
+      // 🔔 If this is a non-admin message, notify admins about new unread
+      if (socket.userData.role !== 'admin') {
+        io.to('admins').emit('public_message:new_unread_notification', {
+          public_conversation_id,
+          sender_name: socket.userData.name,
+          message_preview: messageText.substring(0, 50),
+          createdAt: created.createdAt
+        });
+      }
 
       // 🍪 Remember this room
       cookieUtils.rememberLastRoom(public_conversation_id);
@@ -417,5 +427,50 @@ export default function registerPublicMessageEvents(io, socket) {
       },
       isTyping: !!isTyping
     });
+  });
+
+  /* =========================================================
+   * 🧹 MARK ALL AS READ (ADMIN ONLY - Bulk operation)
+   * =======================================================*/
+  socket.on('public_message:mark_all_read', async () => {
+    // 🔐 Only admins can bulk mark all messages as read
+    if (socket.userData.role !== 'admin') {
+      return socket.emit('public_message:error', {
+        code: 'PERMISSION_DENIED',
+        message: 'Only admins can mark all messages as read'
+      });
+    }
+
+    try {
+      const now = new Date();
+
+      // 📝 Mark ALL unread non-admin messages as read
+      const updated = await prisma.publicLiveChatMessage.updateMany({
+        where: {
+          sender_is_admin: false,
+          readAt: null
+        },
+        data: { readAt: now }
+      });
+
+      console.log(`[Public Messages] 🧹 Admin marked ${updated.count} messages as read globally`);
+
+      // 📣 Confirm to admin
+      socket.emit('public_message:all_marked_read', {
+        ok: true,
+        count: updated.count
+      });
+
+      // 🔔 Broadcast zero unread to admin
+      io.to('admins').emit('public_message:unread_admin', {
+        total: 0
+      });
+    } catch (error) {
+      console.error('[Public Messages] ❌ Mark all read failed:', error.message);
+      socket.emit('public_message:error', {
+        code: 'DB_FAILURE',
+        message: 'Failed to mark all messages as read'
+      });
+    }
   });
 }
