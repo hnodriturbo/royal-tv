@@ -1,511 +1,784 @@
-/**
- * ============== PublicLiveChatWidget (REFACTORED) ==============
- * 💬 Floating chat widget with clean UX and proper admin detection
- * ---------------------------------------------------------------
- * ARCHITECTURE:
- *   • Uses dedicated hooks from usePublicLiveChat
- *   • Auto-syncs cookies for room persistence
- *   • Real-time presence detection for admin online status
- */
 'use client';
+/**
+ * /src/components/reusableUI/socket/PublicLiveChatWidget.js
+ * =========================================================
+ * 💬 Floating public live chat widget (guest + logged-in users)
+ *
+ * Behavior:
+ * - Uses Socket.IO public_* events + public_identity_id cookie from server 🧠
+ * - Server remembers the last room in a cookie; leaving the room clears it 🍪
+ * - Widget itself remembers open/closed UI state in a simple cookie 🪟
+ * - Minimize ➜ keep room + cookie; Hard close ➜ leave room + clear cookie
+ * - Users/guests can send, edit, delete their own messages ✏️🗑️
+ * - Read state is handled via socket events (mark_read + unread counters) ✅
+ */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import usePublicLiveChat, { getCookie } from '@/hooks/socket/usePublicLiveChat';
-import useIsAdminOnline from '@/hooks/socket/useIsAdminOnline';
+import dayjs from 'dayjs';
+import clsx from 'clsx';
 
-// 🔐 FEATURE FLAG: Show chat only when admin is online (set to false for debugging)
-const REQUIRE_ADMIN_ONLINE = false;
+import useAppHandlers from '@/hooks/useAppHandlers'; // 🔔 toasts (success/error)
+import useSocketHub from '@/hooks/socket/useSocketHub'; // 🔌 core socket API + helpers
+import usePublicMessageEvents from '@/hooks/socket/usePublicMessageEvents'; // ✉️ public messages
+import usePublicTypingIndicator from '@/hooks/socket/usePublicTypingIndicator'; // ⌨️ typing indicator
+import usePublicRefreshMessages from '@/hooks/socket/usePublicRefreshMessages'; // 🔄 manual refresh
+import TypingIndicator from '@/components/reusableUI/socket/TypingIndicator'; // 👀 typing UI
+import useIsAdminOnline from '@/hooks/socket/useIsAdminOnline'; // 🟢 admin presence status
+import { SafeString } from '@/lib/ui/SafeString'; // 🛡️ guard against bad strings
+import useModal from '@/hooks/useModal'; // 🪟 global modal wrapper
 
-export default function PublicLiveChatWidget() {
-  const t = useTranslations();
+// 🍪 Cookie names
+// - PUBLIC_CHAT_OPEN_COOKIE: widget open/closed state (UI only)
+// - PUBLIC_LAST_ROOM_COOKIE: last public room id (server-managed identity)
+const PUBLIC_CHAT_OPEN_COOKIE = 'public_chat_open';
+const PUBLIC_LAST_ROOM_COOKIE = 'public_last_conversation_id';
 
-  // 🧭 Use all-in-one hook
-  const chat = usePublicLiveChat();
-
-  // 🔀 Widget visibility
-  const [isOpen, setIsOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [activeRoomId, setActiveRoomId] = useState(null);
-  const [messageList, setMessageList] = useState([]);
-
-  // 📝 Input state
-  const [draft, setDraft] = useState('');
-  const [pendingMessage, setPendingMessage] = useState(null); // Queue first message until room ready
-
-  // 💾 Cache for minimized state
-  const cachedMessagesRef = useRef([]);
-  const scrollRef = useRef(null);
-  const bootstrappedRef = useRef(false);
-
-  // 🔔 Unread tracking
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  // 👥 Admin online detection (global, not room-specific)
-  const { isAdminOnline } = useIsAdminOnline();
-
-  // ⌨️ Typing tracking
-  const [typingUser, setTypingUser] = useState(null);
-
-  /* ========================================
-   * 🍪 COOKIE HELPERS
-   * ======================================*/
-  const setChatStateCookie = useCallback((roomId, isOpen) => {
-    try {
-      const date = new Date();
-      date.setTime(date.getTime() + 14 * 864e5); // 14 days
-      document.cookie = `public_last_conversation_id=${roomId}; expires=${date.toUTCString()}; path=/; samesite=lax`;
-      document.cookie = `public_chat_open=${isOpen}; expires=${date.toUTCString()}; path=/; samesite=lax`;
-      console.log('🍪 Chat state saved:', { roomId, isOpen });
-    } catch (error) {
-      console.warn('⚠️ cookie set failed', error);
-    }
-  }, []);
-
-  const clearChatStateCookie = useCallback(() => {
-    try {
-      const expired = 'expires=Thu, 01 Jan 1970 00:00:00 GMT';
-      document.cookie = `public_last_conversation_id=; ${expired}; path=/; samesite=lax`;
-      document.cookie = `public_chat_open=; ${expired}; path=/; samesite=lax`;
-      console.log('🧽 Chat state cleared');
-    } catch (error) {
-      console.warn('⚠️ cookie clear failed', error);
-    }
-  }, []);
-
-  /* ========================================
-   * 🍪 COOKIE SYNC (listen for server cookie events)
-   * ======================================*/
-  useEffect(() => {
-    if (!chat?.onSetLastRoomCookie || !chat?.onClearLastRoomCookie) return;
-
-    const offSet = chat.onSetLastRoomCookie(({ public_conversation_id }) => {
-      setChatStateCookie(public_conversation_id, isOpen);
-    });
-
-    const offClear = chat.onClearLastRoomCookie(() => {
-      clearChatStateCookie();
-    });
-
-    return () => {
-      offSet?.();
-      offClear?.();
-    };
-  }, [chat, isOpen, setChatStateCookie, clearChatStateCookie]);
-
-  /* ========================================
-   * 🚀 MOUNT BOOTSTRAP (restore widget state from cookies)
-   * ======================================*/
-  useEffect(() => {
-    if (bootstrappedRef.current || !chat) return;
-    bootstrappedRef.current = true;
-
-    // 🍪 Check if chat was previously open
-    const lastRoomId = getCookie('public_last_conversation_id');
-    const wasOpen = getCookie('public_chat_open') === 'true';
-
-    if (lastRoomId && wasOpen) {
-      console.log('🔁 Restoring chat session:', { lastRoomId, wasOpen });
-      setActiveRoomId(lastRoomId);
-      setIsOpen(true);
-      chat.joinPublicRoom(lastRoomId);
-      chat.refreshPublicMessages(lastRoomId, 50);
-    }
-
-    return () => {
-      if (activeRoomId) {
-        chat.leavePublicRoom(activeRoomId);
-      }
-    };
-  }, [chat]);
-
-  /* ========================================
-   * 🆕 CREATE ROOM IMMEDIATELY WHEN WIDGET OPENS (not on first message)
-   * ======================================*/
-  useEffect(() => {
-    // Only create room if:
-    // 1. Widget is open
-    // 2. No active room exists yet
-    // 3. Bootstrap is complete (prevents double creation)
-    // 4. Not already creating (prevents race condition)
-    if (isOpen && !activeRoomId && bootstrappedRef.current && !pendingMessage) {
-      console.log('🆕 Widget opened - creating room immediately');
-      chat.createPublicRoom({ subject: 'Public Live Chat' });
-    }
-  }, [isOpen, activeRoomId, chat, pendingMessage]);
-
-  /* ========================================
-   * 🏠 ROOM READY (after create) - Send pending message once ready
-   * ======================================*/
-  useEffect(() => {
-    if (!isOpen || activeRoomId || !chat?.setupRoomReadyListener) return;
-
-    return chat.setupRoomReadyListener({
-      onRoomReady: (roomId) => {
-        console.log('🟢 Room ready:', roomId);
-        setActiveRoomId(roomId);
-        chat.refreshPublicMessages(roomId, 50);
-
-        // 📤 Send pending message if exists
-        if (pendingMessage) {
-          console.log('📤 Sending pending message:', pendingMessage);
-          chat.sendPublicMessage(roomId, pendingMessage);
-          setPendingMessage(null);
-        }
-      }
-    });
-  }, [chat, isOpen, activeRoomId, pendingMessage]);
-
-  /* ========================================
-   * 📨 MESSAGE LISTENERS - Only when open AND in active room
-   * ======================================*/
-  useEffect(() => {
-    if (!isOpen || !activeRoomId || !chat?.setupMessageListeners) return;
-
-    return chat.setupMessageListeners({
-      activeRoomId,
-      onMessageCreated: (message) => {
-        setMessageList((prev) => [...prev, message]);
-      },
-      onMessageEdited: (message) => {
-        setMessageList((prev) =>
-          prev.map((m) => (m.public_message_id === message.public_message_id ? message : m))
-        );
-      },
-      onMessageDeleted: (messageId) => {
-        setMessageList((prev) => prev.filter((m) => m.public_message_id !== messageId));
-      },
-      onMessagesRefreshed: (list) => {
-        setMessageList(Array.isArray(list) ? list : []);
-      }
-    });
-  }, [chat, activeRoomId, isOpen]);
-
-  /* ========================================
-   * ⌨️ TYPING LISTENER - Only when open AND in active room
-   * ======================================*/
-  useEffect(() => {
-    if (!isOpen || !activeRoomId || !chat?.setupTypingListener) return;
-
-    return chat.setupTypingListener({
-      activeRoomId,
-      onTypingUpdate: (user) => {
-        setTypingUser(user);
-      }
-    });
-  }, [chat, activeRoomId, isOpen]);
-
-  /* ========================================
-   * 🔔 UNREAD LISTENER - Only when minimized with active room
-   * ======================================*/
-  useEffect(() => {
-    if (!activeRoomId || !isMinimized || !chat?.setupUnreadListener) return;
-
-    return chat.setupUnreadListener({
-      activeRoomId,
-      onUnreadUpdate: (count) => {
-        setUnreadCount(count);
-      }
-    });
-  }, [chat, activeRoomId, isOpen]);
-
-  /* ========================================
-   * 📦 CACHE MESSAGES ON CHANGE
-   * ======================================*/
-  useEffect(() => {
-    if (messageList.length > 0) {
-      cachedMessagesRef.current = messageList;
-    }
-  }, [messageList]);
-
-  /* ========================================
-   * 📜 AUTO-SCROLL
-   * ======================================*/
-  useEffect(() => {
-    if (scrollRef.current && messageList.length > 0) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messageList]);
-
-  /* ========================================
-   * 📤 SEND MESSAGE (with pending queue for first message)
-   * ======================================*/
-  const handleSend = useCallback(() => {
-    const text = draft.trim();
-    if (!text) return;
-
-    if (activeRoomId) {
-      // Room exists - send immediately
-      chat.sendPublicMessage(activeRoomId, text);
-      chat.sendPublicTyping(activeRoomId, false);
-      setDraft('');
-    } else {
-      // No room yet - this shouldn't happen since room is created on open
-      // But as a safety fallback, queue the message
-      console.warn('⚠️ No room exists - queuing message and creating room');
-      setPendingMessage(text);
-      chat.createPublicRoom({ subject: 'Public Live Chat' });
-      setDraft('');
-    }
-  }, [draft, activeRoomId, chat]);
-
-  /* ========================================
-   * ⌨️ TYPING HANDLERS
-   * ======================================*/
-  const handleInputChange = useCallback(
-    (e) => {
-      setDraft(e.target.value);
-      if (activeRoomId && e.target.value.trim()) {
-        chat.sendPublicTyping(activeRoomId, true);
-      }
-    },
-    [activeRoomId, chat]
-  );
-
-  const handleInputBlur = useCallback(() => {
-    if (activeRoomId) {
-      chat.sendPublicTyping(activeRoomId, false);
-    }
-  }, [activeRoomId, chat]);
-
-  const handleKeyDown = useCallback(
-    (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        handleSend();
-      }
-    },
-    [handleSend]
-  );
-
-  /* ========================================
-   * 🗂️ MINIMIZE / CLOSE
-   * ======================================*/
-  const handleMinimize = useCallback(() => {
-    setIsMinimized(true);
-    setIsOpen(false);
-  }, []);
-
-  const handleClose = useCallback(() => {
-    if (activeRoomId) {
-      chat.leavePublicRoom(activeRoomId);
-      // Save room ID but mark as closed
-      setChatStateCookie(activeRoomId, false);
-    }
-    setActiveRoomId(null);
-    setMessageList([]);
-    cachedMessagesRef.current = [];
-    setDraft('');
-    setIsOpen(false);
-    setIsMinimized(false);
-  }, [activeRoomId, chat, setChatStateCookie]);
-
-  const handleReopen = useCallback(() => {
-    setIsOpen(true);
-    setIsMinimized(false);
-
-    if (activeRoomId) {
-      // Room exists - rejoin and mark as read
-      chat.joinPublicRoom(activeRoomId);
-      chat.markPublicMessagesRead(activeRoomId);
-      setChatStateCookie(activeRoomId, true);
-    } else {
-      // No room - create immediately (not waiting for first message)
-      console.log('🆕 Reopening without room - creating immediately');
-      chat.createPublicRoom({ subject: 'Public Live Chat' });
-    }
-  }, [activeRoomId, chat, setChatStateCookie]);
-
-  /* ========================================
-   * 📦 DECIDE WHICH MESSAGES TO SHOW
-   * ======================================*/
-  const messagesToShow =
-    messageList.length > 0 ? messageList : isMinimized ? cachedMessagesRef.current : [];
-  const isEmpty = messagesToShow.length === 0;
-
-  /* ========================================
-   * 🎨 RENDER
-   * ======================================*/
-
-  // 🔐 Hide widget if admin-only mode is enabled and no admin is online
-  if (REQUIRE_ADMIN_ONLINE && !isAdminOnline) {
-    return null;
-  }
-
-  return (
-    <div className="fixed bottom-4 left-4 z-[1000] w-[22rem]">
-      {/* 🔒 Closed state (compact reopen button) */}
-      {!isOpen && (
-        <button
-          onClick={handleReopen}
-          className="flex items-center gap-2 px-4 py-3 rounded-full shadow-xl bg-gradient-to-r from-slate-900 to-slate-700 text-white hover:from-slate-800 hover:to-slate-600 transition-all"
-          aria-label={t('socket.ui.publicLiveChat.main.toggle_open')}
-        >
-          <span className="font-medium text-sm">
-            💬 {t('socket.ui.publicLiveChat.main.main_title')}
-          </span>
-          {unreadCount > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[1.25rem] h-5 rounded-full text-xs bg-red-500 px-2">
-              {unreadCount}
-            </span>
-          )}
-        </button>
-      )}
-
-      {/* 🟢 Open state (full widget with smooth grow-from-bottom animation) */}
-      <AnimatePresence>
-        {isOpen && !isMinimized && (
-          <motion.div
-            key="public-chat-widget"
-            initial={{ opacity: 0, scaleY: 0.5, y: 40 }}
-            animate={{ opacity: 1, scaleY: 1, y: 0 }}
-            exit={{ opacity: 0, scaleY: 0.5, y: 40 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
-            style={{ transformOrigin: 'bottom left' }}
-            className="mt-3 rounded-2xl shadow-2xl border border-black/10 bg-white/95 backdrop-blur-sm overflow-hidden"
-          >
-            {/* ========== HEADER (3-Column Layout) ========== */}
-            <div className="grid grid-cols-3 items-center gap-2 px-4 py-3 bg-gradient-to-r from-slate-900 to-slate-700 text-white">
-              {/* LEFT: Title + Unread Badge */}
-              <div className="flex items-center gap-2 justify-start">
-                <span className="font-semibold text-sm">
-                  {t('socket.ui.publicLiveChat.main.main_title')}
-                </span>
-                {unreadCount > 0 && (
-                  <span className="inline-flex items-center justify-center min-w-[1.25rem] h-5 rounded-full text-[10px] bg-red-500 px-2 font-medium">
-                    {unreadCount}
-                  </span>
-                )}
-              </div>
-
-              {/* CENTER: Admin Status */}
-              <div className="flex items-center justify-center gap-1.5">
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    isAdminOnline ? 'bg-emerald-400 animate-pulse' : 'bg-red-500'
-                  }`}
-                />
-                <span
-                  className={`text-[11px] font-medium ${
-                    isAdminOnline ? 'text-emerald-300' : 'text-red-300'
-                  }`}
-                >
-                  {isAdminOnline
-                    ? t('socket.ui.publicLiveChat.main.admin_online')
-                    : t('socket.ui.publicLiveChat.main.admin_offline') || 'Admin Offline'}
-                </span>
-              </div>
-
-              {/* RIGHT: Window Controls */}
-              <div className="flex items-center gap-1 justify-end">
-                <button
-                  onClick={handleMinimize}
-                  className="w-7 h-7 grid place-items-center rounded-full hover:bg-white/10 transition-colors"
-                  title={t('socket.ui.publicLiveChat.main.minimize')}
-                >
-                  <span className="text-lg leading-none">−</span>
-                </button>
-                <button
-                  onClick={handleClose}
-                  className="w-7 h-7 grid place-items-center rounded-full hover:bg-white/10 transition-colors"
-                  title={t('socket.ui.publicLiveChat.main.close')}
-                >
-                  <span className="text-lg leading-none">×</span>
-                </button>
-              </div>
-            </div>
-
-            {/* ========== MESSAGES ========== */}
-            <div
-              ref={scrollRef}
-              className="h-[420px] overflow-y-auto px-4 py-4 space-y-3 bg-slate-100"
-            >
-              {isEmpty ? (
-                <div className="flex items-center justify-center h-full text-sm text-slate-500">
-                  {t('socket.ui.publicLiveChat.main.empty_state')}
-                </div>
-              ) : (
-                messagesToShow.map((msg) => (
-                  <MessageBubble
-                    key={msg.public_message_id}
-                    text={msg.message}
-                    timestamp={msg.createdAt}
-                    isOwnMessage={false}
-                  />
-                ))
-              )}
-            </div>
-
-            {/* ========== FOOTER / INPUT ========== */}
-            <div className="border-t border-slate-200 px-4 py-3 bg-white">
-              {/* Typing Indicator */}
-              {typingUser?.name && (
-                <div className="text-xs text-slate-500 mb-2">
-                  <span className="italic">{typingUser.name} is typing...</span>
-                </div>
-              )}
-
-              {/* Input Row */}
-              <div className="flex items-end gap-2">
-                <textarea
-                  className="flex-1 resize-none rounded-xl px-3 py-2 text-sm border border-slate-300 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 outline-none transition-all"
-                  rows={1}
-                  value={draft}
-                  onChange={handleInputChange}
-                  onBlur={handleInputBlur}
-                  onKeyDown={handleKeyDown}
-                  placeholder={t('socket.ui.publicLiveChat.main.input_placeholder')}
-                />
-                <button
-                  onClick={handleSend}
-                  disabled={!draft.trim()}
-                  className="shrink-0 rounded-xl px-4 py-2 text-sm font-medium bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  {t('socket.ui.publicLiveChat.main.send_button')}
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+// 🔎 Read cookie on client
+function getCookie(cookieName) {
+  // 🛡️ Guard against SSR
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp(`(?:^|; )${cookieName}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
 }
 
-/* ========================================
- * 💬 MESSAGE BUBBLE COMPONENT
- * ======================================*/
-function MessageBubble({ text, timestamp, isOwnMessage = false }) {
-  const formattedTime = timestamp
-    ? new Date(timestamp).toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    : '';
+// ✏️ Write cookie on client
+function setCookie(cookieName, cookieValue, maxAgeDays = 30) {
+  if (typeof document === 'undefined') return;
+  const maxAgeSeconds = maxAgeDays * 24 * 60 * 60;
+  document.cookie = `${cookieName}=${encodeURIComponent(
+    cookieValue
+  )};path=/;max-age=${maxAgeSeconds};SameSite=Lax`;
+}
 
-  return (
-    <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
-      <div
-        className={`max-w-[75%] px-3 py-2 rounded-2xl ${
-          isOwnMessage
-            ? 'bg-gradient-to-br from-slate-700 to-slate-900 text-white rounded-br-sm shadow-md'
-            : 'bg-gradient-to-br from-blue-50 to-purple-50 text-black border border-slate-300 rounded-bl-sm shadow-sm'
-        }`}
-        style={{ textShadow: 'none' }}
-      >
-        <p className="text-sm leading-relaxed break-words" style={{ textShadow: 'none' }}>
-          {text}
-        </p>
-        {formattedTime && (
-          <p
-            className={`text-[10px] mt-1 ${isOwnMessage ? 'text-slate-300' : 'text-slate-500'}`}
-            style={{ textShadow: 'none' }}
-          >
-            {formattedTime}
+export default function PublicLiveChatWidget() {
+  const t = useTranslations(); // 🌍 translations (socket.ui.*)
+  const { displayMessage } = useAppHandlers(); // 🔔 toast helper
+  const { openModal, hideModal } = useModal(); // 🪟 modal helper
+
+  // 🪟 Widget open/closed (minimize only; room stays joined when open toggles)
+  //    SSR-safe: start closed on server, then hydrate from cookie on client
+  const [isWidgetOpen, setIsWidgetOpen] = useState(false);
+
+  // 🟢 Admin online status (real-time)
+  const { isAdminOnline, singleAdmin } = useIsAdminOnline(); // 👤 singleAdmin is usually you
+
+  // 🧵 Active public conversation id (room)
+  const [publicConversationId, setPublicConversationId] = useState(() => {
+    // 🌐 Try to restore from last-room cookie on client
+    return getCookie(PUBLIC_LAST_ROOM_COOKIE);
+  });
+
+  // 💬 Message list (simple array, kept in order)
+  const [messages, setMessages] = useState([]);
+
+  // ✍️ Local draft for new message
+  const [draftMessage, setDraftMessage] = useState('');
+
+  // 🔔 Unread badge when widget is closed and admin replies
+  const [unreadBadgeCount, setUnreadBadgeCount] = useState(0);
+
+  // ✏️ Edit state for a single message
+  const [messageBeingEdited, setMessageBeingEdited] = useState(null);
+  const [editDraftMessage, setEditDraftMessage] = useState('');
+
+  // 🗑️ Delete state for a single message
+  const [messageBeingDeleted, setMessageBeingDeleted] = useState(null);
+
+  // 🚦 Avoid double-init for conversation creation/restore
+  const isInitializingRef = useRef(false);
+  const hasRequestedRoomRef = useRef(false);
+
+  // 🔁 Track if we've already done an initial message refresh for this room
+  const hasInitialRefreshRef = useRef(false);
+
+  // 📜 Scroll container ref for auto-scroll
+  const chatBoxRef = useRef(null);
+
+  // 🔌 Socket helpers from shared hub
+  const {
+    joinPublicRoom,
+    leavePublicRoom,
+    createPublicRoom,
+    markPublicMessagesRead,
+    onPublicRoomReady, // 🧵 per-room mark_read helper (admin+user) + ready event
+    onPublicMessageError,
+    enablePublicCookieSync,
+    getLastPublicRoomFromCookie
+  } = useSocketHub();
+
+  // ✉️ Message events for this public conversation (send/edit/delete + listeners)
+  const {
+    sendMessage,
+    editMessage,
+    deleteMessage,
+    onReceiveMessage,
+    onMessageEdited,
+    onMessageDeleted
+  } = usePublicMessageEvents(publicConversationId);
+
+  // ⌨️ Typing indicator for this conversation
+  const {
+    isTyping,
+    typingUser,
+    isTypingLocal,
+    handleInputChange,
+    handleInputFocus,
+    handleInputBlur
+  } = usePublicTypingIndicator(publicConversationId);
+
+  // 🔄 Manual refresh for this conversation
+  const { requestRefresh, onRefreshed } = usePublicRefreshMessages(publicConversationId);
+
+  // 🧵 Keep local state in sync with server-confirmed room id
+  useEffect(() => {
+    const stop = onPublicRoomReady?.(({ public_conversation_id }) => {
+      if (!public_conversation_id) return;
+      setPublicConversationId((current) => current || public_conversation_id);
+      // New room became ready -> allow a fresh initial refresh
+      hasInitialRefreshRef.current = false;
+    });
+
+    return () => {
+      stop && stop();
+    };
+  }, [onPublicRoomReady]);
+
+  // 🍪 Enable server-driven last-room cookie sync on mount
+  useEffect(() => {
+    const disableSync = enablePublicCookieSync?.();
+    return () => {
+      disableSync && disableSync();
+    };
+  }, [enablePublicCookieSync]);
+
+  // 🧷 After mount, sync widget open state from cookie to avoid SSR mismatch
+  useEffect(() => {
+    const openFromCookie = getCookie(PUBLIC_CHAT_OPEN_COOKIE) === '1';
+    setIsWidgetOpen(openFromCookie);
+    // When widget is hydrating, we haven't refreshed messages yet
+    hasInitialRefreshRef.current = false;
+  }, []);
+
+  // 🧠 Initialize or restore the public conversation
+  const ensureConversation = useCallback(async () => {
+    // 🛑 Busy initializing
+    if (isInitializingRef.current || hasRequestedRoomRef.current) return;
+    isInitializingRef.current = true;
+    hasRequestedRoomRef.current = true;
+
+    try {
+      // 🧪 1) Try to re-join last room based on state or cookie-driven id
+      const existingId = publicConversationId || getLastPublicRoomFromCookie?.();
+      if (existingId) {
+        setPublicConversationId((current) => current || existingId);
+        joinPublicRoom(existingId);
+        return;
+      }
+
+      // 🆕 2) No room yet -> create a new public room.
+      // NOTE: createPublicRoom only emits; the authoritative
+      // id comes back via `public_room:ready`, which our
+      // message hooks already listen to by room id. Here we
+      // just create and let the server remember it in cookies.
+      createPublicRoom({ subject: 'Public Live Chat' });
+    } catch (error) {
+      console.error('[PublicLiveChatWidget] ❌ Error in ensureConversation:', error);
+      displayMessage(
+        t('socket.ui.publicLiveChat.error_open', {
+          defaultValue: 'Could not open public chat, please try again.'
+        }),
+        'error'
+      );
+    } finally {
+      isInitializingRef.current = false;
+    }
+  }, [publicConversationId, joinPublicRoom, createPublicRoom, displayMessage, t]);
+
+  // ❗ Surface public message socket errors in the widget UI
+  useEffect(() => {
+    if (!onPublicMessageError) return;
+    const stopError = onPublicMessageError((payload) => {
+      console.error('[PublicLiveChatWidget] message error', payload);
+      const message =
+        payload?.message ||
+        t('socket.ui.publicLiveChat.generic_error', {
+          defaultValue: 'There was a problem with the public chat.'
+        });
+      displayMessage(message, 'error');
+    });
+    return () => {
+      stopError && stopError();
+    };
+  }, [onPublicMessageError, displayMessage, t]);
+
+  // 🧷 Keep widget open state in cookie
+  useEffect(() => {
+    setCookie(PUBLIC_CHAT_OPEN_COOKIE, isWidgetOpen ? '1' : '0');
+  }, [isWidgetOpen]);
+
+  // 🚪 When widget opens with an active conversation, make sure we have messages
+  useEffect(() => {
+    if (!isWidgetOpen || !publicConversationId) return;
+    if (hasInitialRefreshRef.current) return;
+
+    hasInitialRefreshRef.current = true;
+    // Ask server for the latest messages for this room (after join/restore)
+    requestRefresh();
+  }, [isWidgetOpen, publicConversationId, requestRefresh]);
+
+  // 🚪 When widget opens, make sure conversation exists
+  useEffect(() => {
+    if (!isWidgetOpen) return;
+    ensureConversation();
+  }, [isWidgetOpen, ensureConversation]);
+
+  // 📡 Listen for new message events (create)
+  useEffect(() => {
+    if (!publicConversationId) return;
+
+    const stopReceive = onReceiveMessage((payload) => {
+      const receivedMessage = payload?.message || payload; // 🧱 Support { message } or bare message
+
+      if (!receivedMessage?.public_message_id) return;
+
+      setMessages((previousMessages) => {
+        // 🛡️ Avoid duplicates
+        if (
+          previousMessages.some(
+            (existingMessage) =>
+              existingMessage.public_message_id === receivedMessage.public_message_id
+          )
+        ) {
+          return previousMessages;
+        }
+        return [...previousMessages, receivedMessage];
+      });
+
+      // 🔔 Bump badge if widget is closed and message is from admin
+      if (!isWidgetOpen && receivedMessage.sender_is_admin) {
+        setUnreadBadgeCount((previousCount) => previousCount + 1);
+      }
+    });
+
+    return () => {
+      stopReceive && stopReceive();
+    };
+  }, [publicConversationId, onReceiveMessage, isWidgetOpen]);
+
+  // ✏️🗑️ Listen for edit / delete events
+  useEffect(() => {
+    if (!publicConversationId) return;
+
+    // ✏️ Edited message
+    const stopEdit = onMessageEdited((payload) => {
+      const editedMessage = payload?.message || payload;
+      if (!editedMessage?.public_message_id) return;
+
+      setMessages((previousMessages) =>
+        previousMessages.map((existingMessage) =>
+          existingMessage.public_message_id === editedMessage.public_message_id
+            ? { ...existingMessage, ...editedMessage }
+            : existingMessage
+        )
+      );
+    });
+
+    // 🗑️ Deleted message
+    const stopDelete = onMessageDeleted((payload) => {
+      const deletedId =
+        typeof payload === 'string' ? payload : payload?.public_message_id || payload?.id || null;
+
+      if (!deletedId) return;
+
+      setMessages((previousMessages) =>
+        previousMessages.filter(
+          (existingMessage) => existingMessage.public_message_id !== deletedId
+        )
+      );
+    });
+
+    return () => {
+      stopEdit && stopEdit();
+      stopDelete && stopDelete();
+    };
+  }, [publicConversationId, onMessageEdited, onMessageDeleted]);
+
+  // 🔄 Hook up refresh => replace messages when server responds
+  useEffect(() => {
+    if (!publicConversationId) return;
+
+    const stopRefreshed = onRefreshed((payload) => {
+      const refreshedMessages = Array.isArray(payload?.messages)
+        ? payload.messages
+        : Array.isArray(payload)
+          ? payload
+          : [];
+
+      setMessages(refreshedMessages);
+      /*       displayMessage(
+        t('socket.ui.publicLiveChat.refreshed', { defaultValue: 'Messages refreshed.' }),
+        'success'
+      ); */
+    });
+
+    return () => {
+      stopRefreshed && stopRefreshed();
+    };
+  }, [publicConversationId, onRefreshed /*  displayMessage, t */]);
+
+  // ⬇️ Auto-scroll when messages change
+  useEffect(() => {
+    if (!chatBoxRef.current) return;
+    chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+  }, [messages]);
+
+  // 🛎️ Mark messages as read whenever widget is opened with an active conversation
+  useEffect(() => {
+    if (!isWidgetOpen || !publicConversationId || !markPublicMessagesRead) return;
+
+    // ✅ Ask server to mark messages as read based on role (admin vs user/guest)
+    markPublicMessagesRead(publicConversationId);
+    setUnreadBadgeCount(0);
+  }, [isWidgetOpen, publicConversationId, markPublicMessagesRead]);
+
+  // 📨 Send handler
+  const handleSend = useCallback(() => {
+    const trimmed = draftMessage.trim();
+    if (!trimmed || !publicConversationId) return;
+
+    // ✉️ Send via socket helper
+    sendMessage(trimmed);
+
+    // 🧽 Clear draft and typing
+    setDraftMessage('');
+    handleInputBlur();
+  }, [draftMessage, publicConversationId, sendMessage, handleInputBlur]);
+
+  // ⌨️ Input change handler (wired into typing indicator hook)
+  const handleInput = (event) => {
+    // ✍️ Let typing hook manage isTyping/user notification
+    const updatedValue = handleInputChange(event);
+    setDraftMessage(updatedValue);
+  };
+
+  // ↩️ Enter-to-send (Shift+Enter creates newline)
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      handleSend();
+    }
+  };
+
+  // 🧼 Close (minimize) without leaving room
+  const handleToggleWidget = () => {
+    setIsWidgetOpen((previousState) => !previousState);
+  };
+
+  // 💣 Hard close: confirm, then leave room + clear state (server clears cookie)
+  const handleHardClose = () => {
+    if (!publicConversationId) {
+      // 🧹 Nothing to clean, just close widget UI
+      setIsWidgetOpen(false);
+      setUnreadBadgeCount(0);
+      return;
+    }
+
+    openModal('closePublicChat', {
+      title: t('socket.ui.publicLiveChat.close_title', { defaultValue: 'Close chat?' }),
+      description: t('socket.ui.publicLiveChat.close_description', {
+        defaultValue: 'This will end the current chat session.'
+      }),
+      confirmButtonType: 'danger', // 🔴 use btn-danger mapping
+      confirmButtonText: t('socket.ui.publicLiveChat.close_confirm', {
+        defaultValue: 'Close chat'
+      }),
+      cancelButtonText: t('socket.ui.publicLiveChat.close_cancel', { defaultValue: 'Cancel' }),
+      onConfirm: () => {
+        try {
+          // 🚪 Leave socket room so server forgets last room cookie
+          leavePublicRoom(publicConversationId);
+        } catch (error) {
+          console.error('[PublicLiveChatWidget] ❌ Error leaving room:', error);
+        }
+
+        // 🧵 Drop conversation + messages from client state
+        setPublicConversationId(null);
+        setMessages([]);
+        setDraftMessage('');
+        setUnreadBadgeCount(0);
+        setIsWidgetOpen(false);
+
+        // 🔁 Allow a fresh room initialization on next open
+        isInitializingRef.current = false;
+        hasRequestedRoomRef.current = false;
+        hasInitialRefreshRef.current = false;
+
+        // 🔁 Allow a fresh room on next open
+        isInitializingRef.current = false;
+        hasRequestedRoomRef.current = false;
+        hasInitialRefreshRef.current = false;
+
+        // 🍪 Force closed in widget cookie
+        setCookie(PUBLIC_CHAT_OPEN_COOKIE, '0');
+
+        hideModal();
+      },
+      onCancel: hideModal
+    });
+  };
+
+  const handleConfirmEdit = useCallback(
+    async (messageToEdit, currentDraft) => {
+      const trimmed = (currentDraft || '').trim();
+      if (!trimmed || !messageToEdit?.public_message_id) return;
+
+      await editMessage(messageToEdit.public_message_id, trimmed);
+
+      setMessageBeingEdited(null);
+      setEditDraftMessage('');
+    },
+    [editMessage]
+  );
+
+  // ✏️ Open edit modal for a specific message
+  const openEditModal = (message) => {
+    if (!message?.public_message_id) return;
+
+    // 🧱 Seed local edit state
+    setMessageBeingEdited(message);
+    setEditDraftMessage(message.message || '');
+
+    openModal('editPublicMessage', {
+      title: t('socket.ui.publicLiveChat.edit_title', { defaultValue: 'Edit message' }),
+      // ℹ️ description optional here; content is the form
+      customContent: () => (
+        <div className="space-y-3">
+          {/* ℹ️ Info line */}
+          <p className="text-sm opacity-80">
+            {t('socket.ui.publicLiveChat.edit_hint', {
+              defaultValue: 'Update the message and confirm to save changes.'
+            })}
           </p>
+          {/* 📝 Message textarea */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold">
+              {t('socket.ui.publicLiveChat.edit_message_label', {
+                defaultValue: 'Message'
+              })}
+            </label>
+            <textarea
+              rows={4}
+              defaultValue={message.message || ''}
+              onChange={(event) => setEditDraftMessage(event.target.value)}
+              className="w-full rounded-md border border-slate-500 bg-slate-900 text-sm text-white px-2 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+        </div>
+      ),
+      confirmButtonType: 'info',
+      confirmButtonText: t('socket.ui.publicLiveChat.edit_confirm', {
+        defaultValue: 'Save changes'
+      }),
+      cancelButtonText: t('socket.ui.publicLiveChat.edit_cancel', { defaultValue: 'Cancel' }),
+      onConfirm: () => handleConfirmEdit(message, editDraftMessage),
+
+      /*       onConfirm: async () => {
+        const trimmed = editDraftMessage.trim();
+        if (!trimmed || !message.public_message_id) return;
+
+        try {
+          // ✏️ Call socket helper to edit message
+          await editMessage(message.public_message_id, trimmed);
+
+          // 🔄 Immediately re-fetch messages for this room so UI matches DB
+          if (publicConversationId) {
+            requestRefresh();
+          }
+
+          // 🧽 Clear local edit state after success
+          setMessageBeingEdited(null);
+          setEditDraftMessage('');
+        } catch (error) {
+          console.error('[PublicLiveChatWidget] ❌ Error editing message:', error);
+          displayMessage(
+            t('socket.ui.publicLiveChat.edit_error', {
+              defaultValue: 'Failed to edit message, please try again.'
+            }),
+            'error'
+          );
+        }
+      }, */
+      onCancel: () => {
+        setMessageBeingEdited(null);
+        setEditDraftMessage('');
+        hideModal();
+      }
+    });
+  };
+
+  // 🗑️ Open delete confirmation modal for a specific message
+  const openDeleteModal = (message) => {
+    if (!message?.public_message_id) return;
+
+    setMessageBeingDeleted(message);
+
+    openModal('deletePublicMessage', {
+      title: t('socket.ui.publicLiveChat.delete_title', { defaultValue: 'Delete message?' }),
+      description: t('socket.ui.publicLiveChat.delete_description', {
+        defaultValue: 'This action cannot be undone.'
+      }),
+      confirmButtonType: 'danger',
+      confirmButtonText: t('socket.ui.publicLiveChat.delete_confirm', {
+        defaultValue: 'Delete message'
+      }),
+      cancelButtonText: t('socket.ui.publicLiveChat.delete_cancel', { defaultValue: 'Cancel' }),
+      onConfirm: async () => {
+        if (!message.public_message_id) return;
+
+        try {
+          // 🗑️ Call socket helper to delete message
+          await deleteMessage(message.public_message_id);
+
+          // 🧽 Clear local delete state
+          setMessageBeingDeleted(null);
+        } catch (error) {
+          console.error('[PublicLiveChatWidget] ❌ Error deleting message:', error);
+          displayMessage(
+            t('socket.ui.publicLiveChat.delete_error', {
+              defaultValue: 'Failed to delete message, please try again.'
+            }),
+            'error'
+          );
+        }
+      },
+      onCancel: () => {
+        setMessageBeingDeleted(null);
+        hideModal();
+      }
+    });
+  };
+
+  // 🧮 Helper: own message (user/guest) vs admin (for styling + actions)
+  const isOwnMessage = (message) => !message.sender_is_admin;
+
+  // 🧱 Widget layout (floating bottom-left)
+  return (
+    <div className="fixed bottom-4 left-4 z-[9999] flex flex-col items-start gap-3">
+      {/* 🔘 Main toggle button (always visible) */}
+      <button
+        type="button"
+        onClick={handleToggleWidget}
+        className="flex items-center gap-2 px-4 py-3 rounded-full shadow-xl bg-gradient-to-r from-sky-900 via-sky-700 to-sky-600 border-b border-sky-500/60 text-white hover:from-sky-600 hover:to-sky-400 transition-all"
+      >
+        <span className="text-sm font-semibold">
+          💬{' '}
+          {t('socket.ui.publicLiveChat.button_label', {
+            defaultValue: 'Chat with us'
+          })}
+        </span>
+        {unreadBadgeCount > 0 && (
+          <span className="inline-flex items-center justify-center min-w-[1.4rem] h-5 text-xs rounded-full bg-red-600 px-2">
+            {unreadBadgeCount}
+          </span>
         )}
-      </div>
+      </button>
+
+      {/* 🪟 Chat window (only when open) */}
+      {isWidgetOpen && (
+        <div className="absolute bottom-[3.5rem] left-0 w-[340px] min-h-[360px] max-h-[560px] flex flex-col rounded-2xl shadow-2xl border border-black/30 bg-slate-950/95 text-white backdrop-blur-sm overflow-hidden">
+          {/* 🏷️ header */}
+          <div className="grid grid-cols-3 items-center px-3 py-2 bg-gradient-to-r from-sky-900 via-sky-700 to-sky-600 border-b border-sky-500/60">
+            {/* Left: title */}
+            <div className="flex flex-col items-start justify-center">
+              <span className="text-sm font-semibold tracking-wide">
+                {t('socket.ui.publicLiveChat.title', {
+                  defaultValue: 'Public Chat'
+                })}
+              </span>
+            </div>
+            {/* Center: admin status */}
+            <div className="flex items-center justify-center">
+              <span
+                className={clsx(
+                  'text-xs font-semibold',
+                  isAdminOnline ? 'text-emerald-300' : 'text-red-300'
+                )}
+              >
+                {isAdminOnline
+                  ? t('socket.ui.publicLiveChat.admin_online', {
+                      defaultValue: 'Admin online'
+                    })
+                  : t('socket.ui.publicLiveChat.admin_offline', {
+                      defaultValue: 'Admin offline'
+                    })}
+              </span>
+            </div>
+            {/* Right: controls */}
+            <div className="flex items-center justify-end gap-1">
+              {/* ➖ minimize (keep room joined) */}
+              <button
+                type="button"
+                onClick={handleToggleWidget}
+                className="w-7 h-7 grid place-items-center rounded-full hover:bg-black/20 transition-colors"
+                title={t('socket.ui.publicLiveChat.minimize', { defaultValue: 'Minimize' })}
+              >
+                <span className="text-lg leading-none">−</span>
+              </button>
+              {/* ❌ hard close (leave room) */}
+              <button
+                type="button"
+                onClick={handleHardClose}
+                className="w-7 h-7 grid place-items-center rounded-full hover:bg-black/20 transition-colors"
+                title={t('socket.ui.publicLiveChat.close', { defaultValue: 'End chat' })}
+              >
+                <span className="text-lg leading-none">×</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 💬 Messages */}
+          <div
+            ref={chatBoxRef}
+            className="flex-1 overflow-y-auto px-3 py-3 space-y-2 bg-slate-900"
+            aria-live="polite"
+          >
+            {messages.length === 0 ? (
+              <div className="flex items-center justify-center h-32 text-xs text-slate-300 text-center">
+                {t('socket.ui.publicLiveChat.empty', {
+                  defaultValue: 'No messages yet. Say hi to start the conversation! 😊'
+                })}
+              </div>
+            ) : (
+              messages.map((message) => {
+                const createdAt =
+                  message.createdAt || message.created_at || message.timestamp || null;
+                const timeLabel = createdAt ? dayjs(createdAt).format('HH:mm') : '';
+
+                return (
+                  <div
+                    key={message.public_message_id}
+                    className={clsx(
+                      'w-full flex',
+                      isOwnMessage(message) ? 'justify-end' : 'justify-start'
+                    )}
+                  >
+                    <div className="flex flex-col items-end gap-1 max-w-[80%]">
+                      {/* 💬 Bubble */}
+                      <div
+                        className={clsx(
+                          'w-full px-3 py-2 rounded-2xl text-xs whitespace-pre-wrap break-words',
+                          isOwnMessage(message)
+                            ? 'bg-sky-700 text-white rounded-br-sm shadow-md'
+                            : 'bg-slate-800 text-slate-50 rounded-bl-sm shadow-sm'
+                        )}
+                      >
+                        <p>{SafeString(message.message, '')}</p>
+                        <div className="mt-1 text-[10px] text-slate-200 flex justify-between gap-2">
+                          {timeLabel && <span>{timeLabel}</span>}
+                          {message.status === 'edited' && (
+                            <span className="italic opacity-80">
+                              {t('socket.ui.publicLiveChat.edited', { defaultValue: 'edited' })}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* ✏️🗑️ Actions (only for own messages) */}
+                      {isOwnMessage(message) && (
+                        <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(message)}
+                            className="inline-flex items-center gap-1 hover:text-emerald-300 transition-colors"
+                            title={t('socket.ui.publicLiveChat.edit_tooltip', {
+                              defaultValue: 'Edit message'
+                            })}
+                          >
+                            <span>✏️</span>
+                            <span>
+                              {t('socket.ui.publicLiveChat.edit_short', { defaultValue: 'Edit' })}
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openDeleteModal(message)}
+                            className="inline-flex items-center gap-1 hover:text-red-400 transition-colors"
+                            title={t('socket.ui.publicLiveChat.delete_tooltip', {
+                              defaultValue: 'Delete message'
+                            })}
+                          >
+                            <span>🗑️</span>
+                            <span>
+                              {t('socket.ui.publicLiveChat.delete_short', {
+                                defaultValue: 'Delete'
+                              })}
+                            </span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* 👀 Typing indicator */}
+          <div className="h-5 flex items-center justify-center bg-slate-950 px-2">
+            <TypingIndicator
+              isTyping={isTyping}
+              isTypingLocal={isTypingLocal}
+              typingUser={typingUser}
+              showLocalForDebug={true}
+            />
+          </div>
+
+          {/* ✍️ Input + send + refresh */}
+          <div className="border-t border-slate-700 bg-slate-950 px-3 py-2 flex flex-col gap-2">
+            <div className="flex gap-2 items-end">
+              <textarea
+                rows={1}
+                value={draftMessage}
+                onChange={handleInput}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
+                onKeyDown={handleKeyDown}
+                className="flex-1 resize-none rounded-lg px-2 py-2 text-sm text-black placeholder:text-slate-500 border border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                placeholder={t('socket.ui.publicLiveChat.input_placeholder', {
+                  defaultValue: 'Type your message…'
+                })}
+              />
+              <button
+                type="button"
+                onClick={handleSend}
+                disabled={!draftMessage.trim() || !publicConversationId}
+                className="px-3 py-2 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+              >
+                {t('socket.ui.publicLiveChat.send', { defaultValue: 'Send' })}
+              </button>
+            </div>
+
+            <div className="flex justify-between items-center text-[11px] text-slate-300">
+              <span>
+                {t('socket.ui.publicLiveChat.footer_hint', {
+                  defaultValue: 'Replies may take a moment if we are busy.'
+                })}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!publicConversationId) return;
+                  requestRefresh();
+                }}
+                className="text-emerald-300 hover:text-emerald-100 underline-offset-2 hover:underline"
+              >
+                {t('socket.ui.publicLiveChat.refresh', { defaultValue: 'Refresh' })}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

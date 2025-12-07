@@ -6,15 +6,19 @@ import { useCallback } from 'react';
 import useSocketHub from '@/hooks/socket/useSocketHub';
 
 export default function usePublicRefreshMessages(public_conversation_id) {
-  const { guardedEmit, guardedListen } = useSocketHub();
+  const { refreshPublicMessages, listen } = useSocketHub();
 
   const requestRefresh = useCallback(() => {
-    guardedEmit('public_message:refresh', { public_conversation_id });
-  }, [public_conversation_id, guardedEmit]);
+    if (!public_conversation_id) {
+      console.warn('[usePublicRefreshMessages] No public_conversation_id, skipping refresh');
+      return;
+    }
+    refreshPublicMessages(public_conversation_id);
+  }, [public_conversation_id, refreshPublicMessages]);
 
   const listenForRefresh = useCallback(
     (handler) =>
-      guardedListen('public_message:refreshed', (data) => {
+      listen('public_message:refreshed', (data) => {
         if (
           data.public_conversation_id === public_conversation_id &&
           Array.isArray(data.messages)
@@ -22,7 +26,7 @@ export default function usePublicRefreshMessages(public_conversation_id) {
           handler(data.messages);
         }
       }),
-    [public_conversation_id, guardedListen]
+    [public_conversation_id, listen]
   );
 
   return { requestRefresh, onRefreshed: listenForRefresh };

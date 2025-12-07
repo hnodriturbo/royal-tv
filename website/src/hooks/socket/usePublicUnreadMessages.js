@@ -21,7 +21,12 @@ export default function usePublicUnreadMessages({
   adminGlobal = false
 } = {}) {
   const [unreadCount, setUnreadCount] = useState(0);
-  const { markPublicMessagesRead, listen } = useSocketHub();
+  const {
+    markPublicMessagesRead,
+    markAllConversationsReadUser,
+    markAllConversationsReadAdmin,
+    listen
+  } = useSocketHub();
 
   // Listen for updates
   useEffect(() => {
@@ -39,17 +44,34 @@ export default function usePublicUnreadMessages({
         }
       });
       // Mark as read when mounting
-      markPublicMessagesRead(public_conversation_id);
+      if (public_conversation_id) {
+        markPublicMessagesRead(public_conversation_id);
+      }
       return () => stop();
     }
   }, [adminGlobal, public_conversation_id, markPublicMessagesRead, listen]);
 
   // Manual mark-all-read function
+  // If public_conversation_id is provided, marks only that conversation
+  // Otherwise, marks ALL conversations + messages (user or admin scope)
   const markAllRead = useCallback(() => {
     if (public_conversation_id) {
+      // Mark single conversation as read
       markPublicMessagesRead(public_conversation_id);
+    } else if (adminGlobal) {
+      // Admin: mark ALL conversations + messages globally
+      markAllConversationsReadAdmin();
+    } else {
+      // User: mark all their conversations + messages
+      markAllConversationsReadUser();
     }
-  }, [public_conversation_id, markPublicMessagesRead]);
+  }, [
+    public_conversation_id,
+    adminGlobal,
+    markPublicMessagesRead,
+    markAllConversationsReadUser,
+    markAllConversationsReadAdmin
+  ]);
 
   return { unreadCount, markAllRead };
 }

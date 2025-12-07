@@ -27,8 +27,8 @@ if (!enableServerSideLogs) {
 }
 
 // 🔐 Load environment variables FIRST (before any imports that use them)
-import { config } from 'dotenv';
-config(); // Loads .env file
+/* import { config } from 'dotenv';
+config(); // Loads .env file */
 
 import './src/lib/server/socketServer.js'; // Your Socket.IO server
 import {

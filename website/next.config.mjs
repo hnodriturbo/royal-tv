@@ -6,14 +6,14 @@ const withNextIntl = createNextIntlPlugin();
 const nextConfig = {
   reactStrictMode: false,
   productionBrowserSourceMaps: true,
-  eslint: { ignoreDuringBuilds: false },
+  eslint: { ignoreDuringBuilds: false }
 
   // 🛡️ Remove ALL console.* calls in production builds (keeps console.error)
-  compiler: {
+  /*   compiler: {
     removeConsole: {
       exclude: ['error'] // Keep console.error for critical issues
     }
-  }
+  } */
 };
 
 export default withNextIntl(nextConfig);

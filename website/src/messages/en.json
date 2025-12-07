@@ -1095,37 +1095,65 @@
         "admin_support": "Admin Support"
       },
       "publicLiveChat": {
-        "main": {
-          "main_title": "Live Chat",
-          "toggle_open": "Open chat",
-          "toggle_close": "Close chat",
-          "admin_online": "Admin Online",
-          "admin_offline": "Admin Offline",
-          "bot_standby": "bot standby",
-          "users_label": "users",
-          "empty_state": "No messages yet. Start a conversation!",
-          "input_placeholder": "Type your message...",
-          "send_button": "Send",
-          "unread_badge_sr": "unread messages",
-          "reconnecting": "Reconnecting…",
-          "loading_messages": "Loading messages…",
-          "minimize": "Minimize chat",
-          "close": "Close chat"
-        },
-        "errors": {
-          "INVALID_ID": "That action couldn’t run (invalid id).",
-          "FORBIDDEN": "You don’t have permission for that.",
-          "NOT_FOUND": "That item no longer exists.",
-          "DB_FAILURE": "Something went wrong on our side.",
-          "RATE_LIMIT": "You’re going a bit fast. Try again shortly.",
-          "PAYLOAD_TOO_LARGE": "Message is too large."
-        }
+        "button_label": "Chat with us",
+        "title": "Public Chat",
+        "subtitle": "Ask anything, get help fast.",
+        "toggle_open": "Open chat",
+        "toggle_close": "Close chat",
+        "admin_online": "Admin online",
+        "admin_offline": "Admin offline",
+        "bot_standby": "Bot standby",
+        "users_label": "users",
+        "empty": "No messages yet. Say hi to start the conversation! 😊",
+        "input_placeholder": "Type your message…",
+        "send": "Send",
+        "unread_badge_sr": "unread messages",
+        "reconnecting": "Reconnecting…",
+        "loading_messages": "Loading messages…",
+        "minimize": "Minimize",
+        "close": "End chat",
+        "footer_hint": "Replies may take a moment if we are busy.",
+        "edited": "edited",
+        "refresh": "Refresh",
+        "error_open": "Could not open public chat, please try again.",
+        "refreshed": "Messages refreshed.",
+        "close_title": "Close chat?",
+        "close_description": "This will end the current chat session.",
+        "close_confirm": "Close chat",
+        "close_cancel": "Cancel",
+        "edit_title": "Edit message",
+        "edit_hint": "Update the message and confirm to save changes.",
+        "edit_message_label": "Message",
+        "edit_confirm": "Save changes",
+        "edit_cancel": "Cancel",
+        "edit_tooltip": "Edit message",
+        "edit_short": "Edit",
+        "edit_error": "Failed to edit message, please try again.",
+        "delete_title": "Delete message?",
+        "delete_description": "This action cannot be undone.",
+        "delete_confirm": "Delete message",
+        "delete_cancel": "Cancel",
+        "delete_tooltip": "Delete message",
+        "delete_short": "Delete",
+        "delete_error": "Failed to delete message, please try again.",
+        "typing_user": "{name} is typing…",
+        "typing_admin": "Admin is typing…",
+        "typing_you": "You are typing…",
+        "typing_multiple": "{count} people are typing…"
+      },
+      "errors": {
+        "INVALID_ID": "That action couldn’t run (invalid id).",
+        "FORBIDDEN": "You don’t have permission for that.",
+        "NOT_FOUND": "That item no longer exists.",
+        "DB_FAILURE": "Something went wrong on our side.",
+        "RATE_LIMIT": "You’re going a bit fast. Try again shortly.",
+        "PAYLOAD_TOO_LARGE": "Message is too large."
       }
-    },
-    "hooks": {
-      "useRefreshNotifications": {
-        "all_notifications_refreshed": "🔄 All notifications refreshed!"
-      }
+    }
+  },
+  "hooks": {
+    "useRefreshNotifications": {
+      "all_notifications_refreshed": "🔄 All notifications refreshed!"
     }
   },
   "components": {

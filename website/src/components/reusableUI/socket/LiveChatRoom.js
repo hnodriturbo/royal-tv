@@ -183,14 +183,14 @@ export default function LiveChatRoom({
         {/* 🏷️ header */}
         <div className="flex justify-between items-center">
           <h2 className="text-base font-bold">
-            {t('socket.ui.chat.subject_label')}
+            {t('socket.ui.publicLiveChat.subject_label')}
             <br /> <span className="text-wonderful-5 underline">{subjectText}</span>
           </h2>
           <span>
-            {t('socket.ui.chat.online_count_label', { count: usersInRoom.length })}
+            {t('socket.ui.publicLiveChat.online_count_label', { count: usersInRoom.length })}
             <br />
             <span className="whitespace-nowrap">
-              🔔 {t('socket.ui.chat.unread_count_label', { count: unreadCount })}
+              🔔 {t('socket.ui.publicLiveChat.unread_count_label', { count: unreadCount })}
             </span>
           </span>
         </div>
@@ -251,7 +251,7 @@ export default function LiveChatRoom({
                   <span className="text-gray-300">
                     {dayjs(message.createdAt).format('HH:mm')}
                     {message.status === 'edited' && (
-                      <span className="italic ml-1">{t('socket.ui.chat.edited')}</span>
+                      <span className="italic ml-1">{t('socket.ui.publicLiveChat.edited')}</span>
                     )}
                   </span>
                 </div>
@@ -279,14 +279,14 @@ export default function LiveChatRoom({
             onBlur={handleInputBlur}
             onKeyDown={handleKeyDown}
             className="flex-1 p-2 border rounded text-lg text-black focus:outline-none"
-            placeholder={t('socket.ui.chat.input_placeholder')}
+            placeholder={t('socket.ui.publicLiveChat.input_placeholder')}
           />
           <button
             onClick={handleSend}
             className="px-4 py-2 bg-[#28a745] text-white rounded shadow disabled:opacity-50"
             disabled={!draftMessage.trim()}
           >
-            {t('socket.ui.chat.send')}
+            {t('socket.ui.publicLiveChat.send')}
           </button>
         </div>
 
@@ -296,7 +296,7 @@ export default function LiveChatRoom({
             conversation_id={conversation_id}
             onRefreshed={(msgs) => {
               setMessages(msgs);
-              displayMessage(t('socket.ui.chat.refreshed'), 'success');
+              displayMessage(t('socket.ui.publicLiveChat.refreshed'), 'success');
             }}
           />
         </div>

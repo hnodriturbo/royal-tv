@@ -4,10 +4,11 @@
  * -----------------------------------------------------------
  * Purpose: Handle creating, editing, deleting, and reading messages
  *
- * Key Events:
- *   IN:  public_message:create, edit, delete, refresh, mark_read, typing
- *   OUT: public_message:created, edited, deleted, refreshed, marked_read
- *        public_message:user_typing, unread_user, unread_admin, error
+ * Key Events (simplified, messageEvents-style):
+ *   IN:  public_message:create, edit, delete, refresh, mark_read, mark_all_read, typing
+ *   OUT: public_message:created, edited, deleted, refreshed,
+ *        public_message:marked_read, public_message:all_marked_read,
+ *        public_message:user_typing, public_message:unread_admin, public_message:error
  */
 import prisma from '../lib/core/prisma.js';
 import { createCookieUtils } from './cookieEvents.js';
@@ -54,17 +55,6 @@ export default function registerPublicMessageEvents(io, socket) {
     return false;
   };
 
-  // 🔔 Calculate unread count for a user in a room
-  const countUserUnread = async (roomId) => {
-    return await prisma.publicLiveChatMessage.count({
-      where: {
-        public_conversation_id: roomId,
-        sender_is_admin: true, // User only cares about admin messages
-        readAt: null
-      }
-    });
-  };
-
   // 🔔 Calculate total unread for admin (all unread non-admin messages)
   const countAdminUnread = async () => {
     return await prisma.publicLiveChatMessage.count({
@@ -75,23 +65,15 @@ export default function registerPublicMessageEvents(io, socket) {
     });
   };
 
-  // 📣 Broadcast unread counts
-  const broadcastUnreadCounts = async (roomId) => {
+  // 📣 Broadcast admin global unread (for widget badge)
+  const broadcastAdminUnread = async () => {
     try {
-      // User unread for this room
-      const userUnread = await countUserUnread(roomId);
-      io.to(roomId).emit('public_message:unread_user', {
-        public_conversation_id: roomId,
-        total: userUnread
-      });
-
-      // Admin global unread
       const adminUnread = await countAdminUnread();
       io.to('admins').emit('public_message:unread_admin', {
         total: adminUnread
       });
     } catch (error) {
-      console.error('[Public Messages] ❌ Unread count failed:', error.message);
+      console.error('[Public Messages] ❌ Admin unread count failed:', error.message);
     }
   };
 
@@ -160,17 +142,9 @@ export default function registerPublicMessageEvents(io, socket) {
         message: formatMessage(created)
       });
 
-      // 🔔 Update unread counts immediately (CRITICAL: Admin needs this)
-      await broadcastUnreadCounts(public_conversation_id);
-
-      // 🔔 If this is a non-admin message, notify admins about new unread
+      // 🔔 Update admin unread badge immediately (admin cares about user/guest messages)
       if (socket.userData.role !== 'admin') {
-        io.to('admins').emit('public_message:new_unread_notification', {
-          public_conversation_id,
-          sender_name: socket.userData.name,
-          message_preview: messageText.substring(0, 50),
-          createdAt: created.createdAt
-        });
+        await broadcastAdminUnread();
       }
 
       // 🍪 Remember this room
@@ -188,6 +162,16 @@ export default function registerPublicMessageEvents(io, socket) {
    * ✏️ EDIT MESSAGE
    * =======================================================*/
   socket.on('public_message:edit', async ({ public_message_id, message } = {}) => {
+    console.log('[Public Messages] ✏️ Incoming edit request:', {
+      public_message_id,
+      hasMessage: typeof message === 'string',
+      socketUser: {
+        role: socket.userData?.role,
+        user_id: socket.userData?.user_id,
+        public_identity_id: socket.userData?.public_identity_id
+      }
+    });
+
     const messageText = cleanMessage(message);
 
     // ❌ Validation
@@ -213,7 +197,8 @@ export default function registerPublicMessageEvents(io, socket) {
           public_message_id: true,
           public_conversation_id: true,
           sender_user_id: true,
-          sender_guest_id: true
+          sender_guest_id: true,
+          sender_is_admin: true
         }
       });
 
@@ -226,6 +211,11 @@ export default function registerPublicMessageEvents(io, socket) {
 
       // 🔐 Check permissions
       if (!canModifyMessage(existing)) {
+        console.warn('[Public Messages] ⛔ Edit denied by canModifyMessage:', {
+          public_message_id,
+          existing,
+          socketUser: socket.userData
+        });
         return socket.emit('public_message:error', {
           code: 'PERMISSION_DENIED',
           message: 'You can only edit your own messages'
@@ -307,8 +297,10 @@ export default function registerPublicMessageEvents(io, socket) {
         public_message_id
       });
 
-      // 🔔 Update unread counts (if was unread admin message)
-      await broadcastUnreadCounts(existing.public_conversation_id);
+      // 🔔 If this was a user/guest message, refresh admin unread badge
+      if (!existing.sender_is_admin) {
+        await broadcastAdminUnread();
+      }
     } catch (error) {
       console.error('[Public Messages] ❌ Delete failed:', error.message);
       socket.emit('public_message:error', {
@@ -361,57 +353,6 @@ export default function registerPublicMessageEvents(io, socket) {
   });
 
   /* =========================================================
-   * ✅ MARK AS READ
-   * =======================================================*/
-  socket.on('public_message:mark_read', async ({ public_conversation_id } = {}) => {
-    if (!isUuid(public_conversation_id)) {
-      return socket.emit('public_message:error', {
-        code: 'INVALID_ROOM',
-        message: 'Invalid room ID'
-      });
-    }
-
-    try {
-      const { role } = socket.userData;
-      const now = new Date();
-
-      // 📝 Mark messages as read based on role
-      const whereClause =
-        role === 'admin'
-          ? { sender_is_admin: false, readAt: null } // Admin marks user messages
-          : { sender_is_admin: true, readAt: null }; // User marks admin messages
-
-      const updated = await prisma.publicLiveChatMessage.updateMany({
-        where: {
-          public_conversation_id,
-          ...whereClause
-        },
-        data: { readAt: now }
-      });
-
-      console.log(
-        `[Public Messages] ✅ Marked ${updated.count} messages as read in room ${public_conversation_id}`
-      );
-
-      // 📣 Confirm to sender
-      socket.emit('public_message:marked_read', {
-        public_conversation_id,
-        ok: true,
-        count: updated.count
-      });
-
-      // 🔔 Update unread counts
-      await broadcastUnreadCounts(public_conversation_id);
-    } catch (error) {
-      console.error('[Public Messages] ❌ Mark read failed:', error.message);
-      socket.emit('public_message:error', {
-        code: 'DB_FAILURE',
-        message: 'Failed to mark messages as read'
-      });
-    }
-  });
-
-  /* =========================================================
    * ⌨️ TYPING INDICATOR
    * =======================================================*/
   socket.on('public_message:typing', ({ public_conversation_id, isTyping = true } = {}) => {
@@ -427,6 +368,70 @@ export default function registerPublicMessageEvents(io, socket) {
       },
       isTyping: !!isTyping
     });
+  });
+
+  /* =========================================================
+   * ✅ MARK AS READ
+   * =======================================================*/
+  socket.on('public_message:mark_read', async ({ public_conversation_id } = {}) => {
+    if (!isUuid(public_conversation_id)) {
+      return socket.emit('public_message:error', {
+        code: 'INVALID_ROOM',
+        message: 'Invalid room ID'
+      });
+    }
+
+    try {
+      const { role } = socket.userData;
+      const now = new Date();
+
+      // 📝 Mark messages as read based on role
+      // - admin: mark all unread non-admin messages in this room
+      // - user/guest: mark all unread admin messages in this room
+      const whereClause =
+        role === 'admin'
+          ? { sender_is_admin: false, readAt: null }
+          : { sender_is_admin: true, readAt: null };
+
+      const updated = await prisma.publicLiveChatMessage.updateMany({
+        where: {
+          public_conversation_id,
+          ...whereClause
+        },
+        data: { readAt: now }
+      });
+
+      console.log(
+        `[Public Messages] ✅ Marked ${updated.count} messages as read in room ${public_conversation_id}`
+      );
+
+      // 🧑‍⚖️ If admin reads this room, also mark the conversation as read
+      if (role === 'admin') {
+        await prisma.publicLiveChatConversation.updateMany({
+          where: {
+            public_conversation_id,
+            read: false
+          },
+          data: { read: true }
+        });
+      }
+
+      // 📣 Confirm to sender
+      socket.emit('public_message:marked_read', {
+        public_conversation_id,
+        ok: true,
+        count: updated.count
+      });
+
+      // 🔔 Update admin unread badge after any read operation
+      await broadcastAdminUnread();
+    } catch (error) {
+      console.error('[Public Messages] ❌ Mark read failed:', error.message);
+      socket.emit('public_message:error', {
+        code: 'DB_FAILURE',
+        message: 'Failed to mark messages as read'
+      });
+    }
   });
 
   /* =========================================================
@@ -461,15 +466,144 @@ export default function registerPublicMessageEvents(io, socket) {
         count: updated.count
       });
 
-      // 🔔 Broadcast zero unread to admin
-      io.to('admins').emit('public_message:unread_admin', {
-        total: 0
-      });
+      // 🔔 Refresh admin unread badge (should now be zero)
+      await broadcastAdminUnread();
     } catch (error) {
       console.error('[Public Messages] ❌ Mark all read failed:', error.message);
       socket.emit('public_message:error', {
         code: 'DB_FAILURE',
         message: 'Failed to mark all messages as read'
+      });
+    }
+  });
+
+  /* =========================================================
+   * ✅ MARK ALL CONVERSATIONS + MESSAGES AS READ (USER / GUEST)
+   * =======================================================*/
+  socket.on('public_message:mark_all_conversations_read_user', async () => {
+    const { user_id, public_identity_id, role } = socket.userData;
+
+    // 🔐 Must be authenticated user or guest
+    if (role === 'guest' && !public_identity_id) {
+      return socket.emit('public_message:error', {
+        code: 'UNAUTHORIZED',
+        message: 'Guest ID required'
+      });
+    }
+
+    if (role !== 'guest' && !user_id) {
+      return socket.emit('public_message:error', {
+        code: 'UNAUTHORIZED',
+        message: 'User must be authenticated'
+      });
+    }
+
+    try {
+      // 🔍 Build query based on user type (owner of the conversations)
+      const ownerQuery =
+        role === 'guest' ? { owner_guest_id: public_identity_id } : { owner_id: user_id };
+
+      // 📋 Get all user's conversations
+      const conversations = await prisma.publicLiveChatConversation.findMany({
+        where: ownerQuery,
+        select: { public_conversation_id: true }
+      });
+
+      const conversationIds = conversations.map(
+        (conversation) => conversation.public_conversation_id
+      );
+
+      if (conversationIds.length === 0) {
+        return socket.emit('public_message:all_conversations_marked_read', {
+          updated_conversations: 0,
+          updated_messages: 0
+        });
+      }
+
+      // 💾 Mark ALL admin messages in user's conversations as read
+      const messagesResult = await prisma.publicLiveChatMessage.updateMany({
+        where: {
+          public_conversation_id: { in: conversationIds },
+          sender_is_admin: true, // 🙋 user/guest only cares about admin messages
+          readAt: null
+        },
+        data: { readAt: new Date() }
+      });
+
+      console.log(
+        `[Public Messages] ✅ User/guest marked all conversations' admin messages read: ${messagesResult.count} messages`
+      );
+
+      // 📣 Emit success to user
+      socket.emit('public_message:all_conversations_marked_read', {
+        updated_conversations: 0, // 🎯 only messages affected
+        updated_messages: messagesResult.count
+      });
+
+      // 🔔 User-side unread badges are handled in UI logic; admin badge unaffected here
+    } catch (error) {
+      console.error(
+        '[Public Messages] ❌ Mark all conversations read (user) failed:',
+        error.message
+      );
+      socket.emit('public_message:error', {
+        code: 'DB_FAILURE',
+        message: 'Failed to mark conversations as read'
+      });
+    }
+  });
+
+  /* =========================================================
+   * ✅ MARK ALL CONVERSATIONS + MESSAGES AS READ (ADMIN)
+   * =======================================================*/
+  socket.on('public_message:mark_all_conversations_read_admin', async () => {
+    // 🔐 Only admins can mark everything globally
+    if (socket.userData.role !== 'admin') {
+      return socket.emit('public_message:error', {
+        code: 'UNAUTHORIZED',
+        message: 'Admin only'
+      });
+    }
+
+    try {
+      // 💾 Mark ALL messages globally as read (non-admin messages only)
+      const messagesResult = await prisma.publicLiveChatMessage.updateMany({
+        where: {
+          sender_is_admin: false, // Admin cares about user/guest messages
+          readAt: null
+        },
+        data: {
+          readAt: new Date(),
+          status: 'read'
+        }
+      });
+
+      // 💾 Mark ALL conversations globally as read
+      const conversationsResult = await prisma.publicLiveChatConversation.updateMany({
+        where: { read: false },
+        data: { read: true }
+      });
+
+      console.log(
+        `[Public Messages] ✅ Admin marked ALL conversations read: ${conversationsResult.count} convos, ${messagesResult.count} messages`
+      );
+
+      // 📣 Emit success to admin
+      socket.emit('public_message:all_conversations_marked_read', {
+        updated_conversations: conversationsResult.count,
+        updated_messages: messagesResult.count
+      });
+
+      // 🔔 Refresh admin unread badge (should now be zero)
+      await broadcastAdminUnread();
+    } catch (error) {
+      console.error(
+        '[Public Messages] ❌ Mark all conversations read (admin) failed:',
+        error.message
+      );
+      socket.emit('public_message:error', {
+        code: 'DB_FAILURE',
+        message: 'Failed to mark all conversations as read'
       });
     }
   });

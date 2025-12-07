@@ -138,9 +138,14 @@ export const ModalProvider = ({ children }) => {
                         : BTN_BY_TYPE[normalizeType(modalProps.confirmButtonType)] ||
                           BTN_BY_TYPE.info
                     }`}
-                    onClick={() => {
-                      if (modalProps.onConfirm) modalProps.onConfirm(); // ✅ Handle confirm
-                      hideModal(); // ✅ Close the modal
+                    onClick={async () => {
+                      try {
+                        if (modalProps.onConfirm) {
+                          await modalProps.onConfirm();
+                        }
+                      } finally {
+                        hideModal();
+                      }
                     }}
                   >
                     <span>

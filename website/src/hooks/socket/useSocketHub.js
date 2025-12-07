@@ -401,7 +401,7 @@ const useSocketHub = () => {
 
   /* ================= 💬 PUBLIC MESSAGES (COMPLETE) ================== */
 
-  // ✉️ Send a message
+  // ✉️ [PUBLIC] Send a message
   const sendPublicMessage = useCallback(
     (public_conversation_id, message) =>
       guardedEmit('public_message:create', {
@@ -411,7 +411,7 @@ const useSocketHub = () => {
     [guardedEmit]
   );
 
-  // ✏️ Edit a message
+  // ✏️ [PUBLIC] Edit a message
   const editPublicMessage = useCallback(
     (public_message_id, message) =>
       guardedEmit('public_message:edit', {
@@ -421,33 +421,26 @@ const useSocketHub = () => {
     [guardedEmit]
   );
 
-  // 🗑️ Delete a message
+  // 🗑️ [PUBLIC] Delete a message
   const deletePublicMessage = useCallback(
     (public_message_id) => guardedEmit('public_message:delete', { public_message_id }),
     [guardedEmit]
   );
 
-  // 🔄 Refresh messages in a room
+  // 🔄 [PUBLIC] Refresh messages in a room
   const refreshPublicMessages = useCallback(
     (public_conversation_id, limit = 50) =>
       guardedEmit('public_message:refresh', { public_conversation_id, limit }),
     [guardedEmit]
   );
 
-  // ✅ Mark messages as read
+  // ✅ [PUBLIC] Mark messages as read
   const markPublicMessagesRead = useCallback(
     (public_conversation_id) => guardedEmit('public_message:mark_read', { public_conversation_id }),
     [guardedEmit]
   );
 
-  // ⌨️ Send typing indicator
-  const sendPublicTyping = useCallback(
-    (public_conversation_id, isTyping = true) =>
-      guardedEmit('public_message:typing', { public_conversation_id, isTyping }),
-    [guardedEmit]
-  );
-
-  // 📨 Listen for new messages
+  // 📨 [PUBLIC LISTEN] Listen for new messages
   const onPublicMessageCreated = useCallback(
     (handler) => guardedListen('public_message:created', handler),
     [guardedListen]
@@ -468,30 +461,6 @@ const useSocketHub = () => {
   // 📥 Listen for refreshed message list
   const onPublicMessagesRefreshed = useCallback(
     (handler) => guardedListen('public_message:refreshed', handler),
-    [guardedListen]
-  );
-
-  // ✅ Listen for marked as read confirmation
-  const onPublicMessagesMarkedRead = useCallback(
-    (handler) => guardedListen('public_message:marked_read', handler),
-    [guardedListen]
-  );
-
-  // ⌨️ Listen for typing indicators
-  const onPublicUserTyping = useCallback(
-    (handler) => guardedListen('public_message:user_typing', handler),
-    [guardedListen]
-  );
-
-  // 🔔 Listen for unread counts (user)
-  const onPublicUnreadUser = useCallback(
-    (handler) => guardedListen('public_message:unread_user', handler),
-    [guardedListen]
-  );
-
-  // 🔔 Listen for unread counts (admin)
-  const onPublicUnreadAdmin = useCallback(
-    (handler) => guardedListen('public_message:unread_admin', handler),
     [guardedListen]
   );
 
@@ -518,15 +487,37 @@ const useSocketHub = () => {
     [guardedListen]
   );
 
-  // 🧹 Mark all messages as read (admin only)
+  /* ================== ⌨️ PUBLIC READ (SIMPLIFIED) =================== */
+
+  // ✅ Listen for marked-as-read confirmation for a single room
+  const onPublicMessagesMarkedRead = useCallback(
+    (handler) => guardedListen('public_message:marked_read', handler),
+    [guardedListen]
+  );
+
+  // 🧹 Mark all messages (all rooms) as read – admin only
   const markAllPublicMessagesRead = useCallback(
     () => guardedEmit('public_message:mark_all_read'),
     [guardedEmit]
   );
 
-  // ✅ Listen for mark all read confirmation
+  // ✅ Listen for global mark-all-read confirmation
   const onAllPublicMessagesMarkedRead = useCallback(
     (handler) => guardedListen('public_message:all_marked_read', handler),
+    [guardedListen]
+  );
+
+  /* ================== ⌨️ PUBLIC TYPING =================== */
+  // ⌨️ [PUBLIC] Send typing indicator
+  const sendPublicTypingStatus = useCallback(
+    (public_conversation_id, isTyping = true) =>
+      guardedEmit('public_message:typing', { public_conversation_id, isTyping }),
+    [guardedEmit]
+  );
+
+  // ⌨️ [PUBLIC] Listen for typing indicators
+  const onPublicTypingStatus = useCallback(
+    (handler) => guardedListen('public_message:user_typing', handler),
     [guardedListen]
   );
 
@@ -544,21 +535,7 @@ const useSocketHub = () => {
     [guardedListen]
   );
 
-  /* ================== ⌨️ TYPING =================== */
-  // ⌨️ Send typing on/off
-  const sendPublicTypingStatus = useCallback(
-    (public_conversation_id, isTyping = true) =>
-      guardedEmit('public_message:typing', { public_conversation_id, isTyping }),
-    [guardedEmit]
-  );
-
-  // 👤 Remote typing updates
-  const onPublicTyping = useCallback(
-    (handler) => guardedListen('public_message:user_typing', handler),
-    [guardedListen]
-  );
-
-  /* ================== 🔔 UNREAD =================== */
+  /* ================== 🔔 PUBLIC UNREAD =================== */
   // 🔔 Request initial unread count (bootstrap)
   const requestPublicUnreadBootstrap = useCallback(
     ({ scope, public_conversation_id } = {}) => {
@@ -575,7 +552,7 @@ const useSocketHub = () => {
     [guardedEmit]
   );
 
-  // 🔔 Listen for unread updates (unified handler)
+  // 🔔 PUBLIC Listen for unread updates (unified handler)
   const onPublicUnreadUpdated = useCallback(
     (handler) => {
       if (typeof handler !== 'function') return () => {};
@@ -598,7 +575,6 @@ const useSocketHub = () => {
   );
 
   /* ================== 🍪 COOKIES ================== */
-  /* 
   // 🔄 Server-driven cookie sync helpers
   const enablePublicCookieSync = useCallback(
     (cookieName = 'public_last_conversation_id') => {
@@ -636,12 +612,14 @@ const useSocketHub = () => {
 
   // 🍪 Read last room
   const getLastPublicRoomFromCookie = useCallback((cookieName = 'public_last_conversation_id') => {
+    if (typeof document === 'undefined') return null;
     const match = document.cookie.match(new RegExp(`(?:^|; )${cookieName}=([^;]*)`)); // 🔎 parse
     return match ? decodeURIComponent(match[1]) : null; // 📤 value or null
   }, []);
 
   // 🍪 Write last room (14 days)
   const setLastPublicRoomCookie = useCallback((id, cookieName = 'public_last_conversation_id') => {
+    if (typeof document === 'undefined') return;
     const date = new Date();
     date.setTime(date.getTime() + 14 * 864e5);
     document.cookie = `${cookieName}=${id}; expires=${date.toUTCString()}; path=/; samesite=lax`; // ✍️ write
@@ -649,9 +627,9 @@ const useSocketHub = () => {
 
   // 🍪 Clear last room
   const clearLastPublicRoomCookie = useCallback((cookieName = 'public_last_conversation_id') => {
+    if (typeof document === 'undefined') return;
     document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; samesite=lax`; // 🧹 clear
   }, []);
- */
   // ======================= EXPORTS ========================
   return {
     socket,
@@ -738,6 +716,7 @@ const useSocketHub = () => {
     // 🌍 Locale setLocale emit and onLocaleChanged Listen
     setLocale,
     onLocaleChanged,
+
     // Public Lobby & Rooms
     joinPublicLobby,
     leavePublicLobby,
@@ -757,7 +736,8 @@ const useSocketHub = () => {
     refreshPublicMessages,
     markPublicMessagesRead,
     markAllPublicMessagesRead,
-    sendPublicTyping,
+    sendPublicTypingStatus,
+    onPublicTypingStatus,
     onPublicMessageCreated,
     onPublicMessageEdited,
     onPublicMessageDeleted,
@@ -766,22 +746,15 @@ const useSocketHub = () => {
     onAllPublicMessagesMarkedRead,
     onPublicMessageError,
     onNewUnreadNotification,
-    onPublicUserTyping,
-    onPublicUnreadUser,
-    onPublicUnreadAdmin,
-    onPublicUnreadUpdated,
-    requestPublicUnreadBootstrap,
 
     // Cookie Management
     onSetLastRoomCookie,
-    onClearLastRoomCookie
-    /* 
+    onClearLastRoomCookie,
     // 🍪 Cookies
     enablePublicCookieSync,
     getLastPublicRoomFromCookie,
     setLastPublicRoomCookie,
     clearLastPublicRoomCookie
-     */
   };
 };
 
