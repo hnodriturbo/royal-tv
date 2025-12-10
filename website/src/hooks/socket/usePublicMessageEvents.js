@@ -24,9 +24,9 @@ export default function usePublicMessageEvents(public_conversation_id) {
     sendPublicMessage,
     editPublicMessage,
     deletePublicMessage,
-    onReceiveMessage,
-    onMessageEdited,
-    onMessageDeleted
+    onPublicMessageCreated,
+    onPublicMessageEdited,
+    onPublicMessageDeleted
   } = useSocketHub();
 
   // 📤 Send message (now sends ONLY UUID + message)
@@ -59,34 +59,34 @@ export default function usePublicMessageEvents(public_conversation_id) {
   // 👂 Listen for new incoming messages in this conversation/room
   const onReceive = useCallback(
     (handler) =>
-      onReceiveMessage((data) => {
+      onPublicMessageCreated((data) => {
         if (data.public_conversation_id === public_conversation_id) {
           handler(data);
         }
       }),
-    [public_conversation_id, onReceiveMessage]
+    [public_conversation_id, onPublicMessageCreated]
   );
 
   // 👂 Listen for messages being edited in this conversation/room
   const onEdit = useCallback(
     (handler) =>
-      onMessageEdited((data) => {
+      onPublicMessageEdited((data) => {
         if (data.public_conversation_id === public_conversation_id) {
           handler(data);
         }
       }),
-    [public_conversation_id, onMessageEdited]
+    [public_conversation_id, onPublicMessageEdited]
   );
 
   // 👂 Listen for messages being deleted in this conversation/room
   const onDelete = useCallback(
     (handler) =>
-      onMessageDeleted((data) => {
+      onPublicMessageDeleted((data) => {
         if (data.public_conversation_id === public_conversation_id) {
           handler(data);
         }
       }),
-    [public_conversation_id, onMessageDeleted]
+    [public_conversation_id, onPublicMessageDeleted]
   );
 
   // ✅ Export all actions & listeners for easy chat use

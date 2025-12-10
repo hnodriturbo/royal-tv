@@ -1,3 +1,4 @@
+````md
 # Copilot Instructions – Royal TV
 
 ## 🎯 Mission
@@ -28,16 +29,6 @@ All output must follow:
 - Console logs, warnings, and errors are **debug-only**, never translated
 
 ---
-
-## 🎨 Coding Style
-
-- Top-of-file block comment explaining purpose
-- Emoji one-liner comments for all non-trivial logic
-- Never abbreviate variable/function names (use full words, e.g. request, response, config)
-- Favor clarity over cleverness
-- Client components must include 'use client' at the top
-- Tables on admin/user panels must use borders + hover:bg-gray-400
-- Favor the simplest possible solution over clever or complex patterns. (if possible).
 
 ## 📡 Realtime & Chat Architecture
 
@@ -70,26 +61,7 @@ Copilot must **never mix** data models, flows, or events between private and pub
 
 - Use Next.js App Router route files.
 - Use standard `GET`, `POST`, `PATCH`, `DELETE` exports with a `request` parameter.
-- Always use NextResponse for responses.
-- **EXAMPLE:**
-
-```js
-// /app/api/some-endpoint/route.js WITH ROLE GUARD
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/core/prisma';
-import { withRole } from '@/lib/api/guards';
-
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
-export const GET = withRole('admin', async (_req, ctx) => {
-  const { user_id } = await ctx.params;
-  if (!user_id)
-    return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
-
-  // FETCH DATA FROM DATABASE AND RETURN IT
-});
-```
+- No legacy handlers and no `req`/`res` Express-style usage.
 
 ### API Guards (`/lib/api/guards.js`)
 
@@ -143,10 +115,7 @@ useEffect(() => {
 // 🛡️ non-admin block
 if (!isAllowed) return null;
 ```
-
-```
-
-```
+````
 
 - Show loader while auth status is unknown
 - Redirect when user is not allowed
@@ -175,7 +144,7 @@ Copilot must reuse `AuthGuard` and `useAuthGuard` instead of re-creating client 
   - Handles connection string encoding
   - Sets up a single shared client in development
   - Configures logging levels
-- Copilot must not spawn new Prisma clients in other modules unless it's absolutely necessary (like socket event files for example).
+- Copilot must not spawn new Prisma clients in other modules.
 
 ---
 
@@ -216,11 +185,28 @@ Logs and console messages stay in English and are **never** part of i18n.
 
 ---
 
+## 🎨 Code Style
+
+- Top-of-file block comment describing file purpose.
+- Emoji one-liner comments for non-trivial logic blocks.
+- Use descriptive names (no abbreviations like `req`, `res`, `cfg`, `msg`).
+- `'use client'` only in files that truly need client behavior.
+- Tables in admin/user UI:
+  - Must have borders and row hover styling for clarity.
+- Favor the simplest possible solution over clever or complex patterns.
+
+---
+
 ## 🙅‍♂️ Forbidden
 
 - TypeScript anywhere in the project.
+- Abbreviated variable or function names (`req`, `res`, `cfg`, etc.).
 - Adding i18n keys that are not actually used.
 - Forgetting to add used keys to all supported languages.
 - Changing Next.js routing patterns away from the established App Router conventions.
 - Using legacy route handlers or Express-style APIs.
 - Translating console or server log messages.
+
+```
+
+```

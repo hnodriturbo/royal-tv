@@ -26,6 +26,7 @@ const useSocketHub = () => {
         emitQueueRef.current.push({ event, payload });
         return;
       }
+      console.info(`📡 [SOCKET HUB] Emit "${event}" sent immediately.`, payload);
       emit(event, payload);
     },
     [emit, socket, socketConnected]
@@ -36,9 +37,11 @@ const useSocketHub = () => {
       if (!socket || !socketConnected) {
         // 🛑 Not connected or socket not defined: queue listen and warn
         console.warn(`⚠️ [SOCKET HUB] Listen "${event}" queued (waiting for connection)`);
+
         listenQueueRef.current.push({ event, handler });
         return () => {};
       }
+      console.info(`🪝 [SOCKET HUB] Listen "${event}" registered immediately.`);
       return listen(event, handler);
     },
     [listen, socket, socketConnected]
@@ -393,6 +396,12 @@ const useSocketHub = () => {
     [guardedListen]
   );
 
+  // 🧹 Listen for room closed (admin + room clients)
+  const onPublicRoomClosed = useCallback(
+    (handler) => guardedListen('public_room:closed_admin', handler),
+    [guardedListen]
+  );
+
   // 👥 Listen for presence updates (unified)
   const onPublicPresenceUpdate = useCallback(
     (handler) => guardedListen('public_presence:update', handler),
@@ -725,6 +734,7 @@ const useSocketHub = () => {
     leavePublicRoom,
     onPublicRoomReady,
     onPublicRoomCreated,
+    onPublicRoomClosed,
     onPublicPresenceUpdate,
     onPublicRoomError,
     onNewConversation,

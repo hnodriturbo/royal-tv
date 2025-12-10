@@ -14,6 +14,10 @@
  * - Development: Always enabled
  */
 
+// 🔐 Load environment variables FIRST (before any imports that use them)
+import { config } from 'dotenv';
+config(); // Loads .env file
+
 /* const isDev = process.env.NODE_ENV !== 'production'; */
 const enableServerSideLogs = process.env.SERVER_LOGS === 'true';
 /* const isLoggingEnabled = isDev || enableServerSideLogs; */
@@ -25,12 +29,10 @@ if (!enableServerSideLogs) {
   console.debug = () => {};
   // ✅ console.error stays active
 }
+// 🛰️ Start Socket.IO server (runs on its own port)
+import './src/lib/server/socketServer.js';
 
-// 🔐 Load environment variables FIRST (before any imports that use them)
-/* import { config } from 'dotenv';
-config(); // Loads .env file */
-
-import './src/lib/server/socketServer.js'; // Your Socket.IO server
+// 🧹 Start expiry sweepers for trials + subscriptions
 import {
   sweepAndExpireSubscriptions,
   sweepAndExpireFreeTrials

@@ -1126,6 +1126,7 @@
         "edit_tooltip": "Breyta skilaboðum",
         "edit_short": "Breyta",
         "edit_error": "Ekki tókst að breyta skilaboðunum, reyndu aftur.",
+        "edit_success": "Skilaboð uppfærð.",
         "delete_title": "Eyða skilaboðum?",
         "delete_description": "Ekki er hægt að afturkalla þessa aðgerð.",
         "delete_confirm": "Eyða skilaboðum",
@@ -1136,7 +1137,14 @@
         "typing_user": "{name} er að skrifa…",
         "typing_admin": "Stjórnandi er að skrifa…",
         "typing_you": "Þú ert að skrifa…",
-        "typing_multiple": "{count} eru að skrifa…"
+        "typing_multiple": "{count} eru að skrifa…",
+        "users": "notendur",
+        "open": "Opna",
+        "admin_button": "Stjórnanda spjall",
+        "admin_subtitle": "Opnaðu mörg spjall í einu",
+        "admin_empty": "Engin opin samtöl ennþá. Notendur birtast hér.",
+        "admin_footer": "Sýn stjórnanda · mörg spjall samtímis.",
+        "generic_error": "Vandamál kom upp í opna spjallinu."
       },
       "errors": {
         "INVALID_ID": "Aðgerðin gat ekki keyrt (ógilt auðkenni).",

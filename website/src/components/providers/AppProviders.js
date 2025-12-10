@@ -28,7 +28,7 @@ import ShowMessages from '@/components/ui/showErrorAndMessages/ShowMessages';
 import LanguageSwitcher from '@/components/languageSwitcher/LanguageSwitcher';
 // 💬 Public live chat widgets (role-based)
 import PublicLiveChatWidget from '@/components/reusableUI/socket/PublicLiveChatWidget';
-// import AdminPublicChatWidget from '@/components/reusableUI/socket/AdminPublicChatWidget';
+import AdminPublicLiveChatWidget from '@/components/reusableUI/socket/AdminPublicLiveChatWidget';
 // ❌ Error Debugger Helper
 import ErrorBoundary from '@/lib/debug/ErrorBoundary';
 
@@ -59,8 +59,8 @@ function AppContent({ children }) {
               </div>
 
               <WhatsAppLogo />
-              {/* 💬 Public chat widget (admin widget temporarily disabled) */}
-              <PublicLiveChatWidget />
+              {/* 💬 Role-based public live chat widget */}
+              {isAdmin ? <AdminPublicLiveChatWidget /> : <PublicLiveChatWidget />}
               <ShowMessages />
             </div>
           </ModalProvider>

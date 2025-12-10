@@ -251,6 +251,52 @@ export default function registerPublicRoomEvents(io, socket, globalState) {
   });
 
   /* =========================================================
+   * 🧹 ROOM CLOSE (SOFT DELETE / ARCHIVE)
+   * =======================================================*/
+  socket.on('public_room:close', async ({ public_conversation_id } = {}) => {
+    if (!isUuid(public_conversation_id)) {
+      console.warn(`[Public Room] ⚠️ Invalid room ID for close: ${public_conversation_id}`);
+      return;
+    }
+
+    try {
+      // 🔎 Fetch conversation to verify existence
+      const existing = await prisma.publicLiveChatConversation.findUnique({
+        where: { public_conversation_id },
+        select: { public_conversation_id: true }
+      });
+
+      if (!existing) {
+        console.warn(
+          `[Public Room] ⚠️ Tried to close non-existing room: ${public_conversation_id}`
+        );
+        return;
+      }
+
+      // 🧹 Optional: mark conversation as closed/archived in future
+      // For now we only notify clients to drop it from UI.
+
+      console.log(`[Public Room] 🧹 Closing room (UI only): ${public_conversation_id}`);
+
+      // 📣 Tell everyone in the room that it is closed
+      io.to(public_conversation_id).emit('public_room:closed', {
+        public_conversation_id
+      });
+
+      // 🔔 Notify all admins so admin widgets can remove this room
+      io.to('admins').emit('public_room:closed_admin', {
+        public_conversation_id
+      });
+    } catch (error) {
+      console.error('[Public Room] ❌ Close failed:', error.message);
+      socket.emit('public_room:error', {
+        code: 'CLOSE_FAILED',
+        message: 'Failed to close public conversation.'
+      });
+    }
+  });
+
+  /* =========================================================
    * 🔌 DISCONNECT CLEANUP
    * =======================================================*/
   socket.on('disconnect', () => {

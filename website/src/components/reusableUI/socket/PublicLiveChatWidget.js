@@ -21,12 +21,13 @@ import clsx from 'clsx';
 import useAppHandlers from '@/hooks/useAppHandlers'; // 🔔 toasts (success/error)
 import useSocketHub from '@/hooks/socket/useSocketHub'; // 🔌 core socket API + helpers
 import usePublicMessageEvents from '@/hooks/socket/usePublicMessageEvents'; // ✉️ public messages
+import usePublicLiveChatModals from '@/hooks/socket/usePublicLiveChatModals'; // 🧩 shared public-chat modals
 import usePublicTypingIndicator from '@/hooks/socket/usePublicTypingIndicator'; // ⌨️ typing indicator
 import usePublicRefreshMessages from '@/hooks/socket/usePublicRefreshMessages'; // 🔄 manual refresh
-import TypingIndicator from '@/components/reusableUI/socket/TypingIndicator'; // 👀 typing UI
+import PublicTypingIndicator from '@/components/reusableUI/socket/PublicTypingIndicator'; // 👀 typing UI (public)
 import useIsAdminOnline from '@/hooks/socket/useIsAdminOnline'; // 🟢 admin presence status
 import { SafeString } from '@/lib/ui/SafeString'; // 🛡️ guard against bad strings
-import useModal from '@/hooks/useModal'; // 🪟 global modal wrapper
+/* import useModal from '@/hooks/useModal'; // 🪟 global modal wrapper */
 
 // 🍪 Cookie names
 // - PUBLIC_CHAT_OPEN_COOKIE: widget open/closed state (UI only)
@@ -54,7 +55,7 @@ function setCookie(cookieName, cookieValue, maxAgeDays = 30) {
 export default function PublicLiveChatWidget() {
   const t = useTranslations(); // 🌍 translations (socket.ui.*)
   const { displayMessage } = useAppHandlers(); // 🔔 toast helper
-  const { openModal, hideModal } = useModal(); // 🪟 modal helper
+  /* const { openModal, hideModal } = useModal(); // 🪟 modal helper */
 
   // 🪟 Widget open/closed (minimize only; room stays joined when open toggles)
   //    SSR-safe: start closed on server, then hydrate from cookie on client
@@ -77,13 +78,6 @@ export default function PublicLiveChatWidget() {
 
   // 🔔 Unread badge when widget is closed and admin replies
   const [unreadBadgeCount, setUnreadBadgeCount] = useState(0);
-
-  // ✏️ Edit state for a single message
-  const [messageBeingEdited, setMessageBeingEdited] = useState(null);
-  const [editDraftMessage, setEditDraftMessage] = useState('');
-
-  // 🗑️ Delete state for a single message
-  const [messageBeingDeleted, setMessageBeingDeleted] = useState(null);
 
   // 🚦 Avoid double-init for conversation creation/restore
   const isInitializingRef = useRef(false);
@@ -117,15 +111,14 @@ export default function PublicLiveChatWidget() {
     onMessageDeleted
   } = usePublicMessageEvents(publicConversationId);
 
+  const { openEditModal, openDeleteModal, openCloseChatModal } = usePublicLiveChatModals({
+    editMessage, // ✏️ reuses same socket edit
+    deleteMessage // 🗑️ reuses same socket delete
+  });
+
   // ⌨️ Typing indicator for this conversation
-  const {
-    isTyping,
-    typingUser,
-    isTypingLocal,
-    handleInputChange,
-    handleInputFocus,
-    handleInputBlur
-  } = usePublicTypingIndicator(publicConversationId);
+  const { handleInputChange, handleInputFocus, handleInputBlur } =
+    usePublicTypingIndicator(publicConversationId);
 
   // 🔄 Manual refresh for this conversation
   const { requestRefresh, onRefreshed } = usePublicRefreshMessages(publicConversationId);
@@ -233,10 +226,11 @@ export default function PublicLiveChatWidget() {
     ensureConversation();
   }, [isWidgetOpen, ensureConversation]);
 
-  // 📡 Listen for new message events (create)
+  // 📡 Listen for message events (create / edit / delete)
   useEffect(() => {
     if (!publicConversationId) return;
 
+    // 📨 New message from server
     const stopReceive = onReceiveMessage((payload) => {
       const receivedMessage = payload?.message || payload; // 🧱 Support { message } or bare message
 
@@ -260,15 +254,6 @@ export default function PublicLiveChatWidget() {
         setUnreadBadgeCount((previousCount) => previousCount + 1);
       }
     });
-
-    return () => {
-      stopReceive && stopReceive();
-    };
-  }, [publicConversationId, onReceiveMessage, isWidgetOpen]);
-
-  // ✏️🗑️ Listen for edit / delete events
-  useEffect(() => {
-    if (!publicConversationId) return;
 
     // ✏️ Edited message
     const stopEdit = onMessageEdited((payload) => {
@@ -298,11 +283,13 @@ export default function PublicLiveChatWidget() {
       );
     });
 
+    // 🧹 Cleanup listeners on unmount / room change
     return () => {
+      stopReceive && stopReceive();
       stopEdit && stopEdit();
       stopDelete && stopDelete();
     };
-  }, [publicConversationId, onMessageEdited, onMessageDeleted]);
+  }, [publicConversationId, onReceiveMessage, onMessageEdited, onMessageDeleted, isWidgetOpen]);
 
   // 🔄 Hook up refresh => replace messages when server responds
   useEffect(() => {
@@ -383,18 +370,8 @@ export default function PublicLiveChatWidget() {
       setUnreadBadgeCount(0);
       return;
     }
-
-    openModal('closePublicChat', {
-      title: t('socket.ui.publicLiveChat.close_title', { defaultValue: 'Close chat?' }),
-      description: t('socket.ui.publicLiveChat.close_description', {
-        defaultValue: 'This will end the current chat session.'
-      }),
-      confirmButtonType: 'danger', // 🔴 use btn-danger mapping
-      confirmButtonText: t('socket.ui.publicLiveChat.close_confirm', {
-        defaultValue: 'Close chat'
-      }),
-      cancelButtonText: t('socket.ui.publicLiveChat.close_cancel', { defaultValue: 'Cancel' }),
-      onConfirm: () => {
+    openCloseChatModal({
+      onConfirmClose: () => {
         try {
           // 🚪 Leave socket room so server forgets last room cookie
           leavePublicRoom(publicConversationId);
@@ -414,147 +391,8 @@ export default function PublicLiveChatWidget() {
         hasRequestedRoomRef.current = false;
         hasInitialRefreshRef.current = false;
 
-        // 🔁 Allow a fresh room on next open
-        isInitializingRef.current = false;
-        hasRequestedRoomRef.current = false;
-        hasInitialRefreshRef.current = false;
-
         // 🍪 Force closed in widget cookie
         setCookie(PUBLIC_CHAT_OPEN_COOKIE, '0');
-
-        hideModal();
-      },
-      onCancel: hideModal
-    });
-  };
-
-  const handleConfirmEdit = useCallback(
-    async (messageToEdit, currentDraft) => {
-      const trimmed = (currentDraft || '').trim();
-      if (!trimmed || !messageToEdit?.public_message_id) return;
-
-      await editMessage(messageToEdit.public_message_id, trimmed);
-
-      setMessageBeingEdited(null);
-      setEditDraftMessage('');
-    },
-    [editMessage]
-  );
-
-  // ✏️ Open edit modal for a specific message
-  const openEditModal = (message) => {
-    if (!message?.public_message_id) return;
-
-    // 🧱 Seed local edit state
-    setMessageBeingEdited(message);
-    setEditDraftMessage(message.message || '');
-
-    openModal('editPublicMessage', {
-      title: t('socket.ui.publicLiveChat.edit_title', { defaultValue: 'Edit message' }),
-      // ℹ️ description optional here; content is the form
-      customContent: () => (
-        <div className="space-y-3">
-          {/* ℹ️ Info line */}
-          <p className="text-sm opacity-80">
-            {t('socket.ui.publicLiveChat.edit_hint', {
-              defaultValue: 'Update the message and confirm to save changes.'
-            })}
-          </p>
-          {/* 📝 Message textarea */}
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold">
-              {t('socket.ui.publicLiveChat.edit_message_label', {
-                defaultValue: 'Message'
-              })}
-            </label>
-            <textarea
-              rows={4}
-              defaultValue={message.message || ''}
-              onChange={(event) => setEditDraftMessage(event.target.value)}
-              className="w-full rounded-md border border-slate-500 bg-slate-900 text-sm text-white px-2 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
-        </div>
-      ),
-      confirmButtonType: 'info',
-      confirmButtonText: t('socket.ui.publicLiveChat.edit_confirm', {
-        defaultValue: 'Save changes'
-      }),
-      cancelButtonText: t('socket.ui.publicLiveChat.edit_cancel', { defaultValue: 'Cancel' }),
-      onConfirm: () => handleConfirmEdit(message, editDraftMessage),
-
-      /*       onConfirm: async () => {
-        const trimmed = editDraftMessage.trim();
-        if (!trimmed || !message.public_message_id) return;
-
-        try {
-          // ✏️ Call socket helper to edit message
-          await editMessage(message.public_message_id, trimmed);
-
-          // 🔄 Immediately re-fetch messages for this room so UI matches DB
-          if (publicConversationId) {
-            requestRefresh();
-          }
-
-          // 🧽 Clear local edit state after success
-          setMessageBeingEdited(null);
-          setEditDraftMessage('');
-        } catch (error) {
-          console.error('[PublicLiveChatWidget] ❌ Error editing message:', error);
-          displayMessage(
-            t('socket.ui.publicLiveChat.edit_error', {
-              defaultValue: 'Failed to edit message, please try again.'
-            }),
-            'error'
-          );
-        }
-      }, */
-      onCancel: () => {
-        setMessageBeingEdited(null);
-        setEditDraftMessage('');
-        hideModal();
-      }
-    });
-  };
-
-  // 🗑️ Open delete confirmation modal for a specific message
-  const openDeleteModal = (message) => {
-    if (!message?.public_message_id) return;
-
-    setMessageBeingDeleted(message);
-
-    openModal('deletePublicMessage', {
-      title: t('socket.ui.publicLiveChat.delete_title', { defaultValue: 'Delete message?' }),
-      description: t('socket.ui.publicLiveChat.delete_description', {
-        defaultValue: 'This action cannot be undone.'
-      }),
-      confirmButtonType: 'danger',
-      confirmButtonText: t('socket.ui.publicLiveChat.delete_confirm', {
-        defaultValue: 'Delete message'
-      }),
-      cancelButtonText: t('socket.ui.publicLiveChat.delete_cancel', { defaultValue: 'Cancel' }),
-      onConfirm: async () => {
-        if (!message.public_message_id) return;
-
-        try {
-          // 🗑️ Call socket helper to delete message
-          await deleteMessage(message.public_message_id);
-
-          // 🧽 Clear local delete state
-          setMessageBeingDeleted(null);
-        } catch (error) {
-          console.error('[PublicLiveChatWidget] ❌ Error deleting message:', error);
-          displayMessage(
-            t('socket.ui.publicLiveChat.delete_error', {
-              defaultValue: 'Failed to delete message, please try again.'
-            }),
-            'error'
-          );
-        }
-      },
-      onCancel: () => {
-        setMessageBeingDeleted(null);
-        hideModal();
       }
     });
   };
@@ -726,12 +564,7 @@ export default function PublicLiveChatWidget() {
 
           {/* 👀 Typing indicator */}
           <div className="h-5 flex items-center justify-center bg-slate-950 px-2">
-            <TypingIndicator
-              isTyping={isTyping}
-              isTypingLocal={isTypingLocal}
-              typingUser={typingUser}
-              showLocalForDebug={true}
-            />
+            <PublicTypingIndicator public_conversation_id={publicConversationId} />
           </div>
 
           {/* ✍️ Input + send + refresh */}

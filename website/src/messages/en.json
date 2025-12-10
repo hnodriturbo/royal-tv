@@ -1129,6 +1129,7 @@
         "edit_tooltip": "Edit message",
         "edit_short": "Edit",
         "edit_error": "Failed to edit message, please try again.",
+        "edit_success": "Message updated successfully.",
         "delete_title": "Delete message?",
         "delete_description": "This action cannot be undone.",
         "delete_confirm": "Delete message",
@@ -1139,7 +1140,14 @@
         "typing_user": "{name} is typing…",
         "typing_admin": "Admin is typing…",
         "typing_you": "You are typing…",
-        "typing_multiple": "{count} people are typing…"
+        "typing_multiple": "{count} people are typing…",
+        "users": "users",
+        "open": "Open",
+        "admin_button": "Admin Live Chat",
+        "admin_subtitle": "Open multiple rooms at once",
+        "admin_empty": "No public conversations yet. Users will appear here.",
+        "admin_footer": "Admin view · multiple rooms supported.",
+        "generic_error": "There was a problem with the public chat."
       },
       "errors": {
         "INVALID_ID": "That action couldn’t run (invalid id).",

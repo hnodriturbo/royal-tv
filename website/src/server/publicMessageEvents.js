@@ -162,16 +162,6 @@ export default function registerPublicMessageEvents(io, socket) {
    * ✏️ EDIT MESSAGE
    * =======================================================*/
   socket.on('public_message:edit', async ({ public_message_id, message } = {}) => {
-    console.log('[Public Messages] ✏️ Incoming edit request:', {
-      public_message_id,
-      hasMessage: typeof message === 'string',
-      socketUser: {
-        role: socket.userData?.role,
-        user_id: socket.userData?.user_id,
-        public_identity_id: socket.userData?.public_identity_id
-      }
-    });
-
     const messageText = cleanMessage(message);
 
     // ❌ Validation
