@@ -53,7 +53,7 @@ function setCookie(cookieName, cookieValue, maxAgeDays = 30) {
 }
 
 export default function PublicLiveChatWidget() {
-  const t = useTranslations(); // 🌍 translations (socket.ui.*)
+  const t = useTranslations(); // 🌍 translations (socket.ui.publicLiveChat.*)
   const { displayMessage } = useAppHandlers(); // 🔔 toast helper
   /* const { openModal, hideModal } = useModal(); // 🪟 modal helper */
 
@@ -76,6 +76,10 @@ export default function PublicLiveChatWidget() {
   // ✍️ Local draft for new message
   const [draftMessage, setDraftMessage] = useState('');
 
+  // 🚫 Track closed conversation state so users cannot keep sending
+  const [isConversationClosed, setIsConversationClosed] = useState(false);
+  const [adminHasLeft, setAdminHasLeft] = useState(false);
+
   // 🔔 Unread badge when widget is closed and admin replies
   const [unreadBadgeCount, setUnreadBadgeCount] = useState(0);
 
@@ -96,6 +100,9 @@ export default function PublicLiveChatWidget() {
     createPublicRoom,
     markPublicMessagesRead,
     onPublicRoomReady, // 🧵 per-room mark_read helper (admin+user) + ready event
+    onPublicRoomClosedInRoom,
+    onPublicRoomUserLeft,
+    onPublicRoomError,
     onPublicMessageError,
     enablePublicCookieSync,
     getLastPublicRoomFromCookie
@@ -153,6 +160,12 @@ export default function PublicLiveChatWidget() {
     hasInitialRefreshRef.current = false;
   }, []);
 
+  // 🔁 Reset closed/admin flags whenever the conversation changes
+  useEffect(() => {
+    setIsConversationClosed(false);
+    setAdminHasLeft(false);
+  }, [publicConversationId]);
+
   // 🧠 Initialize or restore the public conversation
   const ensureConversation = useCallback(async () => {
     // 🛑 Busy initializing
@@ -204,6 +217,60 @@ export default function PublicLiveChatWidget() {
       stopError && stopError();
     };
   }, [onPublicMessageError, displayMessage, t]);
+
+  // ❗ Surface public room socket errors (join/close guards)
+  useEffect(() => {
+    if (!onPublicRoomError) return;
+    const stopRoomError = onPublicRoomError((payload) => {
+      if (payload?.code !== 'CONVERSATION_CLOSED') return;
+      if (
+        payload?.public_conversation_id &&
+        payload.public_conversation_id !== publicConversationId
+      ) {
+        return;
+      }
+      setIsConversationClosed(true);
+      setAdminHasLeft(true);
+    });
+    return () => {
+      stopRoomError && stopRoomError();
+    };
+  }, [onPublicRoomError, publicConversationId]);
+
+  // 🧏 Listen for admin leaving or conversation closing in-room
+  useEffect(() => {
+    if (!publicConversationId) return;
+
+    const stopClosed = onPublicRoomClosedInRoom?.((payload) => {
+      if (payload?.public_conversation_id !== publicConversationId) return;
+      setIsConversationClosed(true);
+      setAdminHasLeft(true);
+      leavePublicRoom(publicConversationId);
+      setDraftMessage('');
+    });
+
+    const stopUserLeft = onPublicRoomUserLeft?.((payload) => {
+      if (payload?.public_conversation_id !== publicConversationId) return;
+      if (payload?.role === 'admin') {
+        // 🚫 Admin left entirely -> freeze input for visitors
+        setAdminHasLeft(true);
+        setIsConversationClosed(true);
+        setDraftMessage('');
+        handleInputBlur();
+      }
+    });
+
+    return () => {
+      stopClosed && stopClosed();
+      stopUserLeft && stopUserLeft();
+    };
+  }, [
+    publicConversationId,
+    onPublicRoomClosedInRoom,
+    onPublicRoomUserLeft,
+    leavePublicRoom,
+    handleInputBlur
+  ]);
 
   // 🧷 Keep widget open state in cookie
   useEffect(() => {
@@ -332,7 +399,7 @@ export default function PublicLiveChatWidget() {
   // 📨 Send handler
   const handleSend = useCallback(() => {
     const trimmed = draftMessage.trim();
-    if (!trimmed || !publicConversationId) return;
+    if (!trimmed || !publicConversationId || isConversationClosed || adminHasLeft) return;
 
     // ✉️ Send via socket helper
     sendMessage(trimmed);
@@ -340,10 +407,18 @@ export default function PublicLiveChatWidget() {
     // 🧽 Clear draft and typing
     setDraftMessage('');
     handleInputBlur();
-  }, [draftMessage, publicConversationId, sendMessage, handleInputBlur]);
+  }, [
+    draftMessage,
+    publicConversationId,
+    sendMessage,
+    handleInputBlur,
+    isConversationClosed,
+    adminHasLeft
+  ]);
 
   // ⌨️ Input change handler (wired into typing indicator hook)
   const handleInput = (event) => {
+    if (adminHasLeft || isConversationClosed) return;
     // ✍️ Let typing hook manage isTyping/user notification
     const updatedValue = handleInputChange(event);
     setDraftMessage(updatedValue);
@@ -351,6 +426,7 @@ export default function PublicLiveChatWidget() {
 
   // ↩️ Enter-to-send (Shift+Enter creates newline)
   const handleKeyDown = (event) => {
+    if (adminHasLeft || isConversationClosed) return;
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       handleSend();
@@ -368,6 +444,8 @@ export default function PublicLiveChatWidget() {
       // 🧹 Nothing to clean, just close widget UI
       setIsWidgetOpen(false);
       setUnreadBadgeCount(0);
+      setIsConversationClosed(false);
+      setAdminHasLeft(false);
       return;
     }
     openCloseChatModal({
@@ -385,6 +463,8 @@ export default function PublicLiveChatWidget() {
         setDraftMessage('');
         setUnreadBadgeCount(0);
         setIsWidgetOpen(false);
+        setIsConversationClosed(false);
+        setAdminHasLeft(false);
 
         // 🔁 Allow a fresh room initialization on next open
         isInitializingRef.current = false;
@@ -399,6 +479,9 @@ export default function PublicLiveChatWidget() {
 
   // 🧮 Helper: own message (user/guest) vs admin (for styling + actions)
   const isOwnMessage = (message) => !message.sender_is_admin;
+
+  // 🚫 Lock interactions when admin ends the chat
+  const isInteractionLocked = adminHasLeft || isConversationClosed;
 
   // 🧱 Widget layout (floating bottom-left)
   return (
@@ -475,6 +558,22 @@ export default function PublicLiveChatWidget() {
             </div>
           </div>
 
+          {adminHasLeft && (
+            <div className="px-3 py-2 text-xs text-amber-200 bg-amber-500/10 border-b border-amber-400/40">
+              {t('socket.ui.publicLiveChat.admin_left_notice', {
+                defaultValue: 'An admin closed this chat. Start a new one if you need more help.'
+              })}
+            </div>
+          )}
+
+          {isConversationClosed && (
+            <div className="px-3 py-2 text-xs text-rose-200 bg-rose-500/10 border-b border-rose-400/40">
+              {t('socket.ui.publicLiveChat.closed_notice_user', {
+                defaultValue: 'This conversation is closed. We will not receive new messages.'
+              })}
+            </div>
+          )}
+
           {/* 💬 Messages */}
           <div
             ref={chatBoxRef}
@@ -523,7 +622,7 @@ export default function PublicLiveChatWidget() {
                       </div>
 
                       {/* ✏️🗑️ Actions (only for own messages) */}
-                      {isOwnMessage(message) && (
+                      {isOwnMessage(message) && !isInteractionLocked && (
                         <div className="flex items-center gap-2 text-[10px] text-slate-400">
                           <button
                             type="button"
@@ -577,7 +676,8 @@ export default function PublicLiveChatWidget() {
                 onFocus={handleInputFocus}
                 onBlur={handleInputBlur}
                 onKeyDown={handleKeyDown}
-                className="flex-1 resize-none rounded-lg px-2 py-2 text-sm text-black placeholder:text-slate-500 border border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                disabled={!publicConversationId || isConversationClosed || adminHasLeft}
+                className="flex-1 resize-none rounded-lg px-2 py-2 text-sm text-black placeholder:text-slate-500 border border-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder={t('socket.ui.publicLiveChat.input_placeholder', {
                   defaultValue: 'Type your message…'
                 })}
@@ -585,7 +685,12 @@ export default function PublicLiveChatWidget() {
               <button
                 type="button"
                 onClick={handleSend}
-                disabled={!draftMessage.trim() || !publicConversationId}
+                disabled={
+                  !draftMessage.trim() ||
+                  !publicConversationId ||
+                  isConversationClosed ||
+                  adminHasLeft
+                }
                 className="px-3 py-2 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
               >
                 {t('socket.ui.publicLiveChat.send', { defaultValue: 'Send' })}
@@ -601,10 +706,16 @@ export default function PublicLiveChatWidget() {
               <button
                 type="button"
                 onClick={() => {
-                  if (!publicConversationId) return;
+                  if (!publicConversationId || isInteractionLocked) return;
                   requestRefresh();
                 }}
-                className="text-emerald-300 hover:text-emerald-100 underline-offset-2 hover:underline"
+                disabled={isInteractionLocked}
+                className={clsx(
+                  'text-emerald-300 underline-offset-2 transition-colors',
+                  isInteractionLocked
+                    ? 'opacity-60 cursor-not-allowed'
+                    : 'hover:text-emerald-100 hover:underline'
+                )}
               >
                 {t('socket.ui.publicLiveChat.refresh', { defaultValue: 'Refresh' })}
               </button>

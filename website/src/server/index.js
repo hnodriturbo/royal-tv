@@ -49,6 +49,7 @@ import createCookieUtils from './cookieEvents.js';
 
 // 💾 Prisma for database queries
 import prisma from '../lib/core/prisma.js';
+import { get } from 'node:http';
 
 // ---------------------------------------------------------
 // 🧩 Small helpers (keep it beginner-friendly)
@@ -60,14 +61,18 @@ const pickValue = (value) => {
   return value;
 };
 
-// 🔑 Stable presence key (guest ⇒ cookie public_identity_id, user/admin ⇒ user_id)
-const getPresenceIdentityKey = (snapshot) =>
-  snapshot?.role === 'guest' ? snapshot.public_identity_id : snapshot.user_id;
+// 📝 Log online users (human-friendly, no IDs)
+const logOnlineUsers = (label, users = []) => {
+  const names = users.map(
+    (user) => user?.name || user?.username || (user?.role === 'guest' ? 'Guest' : user?.user_id)
+  );
 
-// 📝 Pretty presence log (count + ids only)
-const logOnlineUsers = (label, list) => {
-  const ids = (list || []).map((user) => getPresenceIdentityKey(user));
-  console.log(`👥 ${label} → count:${ids.length} ids:${ids.join(', ') || '—'}`);
+  console.log(`👥 ${label} → count:${users.length} → names: ${names.join(', ') || '—'}`);
+};
+
+// 🔑 Stable identity (guest => public_identity_id, user/admin => user_id)
+const getPresenceIdentityKey = (snapshot) => {
+  return snapshot?.role === 'guest' ? snapshot?.public_identity_id : snapshot?.user_id;
 };
 
 // 🛡️ Ensure a value is a Set (convert arrays/objects defensively)
@@ -89,12 +94,10 @@ const connectionHandler = (io, socket, globalState) => {
 
   // 🗺️ Ensure shapes:
   //    • onlineUsers: array of snapshots
-  //    • publicLobby: Set of socket IDs
   //    • activeUsersInPublicRoom: { [roomId]: Set<socketId> }
   //    • activeUsersInLiveRoom: keep your existing array-of-snapshots model for private chat
-  globalState.onlineUsers = Array.isArray(globalState.onlineUsers) ? globalState.onlineUsers : [];
 
-  globalState.publicLobby = ensureSet(globalState.publicLobby);
+  globalState.onlineUsers = Array.isArray(globalState.onlineUsers) ? globalState.onlineUsers : [];
 
   globalState.activeUsersInPublicRoom =
     globalState.activeUsersInPublicRoom && typeof globalState.activeUsersInPublicRoom === 'object'
@@ -150,10 +153,12 @@ const connectionHandler = (io, socket, globalState) => {
   // ---------------------------------------------------------
   // 👥 Add the user — de-dupe by identity key (guest cookie or user_id)
   // ---------------------------------------------------------
+  // ✅ CONNECT: de-dupe by identity only
   globalState.onlineUsers = globalState.onlineUsers.filter(
     (existing) => getPresenceIdentityKey(existing) !== getPresenceIdentityKey(socket.userData)
   );
-  globalState.onlineUsers.push({ ...socket.userData }); // ➕ add snapshot
+  // ➕ Push new snapshot of the userData to onlineUsers
+  globalState.onlineUsers.push({ ...socket.userData });
 
   // 📝 Log presence after add
   logOnlineUsers('onlineUsers (after connect)', globalState.onlineUsers);
@@ -161,76 +166,15 @@ const connectionHandler = (io, socket, globalState) => {
   // 🛎️ Join per-user room for targeted emits
   socket.join(user_id);
 
-  // 👑 Admins join a shared room for broadcasts
+  // ---------------------------------------------------------
+  // 👑 Admin special handling
+  // ---------------------------------------------------------
   if (socket.userData.role === 'admin') {
+    console.log(`👑 Admin connected: ${socket.userData.name} (${socket.userData.role})`);
+
     socket.join('admins');
-    console.log(`👑 Admin joined 'admins': ${socket.userData.name} (${socket.userData.user_id})`);
 
-    // 🔄 AUTO-JOIN ALL EXISTING PUBLIC ROOMS (critical for admin to see conversations)
-    (async () => {
-      try {
-        const activeRooms = await prisma.publicLiveChatConversation.findMany({
-          where: { read: false },
-          select: {
-            public_conversation_id: true,
-            subject: true,
-            owner_id: true,
-            owner_guest_id: true,
-            createdAt: true
-          },
-          orderBy: { createdAt: 'desc' }
-        });
-
-        for (const room of activeRooms) {
-          const roomId = room.public_conversation_id;
-
-          // Join Socket.IO room
-          socket.join(roomId);
-
-          // Add to tracking
-          if (!globalState.activeUsersInPublicRoom[roomId]) {
-            globalState.activeUsersInPublicRoom[roomId] = new Set();
-          }
-          globalState.activeUsersInPublicRoom[roomId].add(socket.id);
-
-          // Fetch recent messages for this room (last 50)
-          const messages = await prisma.publicLiveChatMessage.findMany({
-            where: { public_conversation_id: roomId },
-            orderBy: { createdAt: 'asc' },
-            take: 50,
-            include: {
-              user: {
-                select: { name: true, username: true }
-              }
-            }
-          });
-
-          // Notify admin about this existing conversation WITH messages
-          socket.emit('public_room:new_conversation', {
-            public_conversation_id: roomId,
-            subject: room.subject || 'Public Chat',
-            owner_name: 'User', // Will be enriched by client
-            owner_role: room.owner_id ? 'user' : 'guest',
-            createdAt: room.createdAt,
-            messages: messages.map((msg) => ({
-              public_message_id: msg.public_message_id,
-              public_conversation_id: msg.public_conversation_id,
-              message: msg.message,
-              sender_user_id: msg.sender_user_id || null,
-              sender_guest_id: msg.sender_guest_id || null,
-              sender_is_admin: !!msg.sender_is_admin,
-              sender_is_bot: !!msg.sender_is_bot,
-              createdAt: msg.createdAt,
-              updatedAt: msg.updatedAt
-            }))
-          });
-        }
-
-        console.log(`👑 Admin auto-joined ${activeRooms.length} existing rooms with messages`);
-      } catch (error) {
-        console.error('❌ Failed to auto-join admin to existing rooms:', error.message);
-      }
-    })();
+    console.log(`👑 Admin joined 'admins': ${socket.userData.name} (${socket.userData.role})`);
   }
 
   // ---------------------------------------------------------
@@ -284,44 +228,31 @@ const connectionHandler = (io, socket, globalState) => {
   // 🔌 Cleanup on disconnect (single handler — centralized)
   // ---------------------------------------------------------
   socket.on('disconnect', (reason) => {
-    // 1) 👥 Remove from onlineUsers (by identity key) and broadcast
+    // 👥 Remove from onlineUsers (by identity key) and broadcast
     const identityToRemove = getPresenceIdentityKey(socket.userData);
     globalState.onlineUsers = globalState.onlineUsers.filter(
       (user) => getPresenceIdentityKey(user) !== identityToRemove
     );
+
     io.emit('online_users_update', globalState.onlineUsers);
     logOnlineUsers('onlineUsers (after disconnect)', globalState.onlineUsers);
 
-    // 2) 🏢 Remove from PUBLIC lobby Set (by socket.id) and broadcast presence
-    if (globalState.publicLobby instanceof Set) {
-      const beforeSize = globalState.publicLobby.size;
-      globalState.publicLobby.delete(socket.id); // ➖ remove this socket
-      if (globalState.publicLobby.size !== beforeSize) {
-        io.to('PUBLIC_LOBBY').emit('public_presence:update', {
-          room_id: 'PUBLIC_LOBBY',
-          users: usersFromSet(io, globalState.publicLobby)
-        });
-      }
-    } else {
-      // 🧯 fallback if someone mutated it elsewhere
-      globalState.publicLobby = ensureSet(globalState.publicLobby);
+    // 💬 Remove from each PUBLIC room Set (by socket.id) and broadcast updates
+    for (const publicRoomId of Object.keys(globalState.activeUsersInPublicRoom)) {
+      const socketIdSet = ensureSet(globalState.activeUsersInPublicRoom[publicRoomId]); // 🛡️ Always a Set
+      const hadSocket = socketIdSet.delete(socket.id); // ➖ Remove this connection from room presence
+
+      globalState.activeUsersInPublicRoom[publicRoomId] = socketIdSet; // 🧷 Store back (normalized)
+
+      if (!hadSocket) continue; // ⏩ No change, skip broadcast
+
+      io.to(publicRoomId).emit('public_presence:update', {
+        room_id: publicRoomId, // 🏷️ Room identity
+        users: usersFromSet(io, socketIdSet) // 👥 Current members as user snapshots
+      });
     }
 
-    // 3) 💬 Remove from each PUBLIC room Set (by socket.id) and broadcast
-    for (const roomId of Object.keys(globalState.activeUsersInPublicRoom)) {
-      const set = ensureSet(globalState.activeUsersInPublicRoom[roomId]);
-      const beforeSize = set.size;
-      set.delete(socket.id);
-      globalState.activeUsersInPublicRoom[roomId] = set;
-      if (set.size !== beforeSize) {
-        io.to(roomId).emit('public_presence:update', {
-          room_id: roomId,
-          users: usersFromSet(io, set)
-        });
-      }
-    }
-
-    // 4) 🎈 PRIVATE live chat presence (keep array-of-snapshots model)
+    // 🎈 PRIVATE live chat presence (keep array-of-snapshots model)
     for (const roomId of Object.keys(globalState.activeUsersInLiveRoom)) {
       const before = Array.isArray(globalState.activeUsersInLiveRoom[roomId])
         ? globalState.activeUsersInLiveRoom[roomId]

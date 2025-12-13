@@ -1,11 +1,18 @@
+/**
+ * 🍪 Cookie utilities for Socket.IO events
+ * - Read cookies from socket handshake
+ * - Ask client to set/clear cookies via events
+ * - Used for public live chat identity, last room, locale
+ */
+
 // 🧷 Cookie names (constants for consistency)
 export const COOKIE_PUBLIC_ID = 'public_identity_id';
 export const COOKIE_LAST_ROOM = 'public_last_conversation_id';
 export const COOKIE_LOCALE = 'NEXT_LOCALE';
 
 // 📡 Events to ask client to manage cookies
-export const EV_COOKIE_SET_LAST_ROOM = 'public_cookie:set_last_room';
-export const EV_COOKIE_CLEAR_LAST_ROOM = 'public_cookie:clear_last_room';
+export const EVENT_COOKIE_SET_LAST_ROOM = 'public_cookie:set_last_room';
+export const EVENT_COOKIE_CLEAR_LAST_ROOM = 'public_cookie:clear_last_room';
 
 /**
  * 🔎 Read a cookie from the raw "cookie" header string
@@ -23,7 +30,9 @@ function readCookie(cookieHeader, cookieName) {
 
     if (key === cookieName) {
       try {
-        return decodeURIComponent(rawValue);
+        const decodedValue = decodeURIComponent(rawValue);
+        console.log('Decoded cookie value:', decodedValue);
+        return decodedValue;
       } catch {
         return rawValue;
       }
@@ -69,7 +78,7 @@ export function createCookieUtils({ cookieHeader, socket }) {
     // 📝 Ask client to remember last room (client sets cookie)
     rememberLastRoom: (public_conversation_id, maxAgeDays = 14) => {
       if (!socket) return;
-      socket.emit(EV_COOKIE_SET_LAST_ROOM, {
+      socket.emit(EVENT_COOKIE_SET_LAST_ROOM, {
         cookieName: COOKIE_LAST_ROOM,
         public_conversation_id,
         maxAgeDays
@@ -79,7 +88,7 @@ export function createCookieUtils({ cookieHeader, socket }) {
     // 🧽 Ask client to forget last room (client clears cookie)
     forgetLastRoom: () => {
       if (!socket) return;
-      socket.emit(EV_COOKIE_CLEAR_LAST_ROOM, {
+      socket.emit(EVENT_COOKIE_CLEAR_LAST_ROOM, {
         cookieName: COOKIE_LAST_ROOM
       });
     }

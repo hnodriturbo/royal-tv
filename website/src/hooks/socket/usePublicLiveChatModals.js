@@ -176,6 +176,7 @@ export default function usePublicLiveChatModals({ editMessage, deleteMessage }) 
         description: t('socket.ui.publicLiveChat.close_description', {
           defaultValue: 'This will end the current chat session.'
         }),
+        overlayClassName: 'z-[100050]',
         confirmButtonType: 'danger', // 🔴 Same style as before
         confirmButtonText: t('socket.ui.publicLiveChat.close_confirm', {
           defaultValue: 'Close chat'

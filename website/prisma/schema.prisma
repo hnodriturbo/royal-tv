@@ -213,6 +213,7 @@ model PublicLiveChatConversation {
   owner_guest_id         String?
   subject                String?
   read                   Boolean  @default(false)
+  is_closed              Boolean  @default(false)
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 

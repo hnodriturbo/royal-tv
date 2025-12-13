@@ -6,10 +6,13 @@ import bcrypt from 'bcryptjs';
 import { headers, cookies } from 'next/headers';
 
 async function resolveLocaleFromHeadersOrCookie() {
-  const h = await headers();
-  const c = await cookies();
+  const headers = await headers();
+  const cookies = await cookies();
   const hinted =
-    h.get('x-locale') || h.get('accept-language') || c.get('NEXT_LOCALE')?.value || 'en';
+    headers.get('x-locale') ||
+    headers.get('accept-language') ||
+    cookies.get('NEXT_LOCALE')?.value ||
+    'en';
   const lower = String(hinted).toLowerCase();
   return lower.startsWith('is') ? 'is' : 'en';
 }

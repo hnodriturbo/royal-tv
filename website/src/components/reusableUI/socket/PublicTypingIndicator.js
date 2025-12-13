@@ -1,57 +1,46 @@
 'use client';
+
 /**
  * PublicTypingIndicator.js
  * ========================
- * 👀 Typing indicator wired to public live chat socket events
- * - Uses usePublicTypingIndicator for real-time typing state
- * - Renders i18n-aware messages for user/admin/you
+ * 👀 Show public live chat typing status (public_message:user_typing)
+ * - Reads real-time typing state from usePublicTypingIndicator()
+ * - Renders localized typing labels for admin/user/you
  */
 
-import { useTranslations } from 'next-intl';
-import usePublicTypingIndicator from '@/hooks/socket/usePublicTypingIndicator';
+import { useTranslations } from 'next-intl'; // 🌐 i18n hook
+import usePublicTypingIndicator from '@/hooks/socket/usePublicTypingIndicator'; // ⌨️ Public typing hook
 
 export default function PublicTypingIndicator({ public_conversation_id, className = '' }) {
-  const t = useTranslations(); // 🌍 socket.ui.publicLiveChat.*
-  const { isTyping, typingUser, isTypingLocal } = usePublicTypingIndicator(public_conversation_id);
+  const t = useTranslations(); // 🌍 translations (socket.ui.publicLiveChat.*)
+  const { isTyping, typingUser, isTypingLocal } = usePublicTypingIndicator(public_conversation_id); // 🔌
 
   // 🧱 Keep layout stable when nothing is happening
   if (!isTyping && !isTypingLocal) {
-    return <div className={`min-h-[20px] ${className}`} />;
+    return <div className={`min-h-[20px] ${className}`} />; // 📐 Preserve spacing
   }
 
-  let label = '';
+  let label = ''; // 🏷️ What I show to the user
 
-  // 👥 Remote user is typing (data from public_message:user_typing)
-  if (isTyping && typingUser) {
-    const name = typingUser.name || typingUser.username || 'User';
+  // 👥 Remote user is typing (server sends typingUser in payload)
+  if (isTyping) {
+    const name = typingUser?.name || typingUser?.username || 'User'; // 🧑‍💬 Friendly name fallback
 
-    if (typingUser.role === 'admin') {
+    if (typingUser?.role === 'admin') {
       // 🧑‍💼 Admin is typing
-      label = t('socket.ui.publicLiveChat.typing_admin', {
-        defaultValue: 'Admin is typing…'
-      });
+      label = t('socket.ui.publicLiveChat.typing_admin') || 'Admin is typing…'; // 🛟 Safe fallback
     } else {
-      // 👤 Named user/guest is typing
-      label = t('socket.ui.publicLiveChat.typing_user', {
-        name,
-        defaultValue: `${name} is typing…`
-      });
+      // 👤 User/guest is typing
+      label = t('socket.ui.publicLiveChat.typing_user', { name }) || `${name} is typing…`; // 🛟 Safe fallback
     }
-  } else if (isTyping && !typingUser) {
-    // 🧩 Fallback when server did not send user object
-    label = t('socket.ui.publicLiveChat.typing_user', {
-      name: 'User',
-      defaultValue: 'User is typing…'
-    });
   } else if (isTypingLocal) {
-    // 🧑 You are typing
-    label = t('socket.ui.publicLiveChat.typing_you', {
-      defaultValue: 'You are typing…'
-    });
+    // 🫵 Local typing (optional UI hint)
+    label = t('socket.ui.publicLiveChat.typing_you') || 'You are typing…'; // 🛟 Safe fallback
   }
 
+  // 🧱 Keep layout stable if label is empty for any reason
   if (!label) {
-    return <div className={`min-h-[20px] ${className}`} />;
+    return <div className={`min-h-[20px] ${className}`} />; // 📐 Preserve spacing
   }
 
   return (

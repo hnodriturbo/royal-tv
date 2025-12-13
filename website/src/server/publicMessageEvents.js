@@ -102,13 +102,20 @@ export default function registerPublicMessageEvents(io, socket) {
       // ✅ Verify room exists
       const roomExists = await prisma.publicLiveChatConversation.findUnique({
         where: { public_conversation_id },
-        select: { public_conversation_id: true }
+        select: { public_conversation_id: true, is_closed: true }
       });
 
       if (!roomExists) {
         return socket.emit('public_message:error', {
           code: 'ROOM_NOT_FOUND',
           message: 'Room does not exist'
+        });
+      }
+
+      if (roomExists.is_closed) {
+        return socket.emit('public_message:error', {
+          code: 'CONVERSATION_CLOSED',
+          message: 'This conversation has been closed.'
         });
       }
 
@@ -199,6 +206,18 @@ export default function registerPublicMessageEvents(io, socket) {
         });
       }
 
+      const existingConversation = await prisma.publicLiveChatConversation.findUnique({
+        where: { public_conversation_id: existing.public_conversation_id },
+        select: { is_closed: true }
+      });
+
+      if (existingConversation?.is_closed) {
+        return socket.emit('public_message:error', {
+          code: 'CONVERSATION_CLOSED',
+          message: 'This conversation has been closed.'
+        });
+      }
+
       // 🔐 Check permissions
       if (!canModifyMessage(existing)) {
         console.warn('[Public Messages] ⛔ Edit denied by canModifyMessage:', {
@@ -263,6 +282,18 @@ export default function registerPublicMessageEvents(io, socket) {
         return socket.emit('public_message:error', {
           code: 'MESSAGE_NOT_FOUND',
           message: 'Message not found'
+        });
+      }
+
+      const conversation = await prisma.publicLiveChatConversation.findUnique({
+        where: { public_conversation_id: existing.public_conversation_id },
+        select: { is_closed: true }
+      });
+
+      if (conversation?.is_closed) {
+        return socket.emit('public_message:error', {
+          code: 'CONVERSATION_CLOSED',
+          message: 'This conversation has been closed.'
         });
       }
 

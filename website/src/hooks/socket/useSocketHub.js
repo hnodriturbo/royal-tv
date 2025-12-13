@@ -34,6 +34,10 @@ const useSocketHub = () => {
   // 2️⃣ Guarded Listen: queue if not connected
   const guardedListen = useCallback(
     (event, handler) => {
+      if (typeof handler !== 'function') {
+        console.warn(`⚠️ [SOCKET HUB] Listen "${event}" ignored (handler is not a function).`);
+        return () => {};
+      }
       if (!socket || !socketConnected) {
         // 🛑 Not connected or socket not defined: queue listen and warn
         console.warn(`⚠️ [SOCKET HUB] Listen "${event}" queued (waiting for connection)`);
@@ -357,13 +361,7 @@ const useSocketHub = () => {
     [guardedListen]
   );
 
-  /* =============== 🏢 PUBLIC LOBBY & ROOMS (COMPLETE) =============== */
-
-  // 🛋️ Join the public lobby
-  const joinPublicLobby = useCallback(() => guardedEmit('public_lobby:join'), [guardedEmit]);
-
-  // 🛋️ Leave the public lobby
-  const leavePublicLobby = useCallback(() => guardedEmit('public_lobby:leave'), [guardedEmit]);
+  /* =============== 🏢 PUBLIC LIVE CHAT ROOMS =============== */
 
   // 🏠 Create a new public room
   const createPublicRoom = useCallback(
@@ -384,6 +382,12 @@ const useSocketHub = () => {
     [guardedEmit]
   );
 
+  // 🧹 Close/archive a public conversation (admin only)
+  const closePublicConversation = useCallback(
+    (public_conversation_id) => guardedEmit('public_room:close', { public_conversation_id }),
+    [guardedEmit]
+  );
+
   // 🟢 Listen for room ready event
   const onPublicRoomReady = useCallback(
     (handler) => guardedListen('public_room:ready', handler),
@@ -399,6 +403,18 @@ const useSocketHub = () => {
   // 🧹 Listen for room closed (admin + room clients)
   const onPublicRoomClosed = useCallback(
     (handler) => guardedListen('public_room:closed_admin', handler),
+    [guardedListen]
+  );
+
+  // 🧹 Listen for room closed broadcasts (all occupants)
+  const onPublicRoomClosedInRoom = useCallback(
+    (handler) => guardedListen('public_room:closed', handler),
+    [guardedListen]
+  );
+
+  // 👋 Listen for participants leaving
+  const onPublicRoomUserLeft = useCallback(
+    (handler) => guardedListen('public_room:user_left', handler),
     [guardedListen]
   );
 
@@ -726,15 +742,16 @@ const useSocketHub = () => {
     setLocale,
     onLocaleChanged,
 
-    // Public Lobby & Rooms
-    joinPublicLobby,
-    leavePublicLobby,
+    // Public Live Chat Rooms
     createPublicRoom,
     joinPublicRoom,
     leavePublicRoom,
+    closePublicConversation,
     onPublicRoomReady,
     onPublicRoomCreated,
     onPublicRoomClosed,
+    onPublicRoomClosedInRoom,
+    onPublicRoomUserLeft,
     onPublicPresenceUpdate,
     onPublicRoomError,
     onNewConversation,

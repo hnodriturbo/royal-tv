@@ -74,7 +74,9 @@ export const ModalProvider = ({ children }) => {
       {modalOpen &&
         ReactDOM.createPortal(
           <div
-            className="fixed lg:ml-64 inset-0 flex items-center justify-center z-50 transition-opacity duration-300 ease-out"
+            className={`fixed lg:ml-64 inset-0 flex items-center justify-center transition-opacity duration-300 ease-out ${
+              modalProps.overlayClassName || 'z-50'
+            }`}
             style={{ opacity: isVisible ? 1 : 0 }}
           >
             {/* Backdrop: clicking it hides the modal */}
